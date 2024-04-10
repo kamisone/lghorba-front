@@ -1,7 +1,7 @@
 export default function Home() {
   return (
     <main style={{"padding": "1rem 1.5rem"}}>
-      <div style={{"direction": "rtl"}}>
+      <article style={{"direction": "rtl"}}>
         <h1><center>مرحبًا بكم في Lghorba</center></h1>
         
         
@@ -39,9 +39,9 @@ export default function Home() {
           </p>
         </section>
           <h1><center>استكشفوا، واكتشفوا، وشاركوا مع Lghorba.com!</center></h1>
-      </div>
+      </article>
       <hr />
-      <div>
+      <article>
         <h1><center>Bienvenue sur Lghorba.com</center></h1>
         
         <p>Bienvenue sur Lghorba.com, votre destination en ligne pour découvrir des articles captivants, des histoires inspirantes et des conseils pratiques.</p>
@@ -78,7 +78,7 @@ export default function Home() {
           </p>
         </section>
           <h1><center>Explorez, découvrez et partagez avec Lghorba.com !</center></h1>
-      </div>
+      </article>
       <hr/>
       
       <footer>
