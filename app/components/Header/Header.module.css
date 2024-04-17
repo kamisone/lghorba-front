@@ -1,0 +1,21 @@
+.header_container {
+    position: sticky;
+    top: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    background-color: white;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+    padding-inline: 0.5rem;
+
+}
+.header_container img {
+    max-width: 100px;
+}
+
+.header_container section ul {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    list-style: none;
+}

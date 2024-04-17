@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main style={{"padding": "1rem 1.5rem"}}>
+    <div style={{"padding": "1rem 1.5rem"}}>
       <article style={{"direction": "rtl"}}>
         <h1><center>مرحبًا بكم في Lghorba</center></h1>
         
@@ -111,6 +111,6 @@ export default function Home() {
           </ul>
         </section>
       </footer>
-    </main>
+    </div>
   );
 }
