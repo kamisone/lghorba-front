@@ -1,0 +1,22 @@
+.social {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.social li {
+    list-style-type: none;
+}
+
+.social a{
+  text-decoration: none;
+  color: #F7EEDD;
+
+}
+
+
+.social_wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
