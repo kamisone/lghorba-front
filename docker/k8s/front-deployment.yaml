@@ -21,3 +21,9 @@ spec:
               cpu: 500m
             requests:
               cpu: 200m
+          env:
+            - name: PREPROD_PUBLIC_APP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: front-envs
+                  key: PREPROD_PUBLIC_APP_URL

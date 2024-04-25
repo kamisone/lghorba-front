@@ -49,4 +49,8 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_SECOND_USER }}
           password: ${{ secrets.SERVER_SECOND_USER_PASSWORD }}
-          script: kubectl apply -f /srv/k8s/front
+          script: |
+            kubectl delete secret front-envs --ignore-not-found=true
+            kubectl create secret generic front-envs \
+            --from-literal PREPROD_PUBLIC_APP_URL=${{ secrets.PREPROD_PUBLIC_APP_URL }}
+            kubectl apply -f /srv/k8s/front
