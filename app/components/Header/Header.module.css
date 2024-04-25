@@ -4,9 +4,10 @@
     display: grid;
     grid-template-columns: auto 1fr;
     align-items: center;
-    background-color: white;
+    background-color: #ACE2E1;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
     padding-inline: 0.5rem;
+    border-radius: 0 0 100vmax 100vmax;
 
 }
 .header_container img {
@@ -18,4 +19,9 @@
     align-items: center;
     justify-content: space-around;
     list-style: none;
+}
+
+.header_container a {
+    text-decoration: none;
+    color: #000;
 }

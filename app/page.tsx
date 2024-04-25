@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <div style={{"padding": "1rem 1.5rem"}}>
+    <div className="" style={{"paddingBlock": "1.5rem"}}>
       <article style={{"direction": "rtl"}}>
         <h1><center>مرحبًا بكم في Lghorba</center></h1>
         
