@@ -4,8 +4,8 @@
     display: grid;
     grid-template-columns: auto 1fr;
     align-items: center;
-    background-color: #ACE2E1;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+    background-color: #f7f8f9;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
     padding-inline: 0.5rem;
     border-radius: 0 0 100vmax 100vmax;
 
