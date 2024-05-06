@@ -1,7 +1,7 @@
 name: Deployment front preprod
 
 on:
-  push: 
+  push:
     branches: [dev]
 jobs:
   build:
@@ -10,12 +10,15 @@ jobs:
     steps:
       - name: checkout project from git
         uses: actions/checkout@v2
-      
+
       - name: npm install
         run: npm i
 
       - name: build project
         run: npm run build
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          APP_MODE: ${{ secrets.APP_MODE }}
 
       - name: Log in to docker hub registry
         uses: docker/login-action@v3
@@ -38,10 +41,9 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
-          source: 'docker/k8s/front-deployment.yaml,docker/k8s/front-node-port-service.yaml,docker/k8s/front-hap.yaml'
-          target: '/srv/k8s/front'
+          source: "docker/k8s/front-deployment.yaml,docker/k8s/front-node-port-service.yaml,docker/k8s/front-hap.yaml"
+          target: "/srv/k8s/front"
           strip_components: 2
-
 
       - name: apply k8s files
         uses: appleboy/ssh-action@master

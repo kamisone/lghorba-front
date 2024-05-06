@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Header from "./components/Header/Header";
 import "@/app/globals.css";
+import Maintenance from "./components/Maintenance/Maintenance";
+import {AppMode} from '@/app/globals';
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +21,18 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <main>
-          <Header />
-          <div className="container">{children}</div>
+          {(function () {
+            switch (process.env.APP_MODE) {
+              case AppMode.MAINTENANCE:
+                return <Maintenance />;
+              default:
+                return children;
+            }
+          })()}
         </main>
       </body>
     </html>
   );
 }
+
+

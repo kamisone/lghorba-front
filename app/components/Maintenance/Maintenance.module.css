@@ -1,0 +1,24 @@
+.container {
+  --primary_color: #211951;
+  --secondary_color: rgb(64, 123, 255);
+  max-height: 100vh;
+  display: grid;
+  justify-items: center;
+}
+
+.text_container {
+  font-family: Verdana, sans-serif;
+  display: grid;
+  gap: 1em;
+  text-align: center;
+  width: min(100% - 1rem, 800px);
+  margin-inline: auto;
+  padding-bottom: 2rem;
+  color: var(--primary_color);
+}
+.text_container p {
+  font-weight: 600;
+}
+
+
+

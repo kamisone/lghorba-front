@@ -5,17 +5,8 @@
   margin: 0;
   box-sizing: border-box;
 }
-main {
-  background-color: #f7f8f9;
-}
-.container {
-  padding-inline: 1.5rem;
-  background-color: white;
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+
+body, html {
+  min-height: 100%;
 }
 
-.container {
-  width: clamp(300px, 100%, 800px);
-  margin-inline: auto;
-}
