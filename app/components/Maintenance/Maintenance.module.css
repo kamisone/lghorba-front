@@ -1,15 +1,18 @@
 .container {
   --primary_color: #211951;
   --secondary_color: rgb(64, 123, 255);
-  max-height: 100vh;
+  height: 100vh;
   display: grid;
   justify-items: center;
+  align-content: center;
+  background-image: linear-gradient(45deg, #a6d8ff, #fff, #fff);
 }
 
 .text_container {
   font-family: Verdana, sans-serif;
   display: grid;
-  gap: 1em;
+  align-content: start;
+  gap: 1rem;
   text-align: center;
   width: min(100% - 1rem, 800px);
   margin-inline: auto;

@@ -7,9 +7,10 @@ const MaintenanceCharacter = () => {
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
       viewBox="0 0 492 378"
+      height="100%"
+      width="100%"
       style={{
-        width: "100%",
-        height: "100%",
+        maxWidth:"800px",
         transform: "translate3d(0px, 0px, 0px)",
         contentVisibility: "visible",
       }}

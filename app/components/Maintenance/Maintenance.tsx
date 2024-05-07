@@ -6,7 +6,6 @@ export default function Maintenance() {
   return (
     <div className={styles.container}>
       <MaintenanceCharacter />
-
       <article className={styles.text_container}>
         <p dir="rtl">
           نعتذر عن الإزعاج، ولكننا نقوم حاليًا ببعض الصيانة. سنعود عبر الإنترنت
