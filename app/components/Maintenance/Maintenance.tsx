@@ -14,6 +14,7 @@ export default function Maintenance() {
         <p dir="ltr">
           Sorry for the inconvenience, but we're performing some maintenance at
           the moment. We'll be back online shortly! Thank you for your patience.
+          
         </p>
       </article>
     </div>
