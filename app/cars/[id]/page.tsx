@@ -33,7 +33,7 @@ function extractMapsUrl(text: string): string | null {
   return match ? match[0] : null;
 }
 
-const POLL_INTERVAL = 5000;
+const POLL_INTERVAL = 3000;
 
 export default function CarDetailPage() {
   const { id } = useParams<{ id: string }>();
