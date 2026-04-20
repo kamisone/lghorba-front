@@ -148,10 +148,11 @@
   transform: translateY(0);
 }
 
-.open    { background: #22c55e; }
-.close   { background: #ef4444; }
-.parking { background: #3b82f6; }
+.open     { background: #22c55e; }
+.close    { background: #ef4444; }
+.parking  { background: #3b82f6; }
 .location { background: #f97316; }
+.sleep    { background: #7c3aed; }
 
 .waiting { opacity: 0.7; animation: waitingPulse 1.2s ease-in-out infinite; }
 .err { background: #991b1b !important; }
@@ -192,6 +193,23 @@
   color: #94a3b8;
   font-size: 0.9rem;
   margin: 0;
+}
+
+.mapsBtn {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: #1a73e8;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.mapsBtn:hover {
+  opacity: 0.85;
 }
 
 /* ── Not found ── */

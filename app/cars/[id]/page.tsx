@@ -15,14 +15,22 @@ interface SmsMessage {
   createdAt: string;
 }
 
-type ActionKey = "open" | "close" | "parking" | "location";
+type ActionKey = "open" | "close" | "parking" | "location" | "sleep";
 
 const ACTIONS: { key: ActionKey; label: string; message: string }[] = [
   { key: "open", label: "Open Car", message: "open" },
   { key: "close", label: "Close Car", message: "close" },
   { key: "parking", label: "Open Parking", message: "parking" },
   { key: "location", label: "Get Location", message: "location" },
+  { key: "sleep", label: "Sleep", message: "sleep" },
 ];
+
+const MAPS_PATTERN = /https?:\/\/\S*(maps\.google|google\.com\/maps|maps\.app\.goo\.gl|goo\.gl\/maps|waze\.com|maps\.apple)\S*/i;
+
+function extractMapsUrl(text: string): string | null {
+  const match = text.match(MAPS_PATTERN);
+  return match ? match[0] : null;
+}
 
 const POLL_INTERVAL = 5000;
 
@@ -194,6 +202,16 @@ export default function CarDetailPage() {
                 <span className={styles.consumed}> · consumed</span>
               )}
             </p>
+            {extractMapsUrl(lastMessage.message) && (
+              <a
+                href={extractMapsUrl(lastMessage.message)!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.mapsBtn}
+              >
+                Open in Maps
+              </a>
+            )}
           </>
         ) : (
           <p className={styles.noMessage}>No messages yet.</p>
