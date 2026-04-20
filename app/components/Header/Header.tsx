@@ -10,6 +10,7 @@ export default function Header() {
             <img src="assets/lghorba_logo.png" alt="lghorba logo" />
             <section>
                 <ul>
+                    <li><Link href={"/cars"}>Cars</Link></li>
                     <li><Link href={"contact"} >Contact</Link></li>
                     <li><Link href={"about_us"}>About us</Link></li>
                     <li><Link href={"resources"}>Resources</Link></li>

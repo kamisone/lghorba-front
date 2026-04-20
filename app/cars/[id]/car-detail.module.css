@@ -1,0 +1,217 @@
+.page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.back {
+  display: inline-block;
+  color: #407bff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(33, 25, 81, 0.07);
+  margin-bottom: 2rem;
+}
+
+.photoWrapper {
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
+  font-size: 4rem;
+}
+
+.info {
+  padding: 1.2rem 1.2rem 1.2rem 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.carName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #211951;
+  margin: 0;
+}
+
+.immat {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #407bff;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.phone {
+  font-size: 0.88rem;
+  color: #475569;
+  margin: 0;
+}
+
+.desc {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ── Section title ── */
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #211951;
+  margin: 0 0 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Pulsing green dot indicating active polling */
+.pollDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* ── Action buttons ── */
+.actionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.actionBtn {
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  color: #fff;
+}
+
+.actionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actionBtn:not(:disabled):hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.actionBtn:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.open    { background: #22c55e; }
+.close   { background: #ef4444; }
+.parking { background: #3b82f6; }
+.location { background: #f97316; }
+
+.ok  { background: #15803d !important; }
+.err { background: #991b1b !important; }
+
+/* ── Message box ── */
+.messageBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.1rem 1.3rem;
+  min-height: 70px;
+}
+
+.messageText {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #211951;
+  margin: 0 0 0.4rem;
+  word-break: break-word;
+}
+
+.messageMeta {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.consumed {
+  color: #cbd5e1;
+}
+
+.noMessage {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ── Not found ── */
+.notFound {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #475569;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .photoWrapper {
+    width: 100%;
+    height: 180px;
+  }
+
+  .info {
+    padding: 1rem 1.2rem;
+  }
+
+  .actionsGrid {
+    grid-template-columns: 1fr;
+  }
+}

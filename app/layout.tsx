@@ -23,8 +23,8 @@ export default function RootLayout({
         <main>
           {(function () {
             switch (process.env.APP_MODE) {
-              case AppMode.MAINTENANCE:
-                return <Maintenance />;
+              // case AppMode.MAINTENANCE:
+              //   return <Maintenance />;
               default:
                 return children;
             }
