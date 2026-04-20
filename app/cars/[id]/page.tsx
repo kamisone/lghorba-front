@@ -15,7 +15,7 @@ interface SmsMessage {
   createdAt: string;
 }
 
-type ActionKey = "open" | "close" | "parking" | "location" | "sleep";
+type ActionKey = "open" | "close" | "parking" | "location" | "sleep" | "wake";
 
 const ACTIONS: { key: ActionKey; label: string; message: string }[] = [
   { key: "open", label: "Open Car", message: "open" },
@@ -23,6 +23,7 @@ const ACTIONS: { key: ActionKey; label: string; message: string }[] = [
   { key: "parking", label: "Open Parking", message: "parking" },
   { key: "location", label: "Get Location", message: "location" },
   { key: "sleep", label: "Sleep", message: "sleep" },
+  { key: "wake", label: "Wake", message: "wake" },
 ];
 
 const MAPS_PATTERN = /https?:\/\/\S*(maps\.google|google\.com\/maps|maps\.app\.goo\.gl|goo\.gl\/maps|waze\.com|maps\.apple)\S*/i;
@@ -42,7 +43,10 @@ export default function CarDetailPage() {
   const [sendingAction, setSendingAction] = useState<ActionKey | null>(null);
   const [waitingAction, setWaitingAction] = useState<ActionKey | null>(null);
   const [sendError, setSendError] = useState<ActionKey | null>(null);
+  const [releaseClicks, setReleaseClicks] = useState(0);
   const [imgError, setImgError] = useState(false);
+
+  const RELEASE_THRESHOLD = 3;
 
   const actionSentAtRef = useRef<number | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -85,6 +89,7 @@ export default function CarDetailPage() {
         ) {
           setWaitingAction(null);
           actionSentAtRef.current = null;
+          setReleaseClicks(0);
           localStorage.removeItem(waitingKey);
           localStorage.removeItem(sentAtKey);
         }
@@ -100,6 +105,23 @@ export default function CarDetailPage() {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
   }, [car, poll]);
+
+  const forceRelease = () => {
+    setWaitingAction(null);
+    actionSentAtRef.current = null;
+    setReleaseClicks(0);
+    localStorage.removeItem(waitingKey);
+    localStorage.removeItem(sentAtKey);
+  };
+
+  const handleWaitingClick = () => {
+    const next = releaseClicks + 1;
+    if (next >= RELEASE_THRESHOLD) {
+      forceRelease();
+    } else {
+      setReleaseClicks(next);
+    }
+  };
 
   const sendAction = async (action: (typeof ACTIONS)[number]) => {
     if (!car || sendingAction || waitingAction) return;
@@ -173,13 +195,15 @@ export default function CarDetailPage() {
               className={`${styles.actionBtn} ${styles[action.key]} ${
                 isWaiting ? styles.waiting : ""
               } ${isErr ? styles.err : ""}`}
-              onClick={() => sendAction(action)}
-              disabled={isBlocked}
+              onClick={() => isWaiting ? handleWaitingClick() : sendAction(action)}
+              disabled={!isWaiting && isBlocked}
             >
               {isSending
                 ? "Sending…"
                 : isWaiting
-                ? "Waiting for response…"
+                ? releaseClicks === 0
+                  ? "Waiting… (tap 3× to unlock)"
+                  : `Unlock in ${RELEASE_THRESHOLD - releaseClicks} tap${RELEASE_THRESHOLD - releaseClicks > 1 ? "s" : ""}…`
                 : isErr
                 ? "✗ Failed"
                 : action.label}
