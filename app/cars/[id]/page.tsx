@@ -31,28 +31,31 @@ export default function CarDetailPage() {
   const car = getCarById(id);
 
   const [lastMessage, setLastMessage] = useState<SmsMessage | null>(null);
-  const [loadingAction, setLoadingAction] = useState<ActionKey | null>(null);
-  const [actionStatus, setActionStatus] = useState<Record<ActionKey, "idle" | "ok" | "err">>({
-    open: "idle",
-    close: "idle",
-    parking: "idle",
-    location: "idle",
-  });
+  const [sendingAction, setSendingAction] = useState<ActionKey | null>(null);
+  const [waitingAction, setWaitingAction] = useState<ActionKey | null>(null);
+  const [sendError, setSendError] = useState<ActionKey | null>(null);
   const [imgError, setImgError] = useState(false);
+
+  const actionSentAtRef = useRef<number | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const storageKey = `car_last_msg_${id}`;
+  const waitingKey = `car_waiting_action_${id}`;
+  const sentAtKey = `car_action_sent_at_${id}`;
 
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        setLastMessage(JSON.parse(stored));
-      } catch {
-        /* ignore */
-      }
+    const storedMsg = localStorage.getItem(storageKey);
+    if (storedMsg) {
+      try { setLastMessage(JSON.parse(storedMsg)); } catch { /* ignore */ }
     }
-  }, [storageKey]);
+
+    const storedAction = localStorage.getItem(waitingKey) as ActionKey | null;
+    const storedSentAt = localStorage.getItem(sentAtKey);
+    if (storedAction && storedSentAt) {
+      setWaitingAction(storedAction);
+      actionSentAtRef.current = Number(storedSentAt);
+    }
+  }, [storageKey, waitingKey, sentAtKey]);
 
   const poll = useCallback(async () => {
     if (!car) return;
@@ -63,13 +66,23 @@ export default function CarDetailPage() {
       );
       const data = await res.json();
       if (!data.error) {
-        setLastMessage(data as SmsMessage);
-        localStorage.setItem(storageKey, JSON.stringify(data));
+        const msg = data as SmsMessage;
+        setLastMessage(msg);
+        localStorage.setItem(storageKey, JSON.stringify(msg));
+
+        // Unblock buttons if response arrived after the action was sent
+        if (
+          actionSentAtRef.current !== null &&
+          new Date(msg.createdAt).getTime() >= actionSentAtRef.current
+        ) {
+          setWaitingAction(null);
+          actionSentAtRef.current = null;
+          localStorage.removeItem(waitingKey);
+          localStorage.removeItem(sentAtKey);
+        }
       }
-    } catch {
-      /* silent — keep last message */
-    }
-  }, [car, storageKey]);
+    } catch { /* silent — keep last message */ }
+  }, [car, storageKey, waitingKey, sentAtKey]);
 
   useEffect(() => {
     if (!car) return;
@@ -81,24 +94,29 @@ export default function CarDetailPage() {
   }, [car, poll]);
 
   const sendAction = async (action: (typeof ACTIONS)[number]) => {
-    if (!car || loadingAction) return;
-    setLoadingAction(action.key);
+    if (!car || sendingAction || waitingAction) return;
+    setSendingAction(action.key);
+    setSendError(null);
     try {
       await fetch("/api/sms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to: car.phoneNumber, message: action.message }),
       });
-      setActionStatus((s) => ({ ...s, [action.key]: "ok" }));
+      const sentAt = Date.now();
+      actionSentAtRef.current = sentAt;
+      localStorage.setItem(waitingKey, action.key);
+      localStorage.setItem(sentAtKey, String(sentAt));
+      setWaitingAction(action.key);
     } catch {
-      setActionStatus((s) => ({ ...s, [action.key]: "err" }));
+      setSendError(action.key);
+      setTimeout(() => setSendError(null), 3000);
     } finally {
-      setLoadingAction(null);
-      setTimeout(() => {
-        setActionStatus((s) => ({ ...s, [action.key]: "idle" }));
-      }, 2000);
+      setSendingAction(null);
     }
   };
+
+  const isBlocked = sendingAction !== null || waitingAction !== null;
 
   if (!car) {
     return (
@@ -136,24 +154,30 @@ export default function CarDetailPage() {
 
       <h2 className={styles.sectionTitle}>Actions</h2>
       <div className={styles.actionsGrid}>
-        {ACTIONS.map((action) => (
-          <button
-            key={action.key}
-            className={`${styles.actionBtn} ${styles[action.key]} ${
-              actionStatus[action.key] === "ok" ? styles.ok : ""
-            } ${actionStatus[action.key] === "err" ? styles.err : ""}`}
-            onClick={() => sendAction(action)}
-            disabled={loadingAction !== null}
-          >
-            {loadingAction === action.key
-              ? "Sending…"
-              : actionStatus[action.key] === "ok"
-              ? "✓ Sent"
-              : actionStatus[action.key] === "err"
-              ? "✗ Failed"
-              : action.label}
-          </button>
-        ))}
+        {ACTIONS.map((action) => {
+          const isSending = sendingAction === action.key;
+          const isWaiting = waitingAction === action.key;
+          const isErr = sendError === action.key;
+
+          return (
+            <button
+              key={action.key}
+              className={`${styles.actionBtn} ${styles[action.key]} ${
+                isWaiting ? styles.waiting : ""
+              } ${isErr ? styles.err : ""}`}
+              onClick={() => sendAction(action)}
+              disabled={isBlocked}
+            >
+              {isSending
+                ? "Sending…"
+                : isWaiting
+                ? "Waiting for response…"
+                : isErr
+                ? "✗ Failed"
+                : action.label}
+            </button>
+          );
+        })}
       </div>
 
       <h2 className={styles.sectionTitle}>

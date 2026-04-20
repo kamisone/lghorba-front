@@ -1,8 +1,8 @@
 import React from "react";
-import styles from "@/app/page.module.css";
+import Maintenance from "@/app/components/Maintenance/Maintenance";
 
 export default function Home() {
   return <div>
-    
+    <Maintenance />;
   </div>;
 }

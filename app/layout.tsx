@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
-import Maintenance from "./components/Maintenance/Maintenance";
 import {AppMode} from '@/app/globals';
 
 
