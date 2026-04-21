@@ -156,6 +156,12 @@ export default function CarDetailPage() {
 
   const mapsUrl = lastConsumed?.inbound ? extractMapsUrl(lastConsumed.inbound.message) : null;
 
+  const isAwaitingResponse = (() => {
+    if (!lastConsumed?.outbound) return false;
+    if (!lastConsumed.inbound) return true;
+    return new Date(lastConsumed.outbound.createdAt) > new Date(lastConsumed.inbound.createdAt);
+  })();
+
   return (
     <div className={styles.page}>
       <Link href="/cars" className={styles.back}>← Back to Cars</Link>
@@ -215,7 +221,12 @@ export default function CarDetailPage() {
         Last Message
         <span className={styles.pollDot} title="Polling every 3s" />
       </h2>
-      <div className={styles.messageBox}>
+      <div className={`${styles.messageBox} ${isAwaitingResponse ? styles.messageBoxWaiting : ""}`}>
+        {isAwaitingResponse && (
+          <div className={styles.awaitingBadge} title="Waiting for car response">
+            <span className={styles.awaitingSpinner} />
+          </div>
+        )}
         {lastConsumed ? (
           <>
             <div className={styles.msgRow}>
