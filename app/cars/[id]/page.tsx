@@ -64,7 +64,9 @@ export default function CarDetailPage() {
   const [sendingAction, setSendingAction] = useState<ActionKey | null>(null);
   const [sendError, setSendError] = useState<ActionKey | null>(null);
   const [releaseClicks, setReleaseClicks] = useState(0);
+  const [unlockAvailable, setUnlockAvailable] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // stores the inbound message id at the moment of sending, to detect a new response
   const inboundIdAtSendRef = useRef<number | null>(
@@ -77,6 +79,8 @@ export default function CarDetailPage() {
   const clearWaiting = useCallback(() => {
     setWaitingAction(null);
     setReleaseClicks(0);
+    setUnlockAvailable(false);
+    if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
     inboundIdAtSendRef.current = null;
     localStorage.removeItem(waitingKey);
     localStorage.removeItem(inboundIdAtSendKey);
@@ -114,7 +118,16 @@ export default function CarDetailPage() {
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [car, poll]);
 
+  useEffect(() => {
+    if (waitingAction) {
+      setUnlockAvailable(false);
+      unlockTimerRef.current = setTimeout(() => setUnlockAvailable(true), 10000);
+    }
+    return () => { if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current); };
+  }, [waitingAction]);
+
   const handleWaitingClick = () => {
+    if (!unlockAvailable) return;
     const next = releaseClicks + 1;
     if (next >= RELEASE_THRESHOLD) clearWaiting();
     else setReleaseClicks(next);
@@ -206,7 +219,9 @@ export default function CarDetailPage() {
               {isSending
                 ? "Sending…"
                 : isWaiting
-                ? releaseClicks === 0
+                ? !unlockAvailable
+                  ? "Waiting…"
+                  : releaseClicks === 0
                   ? "Waiting… (tap 3× to unlock)"
                   : `Unlock in ${RELEASE_THRESHOLD - releaseClicks} tap${RELEASE_THRESHOLD - releaseClicks > 1 ? "s" : ""}…`
                 : isErr
