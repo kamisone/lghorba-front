@@ -1,9 +1,10 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { getCarById } from "../data";
+import type { Car } from "../data";
+import CarFormModal from "../CarFormModal";
 import styles from "./car-detail.module.css";
 
 interface SmsMessage {
@@ -41,13 +42,10 @@ function extractMapsUrl(text: string): string | null {
 }
 
 function extractLatLng(url: string): { lat: number; lng: number } | null {
-  // @lat,lng,zoom (e.g. google.com/maps/@48.856,2.352,15z)
   let m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
-  // ?q=lat,lng
   m = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
-  // ll=lat,lng
   m = url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
   return null;
@@ -58,11 +56,17 @@ const RELEASE_THRESHOLD = 3;
 
 export default function CarDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const car = getCarById(id);
+  const router = useRouter();
 
-  const storageKey       = `car_last_msg_${id}`;
-  const waitingKey       = `car_waiting_action_${id}`;
+  const storageKey        = `car_last_msg_${id}`;
+  const waitingKey        = `car_waiting_action_${id}`;
   const inboundIdAtSendKey = `car_inbound_id_at_send_${id}`;
+
+  const [car, setCar]               = useState<Car | null>(null);
+  const [carLoading, setCarLoading] = useState(true);
+  const [showEdit, setShowEdit]     = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting]     = useState(false);
 
   const [lastConsumed, setLastConsumed] = useState<LastConsumed | null>(() => {
     if (typeof window === "undefined") return null;
@@ -74,20 +78,25 @@ export default function CarDetailPage() {
     return localStorage.getItem(waitingKey) as ActionKey | null;
   });
 
-  const [sendingAction, setSendingAction] = useState<ActionKey | null>(null);
-  const [sendError, setSendError] = useState<ActionKey | null>(null);
-  const [releaseClicks, setReleaseClicks] = useState(0);
+  const [sendingAction, setSendingAction]   = useState<ActionKey | null>(null);
+  const [sendError, setSendError]           = useState<ActionKey | null>(null);
+  const [releaseClicks, setReleaseClicks]   = useState(0);
   const [unlockAvailable, setUnlockAvailable] = useState(false);
-  const [imgError, setImgError] = useState(false);
-  const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [imgError, setImgError]             = useState(false);
 
-  // stores the inbound message id at the moment of sending, to detect a new response
+  const unlockTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inboundIdAtSendRef = useRef<number | null>(
-    typeof window !== "undefined"
-      ? Number(localStorage.getItem(inboundIdAtSendKey)) || null
-      : null
+    typeof window !== "undefined" ? Number(localStorage.getItem(inboundIdAtSendKey)) || null : null
   );
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Fetch car from API
+  useEffect(() => {
+    fetch(`/next-api/cars/${id}`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setCar(data))
+      .finally(() => setCarLoading(false));
+  }, [id]);
 
   const clearWaiting = useCallback(() => {
     setWaitingAction(null);
@@ -102,26 +111,17 @@ export default function CarDetailPage() {
   const poll = useCallback(async () => {
     if (!car) return;
     try {
-      const res = await fetch(
-        `/next-api/sms/last-consumed?to=${encodeURIComponent(car.phoneNumber)}`,
-        { cache: "no-store" }
-      );
+      const res = await fetch(`/next-api/sms/last-consumed?to=${encodeURIComponent(car.phoneNumber)}`, { cache: "no-store" });
       const data: LastConsumed = await res.json();
       if ("inbound" in data) {
         setLastConsumed(data);
         localStorage.setItem(storageKey, JSON.stringify(data));
-
-        // unblock when a new inbound arrives after the action was sent
         const newInboundId = data.inbound?.id ?? null;
-        if (
-          inboundIdAtSendRef.current !== null &&
-          newInboundId !== null &&
-          newInboundId !== inboundIdAtSendRef.current
-        ) {
+        if (inboundIdAtSendRef.current !== null && newInboundId !== null && newInboundId !== inboundIdAtSendRef.current) {
           clearWaiting();
         }
       }
-    } catch { /* silent — keep last message */ }
+    } catch { /* silent */ }
   }, [car, storageKey, clearWaiting]);
 
   useEffect(() => {
@@ -169,7 +169,28 @@ export default function CarDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!car) return;
+    setDeleting(true);
+    try {
+      await fetch(`/next-api/cars/${car.id}`, { method: "DELETE" });
+      router.replace("/cars");
+    } catch {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
+
   const isBlocked = sendingAction !== null || waitingAction !== null;
+
+  if (carLoading) {
+    return (
+      <div className={styles.page}>
+        <Link href="/cars" className={styles.back}>← Back to Cars</Link>
+        <div className={styles.loadingRow}><span className={styles.loadingSpinner} /></div>
+      </div>
+    );
+  }
 
   if (!car) {
     return (
@@ -195,12 +216,7 @@ export default function CarDetailPage() {
       <div className={styles.header}>
         <div className={styles.photoWrapper}>
           {!imgError ? (
-            <img
-              src={`/assets/cars/${car.id}.jpg`}
-              alt={car.name}
-              className={styles.photo}
-              onError={() => setImgError(true)}
-            />
+            <img src={`/assets/cars/${car.id}.jpg`} alt={car.name} className={styles.photo} onError={() => setImgError(true)} />
           ) : (
             <div className={styles.photoPlaceholder}>🚗</div>
           )}
@@ -210,6 +226,16 @@ export default function CarDetailPage() {
           <p className={styles.immat}>{car.immatriculation}</p>
           <p className={styles.phone}>{car.phoneNumber}</p>
           {car.description && <p className={styles.desc}>{car.description}</p>}
+          <div className={styles.carActions}>
+            <button className={styles.editBtn} onClick={() => setShowEdit(true)}>Edit</button>
+            {confirmDelete ? (
+              <button className={styles.confirmDeleteBtn} onClick={handleDelete} disabled={deleting}>
+                {deleting ? "Deleting…" : "Confirm delete?"}
+              </button>
+            ) : (
+              <button className={styles.deleteBtn} onClick={() => setConfirmDelete(true)}>Delete</button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -218,14 +244,11 @@ export default function CarDetailPage() {
         {ACTIONS.map((action) => {
           const isSending = sendingAction === action.key;
           const isWaiting = waitingAction === action.key;
-          const isErr = sendError === action.key;
-
+          const isErr     = sendError === action.key;
           return (
             <button
               key={action.key}
-              className={`${styles.actionBtn} ${styles[action.key]} ${
-                isWaiting ? styles.waiting : ""
-              } ${isErr ? styles.err : ""}`}
+              className={`${styles.actionBtn} ${styles[action.key]} ${isWaiting ? styles.waiting : ""} ${isErr ? styles.err : ""}`}
               onClick={() => isWaiting ? handleWaitingClick() : sendAction(action)}
               disabled={!isWaiting && isBlocked}
             >
@@ -263,20 +286,12 @@ export default function CarDetailPage() {
             <div className={styles.msgRow}>
               <span className={styles.msgLabel}>Response</span>
               <p className={styles.messageText}>{lastConsumed.inbound?.message ?? "—"}</p>
-              {lastConsumed.inbound && (
-                <p className={styles.messageMeta}>
-                  {new Date(lastConsumed.inbound.createdAt).toLocaleString()}
-                </p>
-              )}
+              {lastConsumed.inbound && <p className={styles.messageMeta}>{new Date(lastConsumed.inbound.createdAt).toLocaleString()}</p>}
             </div>
             <div className={styles.msgRow}>
               <span className={styles.msgLabel}>Last command</span>
               <p className={styles.messageText}>{lastConsumed.outbound?.message ?? "—"}</p>
-              {lastConsumed.outbound && (
-                <p className={styles.messageMeta}>
-                  {new Date(lastConsumed.outbound.createdAt).toLocaleString()}
-                </p>
-              )}
+              {lastConsumed.outbound && <p className={styles.messageMeta}>{new Date(lastConsumed.outbound.createdAt).toLocaleString()}</p>}
             </div>
             {mapsUrl && (() => {
               const coords = extractLatLng(mapsUrl);
@@ -287,21 +302,13 @@ export default function CarDetailPage() {
                 const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
                 return (
                   <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapPreview}>
-                    <iframe
-                      src={embedUrl}
-                      className={styles.mapFrame}
-                      title="Car location map"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
+                    <iframe src={embedUrl} className={styles.mapFrame} title="Car location map" loading="lazy" referrerPolicy="no-referrer" />
                     <span className={styles.mapOverlay}>Open in Maps →</span>
                   </a>
                 );
               }
               return (
-                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapsBtn}>
-                  Open in Maps
-                </a>
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapsBtn}>Open in Maps</a>
               );
             })()}
           </>
@@ -309,6 +316,14 @@ export default function CarDetailPage() {
           <p className={styles.noMessage}>No messages yet.</p>
         )}
       </div>
+
+      {showEdit && (
+        <CarFormModal
+          car={car}
+          onClose={() => setShowEdit(false)}
+          onSaved={(updated) => { setCar(updated); setShowEdit(false); }}
+        />
+      )}
     </div>
   );
 }
