@@ -6,15 +6,21 @@ import { CARS } from "./data";
 import styles from "./cars.module.css";
 
 interface SmsMessage {
+  id: number;
   message: string;
   createdAt: string;
 }
 
+interface LastConsumed {
+  inbound: SmsMessage | null;
+  outbound: SmsMessage | null;
+}
+
 function useLastMessages() {
-  const [messages, setMessages] = useState<Record<string, SmsMessage | null>>({});
+  const [messages, setMessages] = useState<Record<string, LastConsumed | null>>({});
 
   useEffect(() => {
-    const result: Record<string, SmsMessage | null> = {};
+    const result: Record<string, LastConsumed | null> = {};
     for (const car of CARS) {
       const stored = localStorage.getItem(`car_last_msg_${car.id}`);
       try {
@@ -58,11 +64,11 @@ export default function CarsPage() {
               <div className={styles.cardBody}>
                 <h2 className={styles.carName}>{car.name}</h2>
                 <p className={styles.immat}>{car.immatriculation}</p>
-                {msg ? (
+                {msg?.inbound ? (
                   <div className={styles.lastMsg}>
-                    <span className={styles.lastMsgText}>{msg.message}</span>
+                    <span className={styles.lastMsgText}>{msg.inbound.message}</span>
                     <span className={styles.lastMsgTime}>
-                      {new Date(msg.createdAt).toLocaleString()}
+                      {new Date(msg.inbound.createdAt).toLocaleString()}
                     </span>
                   </div>
                 ) : (

@@ -192,6 +192,26 @@
   color: #cbd5e1;
 }
 
+.msgRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.msgRow:last-of-type {
+  border-bottom: none;
+}
+
+.msgLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
 .noMessage {
   color: #94a3b8;
   font-size: 0.9rem;

@@ -15,6 +15,11 @@ interface SmsMessage {
   createdAt: string;
 }
 
+interface LastConsumed {
+  inbound: SmsMessage | null;
+  outbound: SmsMessage | null;
+}
+
 type ActionKey = "open" | "close" | "parking" | "location" | "sleep" | "wake" | "stoplocation" | "network";
 
 const ACTIONS: { key: ActionKey; label: string; message: string }[] = [
@@ -36,93 +41,83 @@ function extractMapsUrl(text: string): string | null {
 }
 
 const POLL_INTERVAL = 3000;
+const RELEASE_THRESHOLD = 3;
 
 export default function CarDetailPage() {
   const { id } = useParams<{ id: string }>();
   const car = getCarById(id);
 
-  const [lastMessage, setLastMessage] = useState<SmsMessage | null>(null);
+  const storageKey       = `car_last_msg_${id}`;
+  const waitingKey       = `car_waiting_action_${id}`;
+  const inboundIdAtSendKey = `car_inbound_id_at_send_${id}`;
+
+  const [lastConsumed, setLastConsumed] = useState<LastConsumed | null>(() => {
+    if (typeof window === "undefined") return null;
+    try { return JSON.parse(localStorage.getItem(storageKey) ?? "null"); } catch { return null; }
+  });
+
+  const [waitingAction, setWaitingAction] = useState<ActionKey | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(waitingKey) as ActionKey | null;
+  });
+
   const [sendingAction, setSendingAction] = useState<ActionKey | null>(null);
-  const [waitingAction, setWaitingAction] = useState<ActionKey | null>(null);
   const [sendError, setSendError] = useState<ActionKey | null>(null);
   const [releaseClicks, setReleaseClicks] = useState(0);
   const [imgError, setImgError] = useState(false);
 
-  const RELEASE_THRESHOLD = 3;
-
-  const actionSentAtRef = useRef<number | null>(null);
+  // stores the inbound message id at the moment of sending, to detect a new response
+  const inboundIdAtSendRef = useRef<number | null>(
+    typeof window !== "undefined"
+      ? Number(localStorage.getItem(inboundIdAtSendKey)) || null
+      : null
+  );
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const storageKey = `car_last_msg_${id}`;
-  const waitingKey = `car_waiting_action_${id}`;
-  const sentAtKey = `car_action_sent_at_${id}`;
-
-  useEffect(() => {
-    const storedMsg = localStorage.getItem(storageKey);
-    if (storedMsg) {
-      try { setLastMessage(JSON.parse(storedMsg)); } catch { /* ignore */ }
-    }
-
-    const storedAction = localStorage.getItem(waitingKey) as ActionKey | null;
-    const storedSentAt = localStorage.getItem(sentAtKey);
-    if (storedAction && storedSentAt) {
-      setWaitingAction(storedAction);
-      actionSentAtRef.current = Number(storedSentAt);
-    }
-  }, [storageKey, waitingKey, sentAtKey]);
+  const clearWaiting = useCallback(() => {
+    setWaitingAction(null);
+    setReleaseClicks(0);
+    inboundIdAtSendRef.current = null;
+    localStorage.removeItem(waitingKey);
+    localStorage.removeItem(inboundIdAtSendKey);
+  }, [waitingKey, inboundIdAtSendKey]);
 
   const poll = useCallback(async () => {
     if (!car) return;
     try {
       const res = await fetch(
-        `/api/sms?type=inbound&to=${encodeURIComponent(car.phoneNumber)}`,
+        `/api/sms/last-consumed?to=${encodeURIComponent(car.phoneNumber)}`,
         { cache: "no-store" }
       );
-      const data = await res.json();
-      if (!data.error) {
-        const msg = data as SmsMessage;
-        setLastMessage(msg);
-        localStorage.setItem(storageKey, JSON.stringify(msg));
+      const data: LastConsumed = await res.json();
+      if ("inbound" in data) {
+        setLastConsumed(data);
+        localStorage.setItem(storageKey, JSON.stringify(data));
 
-        // Unblock buttons if response arrived after the action was sent
+        // unblock when a new inbound arrives after the action was sent
+        const newInboundId = data.inbound?.id ?? null;
         if (
-          actionSentAtRef.current !== null &&
-          new Date(msg.createdAt).getTime() >= actionSentAtRef.current
+          inboundIdAtSendRef.current !== null &&
+          newInboundId !== null &&
+          newInboundId !== inboundIdAtSendRef.current
         ) {
-          setWaitingAction(null);
-          actionSentAtRef.current = null;
-          setReleaseClicks(0);
-          localStorage.removeItem(waitingKey);
-          localStorage.removeItem(sentAtKey);
+          clearWaiting();
         }
       }
     } catch { /* silent — keep last message */ }
-  }, [car, storageKey, waitingKey, sentAtKey]);
+  }, [car, storageKey, clearWaiting]);
 
   useEffect(() => {
     if (!car) return;
     poll();
     pollingRef.current = setInterval(poll, POLL_INTERVAL);
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [car, poll]);
-
-  const forceRelease = () => {
-    setWaitingAction(null);
-    actionSentAtRef.current = null;
-    setReleaseClicks(0);
-    localStorage.removeItem(waitingKey);
-    localStorage.removeItem(sentAtKey);
-  };
 
   const handleWaitingClick = () => {
     const next = releaseClicks + 1;
-    if (next >= RELEASE_THRESHOLD) {
-      forceRelease();
-    } else {
-      setReleaseClicks(next);
-    }
+    if (next >= RELEASE_THRESHOLD) clearWaiting();
+    else setReleaseClicks(next);
   };
 
   const sendAction = async (action: (typeof ACTIONS)[number]) => {
@@ -135,10 +130,10 @@ export default function CarDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to: car.phoneNumber, message: action.message }),
       });
-      const sentAt = Date.now();
-      actionSentAtRef.current = sentAt;
+      const currentInboundId = lastConsumed?.inbound?.id ?? null;
+      inboundIdAtSendRef.current = currentInboundId;
       localStorage.setItem(waitingKey, action.key);
-      localStorage.setItem(sentAtKey, String(sentAt));
+      localStorage.setItem(inboundIdAtSendKey, String(currentInboundId));
       setWaitingAction(action.key);
     } catch {
       setSendError(action.key);
@@ -158,6 +153,8 @@ export default function CarDetailPage() {
       </div>
     );
   }
+
+  const mapsUrl = lastConsumed?.inbound ? extractMapsUrl(lastConsumed.inbound.message) : null;
 
   return (
     <div className={styles.page}>
@@ -216,21 +213,32 @@ export default function CarDetailPage() {
 
       <h2 className={styles.sectionTitle}>
         Last Message
-        <span className={styles.pollDot} title="Polling every 5s" />
+        <span className={styles.pollDot} title="Polling every 3s" />
       </h2>
       <div className={styles.messageBox}>
-        {lastMessage ? (
+        {lastConsumed ? (
           <>
-            <p className={styles.messageText}>{lastMessage.message}</p>
-            <p className={styles.messageMeta}>
-              {new Date(lastMessage.createdAt).toLocaleString()}
-              {lastMessage.consumed && (
-                <span className={styles.consumed}> · consumed</span>
+            <div className={styles.msgRow}>
+              <span className={styles.msgLabel}>Response</span>
+              <p className={styles.messageText}>{lastConsumed.inbound?.message ?? "—"}</p>
+              {lastConsumed.inbound && (
+                <p className={styles.messageMeta}>
+                  {new Date(lastConsumed.inbound.createdAt).toLocaleString()}
+                </p>
               )}
-            </p>
-            {extractMapsUrl(lastMessage.message) && (
+            </div>
+            <div className={styles.msgRow}>
+              <span className={styles.msgLabel}>Last command</span>
+              <p className={styles.messageText}>{lastConsumed.outbound?.message ?? "—"}</p>
+              {lastConsumed.outbound && (
+                <p className={styles.messageMeta}>
+                  {new Date(lastConsumed.outbound.createdAt).toLocaleString()}
+                </p>
+              )}
+            </div>
+            {mapsUrl && (
               <a
-                href={extractMapsUrl(lastMessage.message)!}
+                href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.mapsBtn}
