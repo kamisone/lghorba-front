@@ -15,7 +15,7 @@ interface SmsMessage {
   createdAt: string;
 }
 
-type ActionKey = "open" | "close" | "parking" | "location" | "sleep" | "wake";
+type ActionKey = "open" | "close" | "parking" | "location" | "sleep" | "wake" | "stoplocation" | "network";
 
 const ACTIONS: { key: ActionKey; label: string; message: string }[] = [
   { key: "open", label: "Open Car", message: "open" },
@@ -24,6 +24,8 @@ const ACTIONS: { key: ActionKey; label: string; message: string }[] = [
   { key: "location", label: "Get Location", message: "location" },
   { key: "sleep", label: "Sleep", message: "sleep" },
   { key: "wake", label: "Wake", message: "wake" },
+  { key: "stoplocation", label: "Stop Location", message: "stoplocation" },
+  { key: "network", label: "Network", message: "network" },
 ];
 
 const MAPS_PATTERN = /https?:\/\/\S*(maps\.google|google\.com\/maps|maps\.app\.goo\.gl|goo\.gl\/maps|waze\.com|maps\.apple)\S*/i;
