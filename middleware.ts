@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
 
   if (!token) {
-    if (request.nextUrl.pathname.startsWith("/api/")) {
+    if (request.nextUrl.pathname.startsWith("/next-api/")) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
     const loginUrl = new URL("/login", request.url);
@@ -18,5 +18,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/cars/:path*", "/api/sms/:path*"],
+  matcher: ["/cars/:path*", "/next-api/sms/:path*"],
 };

@@ -18,7 +18,7 @@ function LoginForm() {
     setError("");
 
     try {
-      const res = await fetch("/api/auth", {
+      const res = await fetch("/next-api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

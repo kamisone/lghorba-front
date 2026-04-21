@@ -32,7 +32,7 @@ function useLastMessages() {
       CARS.map(async (car) => {
         try {
           const res = await fetch(
-            `/api/sms/last-consumed?to=${encodeURIComponent(car.phoneNumber)}`,
+            `/next-api/sms/last-consumed?to=${encodeURIComponent(car.phoneNumber)}`,
             { cache: "no-store" }
           );
           const data: LastConsumed = await res.json();

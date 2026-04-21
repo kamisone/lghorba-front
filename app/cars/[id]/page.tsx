@@ -90,7 +90,7 @@ export default function CarDetailPage() {
     if (!car) return;
     try {
       const res = await fetch(
-        `/api/sms/last-consumed?to=${encodeURIComponent(car.phoneNumber)}`,
+        `/next-api/sms/last-consumed?to=${encodeURIComponent(car.phoneNumber)}`,
         { cache: "no-store" }
       );
       const data: LastConsumed = await res.json();
@@ -138,7 +138,7 @@ export default function CarDetailPage() {
     setSendingAction(action.key);
     setSendError(null);
     try {
-      await fetch("/api/sms", {
+      await fetch("/next-api/sms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to: car.phoneNumber, message: action.message }),
