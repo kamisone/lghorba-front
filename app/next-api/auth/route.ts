@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.API_BASE_URL || "http://127.0.0.1:4000";
+const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 const COOKIE_NAME = "lghorba_auth";
 
 export async function POST(request: NextRequest) {
@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
 
   let res: Response;
   try {
-    res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+    res = await fetch(`${BACKEND_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
