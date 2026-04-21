@@ -22,15 +22,15 @@ interface LastConsumed {
 
 type ActionKey = "open" | "close" | "parking" | "location" | "sleep" | "wake" | "stoplocation" | "network";
 
-const ACTIONS: { key: ActionKey; label: string; message: string }[] = [
-  { key: "open", label: "Open Car", message: "open" },
-  { key: "close", label: "Close Car", message: "close" },
-  { key: "parking", label: "Open Parking", message: "parking" },
-  { key: "location", label: "Get Location", message: "location" },
-  { key: "sleep", label: "Sleep", message: "sleep" },
-  { key: "wake", label: "Wake", message: "wake" },
-  { key: "stoplocation", label: "Stop Location", message: "stoplocation" },
-  { key: "network", label: "Network", message: "network" },
+const ACTIONS: { key: ActionKey; label: string; icon: string; message: string }[] = [
+  { key: "open",         label: "Open Car",      icon: "🔓", message: "open" },
+  { key: "close",        label: "Close Car",     icon: "🔒", message: "close" },
+  { key: "parking",      label: "Parking",       icon: "🅿️", message: "parking" },
+  { key: "location",     label: "Location",      icon: "📍", message: "location" },
+  { key: "sleep",        label: "Sleep",         icon: "🌙", message: "sleep" },
+  { key: "wake",         label: "Wake",          icon: "⚡", message: "wake" },
+  { key: "stoplocation", label: "Stop Location", icon: "🛑", message: "stoplocation" },
+  { key: "network",      label: "Network",       icon: "📡", message: "network" },
 ];
 
 const MAPS_PATTERN = /https?:\/\/\S*(maps\.google|google\.com\/maps|maps\.app\.goo\.gl|goo\.gl\/maps|waze\.com|maps\.apple)\S*/i;
@@ -216,17 +216,20 @@ export default function CarDetailPage() {
               onClick={() => isWaiting ? handleWaitingClick() : sendAction(action)}
               disabled={!isWaiting && isBlocked}
             >
-              {isSending
-                ? "Sending…"
-                : isWaiting
-                ? !unlockAvailable
-                  ? "Waiting…"
-                  : releaseClicks === 0
-                  ? "Waiting… (tap 3× to unlock)"
-                  : `Unlock in ${RELEASE_THRESHOLD - releaseClicks} tap${RELEASE_THRESHOLD - releaseClicks > 1 ? "s" : ""}…`
-                : isErr
-                ? "✗ Failed"
-                : action.label}
+              <span className={styles.actionIcon}>{action.icon}</span>
+              <span className={styles.actionLabel}>
+                {isSending
+                  ? "Sending…"
+                  : isWaiting
+                  ? !unlockAvailable
+                    ? "Waiting…"
+                    : releaseClicks === 0
+                    ? "Tap 3× to unlock"
+                    : `${RELEASE_THRESHOLD - releaseClicks} tap${RELEASE_THRESHOLD - releaseClicks > 1 ? "s" : ""} left`
+                  : isErr
+                  ? "Failed"
+                  : action.label}
+              </span>
             </button>
           );
         })}
