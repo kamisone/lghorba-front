@@ -95,19 +95,18 @@ export default function CarsPage() {
             return (
               <Link key={car.id} href={`/cars/${car.id}`} className={styles.card}>
                 <div className={styles.photoWrapper}>
-                  <img
-                    src={`/assets/cars/${car.id}.jpg`}
-                    alt={car.name}
-                    className={styles.photo}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                      const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
-                      if (placeholder) placeholder.style.display = "flex";
-                    }}
-                  />
-                  <div className={styles.photoPlaceholder} style={{ display: "none" }}>
-                    <span>🚗</span>
-                  </div>
+                  {car.photo ? (
+                    <img
+                      src={`/next-api/cars/${car.id}/photo`}
+                      alt={car.name}
+                      className={styles.photo}
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
+                  ) : (
+                    <div className={styles.photoPlaceholder}>
+                      <span>🚗</span>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.cardBody}>
                   <h2 className={styles.carName}>{car.name}</h2>

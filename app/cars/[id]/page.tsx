@@ -67,6 +67,8 @@ export default function CarDetailPage() {
   const [showEdit, setShowEdit]     = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting]     = useState(false);
+  const [uploading, setUploading]   = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [lastConsumed, setLastConsumed] = useState<LastConsumed | null>(() => {
     if (typeof window === "undefined") return null;
@@ -169,6 +171,21 @@ export default function CarDetailPage() {
     }
   };
 
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !car) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("photo", file);
+    try {
+      const res = await fetch(`/next-api/cars/${car.id}/photo`, { method: "POST", body: formData });
+      if (res.ok) setCar(await res.json());
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleDelete = async () => {
     if (!car) return;
     setDeleting(true);
@@ -214,12 +231,31 @@ export default function CarDetailPage() {
       <Link href="/cars" className={styles.back}>← Back to Cars</Link>
 
       <div className={styles.header}>
-        <div className={styles.photoWrapper}>
-          {!imgError ? (
-            <img src={`/assets/cars/${car.id}.jpg`} alt={car.name} className={styles.photo} onError={() => setImgError(true)} />
+        <div
+          className={`${styles.photoWrapper} ${styles.photoUploadable}`}
+          onClick={() => fileInputRef.current?.click()}
+          title="Click to change photo"
+        >
+          {car.photo && !imgError ? (
+            <img
+              src={`/next-api/cars/${car.id}/photo`}
+              alt={car.name}
+              className={styles.photo}
+              onError={() => setImgError(true)}
+            />
           ) : (
             <div className={styles.photoPlaceholder}>🚗</div>
           )}
+          <div className={styles.photoOverlay}>
+            {uploading ? <span className={styles.uploadSpinner} /> : <span className={styles.cameraIcon}>📷</span>}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handlePhotoChange}
+          />
         </div>
         <div className={styles.info}>
           <h1 className={styles.carName}>{car.name}</h1>

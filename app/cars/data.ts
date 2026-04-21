@@ -4,4 +4,5 @@ export interface Car {
   immatriculation: string;
   phoneNumber: string;
   description?: string;
+  photo?: string | null;
 }
