@@ -40,6 +40,19 @@ function extractMapsUrl(text: string): string | null {
   return match ? match[0] : null;
 }
 
+function extractLatLng(url: string): { lat: number; lng: number } | null {
+  // @lat,lng,zoom (e.g. google.com/maps/@48.856,2.352,15z)
+  let m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  // ?q=lat,lng
+  m = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  // ll=lat,lng
+  m = url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  return null;
+}
+
 const POLL_INTERVAL = 3000;
 const RELEASE_THRESHOLD = 3;
 
@@ -265,16 +278,32 @@ export default function CarDetailPage() {
                 </p>
               )}
             </div>
-            {mapsUrl && (
-              <a
-                href={mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.mapsBtn}
-              >
-                Open in Maps
-              </a>
-            )}
+            {mapsUrl && (() => {
+              const coords = extractLatLng(mapsUrl);
+              if (coords) {
+                const { lat, lng } = coords;
+                const d = 0.005;
+                const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
+                const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+                return (
+                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapPreview}>
+                    <iframe
+                      src={embedUrl}
+                      className={styles.mapFrame}
+                      title="Car location map"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className={styles.mapOverlay}>Open in Maps →</span>
+                  </a>
+                );
+              }
+              return (
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapsBtn}>
+                  Open in Maps
+                </a>
+              );
+            })()}
           </>
         ) : (
           <p className={styles.noMessage}>No messages yet.</p>
