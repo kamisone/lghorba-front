@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
 
   response.cookies.set(COOKIE_NAME, access_token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    // secure: process.env.NODE_ENV === "production",
+    secure: false,
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
