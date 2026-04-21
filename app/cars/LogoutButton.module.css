@@ -1,0 +1,29 @@
+.bar {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid #211951;
+  background: transparent;
+  color: #211951;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: #211951;
+  color: #fff;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
