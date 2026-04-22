@@ -12,9 +12,10 @@ interface LastConsumed { inbound: SmsMessage | null; outbound: SmsMessage | null
 interface RentSession {
   id: string;
   carId: string;
-  status: "active" | "ended";
+  status: "active" | "pending_stop" | "ended";
   startedAt: string;
   endedAt?: string;
+  lastLocationRequestedAt?: string | null;
   positions?: RentPosition[];
 }
 
@@ -26,8 +27,6 @@ interface Props {
 }
 
 export default function RentTracker({ car, lastConsumed }: Props) {
-  const storageKey = `rent_session_${car.id}`;
-
   const [tracking,    setTracking]    = useState(false);
   const [sessionId,   setSessionId]   = useState<string | null>(null);
   const [positions,   setPositions]   = useState<RentPosition[]>([]);
@@ -35,19 +34,32 @@ export default function RentTracker({ car, lastConsumed }: Props) {
   const [viewSession, setViewSession] = useState<RentSession | null>(null);
   const [toggling,    setToggling]    = useState(false);
   const [nextIn,      setNextIn]      = useState(0);
+  const [confirming,  setConfirming]  = useState(false);
 
   const intervalRef       = useRef<ReturnType<typeof setInterval> | null>(null);
+  const firstTimeoutRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastSavedMsgIdRef = useRef<number | null>(null);
+  const sessionIdRef        = useRef<string | null>(null);
+  const lastLocationSentRef = useRef<number>(0);
+  const lastSavedMsgIdRef   = useRef<number | null>(null);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   const sendLocation = useCallback(async () => {
+    lastLocationSentRef.current = Date.now();
     await fetch("/next-api/sms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ to: car.phoneNumber, message: "location" }),
     }).catch(() => {});
+    const sId = sessionIdRef.current;
+    if (sId) {
+      fetch(`/next-api/rent-sessions/${sId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lastLocationRequestedAt: new Date().toISOString() }),
+      }).catch(() => {});
+    }
   }, [car.phoneNumber]);
 
   const savePosition = useCallback(async (sId: string, inbound: SmsMessage) => {
@@ -69,11 +81,11 @@ export default function RentTracker({ car, lastConsumed }: Props) {
     } catch { /* silent */ }
   }, []);
 
-  const startCountdown = useCallback(() => {
-    setNextIn(INTERVAL_MS / 1000);
+  const startCountdown = useCallback((seconds = INTERVAL_MS / 1000) => {
+    setNextIn(seconds);
     if (countdownRef.current) clearInterval(countdownRef.current);
     countdownRef.current = setInterval(() => {
-      setNextIn((prev) => (prev <= 1 ? INTERVAL_MS / 1000 : prev - 1));
+      setNextIn((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
   }, []);
 
@@ -82,36 +94,65 @@ export default function RentTracker({ car, lastConsumed }: Props) {
     setNextIn(0);
   }, []);
 
-  // ── Load history on mount ─────────────────────────────────────────────────
+  // ── Restore active session + load history on mount ────────────────────────
 
   useEffect(() => {
-    // Restore active session from storage
-    const savedId = localStorage.getItem(storageKey);
-    if (savedId) {
-      fetch(`/next-api/rent-sessions/${savedId}`, { cache: "no-store" })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((session: RentSession | null) => {
-          if (session?.status === "active") {
-            setSessionId(savedId);
-            setPositions(session.positions ?? []);
-            setTracking(true);
-            intervalRef.current = setInterval(() => {
-              sendLocation();
-              startCountdown();
-            }, INTERVAL_MS);
-            startCountdown();
-          } else {
-            localStorage.removeItem(storageKey);
-          }
-        })
-        .catch(() => localStorage.removeItem(storageKey));
-    }
+    let cancelled = false;
 
-    // Load past sessions
-    fetch(`/next-api/rent-sessions?carId=${car.id}`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data: RentSession[]) => setSessions(data.filter((s) => s.status === "ended")))
-      .catch(() => {});
+    (async () => {
+      try {
+        const r = await fetch(`/next-api/rent-sessions?carId=${car.id}`, { cache: "no-store" });
+        if (!r.ok || cancelled) return;
+        const data: RentSession[] = await r.json();
+
+        const live = data.find((s) => s.status === "active" || s.status === "pending_stop") ?? null;
+        if (!cancelled) setSessions(data.filter((s) => s.status === "ended"));
+        if (!live || cancelled) return;
+
+        let restoredPositions: RentPosition[] = [];
+        try {
+          const posRes = await fetch(`/next-api/rent-sessions/${live.id}/positions`, { cache: "no-store" });
+          if (posRes.ok && !cancelled) restoredPositions = await posRes.json();
+        } catch { /* silent */ }
+
+        if (cancelled) return;
+        sessionIdRef.current = live.id;
+        setSessionId(live.id);
+        setPositions(restoredPositions);
+
+        lastLocationSentRef.current = live.lastLocationRequestedAt
+          ? new Date(live.lastLocationRequestedAt).getTime()
+          : 0;
+
+        if (live.status === "pending_stop") {
+          const elapsed   = lastLocationSentRef.current ? Date.now() - lastLocationSentRef.current : INTERVAL_MS;
+          const remaining = Math.max(0, INTERVAL_MS - elapsed);
+          setNextIn(Math.floor(remaining / 1000));
+          setConfirming(true);
+          return;
+        }
+
+        setTracking(true);
+
+        const elapsed   = lastLocationSentRef.current ? Date.now() - lastLocationSentRef.current : INTERVAL_MS;
+        const remaining = Math.max(0, INTERVAL_MS - elapsed);
+
+        if (remaining === 0) {
+          sendLocation();
+          startCountdown();
+          intervalRef.current = setInterval(() => { sendLocation(); startCountdown(); }, INTERVAL_MS);
+        } else {
+          startCountdown(Math.floor(remaining / 1000));
+          firstTimeoutRef.current = setTimeout(() => {
+            sendLocation();
+            startCountdown();
+            intervalRef.current = setInterval(() => { sendLocation(); startCountdown(); }, INTERVAL_MS);
+          }, remaining);
+        }
+      } catch { /* silent */ }
+    })();
+
+    return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [car.id]);
 
@@ -137,7 +178,7 @@ export default function RentTracker({ car, lastConsumed }: Props) {
       });
       if (!res.ok) return;
       const session: RentSession = await res.json();
-      localStorage.setItem(storageKey, session.id);
+      sessionIdRef.current = session.id;
       setSessionId(session.id);
       setPositions([]);
       lastSavedMsgIdRef.current = null;
@@ -153,9 +194,53 @@ export default function RentTracker({ car, lastConsumed }: Props) {
     }
   };
 
+  const requestStop = () => {
+    if (firstTimeoutRef.current) clearTimeout(firstTimeoutRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current); // freeze display, keep nextIn
+    setTracking(false);
+    setConfirming(true);
+    const sId = sessionIdRef.current;
+    if (sId) {
+      fetch(`/next-api/rent-sessions/${sId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "pending_stop" }),
+      }).catch(() => {});
+    }
+  };
+
+  const resumeTracking = () => {
+    const sId = sessionIdRef.current;
+    if (sId) {
+      fetch(`/next-api/rent-sessions/${sId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      }).catch(() => {});
+    }
+    setConfirming(false);
+    setTracking(true);
+
+    if (nextIn === 0) {
+      sendLocation();
+      startCountdown();
+      intervalRef.current = setInterval(() => { sendLocation(); startCountdown(); }, INTERVAL_MS);
+    } else {
+      startCountdown(nextIn);
+      firstTimeoutRef.current = setTimeout(() => {
+        sendLocation();
+        startCountdown();
+        intervalRef.current = setInterval(() => { sendLocation(); startCountdown(); }, INTERVAL_MS);
+      }, nextIn * 1000);
+    }
+  };
+
   const stopTracking = async () => {
+    setConfirming(false);
     setToggling(true);
     try {
+      if (firstTimeoutRef.current) clearTimeout(firstTimeoutRef.current);
       if (intervalRef.current) clearInterval(intervalRef.current);
       stopCountdown();
       if (sessionId) {
@@ -169,7 +254,7 @@ export default function RentTracker({ car, lastConsumed }: Props) {
           setSessions((prev) => [ended, ...prev]);
         }
       }
-      localStorage.removeItem(storageKey);
+      sessionIdRef.current = null;
       setTracking(false);
       setSessionId(null);
       setPositions([]);
@@ -216,14 +301,25 @@ export default function RentTracker({ car, lastConsumed }: Props) {
           </div>
         </div>
 
-        <button
-          className={`${styles.toggle} ${tracking ? styles.toggleOn : ""} ${toggling ? styles.toggleDisabled : ""}`}
-          onClick={tracking ? stopTracking : startTracking}
-          disabled={toggling}
-          aria-label={tracking ? "Stop rent tracking" : "Start rent tracking"}
-        >
-          <span className={styles.thumb} />
-        </button>
+        {confirming ? (
+          <div className={styles.confirmRow}>
+            <button className={`${styles.confirmBtn} ${styles.confirmEnd}`} onClick={stopTracking}>
+              End rent
+            </button>
+            <button className={`${styles.confirmBtn} ${styles.confirmPause}`} onClick={resumeTracking}>
+              Continue
+            </button>
+          </div>
+        ) : (
+          <button
+            className={`${styles.toggle} ${tracking ? styles.toggleOn : ""} ${toggling ? styles.toggleDisabled : ""}`}
+            onClick={tracking ? requestStop : startTracking}
+            disabled={toggling}
+            aria-label={tracking ? "Stop rent tracking" : "Start rent tracking"}
+          >
+            <span className={styles.thumb} />
+          </button>
+        )}
       </div>
 
       {/* ── Active session status ── */}

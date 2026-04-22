@@ -81,6 +81,42 @@
   transform: translateX(21px);
 }
 
+/* ── Inline stop confirmation ── */
+.confirmRow {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.confirmBtn {
+  padding: 0.28rem 0.65rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.confirmEnd {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.confirmEnd:hover {
+  background: #fecaca;
+}
+
+.confirmPause {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.confirmPause:hover {
+  background: #e2e8f0;
+}
+
 /* ── Active badge ── */
 .activeBadge {
   display: flex;
