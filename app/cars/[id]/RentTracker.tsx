@@ -38,9 +38,7 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
   const [confirming,  setConfirming]  = useState(false);
   const [restored,    setRestored]    = useState(false);
 
-  const intervalRef       = useRef<ReturnType<typeof setInterval> | null>(null);
-  const firstTimeoutRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownRef        = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef        = useRef<string | null>(null);
   const lastLocationSentRef = useRef<number>(0);
   const lastSavedMsgIdRef   = useRef<number | null>(null);
@@ -82,8 +80,11 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
       if (res.ok) {
         const pos: RentPosition = await res.json();
         setPositions((prev) => [...prev, pos]);
+        // Backend just completed a location exchange — reset the countdown
+        startCountdown();
       }
     } catch { /* silent */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startCountdown = useCallback((seconds = INTERVAL_MS / 1000) => {
@@ -130,31 +131,18 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
           ? new Date(live.lastLocationRequestedAt).getTime()
           : 0;
 
+        const elapsed   = lastLocationSentRef.current ? Date.now() - lastLocationSentRef.current : INTERVAL_MS;
+        const remaining = Math.max(0, INTERVAL_MS - elapsed);
+
         if (live.status === "pending_stop") {
-          const elapsed   = lastLocationSentRef.current ? Date.now() - lastLocationSentRef.current : INTERVAL_MS;
-          const remaining = Math.max(0, INTERVAL_MS - elapsed);
           setNextIn(Math.floor(remaining / 1000));
           setConfirming(true);
           return;
         }
 
         setTracking(true);
-
-        const elapsed   = lastLocationSentRef.current ? Date.now() - lastLocationSentRef.current : INTERVAL_MS;
-        const remaining = Math.max(0, INTERVAL_MS - elapsed);
-
-        if (remaining === 0) {
-          sendLocation();
-          startCountdown();
-          intervalRef.current = setInterval(() => { sendLocation(); startCountdown(); }, INTERVAL_MS);
-        } else {
-          startCountdown(Math.floor(remaining / 1000));
-          firstTimeoutRef.current = setTimeout(() => {
-            sendLocation();
-            startCountdown();
-            intervalRef.current = setInterval(() => { sendLocation(); startCountdown(); }, INTERVAL_MS);
-          }, remaining);
-        }
+        // Countdown display only — backend cron drives actual sends
+        startCountdown(Math.floor(remaining / 1000));
       } catch { /* silent */ }
       if (!cancelled) setRestored(true);
     })();
@@ -163,7 +151,7 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [car.id]);
 
-  // ── Auto-start when a scheduled rent period is active ─────────────────────
+  // ── Auto-start when a scheduled rent period is active ────────────────────
 
   useEffect(() => {
     if (!isScheduleActive || !restored || tracking || confirming || sessionId !== null) return;
@@ -198,20 +186,14 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
       setPositions([]);
       lastSavedMsgIdRef.current = null;
       setTracking(true);
-      sendLocation();
+      sendLocation();   // initial send for immediate UX; backend cron handles repeats
       startCountdown();
-      intervalRef.current = setInterval(() => {
-        sendLocation();
-        startCountdown();
-      }, INTERVAL_MS);
     } finally {
       setToggling(false);
     }
   };
 
   const requestStop = () => {
-    if (firstTimeoutRef.current) clearTimeout(firstTimeoutRef.current);
-    if (intervalRef.current) clearInterval(intervalRef.current);
     if (countdownRef.current) clearInterval(countdownRef.current); // freeze display, keep nextIn
     setTracking(false);
     setConfirming(true);
@@ -236,18 +218,11 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
     }
     setConfirming(false);
     setTracking(true);
-
     if (nextIn === 0) {
-      sendLocation();
+      sendLocation();   // overdue — send now, backend will pick up from nextLocationAt
       startCountdown();
-      intervalRef.current = setInterval(() => { sendLocation(); startCountdown(); }, INTERVAL_MS);
     } else {
-      startCountdown(nextIn);
-      firstTimeoutRef.current = setTimeout(() => {
-        sendLocation();
-        startCountdown();
-        intervalRef.current = setInterval(() => { sendLocation(); startCountdown(); }, INTERVAL_MS);
-      }, nextIn * 1000);
+      startCountdown(nextIn); // resume from frozen value
     }
   };
 
@@ -255,8 +230,6 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
     setConfirming(false);
     setToggling(true);
     try {
-      if (firstTimeoutRef.current) clearTimeout(firstTimeoutRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
       stopCountdown();
       if (sessionId) {
         const res = await fetch(`/next-api/rent-sessions/${sessionId}`, {
