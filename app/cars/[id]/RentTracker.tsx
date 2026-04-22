@@ -42,6 +42,9 @@ export default function RentTracker({ car, lastConsumed }: Props) {
   const sessionIdRef        = useRef<string | null>(null);
   const lastLocationSentRef = useRef<number>(0);
   const lastSavedMsgIdRef   = useRef<number | null>(null);
+  const lastConsumedRef     = useRef(lastConsumed);
+
+  lastConsumedRef.current = lastConsumed;
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -117,6 +120,7 @@ export default function RentTracker({ car, lastConsumed }: Props) {
 
         if (cancelled) return;
         sessionIdRef.current = live.id;
+        lastSavedMsgIdRef.current = lastConsumedRef.current?.inbound?.id ?? null;
         setSessionId(live.id);
         setPositions(restoredPositions);
 
