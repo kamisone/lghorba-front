@@ -337,6 +337,11 @@ export default function RentTracker({ car, lastConsumed }: Props) {
       {/* ── Map ── */}
       {mapPositions.length > 0 && (
         <div className={styles.mapWrap}>
+          <div className={styles.mapRange}>
+            <span className={styles.mapRangeStart}>● {1}</span>
+            <span className={styles.mapRangeDash} />
+            <span className={styles.mapRangeEnd}>● {mapPositions.length}</span>
+          </div>
           <RentMap positions={mapPositions} />
         </div>
       )}
