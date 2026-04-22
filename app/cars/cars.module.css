@@ -115,11 +115,33 @@
   padding: 1rem 1.2rem 1.3rem;
 }
 
+.carNameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.3rem;
+  flex-wrap: wrap;
+}
+
 .carName {
   font-size: 1.1rem;
   font-weight: 700;
   color: #211951;
-  margin: 0 0 0.3rem;
+  margin: 0;
+}
+
+.rentingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 .immat {

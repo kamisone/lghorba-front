@@ -1,0 +1,251 @@
+.section {
+  margin-top: 2rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 1rem 1.2rem 1.2rem;
+}
+
+/* ── Header ── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.sectionIcon { font-size: 1.2rem; line-height: 1; }
+
+.sectionLabel {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* ── Calendar nav ── */
+.calWrap { margin-bottom: 1rem; }
+
+.calNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.navBtn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: none;
+  color: #64748b;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+  line-height: 1;
+}
+.navBtn:hover { border-color: #407bff; color: #407bff; }
+
+.monthLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* ── Grid ── */
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dayHeader {
+  text-align: center;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  padding-bottom: 0.3rem;
+}
+
+.day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.dayToday {
+  font-weight: 800;
+  color: #407bff;
+  outline: 1.5px solid #407bff;
+  outline-offset: -1.5px;
+}
+
+.dayRented {
+  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: 0;
+}
+
+.dayStart { border-radius: 6px 0 0 6px; }
+.dayEnd   { border-radius: 0 6px 6px 0; }
+.dayStart.dayEnd { border-radius: 6px; }
+
+/* ── Schedule list ── */
+.scheduleList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.scheduleItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #e8ecf0;
+  background: #fafafa;
+}
+
+.scheduleNow {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.scheduleFuture {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.scheduleStatus { font-size: 0.88rem; flex-shrink: 0; }
+
+.scheduleDates {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.scheduleArrow { color: #94a3b8; font-size: 0.7rem; }
+
+.deleteBtn {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.deleteBtn:hover:not(:disabled) { border-color: #ef4444; color: #ef4444; }
+
+/* ── Add form ── */
+.addBtn {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 8px;
+  background: none;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.addBtn:hover { border-color: #407bff; color: #407bff; }
+
+.addForm {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #f8faff;
+}
+
+.dateRow {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.dateField {
+  flex: 1;
+  min-width: 155px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dateLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dateInput {
+  padding: 0.38rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: #334155;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.dateInput:focus { border-color: #407bff; }
+
+.addActions { display: flex; gap: 0.5rem; }
+
+.saveBtn {
+  flex: 1;
+  padding: 0.4rem;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cancelBtn {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.cancelBtn:hover { border-color: #94a3b8; }

@@ -5,4 +5,5 @@ export interface Car {
   phoneNumber: string;
   description?: string;
   photo?: string | null;
+  isCurrentlyRented?: boolean;
 }

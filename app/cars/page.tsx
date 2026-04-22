@@ -109,7 +109,12 @@ export default function CarsPage() {
                   )}
                 </div>
                 <div className={styles.cardBody}>
-                  <h2 className={styles.carName}>{car.name}</h2>
+                  <div className={styles.carNameRow}>
+                    <h2 className={styles.carName}>{car.name}</h2>
+                    {car.isCurrentlyRented && (
+                      <span className={styles.rentingBadge}>🔑 Renting</span>
+                    )}
+                  </div>
                   <p className={styles.immat}>{car.immatriculation}</p>
                   {msg?.inbound ? (
                     <div className={styles.lastMsg}>

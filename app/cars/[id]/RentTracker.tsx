@@ -24,9 +24,10 @@ const INTERVAL_MS = 30 * 60 * 1000;
 interface Props {
   car: Car;
   lastConsumed: LastConsumed | null;
+  isScheduleActive?: boolean;
 }
 
-export default function RentTracker({ car, lastConsumed }: Props) {
+export default function RentTracker({ car, lastConsumed, isScheduleActive }: Props) {
   const [tracking,    setTracking]    = useState(false);
   const [sessionId,   setSessionId]   = useState<string | null>(null);
   const [positions,   setPositions]   = useState<RentPosition[]>([]);
@@ -35,6 +36,7 @@ export default function RentTracker({ car, lastConsumed }: Props) {
   const [toggling,    setToggling]    = useState(false);
   const [nextIn,      setNextIn]      = useState(0);
   const [confirming,  setConfirming]  = useState(false);
+  const [restored,    setRestored]    = useState(false);
 
   const intervalRef       = useRef<ReturnType<typeof setInterval> | null>(null);
   const firstTimeoutRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -154,11 +156,20 @@ export default function RentTracker({ car, lastConsumed }: Props) {
           }, remaining);
         }
       } catch { /* silent */ }
+      if (!cancelled) setRestored(true);
     })();
 
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [car.id]);
+
+  // ── Auto-start when a scheduled rent period is active ─────────────────────
+
+  useEffect(() => {
+    if (!isScheduleActive || !restored || tracking || confirming || sessionId !== null) return;
+    startTracking();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isScheduleActive, restored]);
 
   // ── Watch for new location responses ─────────────────────────────────────
 
