@@ -268,6 +268,7 @@ export default function CarDetailPage() {
       </div>
 
       <h2 className={styles.sectionTitle}>Actions</h2>
+      <div className={styles.actionsCard}>
       <div className={styles.actionsGrid}>
         {ACTIONS.map((action) => {
           const isSending = sendingAction === action.key;
@@ -297,6 +298,7 @@ export default function CarDetailPage() {
             </button>
           );
         })}
+      </div>
       </div>
 
       <h2 className={styles.sectionTitle}>
