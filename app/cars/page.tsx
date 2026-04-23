@@ -78,7 +78,7 @@ export default function CarsPage() {
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
-        <h1 className={styles.title}>My Cars</h1>
+        <h1 className={styles.title}>Rental cars</h1>
         <button className={styles.addBtn} onClick={() => setShowForm(true)}>+ Add Car</button>
       </div>
 

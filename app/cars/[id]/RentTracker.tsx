@@ -19,7 +19,7 @@ interface RentSession {
   positions?: RentPosition[];
 }
 
-const INTERVAL_MS = 2 * 60 * 1000;
+const INTERVAL_MS = 15 * 60 * 1000;
 
 interface Props {
   car: Car;
