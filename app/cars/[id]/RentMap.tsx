@@ -13,9 +13,10 @@ export interface RentPosition {
 interface Props {
   positions: RentPosition[];
   height?: number;
+  fill?: boolean;
 }
 
-export default function RentMap({ positions, height = 280 }: Props) {
+export default function RentMap({ positions, height = 280, fill = false }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef       = useRef<any>(null);
 
@@ -86,7 +87,12 @@ export default function RentMap({ positions, height = 280 }: Props) {
   return (
     <div
       ref={containerRef}
-      style={{ width: "100%", height: `${height}px`, borderRadius: "10px", overflow: "hidden" }}
+      style={{
+        width: "100%",
+        height: fill ? "100%" : `${height}px`,
+        borderRadius: fill ? 0 : "10px",
+        overflow: "hidden",
+      }}
     />
   );
 }

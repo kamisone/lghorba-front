@@ -146,11 +146,18 @@
   padding: 0 1.2rem 1.2rem;
 }
 
-.mapRange {
+.mapHeader {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.55rem;
+}
+
+.mapRange {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -168,6 +175,69 @@
 .mapRangeEnd {
   color: #dc2626;
   white-space: nowrap;
+}
+
+.mapExpandBtn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #64748b;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.mapExpandBtn:hover { border-color: #407bff; color: #407bff; }
+
+/* ── Fullscreen overlay ── */
+.mapFullscreenOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: #0f0f1e;
+  display: flex;
+  flex-direction: column;
+}
+
+.mapFullscreenBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.2rem;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  flex-shrink: 0;
+}
+
+.mapFullscreenLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.mapFullscreenClose {
+  padding: 0.35rem 0.85rem;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mapFullscreenClose:hover { background: rgba(255, 255, 255, 0.2); }
+
+.mapFullscreenBody {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
 }
 
 /* ── History ── */

@@ -69,7 +69,8 @@ export default function CarDetailPage() {
   const [sendError, setSendError]           = useState<ActionKey | null>(null);
   const [releaseClicks, setReleaseClicks]   = useState(0);
   const [unlockAvailable, setUnlockAvailable] = useState(false);
-  const [imgError, setImgError]             = useState(false);
+  const [imgError, setImgError]                         = useState(false);
+  const [locationMapFullscreen, setLocationMapFullscreen] = useState(false);
 
   const unlockTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inboundIdAtSendRef = useRef<number | null>(
@@ -317,20 +318,30 @@ export default function CarDetailPage() {
             </div>
             {mapsUrl && (() => {
               const coords = extractLatLng(mapsUrl);
-              if (coords) {
-                const { lat, lng } = coords;
-                const d = 0.005;
-                const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
-                const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
-                return (
-                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapPreview}>
-                    <iframe src={embedUrl} className={styles.mapFrame} title="Car location map" loading="lazy" referrerPolicy="no-referrer" />
-                    <span className={styles.mapOverlay}>Open in Maps →</span>
-                  </a>
-                );
-              }
-              return (
+              if (!coords) return (
                 <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapsBtn}>Open in Maps</a>
+              );
+              const { lat, lng } = coords;
+              const d = 0.005;
+              const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
+              const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+              return (
+                <>
+                  <div className={styles.mapPreview}>
+                    <iframe src={embedUrl} className={styles.mapFrame} title="Car location map" loading="lazy" referrerPolicy="no-referrer" />
+                    <button className={styles.mapExpandBtn} onClick={() => setLocationMapFullscreen(true)} title="Fullscreen">⛶</button>
+                  </div>
+                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapsBtn}>Open in Maps →</a>
+                  {locationMapFullscreen && (
+                    <div className={styles.mapFullscreenOverlay}>
+                      <div className={styles.mapFullscreenBar}>
+                        <span className={styles.mapFullscreenLabel}>Location</span>
+                        <button className={styles.mapFullscreenClose} onClick={() => setLocationMapFullscreen(false)}>✕ Close</button>
+                      </div>
+                      <iframe src={embedUrl} className={styles.mapFullscreenFrame} title="Car location map fullscreen" referrerPolicy="no-referrer" />
+                    </div>
+                  )}
+                </>
               );
             })()}
           </>

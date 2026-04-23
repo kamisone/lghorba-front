@@ -28,15 +28,16 @@ interface Props {
 }
 
 export default function RentTracker({ car, lastConsumed, isScheduleActive }: Props) {
-  const [tracking,    setTracking]    = useState(false);
-  const [sessionId,   setSessionId]   = useState<string | null>(null);
-  const [positions,   setPositions]   = useState<RentPosition[]>([]);
-  const [sessions,    setSessions]    = useState<RentSession[]>([]);
-  const [viewSession, setViewSession] = useState<RentSession | null>(null);
-  const [toggling,    setToggling]    = useState(false);
-  const [nextIn,      setNextIn]      = useState(0);
-  const [confirming,  setConfirming]  = useState(false);
-  const [restored,    setRestored]    = useState(false);
+  const [tracking,      setTracking]      = useState(false);
+  const [sessionId,     setSessionId]     = useState<string | null>(null);
+  const [positions,     setPositions]     = useState<RentPosition[]>([]);
+  const [sessions,      setSessions]      = useState<RentSession[]>([]);
+  const [viewSession,   setViewSession]   = useState<RentSession | null>(null);
+  const [toggling,      setToggling]      = useState(false);
+  const [nextIn,        setNextIn]        = useState(0);
+  const [confirming,    setConfirming]    = useState(false);
+  const [restored,      setRestored]      = useState(false);
+  const [mapFullscreen, setMapFullscreen] = useState(false);
 
   const countdownRef        = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef        = useRef<string | null>(null);
@@ -328,14 +329,30 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
 
       {/* ── Map ── */}
       {mapPositions.length > 0 && (
-        <div className={styles.mapWrap}>
-          <div className={styles.mapRange}>
-            <span className={styles.mapRangeStart}>● {1}</span>
-            <span className={styles.mapRangeDash} />
-            <span className={styles.mapRangeEnd}>● {mapPositions.length}</span>
+        <>
+          <div className={styles.mapWrap}>
+            <div className={styles.mapHeader}>
+              <div className={styles.mapRange}>
+                <span className={styles.mapRangeStart}>● 1</span>
+                <span className={styles.mapRangeDash} />
+                <span className={styles.mapRangeEnd}>● {mapPositions.length}</span>
+              </div>
+              <button className={styles.mapExpandBtn} onClick={() => setMapFullscreen(true)} title="Fullscreen">⛶</button>
+            </div>
+            <RentMap positions={mapPositions} />
           </div>
-          <RentMap positions={mapPositions} />
-        </div>
+          {mapFullscreen && (
+            <div className={styles.mapFullscreenOverlay}>
+              <div className={styles.mapFullscreenBar}>
+                <span className={styles.mapFullscreenLabel}>{mapPositions.length} position{mapPositions.length !== 1 ? "s" : ""}</span>
+                <button className={styles.mapFullscreenClose} onClick={() => setMapFullscreen(false)}>✕ Close</button>
+              </div>
+              <div className={styles.mapFullscreenBody}>
+                <RentMap positions={mapPositions} fill />
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* ── History ── */}
