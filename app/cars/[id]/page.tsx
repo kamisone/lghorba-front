@@ -5,8 +5,6 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import type { Car } from "../data";
 import CarFormModal from "../CarFormModal";
-import RentTracker from "./RentTracker";
-import RentCalendar, { type RentSchedule } from "./RentCalendar";
 import styles from "./car-detail.module.css";
 import { extractMapsUrl, extractLatLng } from "./mapUtils";
 
@@ -50,7 +48,6 @@ export default function CarDetailPage() {
   const inboundIdAtSendKey = `car_inbound_id_at_send_${id}`;
 
   const [car, setCar]               = useState<Car | null>(null);
-  const [schedules, setSchedules]   = useState<RentSchedule[]>([]);
   const [carLoading, setCarLoading] = useState(true);
   const [showEdit, setShowEdit]     = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -80,16 +77,11 @@ export default function CarDetailPage() {
   );
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Fetch car + schedules on mount
   useEffect(() => {
     fetch(`/next-api/cars/${id}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setCar(data))
       .finally(() => setCarLoading(false));
-    fetch(`/next-api/cars/${id}/rent-schedules`, { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : []))
-      .then(setSchedules)
-      .catch(() => {});
   }, [id]);
 
   const clearWaiting = useCallback(() => {
@@ -347,15 +339,16 @@ export default function CarDetailPage() {
         )}
       </div>
 
-      <RentTracker
-        car={car}
-        lastConsumed={lastConsumed}
-        isScheduleActive={schedules.some(s => {
-          const now = Date.now();
-          return new Date(s.fromDate).getTime() <= now && now <= new Date(s.toDate).getTime();
-        })}
-      />
-      <RentCalendar car={car} onScheduleChange={setSchedules} />
+      <Link href={`/cars/${car.id}/rent`} className={styles.rentCard}>
+        <div className={styles.rentCardLeft}>
+          <span className={styles.rentCardIcon}>📅</span>
+          <div>
+            <p className={styles.rentCardTitle}>Rent Management</p>
+            <p className={styles.rentCardSub}>Schedules · Tracking · Positions</p>
+          </div>
+        </div>
+        <span className={styles.rentCardArrow}>→</span>
+      </Link>
 
       {showEdit && (
         <CarFormModal

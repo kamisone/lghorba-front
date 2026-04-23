@@ -7,6 +7,19 @@ function bearer(req: NextRequest): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: { id: string; scheduleId: string } }) {
+  try {
+    const body = await req.json();
+    const res = await fetch(
+      `${BACKEND_URL}/api/cars/${params.id}/rent-schedules/${params.scheduleId}`,
+      { method: "PATCH", headers: { "Content-Type": "application/json", ...bearer(req) }, body: JSON.stringify(body) },
+    );
+    return NextResponse.json(await res.json(), { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
+  }
+}
+
 export async function DELETE(req: NextRequest, { params }: { params: { id: string; scheduleId: string } }) {
   try {
     const res = await fetch(

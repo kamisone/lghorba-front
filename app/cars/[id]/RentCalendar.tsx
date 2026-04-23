@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Car } from "../data";
+import RentScheduleModal from "./RentScheduleModal";
 import styles from "./RentCalendar.module.css";
 
 export interface RentSchedule {
@@ -9,6 +10,10 @@ export interface RentSchedule {
   carId: string;
   fromDate: string;
   toDate: string;
+  guestName?: string | null;
+  guestNumber?: string | null;
+  reservationNumber?: string | null;
+  totalEarning?: number | null;
 }
 
 interface Props {
@@ -27,24 +32,28 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 
 function getMonthGrid(year: number, month: number): (Date | null)[] {
-  const first   = new Date(year, month, 1);
-  const last    = new Date(year, month + 1, 0);
-  const padStart = (first.getDay() + 6) % 7; // Mon=0
+  const first    = new Date(year, month, 1);
+  const last     = new Date(year, month + 1, 0);
+  const padStart = (first.getDay() + 6) % 7;
   const cells: (Date | null)[] = Array(padStart).fill(null);
   for (let d = 1; d <= last.getDate(); d++) cells.push(new Date(year, month, d));
   while (cells.length % 7 !== 0) cells.push(null);
   return cells;
 }
 
+function computeForfaitKm(fromDate: string, toDate: string): number {
+  const ms = new Date(toDate).getTime() - new Date(fromDate).getTime();
+  return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24))) * 200;
+}
+
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 export default function RentCalendar({ car, onScheduleChange }: Props) {
-  const [schedules, setSchedules] = useState<RentSchedule[]>([]);
-  const [viewDate,  setViewDate]  = useState(() => new Date());
-  const [adding,    setAdding]    = useState(false);
-  const [saving,    setSaving]    = useState(false);
-  const [form,      setForm]      = useState({ from: "", to: "" });
-  const [deleting,  setDeleting]  = useState<string | null>(null);
+  const [schedules,       setSchedules]       = useState<RentSchedule[]>([]);
+  const [viewDate,        setViewDate]        = useState(() => new Date());
+  const [deleting,        setDeleting]        = useState<string | null>(null);
+  const [showModal,       setShowModal]       = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<RentSchedule | null>(null);
 
   const today = startOfDay(new Date());
 
@@ -60,24 +69,15 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
       .catch(() => {});
   }, [car.id, notify]);
 
-  const addSchedule = async () => {
-    if (!form.from || !form.to) return;
-    setSaving(true);
-    try {
-      const res = await fetch(`/next-api/cars/${car.id}/rent-schedules`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fromDate: new Date(form.from).toISOString(), toDate: new Date(form.to).toISOString() }),
-      });
-      if (res.ok) {
-        const s: RentSchedule = await res.json();
-        notify([...schedules, s]);
-        setForm({ from: "", to: "" });
-        setAdding(false);
-      }
-    } finally {
-      setSaving(false);
-    }
+  const openAdd  = () => { setEditingSchedule(null); setShowModal(true); };
+  const openEdit = (s: RentSchedule) => { setEditingSchedule(s); setShowModal(true); };
+
+  const handleSaved = (saved: RentSchedule) => {
+    notify(editingSchedule
+      ? schedules.map(s => s.id === saved.id ? saved : s)
+      : [...schedules, saved]
+    );
+    setShowModal(false);
   };
 
   const deleteSchedule = async (id: string) => {
@@ -90,7 +90,7 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
     }
   };
 
-  // ── Calendar helpers ─────────────────────────────────────────────────────
+  // ── Calendar helpers ──────────────────────────────────────────────────────
 
   const getScheduleForDay = (date: Date): RentSchedule | undefined => {
     const d = date.getTime();
@@ -104,10 +104,9 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
   const isRangeEdge = (date: Date, which: "from" | "to") =>
     schedules.some(s => isSameDay(date, startOfDay(new Date(s[which === "from" ? "fromDate" : "toDate"]))));
 
-  const year   = viewDate.getFullYear();
-  const month  = viewDate.getMonth();
-  const cells  = getMonthGrid(year, month);
-
+  const year       = viewDate.getFullYear();
+  const month      = viewDate.getMonth();
+  const cells      = getMonthGrid(year, month);
   const monthLabel = viewDate.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
   // ── Format helpers ────────────────────────────────────────────────────────
@@ -142,10 +141,10 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
           {DAYS.map(d => <span key={d} className={styles.dayHeader}>{d}</span>)}
           {cells.map((date, i) => {
             if (!date) return <span key={i} />;
-            const inRange  = !!getScheduleForDay(date);
-            const isStart  = isRangeEdge(date, "from");
-            const isEnd    = isRangeEdge(date, "to");
-            const isT      = isSameDay(date, today);
+            const inRange = !!getScheduleForDay(date);
+            const isStart = isRangeEdge(date, "from");
+            const isEnd   = isRangeEdge(date, "to");
+            const isT     = isSameDay(date, today);
             return (
               <span
                 key={i}
@@ -167,79 +166,62 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
       {/* ── Schedule list ── */}
       {sorted.length > 0 && (
         <div className={styles.scheduleList}>
-          {sorted.map(s => (
-            <div
-              key={s.id}
-              className={[
-                styles.scheduleItem,
-                isActive(s) ? styles.scheduleNow    : "",
-                isFuture(s) ? styles.scheduleFuture : "",
-              ].filter(Boolean).join(" ")}
-            >
-              <span className={styles.scheduleStatus}>
-                {isActive(s) ? "🔑" : isFuture(s) ? "🗓" : "✓"}
-              </span>
-              <div className={styles.scheduleDates}>
-                <span>{fmtDT(s.fromDate)}</span>
-                <span className={styles.scheduleArrow}>⟶</span>
-                <span>{fmtDT(s.toDate)}</span>
-              </div>
-              <button
-                className={styles.deleteBtn}
-                onClick={() => deleteSchedule(s.id)}
-                disabled={deleting === s.id}
-                aria-label="Delete schedule"
+          {sorted.map(s => {
+            const forfaitKm = computeForfaitKm(s.fromDate, s.toDate);
+            return (
+              <div
+                key={s.id}
+                className={[
+                  styles.scheduleItem,
+                  isActive(s) ? styles.scheduleNow    : "",
+                  isFuture(s) ? styles.scheduleFuture : "",
+                ].filter(Boolean).join(" ")}
               >
-                {deleting === s.id ? "…" : "×"}
-              </button>
-            </div>
-          ))}
+                <div className={styles.scheduleMain}>
+                  <span className={styles.scheduleStatus}>
+                    {isActive(s) ? "🔑" : isFuture(s) ? "🗓" : "✓"}
+                  </span>
+                  <div className={styles.scheduleDates}>
+                    <span>{fmtDT(s.fromDate)}</span>
+                    <span className={styles.scheduleArrow}>⟶</span>
+                    <span>{fmtDT(s.toDate)}</span>
+                  </div>
+                  <div className={styles.scheduleItemActions}>
+                    <button className={styles.editBtn} onClick={() => openEdit(s)} aria-label="Edit">✏</button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => deleteSchedule(s.id)}
+                      disabled={deleting === s.id}
+                      aria-label="Delete"
+                    >
+                      {deleting === s.id ? "…" : "×"}
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.scheduleInfo}>
+                  {s.guestName       && <span className={styles.infoPill}>👤 {s.guestName}</span>}
+                  {s.guestNumber     && <span className={styles.infoPill}>📞 {s.guestNumber}</span>}
+                  {s.reservationNumber && <span className={styles.infoPill}>📋 {s.reservationNumber}</span>}
+                  <span className={styles.infoPill}>📏 {forfaitKm.toLocaleString()} km</span>
+                  {s.totalEarning != null && (
+                    <span className={`${styles.infoPill} ${styles.infoPillEarning}`}>💶 {s.totalEarning.toLocaleString()} €</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* ── Add form ── */}
-      {adding ? (
-        <div className={styles.addForm}>
-          <div className={styles.dateRow}>
-            <div className={styles.dateField}>
-              <label className={styles.dateLabel}>From</label>
-              <input
-                type="datetime-local"
-                className={styles.dateInput}
-                value={form.from}
-                onChange={e => setForm(p => ({ ...p, from: e.target.value }))}
-              />
-            </div>
-            <div className={styles.dateField}>
-              <label className={styles.dateLabel}>To</label>
-              <input
-                type="datetime-local"
-                className={styles.dateInput}
-                value={form.to}
-                onChange={e => setForm(p => ({ ...p, to: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className={styles.addActions}>
-            <button
-              className={styles.saveBtn}
-              onClick={addSchedule}
-              disabled={saving || !form.from || !form.to}
-            >
-              {saving ? "Saving…" : "Save"}
-            </button>
-            <button
-              className={styles.cancelBtn}
-              onClick={() => { setAdding(false); setForm({ from: "", to: "" }); }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button className={styles.addBtn} onClick={() => setAdding(true)}>
-          + Add rent period
-        </button>
+      <button className={styles.addBtn} onClick={openAdd}>+ Add rent period</button>
+
+      {showModal && (
+        <RentScheduleModal
+          car={car}
+          schedule={editingSchedule ?? undefined}
+          onClose={() => setShowModal(false)}
+          onSaved={handleSaved}
+        />
       )}
     </div>
   );
