@@ -43,6 +43,28 @@
   font-weight: 600;
 }
 
+/* ── Header right cluster ── */
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.endRentBtn {
+  padding: 0.3rem 0.75rem;
+  border-radius: 7px;
+  border: 1.5px solid #fecaca;
+  background: #fff5f5;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.endRentBtn:hover { background: #fee2e2; border-color: #fca5a5; }
+
 /* ── Toggle switch ── */
 .toggle {
   position: relative;

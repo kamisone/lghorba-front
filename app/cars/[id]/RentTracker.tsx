@@ -15,7 +15,7 @@ interface RentSession {
   id: string;
   carId: string;
   scheduleId?: string | null;
-  status: "active" | "pending_stop" | "ended";
+  status: "active" | "paused" | "pending_stop" | "ended";
   startedAt: string;
   endedAt?: string;
   lastLocationRequestedAt?: string | null;
@@ -45,7 +45,7 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
   const [sessions,           setSessions]           = useState<RentSession[]>([]);
   const [toggling,           setToggling]           = useState(false);
   const [nextIn,             setNextIn]             = useState(0);
-  const [confirming,         setConfirming]         = useState(false);
+  const [confirmingEnd,      setConfirmingEnd]      = useState(false);
   const [restored,           setRestored]           = useState(false);
   const [mapFullscreen,      setMapFullscreen]      = useState(false);
   const [expandedScheduleId, setExpandedScheduleId] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
   const lastLocationSentRef = useRef<number>(0);
   const lastSavedMsgIdRef   = useRef<number | null>(null);
   const lastConsumedRef     = useRef(lastConsumed);
-  const stopTrackingRef     = useRef<() => void>(() => {});
+  const endRentRef          = useRef<() => void>(() => {});
 
   lastConsumedRef.current = lastConsumed;
 
@@ -125,7 +125,7 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
         if (!r.ok || cancelled) return;
         const data: RentSession[] = await r.json();
 
-        const live = data.find((s) => s.status === "active" || s.status === "pending_stop") ?? null;
+        const live = data.find((s) => s.status === "active" || s.status === "pending_stop" || s.status === "paused") ?? null;
         if (!cancelled) setSessions(data.filter((s) => s.status === "ended"));
         if (!live || cancelled) return;
 
@@ -156,14 +156,8 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
         const elapsed   = lastLocationSentRef.current ? Date.now() - lastLocationSentRef.current : INTERVAL_MS;
         const remaining = Math.max(0, INTERVAL_MS - elapsed);
 
-        if (live.status === "pending_stop") {
-          setNextIn(Math.floor(remaining / 1000));
-          setConfirming(true);
-          return;
-        }
-
-        setTracking(true);
-        startCountdown(Math.floor(remaining / 1000));
+        setTracking(live.status === "active");
+        if (live.status === "active") startCountdown(Math.floor(remaining / 1000));
       } catch { /* silent */ }
       if (!cancelled) setRestored(true);
     })();
@@ -175,7 +169,7 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
   // ── Auto-start when schedule begins + autoStartTracking enabled ───────────
 
   useEffect(() => {
-    if (!activeSchedule?.autoStartTracking || !restored || tracking || confirming || sessionId !== null) return;
+    if (!activeSchedule?.autoStartTracking || !restored || tracking || sessionId !== null) return;
     startTracking();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSchedule?.id, restored]);
@@ -183,17 +177,17 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
   // ── Auto-stop when rent ends ──────────────────────────────────────────────
 
   useEffect(() => {
-    stopTrackingRef.current = stopTracking;
+    endRentRef.current = endRent;
   });
 
   useEffect(() => {
-    if (!activeSchedule || !tracking) return;
+    if (!activeSchedule || !sessionId) return;
     const ms = new Date(activeSchedule.toDate).getTime() - Date.now();
-    if (ms <= 0) { stopTrackingRef.current(); return; }
-    const t = setTimeout(() => stopTrackingRef.current(), ms);
+    if (ms <= 0) { endRentRef.current(); return; }
+    const t = setTimeout(() => endRentRef.current(), ms);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSchedule?.id, tracking]);
+  }, [activeSchedule?.id, sessionId]);
 
   // ── Watch for new location responses ─────────────────────────────────────
 
@@ -205,9 +199,20 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
     savePosition(sessionId, inbound);
   }, [lastConsumed?.inbound?.id, tracking, sessionId, savePosition]);
 
-  // ── Toggle ────────────────────────────────────────────────────────────────
+  // ── Tracking toggle ───────────────────────────────────────────────────────
 
   const startTracking = async () => {
+    if (sessionId) {
+      fetch(`/next-api/rent-sessions/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      }).catch(() => {});
+      setTracking(true);
+      sendLocation();
+      startCountdown();
+      return;
+    }
     if (!activeSchedule) return;
     setToggling(true);
     try {
@@ -230,41 +235,23 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
     }
   };
 
-  const requestStop = () => {
-    if (countdownRef.current) clearInterval(countdownRef.current);
+  const pauseTracking = () => {
+    stopCountdown();
     setTracking(false);
-    setConfirming(true);
     const sId = sessionIdRef.current;
     if (sId) {
       fetch(`/next-api/rent-sessions/${sId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "pending_stop" }),
+        body: JSON.stringify({ status: "paused" }),
       }).catch(() => {});
     }
   };
 
-  const resumeTracking = () => {
-    const sId = sessionIdRef.current;
-    if (sId) {
-      fetch(`/next-api/rent-sessions/${sId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "active" }),
-      }).catch(() => {});
-    }
-    setConfirming(false);
-    setTracking(true);
-    if (nextIn === 0) {
-      sendLocation();
-      startCountdown();
-    } else {
-      startCountdown(nextIn);
-    }
-  };
+  // ── End rent ──────────────────────────────────────────────────────────────
 
-  const stopTracking = async () => {
-    setConfirming(false);
+  const endRent = async () => {
+    setConfirmingEnd(false);
     setToggling(true);
     try {
       stopCountdown();
@@ -307,10 +294,10 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
       const res = await fetch(`/next-api/cars/${car.id}/rent-schedules/${schedule.id}`, { method: "DELETE" });
       if (res.ok) {
         setSessions(prev => prev.filter(sess => sess.scheduleId !== schedule.id));
-        if (schedule.id === activeSchedule?.id && (tracking || confirming)) {
+        if (schedule.id === activeSchedule?.id && (tracking || !!sessionId)) {
           stopCountdown();
           setTracking(false);
-          setConfirming(false);
+          setConfirmingEnd(false);
           setSessionId(null);
           setPositions([]);
           sessionIdRef.current = null;
@@ -343,11 +330,12 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
 
   // ── Formatters ────────────────────────────────────────────────────────────
 
-  const fmt     = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const fmt      = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const fmtShort = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
-  const fmtDT   = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  const fmtDT    = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
-  const canStart = !!activeSchedule && !toggling;
+  const canToggleOn = (!!activeSchedule || !!sessionId) && !toggling;
+  const hasSession  = !!sessionId;
 
   const now = Date.now();
   const pastSchedules = allSchedules
@@ -369,30 +357,33 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
                 {nextIn > 0 && <span className={styles.countdown}> · next in {fmt(nextIn)}</span>}
               </p>
             )}
-            {!activeSchedule && !tracking && !confirming && (
+            {!activeSchedule && !hasSession && (
               <p className={styles.noRentMsg}>No active rent</p>
             )}
           </div>
         </div>
 
-        {confirming ? (
+        {confirmingEnd ? (
           <div className={styles.confirmRow}>
-            <button className={`${styles.confirmBtn} ${styles.confirmEnd}`} onClick={stopTracking}>
-              End rent
-            </button>
-            <button className={`${styles.confirmBtn} ${styles.confirmPause}`} onClick={resumeTracking}>
-              Continue
-            </button>
+            <button className={`${styles.confirmBtn} ${styles.confirmEnd}`} onClick={endRent}>End rent</button>
+            <button className={`${styles.confirmBtn} ${styles.confirmPause}`} onClick={() => setConfirmingEnd(false)}>Cancel</button>
           </div>
         ) : (
-          <button
-            className={`${styles.toggle} ${tracking ? styles.toggleOn : ""} ${(!canStart && !tracking) || toggling ? styles.toggleDisabled : ""}`}
-            onClick={tracking ? requestStop : startTracking}
-            disabled={toggling || (!tracking && !activeSchedule)}
-            aria-label={tracking ? "Stop rent tracking" : "Start rent tracking"}
-          >
-            <span className={styles.thumb} />
-          </button>
+          <div className={styles.headerRight}>
+            {hasSession && (
+              <button className={styles.endRentBtn} onClick={() => setConfirmingEnd(true)}>
+                End rent
+              </button>
+            )}
+            <button
+              className={`${styles.toggle} ${tracking ? styles.toggleOn : ""} ${(!canToggleOn && !tracking) || toggling ? styles.toggleDisabled : ""}`}
+              onClick={tracking ? pauseTracking : startTracking}
+              disabled={toggling || (!tracking && !canToggleOn)}
+              aria-label={tracking ? "Pause rent tracking" : "Start rent tracking"}
+            >
+              <span className={styles.thumb} />
+            </button>
+          </div>
         )}
       </div>
 
