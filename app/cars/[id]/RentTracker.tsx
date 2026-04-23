@@ -123,7 +123,15 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
 
         if (cancelled) return;
         sessionIdRef.current = live.id;
-        lastSavedMsgIdRef.current = lastConsumedRef.current?.inbound?.id ?? null;
+
+        const currentInbound = lastConsumedRef.current?.inbound ?? null;
+        const latestPos      = restoredPositions.at(-1) ?? null;
+        const alreadySaved   =
+          currentInbound !== null &&
+          latestPos !== null &&
+          new Date(latestPos.recordedAt).getTime() === new Date(currentInbound.createdAt).getTime();
+        lastSavedMsgIdRef.current = alreadySaved ? currentInbound.id : null;
+
         setSessionId(live.id);
         setPositions(restoredPositions);
 
