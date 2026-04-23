@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Car } from "../data";
 import RentScheduleModal from "./RentScheduleModal";
 import styles from "./RentCalendar.module.css";
@@ -42,16 +42,21 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
   return cells;
 }
 
+function computeForfaitKm(fromDate: string, toDate: string): number {
+  const ms = new Date(toDate).getTime() - new Date(fromDate).getTime();
+  return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24))) * 200;
+}
+
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-interface Tooltip { schedule: RentSchedule; x: number; y: number; }
-
 export default function RentCalendar({ car, onScheduleChange }: Props) {
-  const [schedules, setSchedules] = useState<RentSchedule[]>([]);
-  const [viewDate,  setViewDate]  = useState(() => new Date());
-  const [showModal, setShowModal] = useState(false);
-  const [tooltip,   setTooltip]   = useState<Tooltip | null>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [schedules,       setSchedules]       = useState<RentSchedule[]>([]);
+  const [viewDate,        setViewDate]        = useState(() => new Date());
+  const [showAddModal,    setShowAddModal]    = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<RentSchedule | null>(null);
+  const [showEditModal,   setShowEditModal]   = useState(false);
+  const [deletingId,      setDeletingId]      = useState<string | null>(null);
+  const [confirmDelete,   setConfirmDelete]   = useState(false);
 
   const today = startOfDay(new Date());
 
@@ -61,26 +66,36 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
   }, [onScheduleChange]);
 
   useEffect(() => {
-    if (!tooltip) return;
-    const handler = (e: MouseEvent) => {
-      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
-        setTooltip(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [tooltip]);
-
-  useEffect(() => {
     fetch(`/next-api/cars/${car.id}/rent-schedules`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : [])
       .then(notify)
       .catch(() => {});
   }, [car.id, notify]);
 
-  const handleSaved = (saved: RentSchedule) => {
+  const handleNewSaved = (saved: RentSchedule) => {
     notify([...schedules, saved]);
-    setShowModal(false);
+    setShowAddModal(false);
+  };
+
+  const handleEditSaved = (updated: RentSchedule) => {
+    notify(schedules.map(s => s.id === updated.id ? updated : s));
+    setSelectedSchedule(updated);
+    setShowEditModal(false);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedSchedule) return;
+    setDeletingId(selectedSchedule.id);
+    try {
+      const res = await fetch(`/next-api/cars/${car.id}/rent-schedules/${selectedSchedule.id}`, { method: "DELETE" });
+      if (res.ok) {
+        notify(schedules.filter(s => s.id !== selectedSchedule.id));
+        setSelectedSchedule(null);
+        setConfirmDelete(false);
+      }
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const getScheduleForDay = (date: Date): RentSchedule | undefined => {
@@ -95,7 +110,7 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
   const isRangeEdge = (date: Date, which: "from" | "to") =>
     schedules.some(s => isSameDay(date, startOfDay(new Date(s[which === "from" ? "fromDate" : "toDate"]))));
 
-  const fmtDT = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  const fmtDT = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
   const year       = viewDate.getFullYear();
   const month      = viewDate.getMonth();
@@ -129,15 +144,15 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
                 key={i}
                 className={[
                   styles.day,
-                  inRange ? styles.dayRented  : "",
-                  isStart ? styles.dayStart   : "",
-                  isEnd   ? styles.dayEnd     : "",
-                  isT     ? styles.dayToday   : "",
+                  inRange ? styles.dayRented    : "",
+                  isStart ? styles.dayStart     : "",
+                  isEnd   ? styles.dayEnd       : "",
+                  isT     ? styles.dayToday     : "",
                   inRange ? styles.dayClickable : "",
                 ].filter(Boolean).join(" ")}
-                onClick={schedule ? (e) => {
-                  const r = (e.target as HTMLElement).getBoundingClientRect();
-                  setTooltip(t => t?.schedule.id === schedule.id ? null : { schedule, x: r.left + r.width / 2, y: r.bottom + 6 });
+                onClick={schedule ? () => {
+                  setConfirmDelete(false);
+                  setSelectedSchedule(s => s?.id === schedule.id ? null : schedule);
                 } : undefined}
               >
                 {date.getDate()}
@@ -147,40 +162,104 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
         </div>
       </div>
 
-      <button className={styles.addBtn} onClick={() => setShowModal(true)}>+ Add rent period</button>
+      <button className={styles.addBtn} onClick={() => setShowAddModal(true)}>+ Add rent period</button>
 
-      {showModal && (
+      {/* ── Add modal ── */}
+      {showAddModal && (
         <RentScheduleModal
           car={car}
-          onClose={() => setShowModal(false)}
-          onSaved={handleSaved}
+          onClose={() => setShowAddModal(false)}
+          onSaved={handleNewSaved}
         />
       )}
 
-      {tooltip && (
-        <div
-          ref={tooltipRef}
-          className={styles.tooltip}
-          style={{ left: tooltip.x, top: tooltip.y }}
-        >
-          <div className={styles.tooltipDates}>
-            {fmtDT(tooltip.schedule.fromDate)} → {fmtDT(tooltip.schedule.toDate)}
+      {/* ── Edit modal ── */}
+      {showEditModal && selectedSchedule && (
+        <RentScheduleModal
+          car={car}
+          schedule={selectedSchedule}
+          onClose={() => setShowEditModal(false)}
+          onSaved={handleEditSaved}
+        />
+      )}
+
+      {/* ── Info modal ── */}
+      {selectedSchedule && !showEditModal && (
+        <div className={styles.infoOverlay} onClick={() => { setSelectedSchedule(null); setConfirmDelete(false); }}>
+          <div className={styles.infoModal} onClick={e => e.stopPropagation()}>
+
+            <div className={styles.infoHeader}>
+              <span className={styles.infoIcon}>📅</span>
+              <div className={styles.infoHeaderDates}>
+                <span>{fmtDT(selectedSchedule.fromDate)}</span>
+                <span className={styles.infoArrow}>→</span>
+                <span>{fmtDT(selectedSchedule.toDate)}</span>
+              </div>
+              <button className={styles.infoClose} onClick={() => { setSelectedSchedule(null); setConfirmDelete(false); }}>✕</button>
+            </div>
+
+            <div className={styles.infoBody}>
+              <div className={styles.infoKm}>
+                📏 {computeForfaitKm(selectedSchedule.fromDate, selectedSchedule.toDate).toLocaleString()} km forfait
+              </div>
+
+              <div className={styles.infoPills}>
+                {selectedSchedule.guestName && (
+                  <span className={styles.infoPill}>👤 {selectedSchedule.guestName}</span>
+                )}
+                {selectedSchedule.guestNumber && (
+                  <span className={styles.infoPill}>📞 {selectedSchedule.guestNumber}</span>
+                )}
+                {selectedSchedule.reservationNumber && (
+                  <span className={styles.infoPill}>📋 #{selectedSchedule.reservationNumber}</span>
+                )}
+                {selectedSchedule.totalEarning != null && (
+                  <span className={`${styles.infoPill} ${styles.infoPillEarning}`}>
+                    💶 {selectedSchedule.totalEarning.toLocaleString()} €
+                  </span>
+                )}
+                {selectedSchedule.autoStartTracking && (
+                  <span className={`${styles.infoPill} ${styles.infoPillTracking}`}>🔄 Auto-track</span>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.infoActions}>
+              <button
+                className={styles.infoEditBtn}
+                onClick={() => setShowEditModal(true)}
+              >
+                ✏ Edit
+              </button>
+
+              {confirmDelete ? (
+                <div className={styles.infoConfirmRow}>
+                  <span className={styles.infoConfirmLabel}>Sure?</span>
+                  <button
+                    className={styles.infoConfirmYes}
+                    onClick={handleDelete}
+                    disabled={!!deletingId}
+                  >
+                    {deletingId ? "Deleting…" : "Yes, delete"}
+                  </button>
+                  <button
+                    className={styles.infoConfirmNo}
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className={styles.infoDeleteBtn}
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  🗑 Delete
+                </button>
+              )}
+            </div>
+
           </div>
-          {tooltip.schedule.guestName && (
-            <div className={styles.tooltipRow}>👤 {tooltip.schedule.guestName}</div>
-          )}
-          {tooltip.schedule.guestNumber && (
-            <div className={styles.tooltipRow}>📞 {tooltip.schedule.guestNumber}</div>
-          )}
-          {tooltip.schedule.reservationNumber && (
-            <div className={styles.tooltipRow}>📋 #{tooltip.schedule.reservationNumber}</div>
-          )}
-          {tooltip.schedule.totalEarning != null && (
-            <div className={styles.tooltipRow}>💶 {tooltip.schedule.totalEarning.toLocaleString()} €</div>
-          )}
-          {tooltip.schedule.autoStartTracking && (
-            <div className={styles.tooltipRow}>🔄 Auto-track</div>
-          )}
         </div>
       )}
     </div>

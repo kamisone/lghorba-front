@@ -422,7 +422,7 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
       {tracking && (
         <div className={styles.activeBadge}>
           <span className={styles.activeDot} />
-          Rent in progress
+          Tracking in progress
         </div>
       )}
 

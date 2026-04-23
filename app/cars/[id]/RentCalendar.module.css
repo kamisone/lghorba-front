@@ -227,38 +227,192 @@
   color: #2563eb;
 }
 
-/* ── Tooltip ── */
+/* ── Day click ── */
 .dayClickable { cursor: pointer; }
 
-.tooltip {
+/* ── Info modal ── */
+.infoOverlay {
   position: fixed;
-  transform: translateX(-50%);
-  z-index: 9999;
-  background: #1e293b;
-  color: #f8fafc;
-  border-radius: 10px;
-  padding: 0.6rem 0.85rem;
-  min-width: 180px;
-  max-width: 260px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.22);
-  pointer-events: auto;
-  font-size: 0.78rem;
-  line-height: 1.5;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
-.tooltipDates {
-  font-weight: 700;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  margin-bottom: 0.35rem;
-  white-space: nowrap;
-}
-
-.tooltipRow {
-  white-space: nowrap;
+.infoModal {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  max-width: 420px;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
+
+.infoHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.infoIcon { font-size: 1.1rem; flex-shrink: 0; }
+
+.infoHeaderDates {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  min-width: 0;
+}
+
+.infoArrow { color: #94a3b8; font-size: 0.72rem; }
+
+.infoClose {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.infoClose:hover { border-color: #ef4444; color: #ef4444; }
+
+.infoBody {
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.infoKm {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.infoPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.infoPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.infoPillEarning {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #16a34a;
+}
+
+.infoPillTracking {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+.infoActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.infoEditBtn {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1.5px solid #407bff;
+  border-radius: 8px;
+  background: none;
+  color: #407bff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.infoEditBtn:hover { background: #407bff; color: #fff; }
+
+.infoDeleteBtn {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1.5px solid #ef4444;
+  border-radius: 8px;
+  background: none;
+  color: #ef4444;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.infoDeleteBtn:hover { background: #ef4444; color: #fff; }
+
+.infoConfirmRow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.infoConfirmLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.infoConfirmYes {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  border: none;
+  border-radius: 7px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.infoConfirmYes:disabled { opacity: 0.6; cursor: default; }
+
+.infoConfirmNo {
+  padding: 0.45rem 0.6rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 7px;
+  background: none;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.infoConfirmNo:hover { border-color: #94a3b8; }
 
 /* ── Add button ── */
 .addBtn {
