@@ -126,6 +126,7 @@ export default function RentPage() {
       <RentCalendar
         car={car}
         onScheduleChange={setSchedules}
+        activeScheduleId={activeSchedule?.id}
       />
     </div>
   );

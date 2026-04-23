@@ -20,7 +20,14 @@ interface FormValues {
   reservationNumber: string;
   totalEarning: string;
   autoStartTracking: boolean;
+  color: string;
 }
+
+const COLORS = [
+  "#ef4444", "#f97316", "#eab308", "#22c55e",
+  "#14b8a6", "#3b82f6", "#8b5cf6", "#ec4899",
+  "#64748b", "#1e293b",
+];
 
 function computeForfaitKm(from: string, to: string): number {
   if (!from || !to) return 0;
@@ -37,7 +44,7 @@ function toDateTimeInput(iso: string): string {
 export default function RentScheduleModal({ car, schedule, onClose, onSaved }: Props) {
   const isEdit = !!schedule;
   const [form, setForm] = useState<FormValues>({
-    from: "", to: "", guestName: "", guestNumber: "", reservationNumber: "", totalEarning: "", autoStartTracking: false,
+    from: "", to: "", guestName: "", guestNumber: "", reservationNumber: "", totalEarning: "", autoStartTracking: false, color: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -51,6 +58,7 @@ export default function RentScheduleModal({ car, schedule, onClose, onSaved }: P
         reservationNumber: schedule.reservationNumber ?? "",
         totalEarning: schedule.totalEarning != null ? String(schedule.totalEarning) : "",
         autoStartTracking: schedule.autoStartTracking ?? false,
+        color: schedule.color ?? "",
       });
     }
   }, [schedule]);
@@ -73,6 +81,7 @@ export default function RentScheduleModal({ car, schedule, onClose, onSaved }: P
         reservationNumber: form.reservationNumber.trim() || null,
         totalEarning: form.totalEarning !== "" ? Number(form.totalEarning) : null,
         autoStartTracking: form.autoStartTracking,
+        color: form.color || null,
       };
       const url = isEdit
         ? `/next-api/cars/${car.id}/rent-schedules/${schedule.id}`
@@ -137,6 +146,32 @@ export default function RentScheduleModal({ car, schedule, onClose, onSaved }: P
               <label className={styles.label}>Total earning (€)</label>
               <input type="number" min="0" step="0.01" className={styles.input} placeholder="e.g. 500"
                 value={form.totalEarning} onChange={set("totalEarning")} />
+            </div>
+          </div>
+
+          <div className={styles.colorField}>
+            <label className={styles.label}>Color</label>
+            <div className={styles.colorPicker}>
+              {COLORS.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`${styles.colorSwatch} ${form.color === c ? styles.colorSwatchActive : ""}`}
+                  style={{ background: c }}
+                  onClick={() => setForm(prev => ({ ...prev, color: prev.color === c ? "" : c }))}
+                  aria-label={c}
+                />
+              ))}
+              {form.color && (
+                <button
+                  type="button"
+                  className={styles.colorClear}
+                  onClick={() => setForm(prev => ({ ...prev, color: "" }))}
+                  title="Remove color"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
 

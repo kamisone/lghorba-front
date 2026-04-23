@@ -106,6 +106,54 @@
   align-self: flex-start;
 }
 
+.colorField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.colorPicker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.colorSwatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.colorSwatch:hover { transform: scale(1.15); }
+.colorSwatchActive {
+  border-color: #1e293b;
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px currentColor;
+}
+
+.colorClear {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.colorClear:hover { border-color: #ef4444; color: #ef4444; }
+
 .toggleRow {
   display: flex;
   align-items: center;

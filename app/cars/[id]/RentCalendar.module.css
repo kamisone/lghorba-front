@@ -230,6 +230,37 @@
 /* ── Day click ── */
 .dayClickable { cursor: pointer; }
 
+/* ── Multi-schedule split cell ── */
+.dayMulti {
+  position: relative;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
+  border-radius: 6px;
+  padding: 0;
+}
+
+.daySlice {
+  flex: 1;
+  display: block;
+  transition: opacity 0.15s;
+}
+.daySlice.dayClickable:hover { opacity: 0.72; }
+
+.dayNum {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
 /* ── Info modal ── */
 .infoOverlay {
   position: fixed;
@@ -255,11 +286,11 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 1rem 1rem 0.85rem;
+  padding: 0.85rem 1rem;
   border-bottom: 1px solid #f1f5f9;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
 }
-
-.infoIcon { font-size: 1.1rem; flex-shrink: 0; }
 
 .infoHeaderDates {
   flex: 1;

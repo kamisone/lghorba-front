@@ -15,11 +15,13 @@ export interface RentSchedule {
   reservationNumber?: string | null;
   totalEarning?: number | null;
   autoStartTracking: boolean;
+  color?: string | null;
 }
 
 interface Props {
   car: Car;
   onScheduleChange?: (schedules: RentSchedule[]) => void;
+  activeScheduleId?: string | null;
 }
 
 function startOfDay(d: Date): Date {
@@ -47,16 +49,17 @@ function computeForfaitKm(fromDate: string, toDate: string): number {
   return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24))) * 200;
 }
 
+const DEFAULT_BG = "linear-gradient(135deg, #211951 0%, #407bff 100%)";
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-export default function RentCalendar({ car, onScheduleChange }: Props) {
-  const [schedules,       setSchedules]       = useState<RentSchedule[]>([]);
-  const [viewDate,        setViewDate]        = useState(() => new Date());
-  const [showAddModal,    setShowAddModal]    = useState(false);
+export default function RentCalendar({ car, onScheduleChange, activeScheduleId }: Props) {
+  const [schedules,        setSchedules]        = useState<RentSchedule[]>([]);
+  const [viewDate,         setViewDate]         = useState(() => new Date());
+  const [showAddModal,     setShowAddModal]     = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<RentSchedule | null>(null);
-  const [showEditModal,   setShowEditModal]   = useState(false);
-  const [deletingId,      setDeletingId]      = useState<string | null>(null);
-  const [confirmDelete,   setConfirmDelete]   = useState(false);
+  const [showEditModal,    setShowEditModal]    = useState(false);
+  const [deletingId,       setDeletingId]       = useState<string | null>(null);
+  const [confirmDelete,    setConfirmDelete]    = useState(false);
 
   const today = startOfDay(new Date());
 
@@ -98,19 +101,25 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
     }
   };
 
-  const getScheduleForDay = (date: Date): RentSchedule | undefined => {
+  const getSchedulesForDay = (date: Date): RentSchedule[] => {
     const d = date.getTime();
-    return schedules.find(s => {
+    return schedules.filter(s => {
       const from = startOfDay(new Date(s.fromDate)).getTime();
       const to   = startOfDay(new Date(s.toDate)).getTime();
       return d >= from && d <= to;
     });
   };
 
-  const isRangeEdge = (date: Date, which: "from" | "to") =>
-    schedules.some(s => isSameDay(date, startOfDay(new Date(s[which === "from" ? "fromDate" : "toDate"]))));
+  const isEdge = (date: Date, s: RentSchedule, which: "from" | "to") =>
+    isSameDay(date, startOfDay(new Date(which === "from" ? s.fromDate : s.toDate)));
 
   const fmtDT = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  const openSchedule = (s: RentSchedule) => {
+    if (s.id === activeScheduleId) return;
+    setConfirmDelete(false);
+    setSelectedSchedule(prev => prev?.id === s.id ? null : s);
+  };
 
   const year       = viewDate.getFullYear();
   const month      = viewDate.getMonth();
@@ -134,28 +143,52 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
           {DAYS.map(d => <span key={d} className={styles.dayHeader}>{d}</span>)}
           {cells.map((date, i) => {
             if (!date) return <span key={i} />;
-            const schedule = getScheduleForDay(date);
-            const inRange  = !!schedule;
-            const isStart  = isRangeEdge(date, "from");
-            const isEnd    = isRangeEdge(date, "to");
-            const isT      = isSameDay(date, today);
+            const daySchedules = getSchedulesForDay(date);
+            const isT          = isSameDay(date, today);
+
+            if (daySchedules.length === 0) {
+              return (
+                <span key={i} className={[styles.day, isT ? styles.dayToday : ""].filter(Boolean).join(" ")}>
+                  {date.getDate()}
+                </span>
+              );
+            }
+
+            if (daySchedules.length === 1) {
+              const s       = daySchedules[0];
+              const isStart = isEdge(date, s, "from");
+              const isEnd   = isEdge(date, s, "to");
+              return (
+                <span
+                  key={i}
+                  className={[
+                    styles.day,
+                    styles.dayRented,
+                    isStart ? styles.dayStart : "",
+                    isEnd   ? styles.dayEnd   : "",
+                    isT     ? styles.dayToday : "",
+                    s.id !== activeScheduleId ? styles.dayClickable : "",
+                  ].filter(Boolean).join(" ")}
+                  style={s.color ? { background: s.color } : undefined}
+                  onClick={() => openSchedule(s)}
+                >
+                  {date.getDate()}
+                </span>
+              );
+            }
+
+            // Multiple overlapping schedules — split cell vertically
             return (
-              <span
-                key={i}
-                className={[
-                  styles.day,
-                  inRange ? styles.dayRented    : "",
-                  isStart ? styles.dayStart     : "",
-                  isEnd   ? styles.dayEnd       : "",
-                  isT     ? styles.dayToday     : "",
-                  inRange ? styles.dayClickable : "",
-                ].filter(Boolean).join(" ")}
-                onClick={schedule ? () => {
-                  setConfirmDelete(false);
-                  setSelectedSchedule(s => s?.id === schedule.id ? null : schedule);
-                } : undefined}
-              >
-                {date.getDate()}
+              <span key={i} className={[styles.day, styles.dayMulti, isT ? styles.dayToday : ""].filter(Boolean).join(" ")}>
+                {daySchedules.map(s => (
+                  <span
+                    key={s.id}
+                    className={[styles.daySlice, s.id !== activeScheduleId ? styles.dayClickable : ""].filter(Boolean).join(" ")}
+                    style={{ background: s.color ?? DEFAULT_BG }}
+                    onClick={() => openSchedule(s)}
+                  />
+                ))}
+                <span className={styles.dayNum}>{date.getDate()}</span>
               </span>
             );
           })}
@@ -188,8 +221,7 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
         <div className={styles.infoOverlay} onClick={() => { setSelectedSchedule(null); setConfirmDelete(false); }}>
           <div className={styles.infoModal} onClick={e => e.stopPropagation()}>
 
-            <div className={styles.infoHeader}>
-              <span className={styles.infoIcon}>📅</span>
+            <div className={styles.infoHeader} style={selectedSchedule.color ? { borderTop: `4px solid ${selectedSchedule.color}` } : undefined}>
               <div className={styles.infoHeaderDates}>
                 <span>{fmtDT(selectedSchedule.fromDate)}</span>
                 <span className={styles.infoArrow}>→</span>
@@ -225,35 +257,22 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
             </div>
 
             <div className={styles.infoActions}>
-              <button
-                className={styles.infoEditBtn}
-                onClick={() => setShowEditModal(true)}
-              >
+              <button className={styles.infoEditBtn} onClick={() => setShowEditModal(true)}>
                 ✏ Edit
               </button>
 
               {confirmDelete ? (
                 <div className={styles.infoConfirmRow}>
                   <span className={styles.infoConfirmLabel}>Sure?</span>
-                  <button
-                    className={styles.infoConfirmYes}
-                    onClick={handleDelete}
-                    disabled={!!deletingId}
-                  >
+                  <button className={styles.infoConfirmYes} onClick={handleDelete} disabled={!!deletingId}>
                     {deletingId ? "Deleting…" : "Yes, delete"}
                   </button>
-                  <button
-                    className={styles.infoConfirmNo}
-                    onClick={() => setConfirmDelete(false)}
-                  >
+                  <button className={styles.infoConfirmNo} onClick={() => setConfirmDelete(false)}>
                     Cancel
                   </button>
                 </div>
               ) : (
-                <button
-                  className={styles.infoDeleteBtn}
-                  onClick={() => setConfirmDelete(true)}
-                >
+                <button className={styles.infoDeleteBtn} onClick={() => setConfirmDelete(true)}>
                   🗑 Delete
                 </button>
               )}
