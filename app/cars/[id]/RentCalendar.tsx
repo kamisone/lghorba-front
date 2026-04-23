@@ -20,6 +20,7 @@ export interface RentSchedule {
 interface Props {
   car: Car;
   onScheduleChange?: (schedules: RentSchedule[]) => void;
+  onDeleted?: (id: string) => void;
 }
 
 function startOfDay(d: Date): Date {
@@ -49,7 +50,7 @@ function computeForfaitKm(fromDate: string, toDate: string): number {
 
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-export default function RentCalendar({ car, onScheduleChange }: Props) {
+export default function RentCalendar({ car, onScheduleChange, onDeleted }: Props) {
   const [schedules,       setSchedules]       = useState<RentSchedule[]>([]);
   const [viewDate,        setViewDate]        = useState(() => new Date());
   const [deleting,        setDeleting]        = useState<string | null>(null);
@@ -84,8 +85,11 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
   const deleteSchedule = async (id: string) => {
     setDeleting(id);
     try {
-      await fetch(`/next-api/cars/${car.id}/rent-schedules/${id}`, { method: "DELETE" });
-      notify(schedules.filter(s => s.id !== id));
+      const res = await fetch(`/next-api/cars/${car.id}/rent-schedules/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        notify(schedules.filter(s => s.id !== id));
+        onDeleted?.(id);
+      }
     } finally {
       setDeleting(null);
     }
