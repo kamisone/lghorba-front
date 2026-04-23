@@ -34,7 +34,9 @@ export default function RentPage() {
     try { return JSON.parse(localStorage.getItem(storageKey) ?? "null"); } catch { return null; }
   });
 
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [tick,       setTick]       = useState(0);
+  const pollingRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const boundaryRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch(`/next-api/cars/${id}`, { cache: "no-store" })
@@ -61,6 +63,19 @@ export default function RentPage() {
     pollingRef.current = setInterval(poll, POLL_INTERVAL);
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [car, poll]);
+
+  useEffect(() => {
+    const now = Date.now();
+    const boundaries = schedules
+      .flatMap(s => [new Date(s.fromDate).getTime(), new Date(s.toDate).getTime()])
+      .filter(t => t > now)
+      .sort((a, b) => a - b);
+    if (!boundaries.length) return;
+    const ms = boundaries[0] - now;
+    if (boundaryRef.current) clearTimeout(boundaryRef.current);
+    boundaryRef.current = setTimeout(() => setTick(t => t + 1), ms + 100);
+    return () => { if (boundaryRef.current) clearTimeout(boundaryRef.current); };
+  }, [schedules, tick]);
 
   const activeSchedule = schedules.find(s => {
     const now = Date.now();

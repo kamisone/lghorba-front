@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Car } from "../data";
 import RentScheduleModal from "./RentScheduleModal";
 import styles from "./RentCalendar.module.css";
@@ -44,10 +44,14 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
 
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
+interface Tooltip { schedule: RentSchedule; x: number; y: number; }
+
 export default function RentCalendar({ car, onScheduleChange }: Props) {
   const [schedules, setSchedules] = useState<RentSchedule[]>([]);
   const [viewDate,  setViewDate]  = useState(() => new Date());
   const [showModal, setShowModal] = useState(false);
+  const [tooltip,   setTooltip]   = useState<Tooltip | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const today = startOfDay(new Date());
 
@@ -55,6 +59,17 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
     setSchedules(list);
     onScheduleChange?.(list);
   }, [onScheduleChange]);
+
+  useEffect(() => {
+    if (!tooltip) return;
+    const handler = (e: MouseEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        setTooltip(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [tooltip]);
 
   useEffect(() => {
     fetch(`/next-api/cars/${car.id}/rent-schedules`, { cache: "no-store" })
@@ -80,6 +95,8 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
   const isRangeEdge = (date: Date, which: "from" | "to") =>
     schedules.some(s => isSameDay(date, startOfDay(new Date(s[which === "from" ? "fromDate" : "toDate"]))));
 
+  const fmtDT = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+
   const year       = viewDate.getFullYear();
   const month      = viewDate.getMonth();
   const cells      = getMonthGrid(year, month);
@@ -102,10 +119,11 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
           {DAYS.map(d => <span key={d} className={styles.dayHeader}>{d}</span>)}
           {cells.map((date, i) => {
             if (!date) return <span key={i} />;
-            const inRange = !!getScheduleForDay(date);
-            const isStart = isRangeEdge(date, "from");
-            const isEnd   = isRangeEdge(date, "to");
-            const isT     = isSameDay(date, today);
+            const schedule = getScheduleForDay(date);
+            const inRange  = !!schedule;
+            const isStart  = isRangeEdge(date, "from");
+            const isEnd    = isRangeEdge(date, "to");
+            const isT      = isSameDay(date, today);
             return (
               <span
                 key={i}
@@ -115,7 +133,12 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
                   isStart ? styles.dayStart   : "",
                   isEnd   ? styles.dayEnd     : "",
                   isT     ? styles.dayToday   : "",
+                  inRange ? styles.dayClickable : "",
                 ].filter(Boolean).join(" ")}
+                onClick={schedule ? (e) => {
+                  const r = (e.target as HTMLElement).getBoundingClientRect();
+                  setTooltip(t => t?.schedule.id === schedule.id ? null : { schedule, x: r.left + r.width / 2, y: r.bottom + 6 });
+                } : undefined}
               >
                 {date.getDate()}
               </span>
@@ -132,6 +155,33 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
           onClose={() => setShowModal(false)}
           onSaved={handleSaved}
         />
+      )}
+
+      {tooltip && (
+        <div
+          ref={tooltipRef}
+          className={styles.tooltip}
+          style={{ left: tooltip.x, top: tooltip.y }}
+        >
+          <div className={styles.tooltipDates}>
+            {fmtDT(tooltip.schedule.fromDate)} → {fmtDT(tooltip.schedule.toDate)}
+          </div>
+          {tooltip.schedule.guestName && (
+            <div className={styles.tooltipRow}>👤 {tooltip.schedule.guestName}</div>
+          )}
+          {tooltip.schedule.guestNumber && (
+            <div className={styles.tooltipRow}>📞 {tooltip.schedule.guestNumber}</div>
+          )}
+          {tooltip.schedule.reservationNumber && (
+            <div className={styles.tooltipRow}>📋 #{tooltip.schedule.reservationNumber}</div>
+          )}
+          {tooltip.schedule.totalEarning != null && (
+            <div className={styles.tooltipRow}>💶 {tooltip.schedule.totalEarning.toLocaleString()} €</div>
+          )}
+          {tooltip.schedule.autoStartTracking && (
+            <div className={styles.tooltipRow}>🔄 Auto-track</div>
+          )}
+        </div>
       )}
     </div>
   );

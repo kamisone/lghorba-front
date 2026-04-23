@@ -227,6 +227,39 @@
   color: #2563eb;
 }
 
+/* ── Tooltip ── */
+.dayClickable { cursor: pointer; }
+
+.tooltip {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: #1e293b;
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+  min-width: 180px;
+  max-width: 260px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+  pointer-events: auto;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.tooltipDates {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 0.35rem;
+  white-space: nowrap;
+}
+
+.tooltipRow {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Add button ── */
 .addBtn {
   width: 100%;
