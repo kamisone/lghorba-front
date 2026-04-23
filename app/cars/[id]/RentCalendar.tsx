@@ -14,6 +14,7 @@ export interface RentSchedule {
   guestNumber?: string | null;
   reservationNumber?: string | null;
   totalEarning?: number | null;
+  autoStartTracking: boolean;
 }
 
 interface Props {
@@ -205,6 +206,9 @@ export default function RentCalendar({ car, onScheduleChange }: Props) {
                   <span className={styles.infoPill}>📏 {forfaitKm.toLocaleString()} km</span>
                   {s.totalEarning != null && (
                     <span className={`${styles.infoPill} ${styles.infoPillEarning}`}>💶 {s.totalEarning.toLocaleString()} €</span>
+                  )}
+                  {s.autoStartTracking && (
+                    <span className={`${styles.infoPill} ${styles.infoPillTracking}`}>🔄 Auto-track</span>
                   )}
                 </div>
               </div>

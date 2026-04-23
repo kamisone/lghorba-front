@@ -221,6 +221,12 @@
   color: #16a34a;
 }
 
+.infoPillTracking {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
 /* ── Add button ── */
 .addBtn {
   width: 100%;

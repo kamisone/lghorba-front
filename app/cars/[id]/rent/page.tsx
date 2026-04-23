@@ -62,10 +62,10 @@ export default function RentPage() {
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [car, poll]);
 
-  const isScheduleActive = schedules.some(s => {
+  const activeSchedule = schedules.find(s => {
     const now = Date.now();
     return new Date(s.fromDate).getTime() <= now && now <= new Date(s.toDate).getTime();
-  });
+  }) ?? null;
 
   if (loading) {
     return (
@@ -97,7 +97,8 @@ export default function RentPage() {
       <RentTracker
         car={car}
         lastConsumed={lastConsumed}
-        isScheduleActive={isScheduleActive}
+        activeSchedule={activeSchedule}
+        allSchedules={schedules}
       />
       <RentCalendar car={car} onScheduleChange={setSchedules} />
     </div>

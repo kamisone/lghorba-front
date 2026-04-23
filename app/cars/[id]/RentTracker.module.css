@@ -298,3 +298,124 @@
   font-size: 0.65rem;
   color: #94a3b8;
 }
+
+/* ── No active rent message ── */
+.noRentMsg {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0.1rem 0 0;
+  font-style: italic;
+}
+
+/* ── Active schedule info card ── */
+.scheduleCard {
+  margin: 0 1.2rem 0.75rem;
+  padding: 0.6rem 0.85rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.scheduleCardDates {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+  flex-wrap: wrap;
+}
+
+.scheduleCardArrow {
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+.scheduleCardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.scheduleCardPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.12rem 0.42rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* ── Session block (row + inline map) ── */
+.sessionBlock {
+  margin-bottom: 0.4rem;
+}
+
+.sessionInfo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.sessionRight {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.sessionGuest {
+  font-size: 0.72rem;
+  color: #475569;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sessionRes {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sessionKm {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sessionEarning {
+  font-size: 0.72rem;
+  color: #16a34a;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Inline session map ── */
+.sessionMap {
+  margin-top: 0.3rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  isolation: isolate;
+}
+
+.sessionNoMap {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-align: center;
+  padding: 0.75rem;
+  margin: 0;
+}

@@ -19,6 +19,7 @@ interface FormValues {
   guestNumber: string;
   reservationNumber: string;
   totalEarning: string;
+  autoStartTracking: boolean;
 }
 
 function computeForfaitKm(from: string, to: string): number {
@@ -36,7 +37,7 @@ function toDateTimeInput(iso: string): string {
 export default function RentScheduleModal({ car, schedule, onClose, onSaved }: Props) {
   const isEdit = !!schedule;
   const [form, setForm] = useState<FormValues>({
-    from: "", to: "", guestName: "", guestNumber: "", reservationNumber: "", totalEarning: "",
+    from: "", to: "", guestName: "", guestNumber: "", reservationNumber: "", totalEarning: "", autoStartTracking: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -49,6 +50,7 @@ export default function RentScheduleModal({ car, schedule, onClose, onSaved }: P
         guestNumber: schedule.guestNumber ?? "",
         reservationNumber: schedule.reservationNumber ?? "",
         totalEarning: schedule.totalEarning != null ? String(schedule.totalEarning) : "",
+        autoStartTracking: schedule.autoStartTracking ?? false,
       });
     }
   }, [schedule]);
@@ -70,6 +72,7 @@ export default function RentScheduleModal({ car, schedule, onClose, onSaved }: P
         guestNumber: form.guestNumber.trim() || null,
         reservationNumber: form.reservationNumber.trim() || null,
         totalEarning: form.totalEarning !== "" ? Number(form.totalEarning) : null,
+        autoStartTracking: form.autoStartTracking,
       };
       const url = isEdit
         ? `/next-api/cars/${car.id}/rent-schedules/${schedule.id}`
@@ -135,6 +138,18 @@ export default function RentScheduleModal({ car, schedule, onClose, onSaved }: P
               <input type="number" min="0" step="0.01" className={styles.input} placeholder="e.g. 500"
                 value={form.totalEarning} onChange={set("totalEarning")} />
             </div>
+          </div>
+
+          <div className={styles.toggleRow}>
+            <span className={styles.toggleLabel}>Auto-start tracking when rent begins</span>
+            <button
+              type="button"
+              className={`${styles.toggle} ${form.autoStartTracking ? styles.toggleOn : ""}`}
+              onClick={() => setForm(prev => ({ ...prev, autoStartTracking: !prev.autoStartTracking }))}
+              aria-label="Toggle auto-start tracking"
+            >
+              <span className={styles.toggleThumb} />
+            </button>
           </div>
 
           <div className={styles.actions}>

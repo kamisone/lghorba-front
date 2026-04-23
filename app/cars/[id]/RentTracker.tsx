@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Car } from "../data";
+import type { RentSchedule } from "./RentCalendar";
 import RentMap, { type RentPosition } from "./RentMap";
 import { extractMapsUrl, extractLatLng } from "./mapUtils";
 import styles from "./RentTracker.module.css";
@@ -12,6 +13,7 @@ interface LastConsumed { inbound: SmsMessage | null; outbound: SmsMessage | null
 interface RentSession {
   id: string;
   carId: string;
+  scheduleId?: string | null;
   status: "active" | "pending_stop" | "ended";
   startedAt: string;
   endedAt?: string;
@@ -21,13 +23,19 @@ interface RentSession {
 
 const INTERVAL_MS = 15 * 60 * 1000;
 
+function computeForfaitKm(fromDate: string, toDate: string): number {
+  const ms = new Date(toDate).getTime() - new Date(fromDate).getTime();
+  return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24))) * 200;
+}
+
 interface Props {
   car: Car;
   lastConsumed: LastConsumed | null;
-  isScheduleActive?: boolean;
+  activeSchedule: RentSchedule | null;
+  allSchedules: RentSchedule[];
 }
 
-export default function RentTracker({ car, lastConsumed, isScheduleActive }: Props) {
+export default function RentTracker({ car, lastConsumed, activeSchedule, allSchedules }: Props) {
   const [tracking,      setTracking]      = useState(false);
   const [sessionId,     setSessionId]     = useState<string | null>(null);
   const [positions,     setPositions]     = useState<RentPosition[]>([]);
@@ -44,6 +52,7 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
   const lastLocationSentRef = useRef<number>(0);
   const lastSavedMsgIdRef   = useRef<number | null>(null);
   const lastConsumedRef     = useRef(lastConsumed);
+  const stopTrackingRef     = useRef<() => void>(() => {});
 
   lastConsumedRef.current = lastConsumed;
 
@@ -71,7 +80,6 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
     if (!url) return;
     const coords = extractLatLng(url);
     if (!coords) return;
-
     try {
       const res = await fetch(`/next-api/rent-sessions/${sId}/positions`, {
         method: "POST",
@@ -81,7 +89,6 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
       if (res.ok) {
         const pos: RentPosition = await res.json();
         setPositions((prev) => [...prev, pos]);
-        // Backend just completed a location exchange — reset the countdown
         startCountdown();
       }
     } catch { /* silent */ }
@@ -150,7 +157,6 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
         }
 
         setTracking(true);
-        // Countdown display only — backend cron drives actual sends
         startCountdown(Math.floor(remaining / 1000));
       } catch { /* silent */ }
       if (!cancelled) setRestored(true);
@@ -160,13 +166,28 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [car.id]);
 
-  // ── Auto-start when a scheduled rent period is active ────────────────────
+  // ── Auto-start when schedule begins + autoStartTracking enabled ───────────
 
   useEffect(() => {
-    if (!isScheduleActive || !restored || tracking || confirming || sessionId !== null) return;
+    if (!activeSchedule?.autoStartTracking || !restored || tracking || confirming || sessionId !== null) return;
     startTracking();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isScheduleActive, restored]);
+  }, [activeSchedule?.id, restored]);
+
+  // ── Auto-stop when rent ends ──────────────────────────────────────────────
+
+  useEffect(() => {
+    stopTrackingRef.current = stopTracking;
+  });
+
+  useEffect(() => {
+    if (!activeSchedule || !tracking) return;
+    const ms = new Date(activeSchedule.toDate).getTime() - Date.now();
+    if (ms <= 0) { stopTrackingRef.current(); return; }
+    const t = setTimeout(() => stopTrackingRef.current(), ms);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSchedule?.id, tracking]);
 
   // ── Watch for new location responses ─────────────────────────────────────
 
@@ -181,12 +202,13 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
   // ── Toggle ────────────────────────────────────────────────────────────────
 
   const startTracking = async () => {
+    if (!activeSchedule) return;
     setToggling(true);
     try {
       const res = await fetch("/next-api/rent-sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ carId: car.id }),
+        body: JSON.stringify({ carId: car.id, scheduleId: activeSchedule.id }),
       });
       if (!res.ok) return;
       const session: RentSession = await res.json();
@@ -195,7 +217,7 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
       setPositions([]);
       lastSavedMsgIdRef.current = null;
       setTracking(true);
-      sendLocation();   // initial send for immediate UX; backend cron handles repeats
+      sendLocation();
       startCountdown();
     } finally {
       setToggling(false);
@@ -203,7 +225,7 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
   };
 
   const requestStop = () => {
-    if (countdownRef.current) clearInterval(countdownRef.current); // freeze display, keep nextIn
+    if (countdownRef.current) clearInterval(countdownRef.current);
     setTracking(false);
     setConfirming(true);
     const sId = sessionIdRef.current;
@@ -228,10 +250,10 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
     setConfirming(false);
     setTracking(true);
     if (nextIn === 0) {
-      sendLocation();   // overdue — send now, backend will pick up from nextLocationAt
+      sendLocation();
       startCountdown();
     } else {
-      startCountdown(nextIn); // resume from frozen value
+      startCountdown(nextIn);
     }
   };
 
@@ -240,8 +262,8 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
     setToggling(true);
     try {
       stopCountdown();
-      if (sessionId) {
-        const res = await fetch(`/next-api/rent-sessions/${sessionId}`, {
+      if (sessionIdRef.current) {
+        const res = await fetch(`/next-api/rent-sessions/${sessionIdRef.current}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: "ended" }),
@@ -260,7 +282,7 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
     }
   };
 
-  // ── Load session positions for history view ───────────────────────────────
+  // ── Load session positions for history ────────────────────────────────────
 
   const loadSession = async (session: RentSession) => {
     if (viewSession?.id === session.id) { setViewSession(null); return; }
@@ -276,14 +298,16 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
 
   // ── Formatters ────────────────────────────────────────────────────────────
 
-  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const fmt     = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const fmtDate = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+  const fmtDT   = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
-  const mapPositions = tracking ? positions : (viewSession?.positions ?? []);
+  const canStart = !!activeSchedule && !toggling;
 
   return (
     <div className={styles.section}>
-      {/* ── Toggle row ── */}
+
+      {/* ── Header row ── */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={styles.icon}>🚗</span>
@@ -294,6 +318,9 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
                 {positions.length} position{positions.length !== 1 ? "s" : ""}
                 {nextIn > 0 && <span className={styles.countdown}> · next in {fmt(nextIn)}</span>}
               </p>
+            )}
+            {!activeSchedule && !tracking && !confirming && (
+              <p className={styles.noRentMsg}>No active rent</p>
             )}
           </div>
         </div>
@@ -309,9 +336,9 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
           </div>
         ) : (
           <button
-            className={`${styles.toggle} ${tracking ? styles.toggleOn : ""} ${toggling ? styles.toggleDisabled : ""}`}
+            className={`${styles.toggle} ${tracking ? styles.toggleOn : ""} ${(!canStart && !tracking) || toggling ? styles.toggleDisabled : ""}`}
             onClick={tracking ? requestStop : startTracking}
-            disabled={toggling}
+            disabled={toggling || (!tracking && !activeSchedule)}
             aria-label={tracking ? "Stop rent tracking" : "Start rent tracking"}
           >
             <span className={styles.thumb} />
@@ -319,7 +346,23 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
         )}
       </div>
 
-      {/* ── Active session status ── */}
+      {/* ── Active schedule info ── */}
+      {activeSchedule && (
+        <div className={styles.scheduleCard}>
+          <div className={styles.scheduleCardDates}>
+            <span>{fmtDT(activeSchedule.fromDate)}</span>
+            <span className={styles.scheduleCardArrow}>→</span>
+            <span>{fmtDT(activeSchedule.toDate)}</span>
+          </div>
+          <div className={styles.scheduleCardMeta}>
+            {activeSchedule.guestName && <span className={styles.scheduleCardPill}>👤 {activeSchedule.guestName}</span>}
+            {activeSchedule.reservationNumber && <span className={styles.scheduleCardPill}>📋 {activeSchedule.reservationNumber}</span>}
+            <span className={styles.scheduleCardPill}>📏 {computeForfaitKm(activeSchedule.fromDate, activeSchedule.toDate).toLocaleString()} km</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Active session badge ── */}
       {tracking && (
         <div className={styles.activeBadge}>
           <span className={styles.activeDot} />
@@ -327,51 +370,71 @@ export default function RentTracker({ car, lastConsumed, isScheduleActive }: Pro
         </div>
       )}
 
-      {/* ── Map ── */}
-      {mapPositions.length > 0 && (
+      {/* ── Live map ── */}
+      {tracking && positions.length > 0 && (
         <>
           <div className={styles.mapWrap}>
             <div className={styles.mapHeader}>
               <div className={styles.mapRange}>
                 <span className={styles.mapRangeStart}>● 1</span>
                 <span className={styles.mapRangeDash} />
-                <span className={styles.mapRangeEnd}>● {mapPositions.length}</span>
+                <span className={styles.mapRangeEnd}>● {positions.length}</span>
               </div>
               <button className={styles.mapExpandBtn} onClick={() => setMapFullscreen(true)} title="Fullscreen">⛶</button>
             </div>
-            <RentMap positions={mapPositions} />
+            <RentMap positions={positions} />
           </div>
           {mapFullscreen && (
             <div className={styles.mapFullscreenOverlay}>
               <div className={styles.mapFullscreenBar}>
-                <span className={styles.mapFullscreenLabel}>{mapPositions.length} position{mapPositions.length !== 1 ? "s" : ""}</span>
+                <span className={styles.mapFullscreenLabel}>{positions.length} position{positions.length !== 1 ? "s" : ""}</span>
                 <button className={styles.mapFullscreenClose} onClick={() => setMapFullscreen(false)}>✕ Close</button>
               </div>
               <div className={styles.mapFullscreenBody}>
-                <RentMap positions={mapPositions} fill />
+                <RentMap positions={positions} fill />
               </div>
             </div>
           )}
         </>
       )}
 
-      {/* ── History ── */}
+      {/* ── Past rents history ── */}
       {sessions.length > 0 && (
         <div className={styles.history}>
           <p className={styles.historyTitle}>Past rents</p>
-          {sessions.map((s) => (
-            <button
-              key={s.id}
-              className={`${styles.sessionRow} ${viewSession?.id === s.id ? styles.sessionRowActive : ""}`}
-              onClick={() => loadSession(s)}
-            >
-              <span className={styles.sessionDate}>{fmtDate(s.startedAt)}</span>
-              <span className={styles.sessionPositions}>
-                {s.positions ? `${s.positions.length} pts` : "…"}
-              </span>
-              <span className={styles.sessionChevron}>{viewSession?.id === s.id ? "▲" : "▼"}</span>
-            </button>
-          ))}
+          {sessions.map((s) => {
+            const linked   = allSchedules.find(sch => sch.id === s.scheduleId);
+            const isOpen   = viewSession?.id === s.id;
+            const forfait  = linked ? computeForfaitKm(linked.fromDate, linked.toDate) : null;
+            return (
+              <div key={s.id} className={styles.sessionBlock}>
+                <button
+                  className={`${styles.sessionRow} ${isOpen ? styles.sessionRowActive : ""}`}
+                  onClick={() => loadSession(s)}
+                >
+                  <div className={styles.sessionInfo}>
+                    <span className={styles.sessionDate}>{fmtDate(s.startedAt)}</span>
+                    {linked?.guestName && <span className={styles.sessionGuest}>👤 {linked.guestName}</span>}
+                    {linked?.reservationNumber && <span className={styles.sessionRes}>#{linked.reservationNumber}</span>}
+                  </div>
+                  <div className={styles.sessionRight}>
+                    {forfait != null && <span className={styles.sessionKm}>{forfait.toLocaleString()} km</span>}
+                    {linked?.totalEarning != null && <span className={styles.sessionEarning}>{linked.totalEarning.toLocaleString()} €</span>}
+                    <span className={styles.sessionPositions}>{s.positions ? `${s.positions.length} pts` : "…"}</span>
+                    <span className={styles.sessionChevron}>{isOpen ? "▲" : "▼"}</span>
+                  </div>
+                </button>
+                {isOpen && viewSession?.positions && viewSession.positions.length > 0 && (
+                  <div className={styles.sessionMap}>
+                    <RentMap positions={viewSession.positions} height={220} />
+                  </div>
+                )}
+                {isOpen && viewSession?.positions?.length === 0 && (
+                  <p className={styles.sessionNoMap}>No positions recorded for this rent.</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
