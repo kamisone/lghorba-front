@@ -26,10 +26,9 @@ export default function RentPage() {
   const { id } = useParams<{ id: string }>();
   const storageKey = `car_last_msg_${id}`;
 
-  const [car,             setCar]             = useState<Car | null>(null);
-  const [loading,         setLoading]         = useState(true);
-  const [schedules,       setSchedules]       = useState<RentSchedule[]>([]);
-  const [rentTrackerKey,  setRentTrackerKey]  = useState(0);
+  const [car,          setCar]          = useState<Car | null>(null);
+  const [loading,      setLoading]      = useState(true);
+  const [schedules,    setSchedules]    = useState<RentSchedule[]>([]);
   const [lastConsumed, setLastConsumed] = useState<LastConsumed | null>(() => {
     if (typeof window === "undefined") return null;
     try { return JSON.parse(localStorage.getItem(storageKey) ?? "null"); } catch { return null; }
@@ -68,6 +67,12 @@ export default function RentPage() {
     return new Date(s.fromDate).getTime() <= now && now <= new Date(s.toDate).getTime();
   }) ?? null;
 
+  const handleScheduleUpdate = (updated: RentSchedule) =>
+    setSchedules(prev => prev.map(s => s.id === updated.id ? updated : s));
+
+  const handleScheduleDelete = (deletedId: string) =>
+    setSchedules(prev => prev.filter(s => s.id !== deletedId));
+
   if (loading) {
     return (
       <div className={styles.page}>
@@ -96,16 +101,16 @@ export default function RentPage() {
       </div>
 
       <RentTracker
-        key={rentTrackerKey}
         car={car}
         lastConsumed={lastConsumed}
         activeSchedule={activeSchedule}
         allSchedules={schedules}
+        onScheduleUpdate={handleScheduleUpdate}
+        onScheduleDelete={handleScheduleDelete}
       />
       <RentCalendar
         car={car}
         onScheduleChange={setSchedules}
-        onDeleted={() => setRentTrackerKey(k => k + 1)}
       />
     </div>
   );
