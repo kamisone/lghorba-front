@@ -15,7 +15,8 @@ interface RentSession {
   id: string;
   carId: string;
   scheduleId?: string | null;
-  status: "active" | "paused" | "ended";
+  status: "active" | "ended";
+  trackingPaused: boolean;
   startedAt: string;
   endedAt?: string;
   lastLocationRequestedAt?: string | null;
@@ -125,7 +126,7 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
         if (!r.ok || cancelled) return;
         const data: RentSession[] = await r.json();
 
-        const live = data.find((s) => s.status === "active" || s.status === "paused") ?? null;
+        const live = data.find((s) => s.status === "active") ?? null;
         if (!cancelled) setSessions(data.filter((s) => s.status === "ended"));
         if (!live || cancelled) return;
 
@@ -156,8 +157,9 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
         const elapsed   = lastLocationSentRef.current ? Date.now() - lastLocationSentRef.current : INTERVAL_MS;
         const remaining = Math.max(0, INTERVAL_MS - elapsed);
 
-        setTracking(live.status === "active");
-        if (live.status === "active") startCountdown(Math.floor(remaining / 1000));
+        const trackingActive = !live.trackingPaused;
+        setTracking(trackingActive);
+        if (trackingActive) startCountdown(Math.floor(remaining / 1000));
       } catch { /* silent */ }
       if (!cancelled) setRestored(true);
     })();
@@ -203,14 +205,20 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
 
   const startTracking = async () => {
     if (sessionId) {
-      fetch(`/next-api/rent-sessions/${sessionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "active" }),
-      }).catch(() => {});
-      setTracking(true);
-      sendLocation();
-      startCountdown();
+      setToggling(true);
+      try {
+        const res = await fetch(`/next-api/rent-sessions/${sessionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trackingPaused: false }),
+        });
+        if (!res.ok) return;
+        const session: RentSession = await res.json();
+        setTracking(!session.trackingPaused);
+        if (!session.trackingPaused) { sendLocation(); startCountdown(); }
+      } finally {
+        setToggling(false);
+      }
       return;
     }
     if (!activeSchedule) return;
@@ -227,24 +235,29 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
       setSessionId(session.id);
       setPositions([]);
       lastSavedMsgIdRef.current = null;
-      setTracking(true);
-      sendLocation();
-      startCountdown();
+      setTracking(!session.trackingPaused);
+      if (!session.trackingPaused) { sendLocation(); startCountdown(); }
     } finally {
       setToggling(false);
     }
   };
 
-  const pauseTracking = () => {
-    stopCountdown();
-    setTracking(false);
+  const pauseTracking = async () => {
     const sId = sessionIdRef.current;
-    if (sId) {
-      fetch(`/next-api/rent-sessions/${sId}`, {
+    if (!sId) return;
+    setToggling(true);
+    try {
+      const res = await fetch(`/next-api/rent-sessions/${sId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "paused" }),
-      }).catch(() => {});
+        body: JSON.stringify({ trackingPaused: true }),
+      });
+      if (!res.ok) return;
+      const session: RentSession = await res.json();
+      stopCountdown();
+      setTracking(!session.trackingPaused);
+    } finally {
+      setToggling(false);
     }
   };
 
