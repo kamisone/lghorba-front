@@ -49,7 +49,8 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
   const [nextIn,             setNextIn]             = useState(0);
   const [confirmingEnd,      setConfirmingEnd]      = useState(false);
   const [restored,           setRestored]           = useState(false);
-  const [mapFullscreen,      setMapFullscreen]      = useState(false);
+  const [mapFullscreen,           setMapFullscreen]           = useState(false);
+  const [fullscreenSessionId,     setFullscreenSessionId]     = useState<string | null>(null);
   const [expandedSessionId,  setExpandedSessionId]  = useState<string | null>(null);
   const [showEditModal,      setShowEditModal]      = useState(false);
   const [editingSchedule,    setEditingSchedule]    = useState<RentSchedule | null>(null);
@@ -535,9 +536,30 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
                       </span>
                     </div>
                     {session.positions && session.positions.length > 0 ? (
-                      <div className={styles.sessionMap}>
-                        <RentMap positions={session.positions} height={220} />
-                      </div>
+                      <>
+                        <div className={styles.mapWrap}>
+                          <div className={styles.mapHeader}>
+                            <div className={styles.mapRange}>
+                              <span className={styles.mapRangeStart}>● 1</span>
+                              <span className={styles.mapRangeDash} />
+                              <span className={styles.mapRangeEnd}>● {session.positions.length}</span>
+                            </div>
+                            <button className={styles.mapExpandBtn} onClick={() => setFullscreenSessionId(session.id)} title="Fullscreen">⛶</button>
+                          </div>
+                          <RentMap positions={session.positions} height={220} />
+                        </div>
+                        {fullscreenSessionId === session.id && (
+                          <div className={styles.mapFullscreenOverlay}>
+                            <div className={styles.mapFullscreenBar}>
+                              <span className={styles.mapFullscreenLabel}>{session.positions.length} position{session.positions.length !== 1 ? "s" : ""}</span>
+                              <button className={styles.mapFullscreenClose} onClick={() => setFullscreenSessionId(null)}>✕ Close</button>
+                            </div>
+                            <div className={styles.mapFullscreenBody}>
+                              <RentMap positions={session.positions} fill />
+                            </div>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <p className={styles.sessionNoMap}>
                         {session.positions ? "No positions recorded." : "Loading…"}
