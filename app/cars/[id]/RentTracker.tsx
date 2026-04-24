@@ -5,12 +5,8 @@ import type { Car } from "../data";
 import type { RentSchedule } from "./RentCalendar";
 import RentMap, { type RentPosition } from "./RentMap";
 import RentScheduleModal from "./RentScheduleModal";
-import { extractMapsUrl, extractLatLng } from "./mapUtils";
 import { useToast } from "@/app/components/toast/ToastContext";
 import styles from "./RentTracker.module.css";
-
-interface SmsMessage { id: number; message: string; createdAt: string; }
-interface LastConsumed { inbound: SmsMessage | null; outbound: SmsMessage | null; }
 
 interface RentSession {
   id: string;
@@ -34,7 +30,6 @@ function computeForfaitKm(fromDate: string, toDate: string): number {
 
 interface Props {
   car: Car;
-  lastConsumed: LastConsumed | null;
   activeSchedule: RentSchedule | null;
   allSchedules: RentSchedule[];
   onScheduleUpdate: (s: RentSchedule) => void;
@@ -43,7 +38,7 @@ interface Props {
   onActiveScheduleIdChange?: (id: string | null) => void;
 }
 
-export default function RentTracker({ car, lastConsumed, activeSchedule, allSchedules, onScheduleUpdate, onScheduleDelete, onUsedScheduleIdsChange, onActiveScheduleIdChange }: Props) {
+export default function RentTracker({ car, activeSchedule, allSchedules, onScheduleUpdate, onScheduleDelete, onUsedScheduleIdsChange, onActiveScheduleIdChange }: Props) {
   const { toast } = useToast();
   const [tracking,           setTracking]           = useState(false);
   const [sessionId,          setSessionId]          = useState<string | null>(null);
@@ -62,36 +57,14 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
 
   const countdownRef             = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef             = useRef<string | null>(null);
-  const lastSavedMsgIdRef        = useRef<number | null>(null);
-  const lastConsumedRef          = useRef(lastConsumed);
   const trackingRef              = useRef(tracking);
   const lastLocationRequestedRef = useRef<string | null>(null);
   const togglingRef              = useRef(toggling);
 
-  lastConsumedRef.current = lastConsumed;
-  trackingRef.current     = tracking;
-  togglingRef.current     = toggling;
+  trackingRef.current = tracking;
+  togglingRef.current = toggling;
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-
-  const savePosition = useCallback(async (sId: string, inbound: SmsMessage) => {
-    const url    = extractMapsUrl(inbound.message);
-    if (!url) return;
-    const coords = extractLatLng(url);
-    if (!coords) return;
-    try {
-      const res = await fetch(`/next-api/rent-sessions/${sId}/positions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat: coords.lat, lng: coords.lng, rawMessage: inbound.message, recordedAt: inbound.createdAt }),
-      });
-      if (res.ok) {
-        const pos: RentPosition = await res.json();
-        setPositions((prev) => [...prev, pos]);
-      }
-    } catch { /* silent */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const startCountdown = useCallback((seconds = INTERVAL_MS / 1000) => {
     setNextIn(seconds);
@@ -129,14 +102,6 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
 
         if (cancelled) return;
         sessionIdRef.current = live.id;
-
-        const currentInbound = lastConsumedRef.current?.inbound ?? null;
-        const latestPos      = restoredPositions.at(-1) ?? null;
-        const alreadySaved   =
-          currentInbound !== null &&
-          latestPos !== null &&
-          new Date(latestPos.recordedAt).getTime() === new Date(currentInbound.createdAt).getTime();
-        lastSavedMsgIdRef.current = alreadySaved ? currentInbound.id : null;
 
         setSessionId(live.id);
         setPositions(restoredPositions);
@@ -191,7 +156,6 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
           setSessionId(live.id);
           setSessions(data.filter(s => s.status === "ended"));
           onActiveScheduleIdChange?.(live.scheduleId ?? null);
-          lastSavedMsgIdRef.current = lastConsumedRef.current?.inbound?.id ?? null;
           lastLocationRequestedRef.current = live.lastLocationRequestedAt ?? null;
           try {
             const posRes = await fetch(`/next-api/rent-sessions/${live.id}/positions`, { cache: "no-store" });
@@ -215,6 +179,20 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
             const remaining = Math.max(0, INTERVAL_MS - (lastSent ? Date.now() - lastSent : INTERVAL_MS));
             startCountdown(Math.floor(remaining / 1000));
           }
+
+          // Poll positions so the map reflects what the cron saved on the backend
+          if (shouldTrack) {
+            try {
+              const posRes = await fetch(`/next-api/rent-sessions/${live.id}/positions`, { cache: "no-store" });
+              if (posRes.ok) {
+                const fetched: RentPosition[] = await posRes.json();
+                setPositions(prev => {
+                  if (prev.length === fetched.length && prev.at(-1)?.id === fetched.at(-1)?.id) return prev;
+                  return fetched;
+                });
+              }
+            } catch { /* silent */ }
+          }
         }
       } catch { /* silent */ }
     }, SESSION_POLL_MS);
@@ -232,16 +210,6 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
     }
     onUsedScheduleIdsChange?.(Array.from(new Set(ids)));
   }, [sessions, sessionId, activeSchedule, onUsedScheduleIdsChange]);
-
-  // ── Watch for new location responses ─────────────────────────────────────
-
-  useEffect(() => {
-    if (!tracking || !sessionId || !lastConsumed?.inbound) return;
-    const inbound = lastConsumed.inbound;
-    if (inbound.id === lastSavedMsgIdRef.current) return;
-    lastSavedMsgIdRef.current = inbound.id;
-    savePosition(sessionId, inbound);
-  }, [lastConsumed?.inbound?.id, tracking, sessionId, savePosition]);
 
   // ── Tracking toggle ───────────────────────────────────────────────────────
 
