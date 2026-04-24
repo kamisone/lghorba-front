@@ -11,6 +11,7 @@ interface Props {
   sessionStarted?: boolean;
   onClose: () => void;
   onSaved: (s: RentSchedule) => void;
+  onDelete?: () => void;
 }
 
 interface FormValues {
@@ -42,7 +43,7 @@ function toDateTimeInput(iso: string): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-export default function RentScheduleModal({ car, schedule, sessionStarted, onClose, onSaved }: Props) {
+export default function RentScheduleModal({ car, schedule, sessionStarted, onClose, onSaved, onDelete }: Props) {
   const isEdit = !!schedule;
   const [form, setForm] = useState<FormValues>({
     from: "", to: "", guestName: "", guestNumber: "", reservationNumber: "", totalEarning: "", autoStartTracking: false, color: "",
@@ -150,31 +151,33 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
             </div>
           </div>
 
-          <div className={styles.colorField}>
-            <label className={styles.label}>Color</label>
-            <div className={styles.colorPicker}>
-              {COLORS.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`${styles.colorSwatch} ${form.color === c ? styles.colorSwatchActive : ""}`}
-                  style={{ background: c }}
-                  onClick={() => setForm(prev => ({ ...prev, color: prev.color === c ? "" : c }))}
-                  aria-label={c}
-                />
-              ))}
-              {form.color && (
-                <button
-                  type="button"
-                  className={styles.colorClear}
-                  onClick={() => setForm(prev => ({ ...prev, color: "" }))}
-                  title="Remove color"
-                >
-                  ✕
-                </button>
-              )}
+          {!sessionStarted && (
+            <div className={styles.colorField}>
+              <label className={styles.label}>Color</label>
+              <div className={styles.colorPicker}>
+                {COLORS.map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`${styles.colorSwatch} ${form.color === c ? styles.colorSwatchActive : ""}`}
+                    style={{ background: c }}
+                    onClick={() => setForm(prev => ({ ...prev, color: prev.color === c ? "" : c }))}
+                    aria-label={c}
+                  />
+                ))}
+                {form.color && (
+                  <button
+                    type="button"
+                    className={styles.colorClear}
+                    onClick={() => setForm(prev => ({ ...prev, color: "" }))}
+                    title="Remove color"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className={styles.toggleRow}>
             <div className={styles.toggleLabelWrap}>
@@ -193,6 +196,9 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
           </div>
 
           <div className={styles.actions}>
+            {onDelete && (
+              <button type="button" className={styles.deleteBtn} onClick={onDelete} disabled={saving}>Delete</button>
+            )}
             <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={saving}>Cancel</button>
             <button type="submit" className={styles.submitBtn} disabled={saving || !form.from || !form.to}>
               {saving ? "Saving…" : isEdit ? "Save changes" : "Add period"}

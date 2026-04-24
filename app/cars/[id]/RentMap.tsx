@@ -61,7 +61,7 @@ export default function RentMap({ positions, height = 280, fill = false }: Props
         });
 
         const popup = L.popup({ offset: [0, -10] }).setContent(
-          `<b>#${i + 1}</b><br/>${new Date(pos.recordedAt).toLocaleString()}`
+          `<b>#${i + 1}</b><br/>${new Date(pos.recordedAt).toLocaleString()}<br/><a href="https://www.google.com/maps?q=${pos.lat},${pos.lng}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>`
         );
 
         L.marker([pos.lat, pos.lng], { icon }).bindPopup(popup).addTo(map);

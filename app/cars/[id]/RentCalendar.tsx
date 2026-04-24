@@ -58,9 +58,8 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
   const [viewDate,         setViewDate]         = useState(() => new Date());
   const [showAddModal,     setShowAddModal]     = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<RentSchedule | null>(null);
-  const [showEditModal,    setShowEditModal]    = useState(false);
-  const [deletingId,       setDeletingId]       = useState<string | null>(null);
-  const [confirmDelete,    setConfirmDelete]    = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [deletingId,    setDeletingId]    = useState<string | null>(null);
 
   const today = startOfDay(new Date());
 
@@ -83,7 +82,7 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
 
   const handleEditSaved = (updated: RentSchedule) => {
     notify(schedules.map(s => s.id === updated.id ? updated : s));
-    setSelectedSchedule(updated);
+    setSelectedSchedule(null);
     setShowEditModal(false);
   };
 
@@ -95,7 +94,7 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
       if (res.ok) {
         notify(schedules.filter(s => s.id !== selectedSchedule.id));
         setSelectedSchedule(null);
-        setConfirmDelete(false);
+        setShowEditModal(false);
       }
     } finally {
       setDeletingId(null);
@@ -122,9 +121,10 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
 
   const openSchedule = (s: RentSchedule) => {
     if (s.id === activeScheduleId) return;
-    setConfirmDelete(false);
-    setSelectedSchedule(prev => prev?.id === s.id ? null : s);
+    setSelectedSchedule(s);
+    setShowEditModal(true);
   };
+
 
   const year       = viewDate.getFullYear();
   const month      = viewDate.getMonth();
@@ -216,75 +216,10 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
         <RentScheduleModal
           car={car}
           schedule={selectedSchedule}
-          onClose={() => setShowEditModal(false)}
+          onClose={() => { setShowEditModal(false); setSelectedSchedule(null); }}
           onSaved={handleEditSaved}
+          onDelete={handleDelete}
         />
-      )}
-
-      {/* ── Info modal ── */}
-      {selectedSchedule && !showEditModal && (
-        <div className={styles.infoOverlay} onClick={() => { setSelectedSchedule(null); setConfirmDelete(false); }}>
-          <div className={styles.infoModal} onClick={e => e.stopPropagation()}>
-
-            <div className={styles.infoHeader} style={selectedSchedule.color ? { borderTop: `4px solid ${selectedSchedule.color}` } : undefined}>
-              <div className={styles.infoHeaderDates}>
-                <span>{fmtDT(selectedSchedule.fromDate)}</span>
-                <span className={styles.infoArrow}>→</span>
-                <span>{fmtDT(selectedSchedule.toDate)}</span>
-              </div>
-              <button className={styles.infoClose} onClick={() => { setSelectedSchedule(null); setConfirmDelete(false); }}>✕</button>
-            </div>
-
-            <div className={styles.infoBody}>
-              <div className={styles.infoKm}>
-                📏 {computeForfaitKm(selectedSchedule.fromDate, selectedSchedule.toDate).toLocaleString()} km forfait
-              </div>
-
-              <div className={styles.infoPills}>
-                {selectedSchedule.guestName && (
-                  <span className={styles.infoPill}>👤 {selectedSchedule.guestName}</span>
-                )}
-                {selectedSchedule.guestNumber && (
-                  <span className={styles.infoPill}>📞 {selectedSchedule.guestNumber}</span>
-                )}
-                {selectedSchedule.reservationNumber && (
-                  <span className={styles.infoPill}>📋 #{selectedSchedule.reservationNumber}</span>
-                )}
-                {selectedSchedule.totalEarning != null && (
-                  <span className={`${styles.infoPill} ${styles.infoPillEarning}`}>
-                    💶 {selectedSchedule.totalEarning.toLocaleString()} €
-                  </span>
-                )}
-                {selectedSchedule.autoStartTracking && (
-                  <span className={`${styles.infoPill} ${styles.infoPillTracking}`}>🔄 Auto-track</span>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.infoActions}>
-              <button className={styles.infoEditBtn} onClick={() => setShowEditModal(true)}>
-                ✏ Edit
-              </button>
-
-              {confirmDelete ? (
-                <div className={styles.infoConfirmRow}>
-                  <span className={styles.infoConfirmLabel}>Sure?</span>
-                  <button className={styles.infoConfirmYes} onClick={handleDelete} disabled={!!deletingId}>
-                    {deletingId ? "Deleting…" : "Yes, delete"}
-                  </button>
-                  <button className={styles.infoConfirmNo} onClick={() => setConfirmDelete(false)}>
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button className={styles.infoDeleteBtn} onClick={() => setConfirmDelete(true)}>
-                  🗑 Delete
-                </button>
-              )}
-            </div>
-
-          </div>
-        </div>
       )}
     </div>
   );

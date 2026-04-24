@@ -70,6 +70,11 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
   const secsUntil = (iso: string | null | undefined): number =>
     iso ? Math.max(0, Math.floor((new Date(iso).getTime() - Date.now()) / 1000)) : 0;
 
+  const remainingSecs = (lastReq: string | null | undefined, nextAt: string | null | undefined): number =>
+    lastReq
+      ? Math.max(0, Math.floor((INTERVAL_MS - (Date.now() - new Date(lastReq).getTime())) / 1000))
+      : secsUntil(nextAt);
+
   const startCountdown = useCallback((seconds = INTERVAL_MS / 1000) => {
     setNextIn(seconds);
     if (countdownRef.current) clearInterval(countdownRef.current);
@@ -115,7 +120,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
 
         const trackingActive = !live.trackingPaused;
         setTracking(trackingActive);
-        if (trackingActive) startCountdown(secsUntil(live.nextLocationAt));
+        if (trackingActive) startCountdown(remainingSecs(live.lastLocationRequestedAt, live.nextLocationAt));
       } catch { /* silent */ } finally {
         if (!cancelled) setRestored(true);
       }
@@ -173,7 +178,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
               stopCountdown();
             } else {
               lastLocationRequestedRef.current = live.lastLocationRequestedAt ?? null;
-              startCountdown(secsUntil(live.nextLocationAt));
+              startCountdown(remainingSecs(live.lastLocationRequestedAt, live.nextLocationAt));
             }
           }
 
@@ -181,7 +186,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
           const newLastReq = live.lastLocationRequestedAt ?? null;
           if (shouldTrack && newLastReq !== lastLocationRequestedRef.current) {
             lastLocationRequestedRef.current = newLastReq;
-            startCountdown(secsUntil(live.nextLocationAt));
+            startCountdown(remainingSecs(live.lastLocationRequestedAt, live.nextLocationAt));
           }
 
           // Poll positions so the map reflects what the cron saved on the backend
@@ -230,7 +235,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
       const session: RentSession = await res.json();
       if (!session.trackingPaused) {
         lastLocationRequestedRef.current = session.lastLocationRequestedAt ?? null;
-        startCountdown(secsUntil(session.nextLocationAt));
+        startCountdown(remainingSecs(session.lastLocationRequestedAt, session.nextLocationAt));
       }
       setTracking(!session.trackingPaused);
     } finally {
@@ -436,7 +441,6 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
             {activeSchedule.reservationNumber && <span className={styles.scheduleCardPill}>📋 {activeSchedule.reservationNumber}</span>}
             <span className={styles.scheduleCardPill}>📏 {computeForfaitKm(activeSchedule.fromDate, activeSchedule.toDate).toLocaleString()} km</span>
             {activeSchedule.totalEarning != null && <span className={`${styles.scheduleCardPill} ${styles.scheduleCardPillEarning}`}>💶 {activeSchedule.totalEarning.toLocaleString()} €</span>}
-            {activeSchedule.autoStartTracking && <span className={`${styles.scheduleCardPill} ${styles.scheduleCardPillTracking}`}>🔄 Auto-track</span>}
           </div>
         </div>
       )}
