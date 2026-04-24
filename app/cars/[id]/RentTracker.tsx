@@ -15,7 +15,7 @@ interface RentSession {
   id: string;
   carId: string;
   scheduleId?: string | null;
-  status: "active" | "paused" | "pending_stop" | "ended";
+  status: "active" | "paused" | "ended";
   startedAt: string;
   endedAt?: string;
   lastLocationRequestedAt?: string | null;
@@ -125,7 +125,7 @@ export default function RentTracker({ car, lastConsumed, activeSchedule, allSche
         if (!r.ok || cancelled) return;
         const data: RentSession[] = await r.json();
 
-        const live = data.find((s) => s.status === "active" || s.status === "pending_stop" || s.status === "paused") ?? null;
+        const live = data.find((s) => s.status === "active" || s.status === "paused") ?? null;
         if (!cancelled) setSessions(data.filter((s) => s.status === "ended"));
         if (!live || cancelled) return;
 
