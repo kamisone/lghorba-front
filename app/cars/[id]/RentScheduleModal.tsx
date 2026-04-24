@@ -8,6 +8,7 @@ import styles from "./RentScheduleModal.module.css";
 interface Props {
   car: Car;
   schedule?: RentSchedule;
+  sessionStarted?: boolean;
   onClose: () => void;
   onSaved: (s: RentSchedule) => void;
 }
@@ -41,7 +42,7 @@ function toDateTimeInput(iso: string): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-export default function RentScheduleModal({ car, schedule, onClose, onSaved }: Props) {
+export default function RentScheduleModal({ car, schedule, sessionStarted, onClose, onSaved }: Props) {
   const isEdit = !!schedule;
   const [form, setForm] = useState<FormValues>({
     from: "", to: "", guestName: "", guestNumber: "", reservationNumber: "", totalEarning: "", autoStartTracking: false, color: "",
@@ -176,11 +177,15 @@ export default function RentScheduleModal({ car, schedule, onClose, onSaved }: P
           </div>
 
           <div className={styles.toggleRow}>
-            <span className={styles.toggleLabel}>Auto-start tracking when rent begins</span>
+            <div className={styles.toggleLabelWrap}>
+              <span className={styles.toggleLabel}>Auto-start tracking when rent begins</span>
+              {sessionStarted && <span className={styles.toggleHint}>Session already started</span>}
+            </div>
             <button
               type="button"
-              className={`${styles.toggle} ${form.autoStartTracking ? styles.toggleOn : ""}`}
-              onClick={() => setForm(prev => ({ ...prev, autoStartTracking: !prev.autoStartTracking }))}
+              className={`${styles.toggle} ${form.autoStartTracking ? styles.toggleOn : ""} ${sessionStarted ? styles.toggleDisabled : ""}`}
+              onClick={() => !sessionStarted && setForm(prev => ({ ...prev, autoStartTracking: !prev.autoStartTracking }))}
+              disabled={sessionStarted}
               aria-label="Toggle auto-start tracking"
             >
               <span className={styles.toggleThumb} />

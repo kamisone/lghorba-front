@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
-import {AppMode} from '@/app/globals';
+import { AppMode } from "@/app/globals";
+import { ToastProvider } from "@/app/components/toast/ToastContext";
+import Toaster from "@/app/components/toast/Toaster";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -19,16 +21,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <main>
-          {(function () {
-            switch (process.env.APP_MODE) {
-              // case AppMode.MAINTENANCE:
-              //   return <Maintenance />;
-              default:
-                return children;
-            }
-          })()}
-        </main>
+        <ToastProvider>
+          <main>
+            {(function () {
+              switch (process.env.APP_MODE) {
+                // case AppMode.MAINTENANCE:
+                //   return <Maintenance />;
+                default:
+                  return children;
+              }
+            })()}
+          </main>
+          <Toaster />
+        </ToastProvider>
       </body>
     </html>
   );

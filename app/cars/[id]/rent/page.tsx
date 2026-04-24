@@ -26,9 +26,10 @@ export default function RentPage() {
   const { id } = useParams<{ id: string }>();
   const storageKey = `car_last_msg_${id}`;
 
-  const [car,          setCar]          = useState<Car | null>(null);
-  const [loading,      setLoading]      = useState(true);
-  const [schedules,    setSchedules]    = useState<RentSchedule[]>([]);
+  const [car,              setCar]              = useState<Car | null>(null);
+  const [loading,          setLoading]          = useState(true);
+  const [schedules,        setSchedules]        = useState<RentSchedule[]>([]);
+  const [usedScheduleIds,  setUsedScheduleIds]  = useState<string[]>([]);
   const [lastConsumed, setLastConsumed] = useState<LastConsumed | null>(() => {
     if (typeof window === "undefined") return null;
     try { return JSON.parse(localStorage.getItem(storageKey) ?? "null"); } catch { return null; }
@@ -122,11 +123,13 @@ export default function RentPage() {
         allSchedules={schedules}
         onScheduleUpdate={handleScheduleUpdate}
         onScheduleDelete={handleScheduleDelete}
+        onUsedScheduleIdsChange={setUsedScheduleIds}
       />
       <RentCalendar
         car={car}
         onScheduleChange={setSchedules}
         activeScheduleId={activeSchedule?.id}
+        excludeScheduleIds={usedScheduleIds}
       />
     </div>
   );

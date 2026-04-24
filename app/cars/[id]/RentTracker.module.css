@@ -150,6 +150,15 @@
   color: #16a34a;
 }
 
+.activeBadgePaused {
+  color: #92400e;
+}
+
+.activeBadgePaused .activeDot {
+  background: #f59e0b;
+  animation: none;
+}
+
 .activeDot {
   width: 8px;
   height: 8px;
@@ -500,6 +509,20 @@
   color: #16a34a;
   font-weight: 700;
   white-space: nowrap;
+}
+
+/* ── Session expanded detail ── */
+.sessionDetail {
+  padding: 0.5rem 0.6rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sessionDetailPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
 }
 
 /* ── Inline session map ── */

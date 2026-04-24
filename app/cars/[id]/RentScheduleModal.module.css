@@ -164,10 +164,22 @@
   border-radius: 9px;
 }
 
+.toggleLabelWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
 .toggleLabel {
   font-size: 0.84rem;
   font-weight: 600;
   color: #374151;
+}
+
+.toggleHint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-style: italic;
 }
 
 .toggle {
@@ -184,6 +196,11 @@
 
 .toggleOn {
   background: linear-gradient(135deg, #211951 0%, #407bff 100%);
+}
+
+.toggleDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .toggleThumb {

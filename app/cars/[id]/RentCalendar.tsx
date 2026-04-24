@@ -22,6 +22,7 @@ interface Props {
   car: Car;
   onScheduleChange?: (schedules: RentSchedule[]) => void;
   activeScheduleId?: string | null;
+  excludeScheduleIds?: string[];
 }
 
 function startOfDay(d: Date): Date {
@@ -52,7 +53,7 @@ function computeForfaitKm(fromDate: string, toDate: string): number {
 const DEFAULT_BG = "linear-gradient(135deg, #211951 0%, #407bff 100%)";
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-export default function RentCalendar({ car, onScheduleChange, activeScheduleId }: Props) {
+export default function RentCalendar({ car, onScheduleChange, activeScheduleId, excludeScheduleIds }: Props) {
   const [schedules,        setSchedules]        = useState<RentSchedule[]>([]);
   const [viewDate,         setViewDate]         = useState(() => new Date());
   const [showAddModal,     setShowAddModal]     = useState(false);
@@ -101,9 +102,13 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId }
     }
   };
 
+  const visibleSchedules = excludeScheduleIds?.length
+    ? schedules.filter(s => !excludeScheduleIds.includes(s.id))
+    : schedules;
+
   const getSchedulesForDay = (date: Date): RentSchedule[] => {
     const d = date.getTime();
-    return schedules.filter(s => {
+    return visibleSchedules.filter(s => {
       const from = startOfDay(new Date(s.fromDate)).getTime();
       const to   = startOfDay(new Date(s.toDate)).getTime();
       return d >= from && d <= to;

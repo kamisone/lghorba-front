@@ -32,3 +32,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/rent-sessions/${params.id}`, {
+      method: "DELETE",
+      headers: bearer(request),
+    });
+    if (res.status === 204) return new NextResponse(null, { status: 204 });
+    return NextResponse.json(await res.json(), { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
+  }
+}
