@@ -4,10 +4,12 @@
   background: rgba(15, 15, 30, 0.55);
   backdrop-filter: blur(3px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 200;
   padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  overflow-y: auto;
 }
 
 .modal {
@@ -16,7 +18,7 @@
   box-shadow: 0 24px 60px rgba(33, 25, 81, 0.18);
   width: 100%;
   max-width: 520px;
-  overflow: hidden;
+  margin: auto;
 }
 
 .modalHeader {
