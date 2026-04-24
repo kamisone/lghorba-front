@@ -17,6 +17,7 @@ interface RentSession {
   startedAt: string;
   endedAt?: string;
   lastLocationRequestedAt?: string | null;
+  nextLocationAt?: string | null;
   positions?: RentPosition[];
 }
 
@@ -66,6 +67,9 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
+  const secsUntil = (iso: string | null | undefined): number =>
+    iso ? Math.max(0, Math.floor((new Date(iso).getTime() - Date.now()) / 1000)) : 0;
+
   const startCountdown = useCallback((seconds = INTERVAL_MS / 1000) => {
     setNextIn(seconds);
     if (countdownRef.current) clearInterval(countdownRef.current);
@@ -108,13 +112,10 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
         onActiveScheduleIdChange?.(live.scheduleId ?? null);
 
         lastLocationRequestedRef.current = live.lastLocationRequestedAt ?? null;
-        const lastSent  = live.lastLocationRequestedAt ? new Date(live.lastLocationRequestedAt).getTime() : 0;
-        const elapsed   = lastSent ? Date.now() - lastSent : INTERVAL_MS;
-        const remaining = Math.max(0, INTERVAL_MS - elapsed);
 
         const trackingActive = !live.trackingPaused;
         setTracking(trackingActive);
-        if (trackingActive) startCountdown(Math.floor(remaining / 1000));
+        if (trackingActive) startCountdown(secsUntil(live.nextLocationAt));
       } catch { /* silent */ } finally {
         if (!cancelled) setRestored(true);
       }
@@ -168,16 +169,19 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
           const shouldTrack = !live.trackingPaused;
           if (shouldTrack !== trackingRef.current) {
             setTracking(shouldTrack);
-            if (!shouldTrack) stopCountdown();
+            if (!shouldTrack) {
+              stopCountdown();
+            } else {
+              lastLocationRequestedRef.current = live.lastLocationRequestedAt ?? null;
+              startCountdown(secsUntil(live.nextLocationAt));
+            }
           }
 
-          // Sync countdown from lastLocationRequestedAt when it changes
+          // Cron fired — lastLocationRequestedAt changed, restart countdown from new nextLocationAt
           const newLastReq = live.lastLocationRequestedAt ?? null;
           if (shouldTrack && newLastReq !== lastLocationRequestedRef.current) {
             lastLocationRequestedRef.current = newLastReq;
-            const lastSent  = newLastReq ? new Date(newLastReq).getTime() : 0;
-            const remaining = Math.max(0, INTERVAL_MS - (lastSent ? Date.now() - lastSent : INTERVAL_MS));
-            startCountdown(Math.floor(remaining / 1000));
+            startCountdown(secsUntil(live.nextLocationAt));
           }
 
           // Poll positions so the map reflects what the cron saved on the backend
@@ -224,6 +228,10 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
       });
       if (!res.ok) return;
       const session: RentSession = await res.json();
+      if (!session.trackingPaused) {
+        lastLocationRequestedRef.current = session.lastLocationRequestedAt ?? null;
+        startCountdown(secsUntil(session.nextLocationAt));
+      }
       setTracking(!session.trackingPaused);
     } finally {
       setToggling(false);
@@ -369,7 +377,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
             {tracking && (
               <p className={styles.meta}>
                 {positions.length} position{positions.length !== 1 ? "s" : ""}
-                <span className={styles.countdown}> · next in {nextIn > 0 ? fmt(nextIn) : "now"}</span>
+                <span className={styles.countdown}> · next in {fmt(nextIn)}</span>
               </p>
             )}
             {!hasSession && (
