@@ -27,17 +27,20 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     else setCollapsed((c) => !c);
   };
 
+  // On mobile: collapsed=false when open (shows chevron_left), collapsed=true when closed
   const effectiveCollapsed = isMobile ? !mobileOpen : collapsed;
-  const showOverlay = isMobile && mobileOpen;
 
   return (
     <div className={`${styles.shell} ${effectiveCollapsed ? styles.collapsed : ""}`}>
-      {showOverlay && (
-        <div
-          className={styles.overlay}
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
+      {/* Floating hamburger — mobile only, shown when sidebar is closed */}
+      {isMobile && !mobileOpen && (
+        <button
+          className={styles.mobileHamburger}
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+        >
+          <span /><span /><span />
+        </button>
       )}
 
       <AdminSidebar
