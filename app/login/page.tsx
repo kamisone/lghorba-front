@@ -40,15 +40,19 @@ function LoginForm() {
   return (
     <div className={styles.card}>
       <div className={styles.brand}>
-        <div className={styles.brandMark}>🚗</div>
-        <h1 className={styles.title}>Welcome back</h1>
+        <div className={styles.brandMark}>
+          <img src="assets/lghorba_logo.png" alt="lghorba logo" className="w-4 h-4"/>
+        </div>
+        <h1 className={styles.title}>Lghorba cars</h1>
         <p className={styles.subtitle}>Sign in to your account</p>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className={styles.fields}>
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="email">Email</label>
+            <label className={styles.label} htmlFor="email">
+              Email
+            </label>
             <input
               id="email"
               className={styles.input}
@@ -61,7 +65,9 @@ function LoginForm() {
             />
           </div>
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="password">Password</label>
+            <label className={styles.label} htmlFor="password">
+              Password
+            </label>
             <input
               id="password"
               className={styles.input}

@@ -35,6 +35,12 @@
   justify-content: center;
   font-size: 1.6rem;
   margin-bottom: 0.25rem;
+  overflow: hidden;
+  box-shadow:  0 0 0 2px #407bff;
+}
+
+.brandMark img {
+  width: 100%;
 }
 
 .title {
