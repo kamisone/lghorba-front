@@ -117,8 +117,6 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
   const isEdge = (date: Date, s: RentSchedule, which: "from" | "to") =>
     isSameDay(date, startOfDay(new Date(which === "from" ? s.fromDate : s.toDate)));
 
-  const fmtDT = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-
   const openSchedule = (s: RentSchedule) => {
     if (s.id === activeScheduleId) return;
     setSelectedSchedule(s);
