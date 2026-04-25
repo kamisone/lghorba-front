@@ -270,23 +270,25 @@ export default function CarDetailPage() {
           const isSending = sendingAction === action.key;
           const isWaiting = waitingAction === action.key;
           const isErr     = sendError === action.key;
+          const canUnlock = isWaiting && unlockAvailable;
+          const isLoading = isSending || (isWaiting && !unlockAvailable);
           return (
             <button
               key={action.key}
-              className={`${styles.actionBtn} ${styles[action.key]} ${isSending ? styles.sending : ""} ${isWaiting ? styles.waiting : ""} ${isErr ? styles.err : ""}`}
+              className={`${styles.actionBtn} ${styles[action.key]} ${isLoading ? styles.sending : ""} ${canUnlock ? styles.waiting : ""} ${isErr ? styles.err : ""}`}
               onClick={() => isWaiting ? handleWaitingClick() : sendAction(action)}
               disabled={!isWaiting && isBlocked}
             >
               <span className={styles.actionIcon}>
-                {isSending ? <span className={styles.sendingSpinner} /> : action.icon}
+                {isLoading ? <span className={styles.sendingSpinner} /> : action.icon}
               </span>
               <span className={styles.actionLabel}>
                 {isSending
                   ? "Sending…"
-                  : isWaiting
-                  ? !unlockAvailable
-                    ? "Waiting…"
-                    : releaseClicks === 0
+                  : isLoading
+                  ? "Waiting…"
+                  : canUnlock
+                  ? releaseClicks === 0
                     ? "Tap 3× to unlock"
                     : `${RELEASE_THRESHOLD - releaseClicks} tap${RELEASE_THRESHOLD - releaseClicks > 1 ? "s" : ""} left`
                   : isErr
@@ -304,11 +306,6 @@ export default function CarDetailPage() {
         <span className={styles.pollDot} title="Polling every 3s" />
       </h2>
       <div className={`${styles.messageBox} ${isAwaitingResponse ? styles.messageBoxWaiting : ""}`}>
-        {isAwaitingResponse && (
-          <div className={styles.awaitingBadge} title="Waiting for car response">
-            <span className={styles.awaitingSpinner} />
-          </div>
-        )}
         {lastConsumed ? (
           <>
             <div className={styles.msgRow}>
