@@ -234,6 +234,30 @@
   animation: waitingPulse 1.4s ease-in-out infinite;
 }
 
+.sending {
+  border-color: var(--action-color, #407bff) !important;
+  background: linear-gradient(
+    90deg,
+    #f8fafc 0%,
+    color-mix(in srgb, var(--action-color, #407bff) 14%, white) 45%,
+    color-mix(in srgb, var(--action-color, #407bff) 26%, white) 50%,
+    color-mix(in srgb, var(--action-color, #407bff) 14%, white) 55%,
+    #f8fafc 100%
+  );
+  background-size: 250% 100%;
+  animation: sendingShimmer 1s linear infinite;
+}
+
+.sendingSpinner {
+  display: block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid color-mix(in srgb, var(--action-color, #407bff) 25%, white);
+  border-top-color: var(--action-color, #407bff);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+}
+
 .err {
   --action-color: #ef4444;
   border-color: #ef4444 !important;
@@ -242,6 +266,15 @@
 @keyframes waitingPulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.55; }
+}
+
+@keyframes sendingShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ── Message box ── */

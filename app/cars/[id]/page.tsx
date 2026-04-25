@@ -72,10 +72,13 @@ export default function CarDetailPage() {
   const [imgError, setImgError]                         = useState(false);
   const [locationMapFullscreen, setLocationMapFullscreen] = useState(false);
 
-  const unlockTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unlockTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const waitingActionRef  = useRef(waitingAction);
   const inboundIdAtSendRef = useRef<number | null>(
     typeof window !== "undefined" ? Number(localStorage.getItem(inboundIdAtSendKey)) || null : null
   );
+
+  waitingActionRef.current = waitingAction;
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -104,7 +107,7 @@ export default function CarDetailPage() {
         setLastConsumed(data);
         localStorage.setItem(storageKey, JSON.stringify(data));
         const newInboundId = data.inbound?.id ?? null;
-        if (inboundIdAtSendRef.current !== null && newInboundId !== null && newInboundId !== inboundIdAtSendRef.current) {
+        if (waitingActionRef.current !== null && newInboundId !== null && newInboundId !== inboundIdAtSendRef.current) {
           clearWaiting();
         }
       }
@@ -270,11 +273,13 @@ export default function CarDetailPage() {
           return (
             <button
               key={action.key}
-              className={`${styles.actionBtn} ${styles[action.key]} ${isWaiting ? styles.waiting : ""} ${isErr ? styles.err : ""}`}
+              className={`${styles.actionBtn} ${styles[action.key]} ${isSending ? styles.sending : ""} ${isWaiting ? styles.waiting : ""} ${isErr ? styles.err : ""}`}
               onClick={() => isWaiting ? handleWaitingClick() : sendAction(action)}
               disabled={!isWaiting && isBlocked}
             >
-              <span className={styles.actionIcon}>{action.icon}</span>
+              <span className={styles.actionIcon}>
+                {isSending ? <span className={styles.sendingSpinner} /> : action.icon}
+              </span>
               <span className={styles.actionLabel}>
                 {isSending
                   ? "Sending…"
