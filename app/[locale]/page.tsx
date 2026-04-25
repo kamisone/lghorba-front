@@ -25,7 +25,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             <span className={styles.logoText}>vitecamion</span>
           </div>
           <nav className={styles.navLinks}>
-            <a href="#fleet"     className={styles.navLink}>{t.nav.fleet}</a>
+            <Link href={`/${locale}/fleet`} className={styles.navLink}>{t.nav.fleet}</Link>
             <a href="#platforms" className={styles.navLink}>{t.nav.platforms}</a>
             <a href="#how"       className={styles.navLink}>{t.nav.howItWorks}</a>
             <a href="#contact"   className={styles.navLink}>{t.nav.contact}</a>
@@ -35,10 +35,10 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             <a href="#contact" className={`${styles.navCta} ${styles.navCtaDesktop}`}>{t.nav.bookNow}</a>
             <NavHamburger
               links={[
-                { href: "#fleet",     label: t.nav.fleet },
-                { href: "#platforms", label: t.nav.platforms },
-                { href: "#how",       label: t.nav.howItWorks },
-                { href: "#contact",   label: t.nav.contact },
+                { href: `/${locale}/fleet`, label: t.nav.fleet },
+                { href: "#platforms",       label: t.nav.platforms },
+                { href: "#how",             label: t.nav.howItWorks },
+                { href: "#contact",         label: t.nav.contact },
               ]}
               ctaLabel={t.nav.bookNow}
             />

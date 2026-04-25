@@ -2,6 +2,7 @@ export type Translations = typeof en;
 
 export const en = {
   nav: {
+    home: "Home",
     fleet: "Fleet",
     platforms: "Platforms",
     howItWorks: "How it works",
@@ -42,6 +43,9 @@ export const en = {
   fleet: {
     eyebrow: "Our vehicles",
     title: "A fleet for every journey",
+    sub: "Browse our available vehicles and book the one that fits your needs.",
+    available: "Available",
+    rented: "Rented",
     city: { type: "City car", desc: "Compact & fuel-efficient. Perfect for urban trips and daily use." },
     suv:  { type: "SUV",      desc: "Spacious, comfortable — ideal for families or weekend road trips." },
     van:  { type: "Van",      desc: "Full cargo capacity for moves, events, or group travel." },
@@ -110,6 +114,7 @@ export const en = {
 
 export const fr: Translations = {
   nav: {
+    home: "Accueil",
     fleet: "Flotte",
     platforms: "Plateformes",
     howItWorks: "Comment ça marche",
@@ -150,6 +155,9 @@ export const fr: Translations = {
   fleet: {
     eyebrow: "Nos véhicules",
     title: "Une flotte pour chaque trajet",
+    sub: "Parcourez nos véhicules disponibles et réservez celui qui correspond à vos besoins.",
+    available: "Disponible",
+    rented: "Loué",
     city: { type: "Citadine",   desc: "Compacte et économique. Parfaite pour les trajets urbains et le quotidien." },
     suv:  { type: "SUV",        desc: "Spacieux et confortable — idéal pour les familles ou les week-ends en road trip." },
     van:  { type: "Van",        desc: "Grande capacité de chargement pour les déménagements, événements ou voyages en groupe." },
@@ -218,6 +226,7 @@ export const fr: Translations = {
 
 export const ar: Translations = {
   nav: {
+    home: "الرئيسية",
     fleet: "الأسطول",
     platforms: "المنصات",
     howItWorks: "كيف يعمل",
@@ -258,6 +267,9 @@ export const ar: Translations = {
   fleet: {
     eyebrow: "مركباتنا",
     title: "أسطول لكل رحلة",
+    sub: "تصفح مركباتنا المتاحة واحجز ما يناسب احتياجاتك.",
+    available: "متاح",
+    rented: "مؤجر",
     city: { type: "سيارة المدينة", desc: "مدمجة وموفرة للوقود. مثالية للتنقل الحضري والاستخدام اليومي." },
     suv:  { type: "دفع رباعي",     desc: "فسيحة ومريحة — مثالية للعائلات أو رحلات نهاية الأسبوع." },
     van:  { type: "فان",            desc: "سعة شحن كاملة للانتقالات والفعاليات والسفر الجماعي." },

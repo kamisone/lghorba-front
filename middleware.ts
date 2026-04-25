@@ -15,8 +15,11 @@ function detectLocale(request: NextRequest): Locale {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── API routes: auth-check protected ones, pass the rest through ─────────
+  // ── API routes ────────────────────────────────────────────────────────────
   if (pathname.startsWith("/next-api/")) {
+    // Public API — no auth required
+    if (pathname.startsWith("/next-api/public/")) return NextResponse.next();
+    // Protected API
     const isProtected =
       pathname.startsWith("/next-api/sms/") ||
       pathname.startsWith("/next-api/cars/") ||
