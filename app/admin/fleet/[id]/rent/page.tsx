@@ -54,7 +54,7 @@ export default function RentPage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <Link href={`/cars/${id}`} className={styles.back}>← Back to car</Link>
+        <Link href={`/admin/fleet/${id}`} className={styles.back}>← Back to car</Link>
         <div className={styles.loadingRow}><span className={styles.loadingSpinner} /></div>
       </div>
     );
@@ -64,14 +64,14 @@ export default function RentPage() {
     return (
       <div className={styles.notFound}>
         <p>Car not found.</p>
-        <Link href="/cars" className={styles.back}>← Back to Cars</Link>
+        <Link href="/admin/fleet" className={styles.back}>← Back to Fleet</Link>
       </div>
     );
   }
 
   return (
     <div className={styles.page}>
-      <Link href={`/cars/${car.id}`} className={styles.back}>← Back to {car.name}</Link>
+      <Link href={`/admin/fleet/${car.id}`} className={styles.back}>← Back to {car.name}</Link>
 
       <div className={styles.carHeader}>
         <h1 className={styles.carName}>{car.name}</h1>

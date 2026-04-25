@@ -93,7 +93,7 @@ export default function CarsPage() {
           {cars.map((car) => {
             const msg = lastMessages[car.id];
             return (
-              <Link key={car.id} href={`/cars/${car.id}`} className={styles.card}>
+              <Link key={car.id} href={`/admin/fleet/${car.id}`} className={styles.card}>
                 <div className={styles.photoWrapper}>
                   {car.photo ? (
                     <img

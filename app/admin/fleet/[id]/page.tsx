@@ -191,7 +191,7 @@ export default function CarDetailPage() {
   if (carLoading) {
     return (
       <div className={styles.page}>
-        <Link href="/cars" className={styles.back}>← Back to Cars</Link>
+        <Link href="/admin/fleet" className={styles.back}>← Back to Fleet</Link>
         <div className={styles.loadingRow}><span className={styles.loadingSpinner} /></div>
       </div>
     );
@@ -201,7 +201,7 @@ export default function CarDetailPage() {
     return (
       <div className={styles.notFound}>
         <p>Car not found.</p>
-        <Link href="/cars" className={styles.back}>← Back to Cars</Link>
+        <Link href="/admin/fleet" className={styles.back}>← Back to Fleet</Link>
       </div>
     );
   }
@@ -216,7 +216,7 @@ export default function CarDetailPage() {
 
   return (
     <div className={styles.page}>
-      <Link href="/cars" className={styles.back}>← Back to Cars</Link>
+      <Link href="/admin/fleet" className={styles.back}>← Back to Fleet</Link>
 
       <div className={styles.header}>
         <div
@@ -352,7 +352,7 @@ export default function CarDetailPage() {
         )}
       </div>
 
-      <Link href={`/cars/${car.id}/rent`} className={styles.rentCard}>
+      <Link href={`/admin/fleet/${car.id}/rent`} className={styles.rentCard}>
         <div className={styles.rentCardLeft}>
           <span className={styles.rentCardIcon}>📅</span>
           <div>

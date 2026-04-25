@@ -1,0 +1,322 @@
+.icon {
+  font-size: 20px;
+  line-height: 1;
+  display: block;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
+}
+
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  transition: width 0.25s ease;
+  overflow: hidden;
+}
+
+/* ── Desktop collapsed: icons only, no labels ── */
+.sidebarCollapsed {
+  width: 60px;
+}
+
+/* Hide text, keep icons */
+.sidebarCollapsed .brandText {
+  display: none;
+}
+
+.sidebarCollapsed .navLabel {
+  display: none;
+}
+
+.sidebarCollapsed .logoutLabel {
+  display: none;
+}
+
+/* Brand row: just the collapse button, centered */
+.sidebarCollapsed .brandIcon {
+  display: none;
+}
+
+.sidebarCollapsed .brand {
+  justify-content: center;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sidebarCollapsed .collapseBtn {
+  margin: 0 auto;
+  width: 28px;
+  height: 28px;
+}
+
+/* Nav items: center the icon */
+.sidebarCollapsed .navItem {
+  justify-content: center;
+  padding: 0.6rem 0;
+}
+
+.sidebarCollapsed .navActiveBar {
+  display: none;
+}
+
+/* Logout: center the icon */
+.sidebarCollapsed .logoutBtn {
+  justify-content: center;
+  padding: 0.6rem 0;
+}
+
+/* ── Brand row ── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.2rem 1rem 1.2rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.brandIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.brandText {
+  flex: 1;
+  min-width: 0;
+  transition: opacity 0.2s, width 0.25s;
+}
+
+.brandName {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.brandSub {
+  font-size: 0.65rem;
+  color: #64748b;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+/* Desktop collapse toggle */
+.collapseBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0;
+}
+
+.collapseBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
+
+/* ── Nav ── */
+.nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1rem 0.75rem;
+  overflow: hidden;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+  white-space: nowrap;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+}
+
+.navItemActive {
+  background: rgba(249, 115, 22, 0.12);
+  color: #f97316;
+}
+
+.navItemActive:hover {
+  background: rgba(249, 115, 22, 0.18);
+  color: #f97316;
+}
+
+.navIcon {
+  font-size: 1rem;
+  line-height: 1;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.navLabel {
+  flex: 1;
+  transition: opacity 0.2s;
+}
+
+.navActiveBar {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: #f97316;
+  border-radius: 0 3px 3px 0;
+}
+
+
+/* ── Footer / logout ── */
+.footer {
+  padding: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.logoutBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+.logoutIcon {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.logoutLabel {
+  transition: opacity 0.2s;
+}
+
+
+/* ── Mobile close button ── */
+.mobileCloseBtn {
+  display: none;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  font-size: 0.75rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  /* Always visible — width is controlled by JS via collapsed/sidebarCollapsed classes */
+  .sidebar {
+    width: 60px;
+    transition: width 0.25s ease;
+  }
+
+  /* collapseBtn is the open/close control on mobile — always show it */
+  .collapseBtn {
+    display: flex;
+  }
+
+  /* mobileCloseBtn no longer used on mobile */
+  .mobileCloseBtn {
+    display: none !important;
+  }
+
+  /* Expanded state */
+  .sidebarMobileOpen {
+    width: 220px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .sidebarMobileOpen .brandIcon {
+    display: block;
+  }
+
+  .sidebarMobileOpen .brandText {
+    display: block;
+  }
+
+  .sidebarMobileOpen .navLabel,
+  .sidebarMobileOpen .logoutLabel {
+    display: inline;
+  }
+
+  .sidebarMobileOpen .brand {
+    justify-content: flex-start;
+    padding: 1.2rem 1rem 1.2rem 1.25rem;
+  }
+
+  .sidebarMobileOpen .navItem {
+    justify-content: flex-start;
+    padding: 0.6rem 0.85rem;
+  }
+
+  .sidebarMobileOpen .navActiveBar {
+    display: block;
+  }
+
+  .sidebarMobileOpen .logoutBtn {
+    justify-content: flex-start;
+    padding: 0.6rem 0.85rem;
+  }
+}

@@ -1,8 +1,7 @@
-import React from "react";
-import Maintenance from "@/app/components/Maintenance/Maintenance";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return <div>
-    <Maintenance />;
-  </div>;
+// Middleware handles locale detection and redirects to /[locale].
+// This fallback ensures /  always reaches the localized page.
+export default function Root() {
+  redirect("/en");
 }

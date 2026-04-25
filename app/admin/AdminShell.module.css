@@ -1,0 +1,41 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+/* ── Main content ── */
+.main {
+  flex: 1;
+  margin-left: 220px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.25s ease;
+  min-width: 0;
+}
+
+.collapsed .main {
+  margin-left: 60px;
+}
+
+.content {
+  flex: 1;
+}
+
+/* ── Mobile overlay (shown when sidebar is expanded) ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  /* Sidebar always visible at 60px; margin never shifts when expanded (sidebar overlays) */
+  .main {
+    margin-left: 60px !important;
+  }
+}
