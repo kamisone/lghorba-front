@@ -128,6 +128,29 @@
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover td { background: #f8fafc; }
 
+.table th:last-child,
+.table td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+}
+.table thead th:last-child { background: #f8fafc; }
+.table tbody td:last-child { background: #fff; }
+.table tbody tr:hover td:last-child { background: #f8fafc; }
+
+.table thead th:last-child { border-left: 1px solid #e2e8f0; }
+
+.table td:last-child::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -20px;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to right, transparent, rgba(0,0,0,0.07));
+  pointer-events: none;
+}
+
 .nameCell { font-weight: 600; color: #211951 !important; }
 .na { color: #cbd5e1; }
 .dateCell { color: #64748b !important; font-size: 0.82rem !important; }
