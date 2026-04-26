@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import styles from "./users.module.css";
+import CreateUserModal from "./CreateUserModal";
 
 interface User {
   id: string;
@@ -23,6 +24,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchUsers = (q: string) => {
@@ -44,19 +46,27 @@ export default function UsersPage() {
     debounceRef.current = setTimeout(() => fetchUsers(val), 300);
   };
 
+  const handleCreated = () => {
+    setShowCreate(false);
+    fetchUsers(search);
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <h1 className={styles.title}>Users</h1>
-        <div className={styles.searchWrap}>
-          <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="Search by name or phone…"
-            value={search}
-            onChange={e => handleSearch(e.target.value)}
-          />
+        <div className={styles.headerRight}>
+          <div className={styles.searchWrap}>
+            <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="Search by name or phone…"
+              value={search}
+              onChange={e => handleSearch(e.target.value)}
+            />
+          </div>
+          <button className={styles.addBtn} onClick={() => setShowCreate(true)}>+ Add User</button>
         </div>
       </div>
 
@@ -101,6 +111,10 @@ export default function UsersPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {showCreate && (
+        <CreateUserModal onClose={() => setShowCreate(false)} onCreated={handleCreated} />
       )}
     </div>
   );
