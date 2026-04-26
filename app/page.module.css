@@ -74,7 +74,7 @@
 .navCta {
   flex-shrink: 0;
   padding: 0.5rem 1.2rem;
-  background: #f97316;
+  background: #335765;
   color: #fff;
   border-radius: 8px;
   font-size: 0.875rem;
@@ -97,7 +97,7 @@
   justify-content: center;
   padding: 6rem 2rem 4rem;
   overflow: hidden;
-  background: #050d1e;
+  background: #0d2430;
 }
 
 .heroBg {
@@ -111,7 +111,7 @@
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(249,115,22,0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(116,168,164,0.22) 0%, transparent 70%);
   top: -100px;
   left: -100px;
 }
@@ -121,7 +121,7 @@
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(51,87,101,0.22) 0%, transparent 70%);
   bottom: -80px;
   right: -80px;
 }
@@ -148,12 +148,12 @@
 .heroPill {
   display: inline-block;
   padding: 0.4rem 1rem;
-  background: rgba(249,115,22,0.15);
-  border: 1px solid rgba(249,115,22,0.3);
+  background: rgba(116,168,164,0.15);
+  border: 1px solid rgba(116,168,164,0.4);
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #fb923c;
+  color: #74A8A4;
   letter-spacing: 0.02em;
 }
 
@@ -167,7 +167,7 @@
 }
 
 .heroAccent {
-  background: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+  background: linear-gradient(135deg, #74A8A4 0%, #B6D9E0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -190,7 +190,7 @@
 
 .btnPrimary {
   padding: 0.75rem 1.75rem;
-  background: #f97316;
+  background: #335765;
   color: #fff;
   border-radius: 10px;
   font-size: 0.95rem;
@@ -280,7 +280,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #f97316;
+  color: #74A8A4;
   margin: 0 0 0.6rem;
 }
 
@@ -319,12 +319,12 @@
 .platformCard:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(15,23,42,0.1);
-  border-color: #f97316;
+  border-color: #74A8A4;
 }
 
 .platformCardFeatured {
-  border-color: #f97316;
-  background: #fff7ed;
+  border-color: #74A8A4;
+  background: #f0f8f9;
 }
 
 .platformBadge {
@@ -332,7 +332,7 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: #f97316;
+  background: #7F543D;
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -370,7 +370,7 @@
 .platformLink {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #f97316;
+  color: #335765;
   text-decoration: none;
   transition: gap 0.15s;
 }
@@ -441,7 +441,7 @@
 .howStepNum {
   font-size: 2.5rem;
   font-weight: 900;
-  color: #f97316;
+  color: #74A8A4;
   opacity: 0.4;
   line-height: 1;
 }
@@ -463,11 +463,11 @@
 /* ── Why us ── */
 .why {
   padding: 6rem 0;
-  background: #0f172a;
+  background: #1a3540;
 }
 
 .why .sectionEyebrow {
-  color: #fb923c;
+  color: #B6D9E0;
 }
 
 .why .sectionTitle {
@@ -515,8 +515,8 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  background: rgba(249,115,22,0.15);
-  color: #fb923c;
+  background: rgba(116,168,164,0.2);
+  color: #B6D9E0;
   border-radius: 50%;
   font-size: 0.7rem;
   font-weight: 800;
@@ -527,7 +527,7 @@
 /* ── CTA ── */
 .cta {
   padding: 7rem 0;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #335765 0%, #1a3540 100%);
   text-align: center;
 }
 
@@ -561,7 +561,7 @@
 
 .cta .btnPrimary {
   background: #fff;
-  color: #ea580c;
+  color: #335765;
 }
 .cta .btnPrimary:hover {
   opacity: 0.95;
@@ -569,7 +569,7 @@
 
 /* ── Footer ── */
 .footer {
-  background: #050d1e;
+  background: #0d2430;
   padding: 2rem 0;
 }
 
@@ -697,14 +697,14 @@
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 700;
-  color: #f97316;
+  color: #335765;
   text-decoration: none;
-  background: rgba(249, 115, 22, 0.08);
+  background: rgba(51, 87, 101, 0.08);
   transition: background 0.12s;
 }
 
 .mobileMenuCta:hover {
-  background: rgba(249, 115, 22, 0.14);
+  background: rgba(51, 87, 101, 0.15);
 }
 
 /* ── Responsive ── */

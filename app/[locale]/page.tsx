@@ -28,17 +28,17 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             <Link href={`/${locale}/fleet`} className={styles.navLink}>{t.nav.fleet}</Link>
             <a href="#platforms" className={styles.navLink}>{t.nav.platforms}</a>
             <a href="#how"       className={styles.navLink}>{t.nav.howItWorks}</a>
-            <a href="#contact"   className={styles.navLink}>{t.nav.contact}</a>
+            <Link href={`/${locale}/contact`} className={styles.navLink}>{t.nav.contact}</Link>
           </nav>
           <div className={styles.navRight}>
             <LangSwitcher locale={locale} />
-            <a href="#contact" className={`${styles.navCta} ${styles.navCtaDesktop}`}>{t.nav.bookNow}</a>
+            <Link href={`/${locale}/contact`} className={`${styles.navCta} ${styles.navCtaDesktop}`}>{t.nav.bookNow}</Link>
             <NavHamburger
               links={[
-                { href: `/${locale}/fleet`, label: t.nav.fleet },
-                { href: "#platforms",       label: t.nav.platforms },
-                { href: "#how",             label: t.nav.howItWorks },
-                { href: "#contact",         label: t.nav.contact },
+                { href: `/${locale}/fleet`,    label: t.nav.fleet },
+                { href: "#platforms",          label: t.nav.platforms },
+                { href: "#how",                label: t.nav.howItWorks },
+                { href: `/${locale}/contact`,  label: t.nav.contact },
               ]}
               ctaLabel={t.nav.bookNow}
             />
@@ -92,23 +92,22 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           <h2 className={styles.sectionTitle}>{t.platforms.title}</h2>
           <div className={styles.platformGrid}>
             <div className={styles.platformCard}>
-              <div className={styles.platformIcon} style={{ background: "#1a1a2e" }}>🚘</div>
+              <div className={styles.platformIcon} style={{ background: "#0d2b35" }}>🚘</div>
               <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
               <p className={styles.platformDesc}>{t.platforms.turo.desc}</p>
-              <a href="#contact" className={styles.platformLink}>{t.platforms.turo.link}</a>
+              <a href="https://turo.com/us/en/drivers/49282472" className={styles.platformLink} target="_blank">{t.platforms.turo.link}</a>
             </div>
             <div className={`${styles.platformCard} ${styles.platformCardFeatured}`}>
-              <div className={styles.platformBadge}>{t.platforms.getaround.badge}</div>
-              <div className={styles.platformIcon} style={{ background: "#0d2137" }}>🚙</div>
+              <div className={styles.platformIcon} style={{ background: "#0d2b35" }}>🚙</div>
               <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
               <p className={styles.platformDesc}>{t.platforms.getaround.desc}</p>
-              <a href="#contact" className={styles.platformLink}>{t.platforms.getaround.link}</a>
+              <a href="https://fr.getaround.com/users/5054364" className={styles.platformLink} target="_blank">{t.platforms.getaround.link}</a>
             </div>
             <div className={styles.platformCard}>
-              <div className={styles.platformIcon} style={{ background: "#1a0a00" }}>🤝</div>
+              <div className={styles.platformIcon} style={{ background: "#2e1f18" }}>🤝</div>
               <h3 className={styles.platformName}>{t.platforms.private.name}</h3>
               <p className={styles.platformDesc}>{t.platforms.private.desc}</p>
-              <a href="#contact" className={styles.platformLink}>{t.platforms.private.link}</a>
+              <a href="/fleet" className={styles.platformLink}>{t.platforms.private.link}</a>
             </div>
           </div>
         </div>
@@ -165,19 +164,6 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section id="contact" className={styles.cta}>
-        <div className={styles.ctaInner}>
-          <h2 className={styles.ctaTitle}>{t.cta.title}</h2>
-          <p className={styles.ctaSub}>{t.cta.sub}</p>
-          <div className={styles.ctaBtns}>
-            <a href="mailto:info@vitecamion.com" className={styles.btnPrimary}>
-              info@vitecamion.com
-            </a>
           </div>
         </div>
       </section>

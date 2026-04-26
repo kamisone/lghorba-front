@@ -1,0 +1,208 @@
+.page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.pageHeader {
+  margin-bottom: 2rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #211951;
+  margin: 0;
+}
+
+.unreadBadge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #335765 0%, #74A8A4 100%);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.loadingRow { display: flex; justify-content: center; padding: 4rem 0; }
+
+.spinner {
+  display: inline-block;
+  width: 32px; height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #74A8A4;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty {
+  color: #94a3b8;
+  text-align: center;
+  padding: 4rem 0;
+  font-size: 0.95rem;
+}
+
+/* ── List ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.itemUnread {
+  border-color: #74A8A4;
+  box-shadow: 0 0 0 3px rgba(116,168,164,0.1);
+}
+
+.itemOpen {
+  box-shadow: 0 4px 16px rgba(33, 25, 81, 0.09);
+}
+
+.itemHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.itemHeader:hover { background: #f8fafc; }
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #74A8A4;
+  flex-shrink: 0;
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.itemName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #211951;
+  white-space: nowrap;
+}
+
+.itemContact {
+  font-size: 0.78rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.itemRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.itemSubject {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemDate {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chevron {
+  font-size: 0.6rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+/* ── Expanded body ── */
+.itemBody {
+  border-top: 1px solid #f1f5f9;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.messageText {
+  font-size: 0.9rem;
+  color: #334155;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.itemFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.itemDateFull {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.readBtn {
+  padding: 0.35rem 0.9rem;
+  border-radius: 7px;
+  border: 1.5px solid #74A8A4;
+  background: #fff;
+  color: #335765;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.readBtn:hover { background: #f0f8f9; border-color: #335765; }
+
+.readLabel {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-style: italic;
+}

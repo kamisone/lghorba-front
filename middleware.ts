@@ -27,7 +27,9 @@ export function middleware(request: NextRequest) {
       pathname.startsWith("/next-api/users/") ||
       pathname === "/next-api/users" ||
       pathname.startsWith("/next-api/admins/") ||
-      pathname === "/next-api/admins";
+      pathname === "/next-api/admins" ||
+      pathname.startsWith("/next-api/contacts/") ||
+      (pathname === "/next-api/contacts" && request.method !== "POST");
     if (!isProtected) return NextResponse.next();
     const token = request.cookies.get(COOKIE_NAME)?.value;
     if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

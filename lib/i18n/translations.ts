@@ -37,7 +37,7 @@ export const en = {
     private: {
       name: "Private rental",
       desc: "Direct booking with no platform fees. Custom durations, delivery available, best rates guaranteed.",
-      link: "Contact us →",
+      link: "See the fleet →",
     },
   },
   fleet: {
@@ -75,6 +75,25 @@ export const en = {
   cta: {
     title: "Ready to hit the road?",
     sub: "Find us on Turo and Getaround, or reach out for a private booking.",
+  },
+  contact: {
+    eyebrow: "Get in touch",
+    title: "Contact us",
+    sub: "Have a question or want to book privately? Send us a message and we'll get back to you shortly.",
+    name: "Name",
+    namePlaceholder: "Your name",
+    contactField: "Phone or Email",
+    contactPlaceholder: "+33 6 xx xx xx or email@example.com",
+    subject: "Subject",
+    subjectPlaceholder: "How can we help?",
+    message: "Message",
+    messagePlaceholder: "Tell us more about your request…",
+    submit: "Send message",
+    submitting: "Sending…",
+    successTitle: "Message sent!",
+    successSub: "We'll get back to you as soon as possible.",
+    backHome: "← Back to home",
+    error: "Something went wrong. Please try again.",
   },
   footer: {
     rights: "All rights reserved",
@@ -149,7 +168,7 @@ export const fr: Translations = {
     private: {
       name: "Location privée",
       desc: "Réservation directe sans frais de plateforme. Durées personnalisées, livraison disponible, meilleurs tarifs garantis.",
-      link: "Nous contacter →",
+      link: "Voir les voitures →",
     },
   },
   fleet: {
@@ -187,6 +206,25 @@ export const fr: Translations = {
   cta: {
     title: "Prêt à prendre la route ?",
     sub: "Retrouvez-nous sur Turo et Getaround, ou contactez-nous pour une réservation privée.",
+  },
+  contact: {
+    eyebrow: "Nous contacter",
+    title: "Contactez-nous",
+    sub: "Une question ou envie de réserver en privé ? Envoyez-nous un message, nous vous répondrons rapidement.",
+    name: "Nom",
+    namePlaceholder: "Votre nom",
+    contactField: "Téléphone ou Email",
+    contactPlaceholder: "+33 6 xx xx xx xx ou email@exemple.com",
+    subject: "Sujet",
+    subjectPlaceholder: "Comment pouvons-nous vous aider ?",
+    message: "Message",
+    messagePlaceholder: "Décrivez votre demande…",
+    submit: "Envoyer le message",
+    submitting: "Envoi en cours…",
+    successTitle: "Message envoyé !",
+    successSub: "Nous vous répondrons dans les plus brefs délais.",
+    backHome: "← Retour à l'accueil",
+    error: "Une erreur s'est produite. Veuillez réessayer.",
   },
   footer: {
     rights: "Tous droits réservés",
@@ -261,7 +299,7 @@ export const ar: Translations = {
     private: {
       name: "تأجير خاص",
       desc: "حجز مباشر بدون رسوم منصة. مدد مخصصة، توصيل متاح، أفضل الأسعار مضمونة.",
-      link: "← اتصل بنا",
+      link: " ← عرض السيارات",
     },
   },
   fleet: {
@@ -299,6 +337,25 @@ export const ar: Translations = {
   cta: {
     title: "مستعد للانطلاق؟",
     sub: "جدنا على Turo وGetaround، أو تواصل معنا للحجز الخاص.",
+  },
+  contact: {
+    eyebrow: "تواصل معنا",
+    title: "اتصل بنا",
+    sub: "هل لديك سؤال أو تريد الحجز بشكل خاص؟ أرسل لنا رسالة وسنرد عليك في أقرب وقت.",
+    name: "الاسم",
+    namePlaceholder: "اسمك",
+    contactField: "الهاتف أو البريد الإلكتروني",
+    contactPlaceholder: "رقم الهاتف أو البريد الإلكتروني",
+    subject: "الموضوع",
+    subjectPlaceholder: "كيف يمكننا مساعدتك؟",
+    message: "الرسالة",
+    messagePlaceholder: "أخبرنا المزيد عن طلبك…",
+    submit: "إرسال الرسالة",
+    submitting: "جارٍ الإرسال…",
+    successTitle: "تم إرسال الرسالة!",
+    successSub: "سنرد عليك في أقرب وقت ممكن.",
+    backHome: "→ العودة إلى الرئيسية",
+    error: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
   },
   footer: {
     rights: "جميع الحقوق محفوظة",
