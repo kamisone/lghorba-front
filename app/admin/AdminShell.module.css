@@ -23,6 +23,11 @@
   flex: 1;
 }
 
+/* ── Mobile overlay backdrop ── */
+.backdrop {
+  display: none;
+}
+
 /* ── Floating mobile hamburger ── */
 .mobileHamburger {
   display: none;
@@ -30,16 +35,21 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  /* Sidebar open (no .collapsed): push content right by sidebar width */
-  .main {
-    margin-left: 60px !important;
-    transition: margin-left 0.25s ease;
-  }
-
-  /* Sidebar closed (.collapsed): no offset */
+  /* Sidebar always overlays — no content offset */
+  .main,
   .collapsed .main {
     margin-left: 0 !important;
   }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 99;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   .mobileHamburger {
     display: flex;

@@ -43,6 +43,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </button>
       )}
 
+      {isMobile && mobileOpen && (
+        <div className={styles.backdrop} onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      )}
+
       <AdminSidebar
         collapsed={effectiveCollapsed}
         mobileOpen={mobileOpen}
