@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Car } from "../../data";
 import type { RentSchedule } from "../RentCalendar";
@@ -17,9 +17,6 @@ export default function RentPage() {
   const [schedules,       setSchedules]       = useState<RentSchedule[]>([]);
   const [usedScheduleIds, setUsedScheduleIds] = useState<string[]>([]);
 
-  const [tick,      setTick]      = useState(0);
-  const boundaryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     fetch(`/next-api/cars/${id}`, { cache: "no-store" })
       .then(res => res.ok ? res.json() : null)
@@ -28,22 +25,14 @@ export default function RentPage() {
   }, [id]);
 
   useEffect(() => {
-    const now = Date.now();
-    const boundaries = schedules
-      .flatMap(s => [new Date(s.fromDate).getTime(), new Date(s.toDate).getTime()])
-      .filter(t => t > now)
-      .sort((a, b) => a - b);
-    if (!boundaries.length) return;
-    const ms = boundaries[0] - now;
-    if (boundaryRef.current) clearTimeout(boundaryRef.current);
-    boundaryRef.current = setTimeout(() => setTick(t => t + 1), ms + 100);
-    return () => { if (boundaryRef.current) clearTimeout(boundaryRef.current); };
-  }, [schedules, tick]);
+    fetch(`/next-api/cars/${id}/rent-schedules`, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : [])
+      .then(setSchedules)
+      .catch(() => {});
+  }, [id]);
 
-  const activeSchedule = schedules.find(s => {
-    const now = Date.now();
-    return new Date(s.fromDate).getTime() <= now && now <= new Date(s.toDate).getTime();
-  }) ?? null;
+  const handleScheduleAdd    = (saved: RentSchedule) =>
+    setSchedules(prev => [...prev, saved]);
 
   const handleScheduleUpdate = (updated: RentSchedule) =>
     setSchedules(prev => prev.map(s => s.id === updated.id ? updated : s));
@@ -80,17 +69,17 @@ export default function RentPage() {
 
       <RentTracker
         car={car}
-        activeSchedule={activeSchedule}
-        allSchedules={schedules}
         onScheduleUpdate={handleScheduleUpdate}
         onScheduleDelete={handleScheduleDelete}
         onUsedScheduleIdsChange={setUsedScheduleIds}
       />
       <RentCalendar
         car={car}
-        onScheduleChange={setSchedules}
-        activeScheduleId={activeSchedule?.id}
+        schedules={schedules}
         excludeScheduleIds={usedScheduleIds}
+        onAdd={handleScheduleAdd}
+        onUpdate={handleScheduleUpdate}
+        onDelete={handleScheduleDelete}
       />
     </div>
   );

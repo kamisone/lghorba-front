@@ -12,6 +12,7 @@ interface RentSession {
   id: string;
   carId: string;
   scheduleId?: string | null;
+  schedule?: RentSchedule | null;
   status: "active" | "ended";
   trackingPaused: boolean;
   startedAt: string;
@@ -31,18 +32,16 @@ function computeForfaitKm(fromDate: string, toDate: string): number {
 
 interface Props {
   car: Car;
-  activeSchedule: RentSchedule | null;
-  allSchedules: RentSchedule[];
   onScheduleUpdate: (s: RentSchedule) => void;
   onScheduleDelete: (id: string) => void;
   onUsedScheduleIdsChange?: (ids: string[]) => void;
-  onActiveScheduleIdChange?: (id: string | null) => void;
 }
 
-export default function RentTracker({ car, activeSchedule, allSchedules, onScheduleUpdate, onScheduleDelete, onUsedScheduleIdsChange, onActiveScheduleIdChange }: Props) {
+export default function RentTracker({ car, onScheduleUpdate, onScheduleDelete, onUsedScheduleIdsChange }: Props) {
   const { toast } = useToast();
   const [tracking,           setTracking]           = useState(false);
   const [sessionId,          setSessionId]          = useState<string | null>(null);
+  const [activeSchedule,     setActiveSchedule]     = useState<RentSchedule | null>(null);
   const [positions,          setPositions]          = useState<RentPosition[]>([]);
   const [sessions,           setSessions]           = useState<RentSession[]>([]);
   const [toggling,           setToggling]           = useState(false);
@@ -114,8 +113,8 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
         sessionIdRef.current = live.id;
 
         setSessionId(live.id);
+        setActiveSchedule(live.schedule ?? null);
         setPositions(restoredPositions);
-        onActiveScheduleIdChange?.(live.scheduleId ?? null);
 
         lastLocationRequestedRef.current = live.lastLocationRequestedAt ?? null;
 
@@ -148,12 +147,12 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
           stopCountdown();
           setTracking(false);
           setSessionId(null);
+          setActiveSchedule(null);
           setPositions([]);
           setConfirmingEnd(false);
           sessionIdRef.current = null;
           lastLocationRequestedRef.current = null;
           setSessions(data.filter(s => s.status === "ended"));
-          onActiveScheduleIdChange?.(null);
           return;
         }
 
@@ -161,8 +160,8 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
         if (live && !sessionIdRef.current) {
           sessionIdRef.current = live.id;
           setSessionId(live.id);
+          setActiveSchedule(live.schedule ?? null);
           setSessions(data.filter(s => s.status === "ended"));
-          onActiveScheduleIdChange?.(live.scheduleId ?? null);
           lastLocationRequestedRef.current = live.lastLocationRequestedAt ?? null;
           try {
             const posRes = await fetch(`/next-api/rent-sessions/${live.id}/positions`, { cache: "no-store" });
@@ -216,7 +215,8 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
     const ids: string[] = [];
     if (sessionId && activeSchedule?.id) ids.push(activeSchedule.id);
     for (const s of sessions) {
-      if (s.scheduleId) ids.push(s.scheduleId);
+      const id = s.schedule?.id ?? s.scheduleId;
+      if (id) ids.push(id);
     }
     onUsedScheduleIdsChange?.(Array.from(new Set(ids)));
   }, [sessions, sessionId, activeSchedule, onUsedScheduleIdsChange]);
@@ -314,6 +314,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
           setTracking(false);
           setConfirmingEnd(false);
           setSessionId(null);
+          setActiveSchedule(null);
           setPositions([]);
           sessionIdRef.current = null;
         }
@@ -492,7 +493,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
         <div className={styles.history}>
           <p className={styles.historyTitle}>Past rents</p>
           {pastSessions.map(session => {
-            const linked = allSchedules.find(s => s.id === session.scheduleId) ?? null;
+            const linked = session.schedule ?? null;
             const isOpen = expandedSessionId === session.id;
             return (
               <div key={session.id} className={styles.sessionBlock}>

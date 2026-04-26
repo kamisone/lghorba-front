@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import type { Car } from "../data";
 import RentScheduleModal from "./RentScheduleModal";
 import styles from "./RentCalendar.module.css";
@@ -29,9 +29,11 @@ export interface RentSchedule {
 
 interface Props {
   car: Car;
-  onScheduleChange?: (schedules: RentSchedule[]) => void;
-  activeScheduleId?: string | null;
+  schedules: RentSchedule[];
   excludeScheduleIds?: string[];
+  onAdd: (saved: RentSchedule) => void;
+  onUpdate: (updated: RentSchedule) => void;
+  onDelete: (id: string) => void;
 }
 
 function startOfDay(d: Date): Date {
@@ -54,43 +56,25 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
   return cells;
 }
 
-function computeForfaitKm(fromDate: string, toDate: string): number {
-  const ms = new Date(toDate).getTime() - new Date(fromDate).getTime();
-  return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24))) * 200;
-}
-
 const DEFAULT_BG = "linear-gradient(135deg, #211951 0%, #407bff 100%)";
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-export default function RentCalendar({ car, onScheduleChange, activeScheduleId, excludeScheduleIds }: Props) {
-  const [schedules,        setSchedules]        = useState<RentSchedule[]>([]);
+export default function RentCalendar({ car, schedules, excludeScheduleIds, onAdd, onUpdate, onDelete }: Props) {
   const [viewDate,         setViewDate]         = useState(() => new Date());
   const [showAddModal,     setShowAddModal]     = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<RentSchedule | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [deletingId,    setDeletingId]    = useState<string | null>(null);
+  const [showEditModal,    setShowEditModal]    = useState(false);
+  const [deletingId,       setDeletingId]       = useState<string | null>(null);
 
   const today = startOfDay(new Date());
 
-  const notify = useCallback((list: RentSchedule[]) => {
-    setSchedules(list);
-    onScheduleChange?.(list);
-  }, [onScheduleChange]);
-
-  useEffect(() => {
-    fetch(`/next-api/cars/${car.id}/rent-schedules`, { cache: "no-store" })
-      .then(r => r.ok ? r.json() : [])
-      .then(notify)
-      .catch(() => {});
-  }, [car.id, notify]);
-
   const handleNewSaved = (saved: RentSchedule) => {
-    notify([...schedules, saved]);
+    onAdd(saved);
     setShowAddModal(false);
   };
 
   const handleEditSaved = (updated: RentSchedule) => {
-    notify(schedules.map(s => s.id === updated.id ? updated : s));
+    onUpdate(updated);
     setSelectedSchedule(null);
     setShowEditModal(false);
   };
@@ -101,7 +85,7 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
     try {
       const res = await fetch(`/next-api/cars/${car.id}/rent-schedules/${selectedSchedule.id}`, { method: "DELETE" });
       if (res.ok) {
-        notify(schedules.filter(s => s.id !== selectedSchedule.id));
+        onDelete(selectedSchedule.id);
         setSelectedSchedule(null);
         setShowEditModal(false);
       }
@@ -127,11 +111,9 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
     isSameDay(date, startOfDay(new Date(which === "from" ? s.fromDate : s.toDate)));
 
   const openSchedule = (s: RentSchedule) => {
-    if (s.id === activeScheduleId) return;
     setSelectedSchedule(s);
     setShowEditModal(true);
   };
-
 
   const year       = viewDate.getFullYear();
   const month      = viewDate.getMonth();
@@ -179,7 +161,7 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
                     isStart ? styles.dayStart : "",
                     isEnd   ? styles.dayEnd   : "",
                     isT     ? styles.dayToday : "",
-                    s.id !== activeScheduleId ? styles.dayClickable : "",
+                    styles.dayClickable,
                   ].filter(Boolean).join(" ")}
                   style={s.color ? { background: s.color } : undefined}
                   onClick={() => openSchedule(s)}
@@ -195,7 +177,7 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
                 {daySchedules.map(s => (
                   <span
                     key={s.id}
-                    className={[styles.daySlice, s.id !== activeScheduleId ? styles.dayClickable : ""].filter(Boolean).join(" ")}
+                    className={`${styles.daySlice} ${styles.dayClickable}`}
                     style={{ background: s.color ?? DEFAULT_BG }}
                     onClick={() => openSchedule(s)}
                   />
@@ -227,7 +209,7 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
           existingSchedules={schedules}
           onClose={() => { setShowEditModal(false); setSelectedSchedule(null); }}
           onSaved={handleEditSaved}
-          onDelete={handleDelete}
+          onDelete={deletingId === selectedSchedule.id ? undefined : handleDelete}
         />
       )}
     </div>
