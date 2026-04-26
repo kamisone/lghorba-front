@@ -35,9 +35,10 @@ interface Props {
   onScheduleUpdate: (s: RentSchedule) => void;
   onScheduleDelete: (id: string) => void;
   onUsedScheduleIdsChange?: (ids: string[]) => void;
+  onEndedScheduleIdsChange?: (ids: string[]) => void;
 }
 
-export default function RentTracker({ car, onScheduleUpdate, onScheduleDelete, onUsedScheduleIdsChange }: Props) {
+export default function RentTracker({ car, onScheduleUpdate, onScheduleDelete, onUsedScheduleIdsChange, onEndedScheduleIdsChange }: Props) {
   const { toast } = useToast();
   const [tracking,           setTracking]           = useState(false);
   const [sessionId,          setSessionId]          = useState<string | null>(null);
@@ -212,14 +213,16 @@ export default function RentTracker({ car, onScheduleUpdate, onScheduleDelete, o
   // ── Notify parent which schedule IDs have sessions ───────────────────────
 
   useEffect(() => {
-    const ids: string[] = [];
-    if (sessionId && activeSchedule?.id) ids.push(activeSchedule.id);
+    const usedIds: string[] = [];
+    const endedIds: string[] = [];
+    if (sessionId && activeSchedule?.id) usedIds.push(activeSchedule.id);
     for (const s of sessions) {
       const id = s.schedule?.id ?? s.scheduleId;
-      if (id) ids.push(id);
+      if (id) { usedIds.push(id); endedIds.push(id); }
     }
-    onUsedScheduleIdsChange?.(Array.from(new Set(ids)));
-  }, [sessions, sessionId, activeSchedule, onUsedScheduleIdsChange]);
+    onUsedScheduleIdsChange?.(Array.from(new Set(usedIds)));
+    onEndedScheduleIdsChange?.(Array.from(new Set(endedIds)));
+  }, [sessions, sessionId, activeSchedule, onUsedScheduleIdsChange, onEndedScheduleIdsChange]);
 
   // ── Tracking toggle ───────────────────────────────────────────────────────
 

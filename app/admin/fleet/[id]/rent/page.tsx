@@ -14,8 +14,9 @@ export default function RentPage() {
 
   const [car,             setCar]             = useState<Car | null>(null);
   const [loading,         setLoading]         = useState(true);
-  const [schedules,       setSchedules]       = useState<RentSchedule[]>([]);
-  const [usedScheduleIds, setUsedScheduleIds] = useState<string[]>([]);
+  const [schedules,        setSchedules]        = useState<RentSchedule[]>([]);
+  const [usedScheduleIds,  setUsedScheduleIds]  = useState<string[]>([]);
+  const [endedScheduleIds, setEndedScheduleIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetch(`/next-api/cars/${id}`, { cache: "no-store" })
@@ -72,11 +73,13 @@ export default function RentPage() {
         onScheduleUpdate={handleScheduleUpdate}
         onScheduleDelete={handleScheduleDelete}
         onUsedScheduleIdsChange={setUsedScheduleIds}
+        onEndedScheduleIdsChange={setEndedScheduleIds}
       />
       <RentCalendar
         car={car}
         schedules={schedules}
         excludeScheduleIds={usedScheduleIds}
+        endedScheduleIds={endedScheduleIds}
         onAdd={handleScheduleAdd}
         onUpdate={handleScheduleUpdate}
         onDelete={handleScheduleDelete}

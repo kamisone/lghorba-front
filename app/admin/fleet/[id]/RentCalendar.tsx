@@ -31,6 +31,7 @@ interface Props {
   car: Car;
   schedules: RentSchedule[];
   excludeScheduleIds?: string[];
+  endedScheduleIds?: string[];
   onAdd: (saved: RentSchedule) => void;
   onUpdate: (updated: RentSchedule) => void;
   onDelete: (id: string) => void;
@@ -59,7 +60,7 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
 const DEFAULT_BG = "linear-gradient(135deg, #211951 0%, #407bff 100%)";
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-export default function RentCalendar({ car, schedules, excludeScheduleIds, onAdd, onUpdate, onDelete }: Props) {
+export default function RentCalendar({ car, schedules, excludeScheduleIds, endedScheduleIds, onAdd, onUpdate, onDelete }: Props) {
   const [viewDate,         setViewDate]         = useState(() => new Date());
   const [showAddModal,     setShowAddModal]     = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<RentSchedule | null>(null);
@@ -195,7 +196,7 @@ export default function RentCalendar({ car, schedules, excludeScheduleIds, onAdd
       {showAddModal && (
         <RentScheduleModal
           car={car}
-          existingSchedules={schedules}
+          existingSchedules={endedScheduleIds?.length ? schedules.filter(s => !endedScheduleIds.includes(s.id)) : schedules}
           onClose={() => setShowAddModal(false)}
           onSaved={handleNewSaved}
         />
@@ -206,7 +207,7 @@ export default function RentCalendar({ car, schedules, excludeScheduleIds, onAdd
         <RentScheduleModal
           car={car}
           schedule={selectedSchedule}
-          existingSchedules={schedules}
+          existingSchedules={endedScheduleIds?.length ? schedules.filter(s => !endedScheduleIds.includes(s.id)) : schedules}
           onClose={() => { setShowEditModal(false); setSelectedSchedule(null); }}
           onSaved={handleEditSaved}
           onDelete={deletingId === selectedSchedule.id ? undefined : handleDelete}
