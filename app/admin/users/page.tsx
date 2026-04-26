@@ -11,6 +11,7 @@ interface User {
   phone: string;
   email?: string;
   rentCount?: number;
+  hasActiveSession?: boolean;
   score?: number;
   createdAt: string;
 }
@@ -93,10 +94,15 @@ export default function UsersPage() {
                   <td className={styles.nameCell}>{u.name}</td>
                   <td>{u.phone || <span className={styles.na}>—</span>}</td>
                   <td>
-                    {u.rentCount != null && u.rentCount > 0
-                      ? <span className={styles.rentBadge}>{u.rentCount}</span>
-                      : <span className={styles.na}>0</span>
-                    }
+                    <div className={styles.rentCell}>
+                      {u.rentCount != null && u.rentCount > 0
+                        ? <span className={styles.rentBadge}>{u.rentCount}</span>
+                        : <span className={styles.na}>0</span>
+                      }
+                      {u.hasActiveSession && (
+                        <span className={styles.activeDot} title="Ongoing session" />
+                      )}
+                    </div>
                   </td>
                   <td>
                     {u.score != null
