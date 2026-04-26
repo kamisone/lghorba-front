@@ -6,4 +6,5 @@ export interface Car {
   description?: string;
   photo?: string | null;
   isCurrentlyRented?: boolean;
+  isTrackingActive?: boolean;
 }

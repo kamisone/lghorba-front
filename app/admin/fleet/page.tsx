@@ -114,6 +114,12 @@ export default function CarsPage() {
                     {car.isCurrentlyRented && (
                       <span className={styles.rentingBadge}>🔑 Renting</span>
                     )}
+                    {car.isTrackingActive && (
+                      <span className={styles.trackingBadge} title="Tracking active">
+                        <span className={styles.trackingDot} />
+                        GPS
+                      </span>
+                    )}
                   </div>
                   <p className={styles.immat}>{car.immatriculation}</p>
                   {msg?.inbound ? (

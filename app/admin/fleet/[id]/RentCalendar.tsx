@@ -213,6 +213,7 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
       {showAddModal && (
         <RentScheduleModal
           car={car}
+          existingSchedules={schedules}
           onClose={() => setShowAddModal(false)}
           onSaved={handleNewSaved}
         />
@@ -223,6 +224,7 @@ export default function RentCalendar({ car, onScheduleChange, activeScheduleId, 
         <RentScheduleModal
           car={car}
           schedule={selectedSchedule}
+          existingSchedules={schedules}
           onClose={() => { setShowEditModal(false); setSelectedSchedule(null); }}
           onSaved={handleEditSaved}
           onDelete={handleDelete}

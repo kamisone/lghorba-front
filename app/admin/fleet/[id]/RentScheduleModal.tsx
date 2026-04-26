@@ -9,6 +9,7 @@ import styles from "./RentScheduleModal.module.css";
 interface Props {
   car: Car;
   schedule?: RentSchedule;
+  existingSchedules?: RentSchedule[];
   sessionStarted?: boolean;
   onClose: () => void;
   onSaved: (s: RentSchedule) => void;
@@ -35,6 +36,19 @@ const COLORS = [
   "#64748b", "#1e293b",
 ];
 
+function hasOverlap(from: string, to: string, schedules: RentSchedule[], excludeId?: string): boolean {
+  if (!from || !to) return false;
+  const newFrom = new Date(from).getTime();
+  const newTo   = new Date(to).getTime();
+  if (newTo <= newFrom) return false;
+  return schedules.some(s => {
+    if (excludeId && s.id === excludeId) return false;
+    const sFrom = new Date(s.fromDate).getTime();
+    const sTo   = new Date(s.toDate).getTime();
+    return newFrom < sTo && sFrom < newTo;
+  });
+}
+
 function computeForfaitKm(from: string, to: string): number {
   if (!from || !to) return 0;
   const ms = new Date(to).getTime() - new Date(from).getTime();
@@ -48,7 +62,7 @@ function toDateTimeInput(iso: string): string {
 }
 
 
-export default function RentScheduleModal({ car, schedule, sessionStarted, onClose, onSaved, onDelete }: Props) {
+export default function RentScheduleModal({ car, schedule, existingSchedules, sessionStarted, onClose, onSaved, onDelete }: Props) {
   const isEdit = !!schedule;
   const [form, setForm] = useState<FormValues>({
     from: "", to: "", guestName: "", guestNumber: "", guestEmail: "",
@@ -57,6 +71,7 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
   });
   const [selectedUser, setSelectedUser] = useState<GuestUser | null>(null);
   const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
     if (schedule) {
@@ -99,6 +114,8 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
     e.preventDefault();
     if (!form.from || !form.to) return;
     if (phoneMissing) return;
+    if (overlapDetected) return;
+    setApiError(null);
     setSaving(true);
     try {
       const body = {
@@ -123,11 +140,24 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (res.ok) onSaved(await res.json());
+      if (res.ok) {
+        onSaved(await res.json());
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setApiError(
+          res.status === 409
+            ? "These dates overlap with an existing rent period for this car."
+            : (err?.message ?? "An error occurred. Please try again.")
+        );
+      }
     } finally {
       setSaving(false);
     }
   };
+
+  const overlapDetected = existingSchedules
+    ? hasOverlap(form.from, form.to, existingSchedules, schedule?.id)
+    : false;
 
   const score = selectedUser?.score ?? null;
 
@@ -157,6 +187,16 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
             <div className={styles.forfaitBadge}>
               📏 Forfait: <strong>{forfaitKm.toLocaleString()} km</strong>
             </div>
+          )}
+
+          {overlapDetected && (
+            <div className={styles.errorBanner}>
+              These dates overlap with an existing rent period for this car.
+            </div>
+          )}
+
+          {apiError && !overlapDetected && (
+            <div className={styles.errorBanner}>{apiError}</div>
           )}
 
           {/* ── Guest section ── */}
@@ -302,7 +342,7 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
               <button type="button" className={styles.deleteBtn} onClick={onDelete} disabled={saving}>Delete</button>
             )}
             <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={saving}>Cancel</button>
-            <button type="submit" className={styles.submitBtn} disabled={saving || !form.from || !form.to || phoneMissing}>
+            <button type="submit" className={styles.submitBtn} disabled={saving || !form.from || !form.to || phoneMissing || overlapDetected}>
               {saving ? "Saving…" : isEdit ? "Save changes" : "Add period"}
             </button>
           </div>

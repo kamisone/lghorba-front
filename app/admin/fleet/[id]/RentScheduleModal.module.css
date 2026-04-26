@@ -165,6 +165,19 @@
 .infoMid  { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.25); color: #b45309; }
 .infoLow  { background: rgba(239, 68, 68, 0.08);  border-color: rgba(239, 68, 68, 0.2);  color: #dc2626; }
 
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.85rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
 .forfaitBadge {
   display: inline-flex;
   align-items: center;
