@@ -11,8 +11,8 @@ import styles from "./RentTracker.module.css";
 interface RentSession {
   id: string;
   carId: string;
-  scheduleId?: string | null;
-  schedule?: RentSchedule | null;
+  scheduleId: string;
+  schedule: RentSchedule;
   status: "active" | "ended";
   trackingPaused: boolean;
   startedAt: string;
@@ -217,8 +217,8 @@ export default function RentTracker({ car, onScheduleUpdate, onScheduleDelete, o
     const endedIds: string[] = [];
     if (sessionId && activeSchedule?.id) usedIds.push(activeSchedule.id);
     for (const s of sessions) {
-      const id = s.schedule?.id ?? s.scheduleId;
-      if (id) { usedIds.push(id); endedIds.push(id); }
+      usedIds.push(s.scheduleId);
+      endedIds.push(s.scheduleId);
     }
     onUsedScheduleIdsChange?.(Array.from(new Set(usedIds)));
     onEndedScheduleIdsChange?.(Array.from(new Set(endedIds)));
@@ -355,11 +355,7 @@ export default function RentTracker({ car, onScheduleUpdate, onScheduleDelete, o
       if (res.ok) {
         setSessions(prev => prev.filter(s => s.id !== session.id));
         if (expandedSessionId === session.id) setExpandedSessionId(null);
-
-        if (session.scheduleId) {
-          onScheduleDelete(session.scheduleId);
-        }
-
+        onScheduleDelete(session.scheduleId);
         toast.success("Session deleted");
       } else {
         toast.error("Could not delete session — please try again");
@@ -496,7 +492,7 @@ export default function RentTracker({ car, onScheduleUpdate, onScheduleDelete, o
         <div className={styles.history}>
           <p className={styles.historyTitle}>Past rents</p>
           {pastSessions.map(session => {
-            const linked = session.schedule ?? null;
+            const linked = session.schedule;
             const isOpen = expandedSessionId === session.id;
             return (
               <div key={session.id} className={styles.sessionBlock}>
