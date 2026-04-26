@@ -351,6 +351,11 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
       if (res.ok) {
         setSessions(prev => prev.filter(s => s.id !== session.id));
         if (expandedSessionId === session.id) setExpandedSessionId(null);
+
+        if (session.scheduleId) {
+          onScheduleDelete(session.scheduleId);
+        }
+
         toast.success("Session deleted");
       } else {
         toast.error("Could not delete session — please try again");
