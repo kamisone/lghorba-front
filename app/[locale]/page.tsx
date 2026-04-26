@@ -62,7 +62,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           <p className={styles.heroSub}>{t.hero.sub}</p>
           <div className={styles.heroBtns}>
             <a href="#platforms" className={styles.btnPrimary}>{t.hero.cta1}</a>
-            <a href="#fleet"     className={styles.btnOutline}>{t.hero.cta2}</a>
+            <a href="/fleet"     className={styles.btnOutline}>{t.hero.cta2}</a>
           </div>
         </div>
         <div className={styles.heroCard} aria-hidden="true">

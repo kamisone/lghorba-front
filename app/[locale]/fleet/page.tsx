@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
+import LangSwitcher from "../LangSwitcher";
+import NavHamburger from "../NavHamburger";
 import styles from "./fleet.module.css";
+import landingStyles from "../../page.module.css";
 
 interface PublicCar {
   id: string;
@@ -26,16 +29,54 @@ async function getCars(): Promise<PublicCar[]> {
 
 export default async function FleetPage({ params }: { params: { locale: string } }) {
   const t = getTranslations(params.locale);
+  const locale = params.locale;
   const cars = await getCars();
 
   return (
     <div className={styles.page}>
-      <header className={styles.hero}>
-        <Link href={`/${params.locale}`} className={styles.back}>← {t.nav.home}</Link>
-        <h1 className={styles.title}>{t.fleet.title}</h1>
-        <p className={styles.sub}>{t.fleet.sub}</p>
+
+      {/* ── Navbar (same as landing) ── */}
+      <header className={landingStyles.navbar}>
+        <div className={landingStyles.navInner}>
+          <Link href={`/${locale}`} className={landingStyles.logo}>
+            <span className={landingStyles.logoIcon}>🚐</span>
+            <span className={landingStyles.logoText}>vitecamion</span>
+          </Link>
+          <nav className={landingStyles.navLinks}>
+            <Link href={`/${locale}`}         className={landingStyles.navLink}>{t.nav.home}</Link>
+            <Link href={`/${locale}#platforms`} className={landingStyles.navLink}>{t.nav.platforms}</Link>
+            <Link href={`/${locale}#how`}       className={landingStyles.navLink}>{t.nav.howItWorks}</Link>
+            <Link href={`/${locale}/contact`}   className={landingStyles.navLink}>{t.nav.contact}</Link>
+          </nav>
+          <div className={landingStyles.navRight}>
+            <LangSwitcher locale={locale} />
+            <NavHamburger
+              links={[
+                { href: `/${locale}`,           label: t.nav.home },
+                { href: `/${locale}#platforms`,  label: t.nav.platforms },
+                { href: `/${locale}#how`,         label: t.nav.howItWorks },
+                { href: `/${locale}/contact`,    label: t.nav.contact },
+              ]}
+              ctaLabel={t.nav.bookNow}
+            />
+          </div>
+        </div>
       </header>
 
+      {/* ── Hero ── */}
+      <div className={styles.hero}>
+        <div className={styles.heroBg} aria-hidden="true">
+          <div className={styles.heroBgGlow} />
+          <div className={styles.heroBgGrid} />
+        </div>
+        <div className={styles.heroContent}>
+          <p className={styles.heroEyebrow}>{t.fleet.eyebrow}</p>
+          <h1 className={styles.heroTitle}>{t.fleet.title}</h1>
+          <p className={styles.heroSub}>{t.fleet.sub}</p>
+        </div>
+      </div>
+
+      {/* ── Cars grid ── */}
       {cars.length === 0 ? (
         <p className={styles.empty}>No vehicles available right now. Check back soon.</p>
       ) : (
@@ -61,12 +102,13 @@ export default async function FleetPage({ params }: { params: { locale: string }
               <div className={styles.info}>
                 <h2 className={styles.carName}>{car.name}</h2>
                 {car.description && <p className={styles.carDesc}>{car.description}</p>}
-                <a href="#contact" className={styles.cta}>{t.nav.bookNow}</a>
+                <Link href={`/${locale}/contact`} className={styles.cta}>{t.nav.bookNow}</Link>
               </div>
             </div>
           ))}
         </div>
       )}
+
     </div>
   );
 }
