@@ -133,7 +133,7 @@
 
 .tableWrap {
   background: #fff; border: 1px solid #e2e8f0;
-  border-radius: 12px; overflow: hidden;
+  border-radius: 12px; overflow-x: auto;
   box-shadow: 0 2px 8px rgba(33, 25, 81, 0.06);
 }
 .table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
