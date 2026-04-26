@@ -180,7 +180,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           </p>
           <div className={styles.footerLinks}>
             <Link href={`/${locale}/privacy-policy`} className={styles.footerLink}>{t.footer.privacy}</Link>
-            <Link href="/login" className={styles.footerLink}>{t.footer.admin}</Link>
+            <Link href="/admin" className={styles.footerLink}>{t.footer.admin}</Link>
           </div>
         </div>
       </footer>

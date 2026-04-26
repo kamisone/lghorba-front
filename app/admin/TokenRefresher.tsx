@@ -1,53 +1,65 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-const REFRESH_INTERVAL_MS = 14 * 60 * 1000; // 14 min (JWT expires at 15 min)
-const VISIBILITY_THRESHOLD_MS = 5 * 60 * 1000; // re-refresh if tab was hidden > 5 min
 
 export default function TokenRefresher() {
   const router = useRouter();
-  const lastRefreshAt = useRef<number>(0);
-  const refreshing = useRef(false);
-
-  const refresh = async () => {
-    if (refreshing.current) return;
-    refreshing.current = true;
-    try {
-      const res = await fetch("/next-api/auth/refresh", { method: "POST" });
-      if (res.status === 401) {
-        await fetch("/next-api/auth", { method: "DELETE" });
-        router.replace("/login");
-        return;
-      }
-      lastRefreshAt.current = Date.now();
-    } catch {
-      // network error — keep trying on next interval
-    } finally {
-      refreshing.current = false;
-    }
-  };
 
   useEffect(() => {
-    refresh();
+    const originalFetch = window.fetch.bind(window);
+    let isRefreshing = false;
+    let queue: Array<() => void> = [];
 
-    const interval = setInterval(refresh, REFRESH_INTERVAL_MS);
+    window.fetch = async (...args: Parameters<typeof fetch>) => {
+      const input = args[0];
+      const url = input instanceof Request ? input.url : String(input);
 
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        const elapsed = Date.now() - lastRefreshAt.current;
-        if (elapsed > VISIBILITY_THRESHOLD_MS) refresh();
+      // Never intercept auth endpoints — avoids infinite loops
+      if (url.includes("/next-api/auth")) {
+        return originalFetch(...args);
+      }
+
+      const res = await originalFetch(...args);
+      if (res.status !== 401) return res;
+
+      // Another refresh is already in flight — queue this retry
+      if (isRefreshing) {
+        return new Promise<Response>((resolve) => {
+          queue.push(() => resolve(originalFetch(...args)));
+        });
+      }
+
+      isRefreshing = true;
+
+      try {
+        const refreshRes = await originalFetch("/next-api/auth/refresh", { method: "POST" });
+
+        if (refreshRes.ok) {
+          // New access token set — flush queued retries then retry this one
+          queue.forEach(fn => fn());
+          queue = [];
+          isRefreshing = false;
+          return originalFetch(...args);
+        }
+
+        // Refresh token also expired → force re-login
+        queue = [];
+        isRefreshing = false;
+        await originalFetch("/next-api/auth", { method: "DELETE" });
+        router.replace("/login");
+        return res;
+      } catch {
+        queue = [];
+        isRefreshing = false;
+        return res;
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibility);
-
     return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibility);
+      window.fetch = originalFetch;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }
