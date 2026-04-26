@@ -95,6 +95,76 @@
   box-shadow: 0 0 0 3px rgba(64, 123, 255, 0.12);
 }
 
+.inputError {
+  border-color: #fca5a5 !important;
+  background: #fff5f5 !important;
+}
+.inputError:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.fieldError {
+  font-size: 0.72rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.required {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.optional {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 0.2rem;
+}
+
+/* ── Guest section ── */
+.guestSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  padding: 0.9rem 1rem;
+}
+
+.guestSectionLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.userInfoRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.infoBadge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.infoHigh { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.25); color: #16a34a; }
+.infoMid  { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.25); color: #b45309; }
+.infoLow  { background: rgba(239, 68, 68, 0.08);  border-color: rgba(239, 68, 68, 0.2);  color: #dc2626; }
+
 .forfaitBadge {
   display: inline-flex;
   align-items: center;

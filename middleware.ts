@@ -23,7 +23,11 @@ export function middleware(request: NextRequest) {
     const isProtected =
       pathname.startsWith("/next-api/sms/") ||
       pathname.startsWith("/next-api/cars/") ||
-      pathname.startsWith("/next-api/rent-sessions/");
+      pathname.startsWith("/next-api/rent-sessions/") ||
+      pathname.startsWith("/next-api/users/") ||
+      pathname === "/next-api/users" ||
+      pathname.startsWith("/next-api/admins/") ||
+      pathname === "/next-api/admins";
     if (!isProtected) return NextResponse.next();
     const token = request.cookies.get(COOKIE_NAME)?.value;
     if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

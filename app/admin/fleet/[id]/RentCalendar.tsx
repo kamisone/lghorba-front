@@ -5,17 +5,26 @@ import type { Car } from "../data";
 import RentScheduleModal from "./RentScheduleModal";
 import styles from "./RentCalendar.module.css";
 
+export interface RentScheduleUser {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string | null;
+  score?: number | null;
+  turoJoinDate?: string | null;
+  getaroundJoinDate?: string | null;
+}
+
 export interface RentSchedule {
   id: string;
   carId: string;
   fromDate: string;
   toDate: string;
-  guestName?: string | null;
-  guestNumber?: string | null;
   reservationNumber?: string | null;
   totalEarning?: number | null;
   autoStartTracking: boolean;
   color?: string | null;
+  user?: RentScheduleUser | null;
 }
 
 interface Props {

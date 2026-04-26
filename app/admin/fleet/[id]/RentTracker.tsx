@@ -438,7 +438,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
             </div>
           </div>
           <div className={styles.scheduleCardMeta}>
-            {activeSchedule.guestName && <span className={styles.scheduleCardPill}>👤 {activeSchedule.guestName}</span>}
+            {activeSchedule.user?.name && <span className={styles.scheduleCardPill}>👤 {activeSchedule.user.name}</span>}
             {activeSchedule.reservationNumber && <span className={styles.scheduleCardPill}>📋 {activeSchedule.reservationNumber}</span>}
             <span className={styles.scheduleCardPill}>📏 {computeForfaitKm(activeSchedule.fromDate, activeSchedule.toDate).toLocaleString()} km</span>
             {activeSchedule.totalEarning != null && <span className={`${styles.scheduleCardPill} ${styles.scheduleCardPillEarning}`}>💶 {activeSchedule.totalEarning.toLocaleString()} €</span>}
@@ -502,7 +502,7 @@ export default function RentTracker({ car, activeSchedule, allSchedules, onSched
                       <span className={styles.sessionDate}>
                         {fmtShort(session.startedAt)} → {session.endedAt ? fmtShort(session.endedAt) : "…"}
                       </span>
-                      {linked?.guestName && <span className={styles.sessionGuest}>👤 {linked.guestName}</span>}
+                      {linked?.user?.name && <span className={styles.sessionGuest}>👤 {linked.user.name}</span>}
                       {linked?.reservationNumber && <span className={styles.sessionRes}>#{linked.reservationNumber}</span>}
                     </div>
                     <span className={styles.sessionChevron}>{isOpen ? "▲" : "▼"}</span>

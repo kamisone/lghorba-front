@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import type { Car } from "../data";
 import type { RentSchedule } from "./RentCalendar";
+import GuestAutocomplete, { type GuestUser } from "./GuestAutocomplete";
 import styles from "./RentScheduleModal.module.css";
 
 interface Props {
@@ -19,6 +20,9 @@ interface FormValues {
   to: string;
   guestName: string;
   guestNumber: string;
+  guestEmail: string;
+  turoJoinDate: string;
+  getaroundJoinDate: string;
   reservationNumber: string;
   totalEarning: string;
   autoStartTracking: boolean;
@@ -43,20 +47,37 @@ function toDateTimeInput(iso: string): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+
 export default function RentScheduleModal({ car, schedule, sessionStarted, onClose, onSaved, onDelete }: Props) {
   const isEdit = !!schedule;
   const [form, setForm] = useState<FormValues>({
-    from: "", to: "", guestName: "", guestNumber: "", reservationNumber: "", totalEarning: "", autoStartTracking: false, color: "",
+    from: "", to: "", guestName: "", guestNumber: "", guestEmail: "",
+    turoJoinDate: "", getaroundJoinDate: "",
+    reservationNumber: "", totalEarning: "", autoStartTracking: false, color: "",
   });
+  const [selectedUser, setSelectedUser] = useState<GuestUser | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (schedule) {
+      const u = schedule.user ?? null;
+      if (u) setSelectedUser({
+        id: u.id,
+        name: u.name,
+        phone: u.phone,
+        email: u.email ?? undefined,
+        score: u.score ?? undefined,
+        turoJoinDate: u.turoJoinDate ?? undefined,
+        getaroundJoinDate: u.getaroundJoinDate ?? undefined,
+      });
       setForm({
         from: toDateTimeInput(schedule.fromDate),
         to: toDateTimeInput(schedule.toDate),
-        guestName: schedule.guestName ?? "",
-        guestNumber: schedule.guestNumber ?? "",
+        guestName: u?.name ?? "",
+        guestNumber: u?.phone ?? "",
+        guestEmail: u?.email ?? "",
+        turoJoinDate: u?.turoJoinDate?.slice(0, 10) ?? "",
+        getaroundJoinDate: u?.getaroundJoinDate?.slice(0, 10) ?? "",
         reservationNumber: schedule.reservationNumber ?? "",
         totalEarning: schedule.totalEarning != null ? String(schedule.totalEarning) : "",
         autoStartTracking: schedule.autoStartTracking ?? false,
@@ -70,16 +91,25 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
 
   const forfaitKm = computeForfaitKm(form.from, form.to);
 
+  // If typing a new user (not selected from DB), name and phone are both required
+  const isNewGuest = !selectedUser && form.guestName.trim() !== "";
+  const phoneMissing = isNewGuest && form.guestNumber.trim() === "";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.from || !form.to) return;
+    if (phoneMissing) return;
     setSaving(true);
     try {
       const body = {
         fromDate: new Date(form.from).toISOString(),
         toDate: new Date(form.to).toISOString(),
-        guestName: form.guestName.trim() || null,
-        guestNumber: form.guestNumber.trim() || null,
+        userId: selectedUser?.id ?? null,
+        guestName: (selectedUser?.name ?? form.guestName).trim() || null,
+        guestNumber: (selectedUser?.phone ?? form.guestNumber).trim() || null,
+        guestEmail: (selectedUser?.email ?? form.guestEmail).trim() || null,
+        turoJoinDate: form.turoJoinDate || null,
+        getaroundJoinDate: form.getaroundJoinDate || null,
         reservationNumber: form.reservationNumber.trim() || null,
         totalEarning: form.totalEarning !== "" ? Number(form.totalEarning) : null,
         autoStartTracking: form.autoStartTracking,
@@ -99,6 +129,8 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
     }
   };
 
+  const score = selectedUser?.score ?? null;
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -108,6 +140,8 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+
+          {/* ── Dates ── */}
           <div className={styles.row}>
             <div className={styles.field}>
               <label className={styles.label}>From</label>
@@ -125,19 +159,87 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
             </div>
           )}
 
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label className={styles.label}>Guest name</label>
-              <input type="text" className={styles.input} placeholder="e.g. John Doe"
-                value={form.guestName} onChange={set("guestName")} />
+          {/* ── Guest section ── */}
+          <div className={styles.guestSection}>
+            <p className={styles.guestSectionLabel}>Guest</p>
+
+            <div className={styles.row}>
+              <div className={styles.field}>
+                <label className={styles.label}>Name <span className={styles.required}>*</span></label>
+                <GuestAutocomplete
+                  value={form.guestName}
+                  onChange={name => setForm(f => ({ ...f, guestName: name }))}
+                  onSelect={user => {
+                    setSelectedUser(user);
+                    if (user) setForm(f => ({ ...f, guestName: user.name, guestNumber: user.phone, guestEmail: user.email ?? "", turoJoinDate: user.turoJoinDate ? user.turoJoinDate.slice(0, 10) : "", getaroundJoinDate: user.getaroundJoinDate ? user.getaroundJoinDate.slice(0, 10) : "" }));
+                    else setForm(f => ({ ...f, guestName: "", guestNumber: "", guestEmail: "", turoJoinDate: "", getaroundJoinDate: "" }));
+                  }}
+                  selectedUser={selectedUser}
+                />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>
+                  Phone <span className={styles.required}>*</span>
+                </label>
+                <input
+                  type="text"
+                  className={`${styles.input} ${phoneMissing ? styles.inputError : ""}`}
+                  placeholder="e.g. +212 6xx"
+                  value={selectedUser ? selectedUser.phone : form.guestNumber}
+                  onChange={set("guestNumber")}
+                  readOnly={!!selectedUser}
+                  style={selectedUser ? { background: "#f1f5f9", color: "#64748b" } : undefined}
+                />
+                {phoneMissing && <span className={styles.fieldError}>Required when name is set</span>}
+              </div>
             </div>
+
             <div className={styles.field}>
-              <label className={styles.label}>Guest number</label>
-              <input type="text" className={styles.input} placeholder="e.g. +212 6xx"
-                value={form.guestNumber} onChange={set("guestNumber")} />
+              <label className={styles.label}>Email <span className={styles.optional}>optional</span></label>
+              <input
+                type="email"
+                className={styles.input}
+                placeholder="e.g. guest@example.com"
+                value={selectedUser ? (selectedUser.email ?? "") : form.guestEmail}
+                onChange={set("guestEmail")}
+                readOnly={!!selectedUser}
+                style={selectedUser ? { background: "#f1f5f9", color: "#64748b" } : undefined}
+              />
+            </div>
+
+            {/* Score badge (read-only) */}
+            {score != null && (
+              <div className={styles.userInfoRow}>
+                <span className={`${styles.infoBadge} ${score >= 8 ? styles.infoHigh : score >= 5 ? styles.infoMid : styles.infoLow}`}>
+                  ★ {score}/10
+                </span>
+              </div>
+            )}
+
+            {/* Platform join dates (editable) */}
+            <div className={styles.row}>
+              <div className={styles.field}>
+                <label className={styles.label}>Turo join date <span className={styles.optional}>optional</span></label>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={form.turoJoinDate}
+                  onChange={set("turoJoinDate")}
+                />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Getaround join date <span className={styles.optional}>optional</span></label>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={form.getaroundJoinDate}
+                  onChange={set("getaroundJoinDate")}
+                />
+              </div>
             </div>
           </div>
 
+          {/* ── Booking details ── */}
           <div className={styles.row}>
             <div className={styles.field}>
               <label className={styles.label}>Reservation #</label>
@@ -200,7 +302,7 @@ export default function RentScheduleModal({ car, schedule, sessionStarted, onClo
               <button type="button" className={styles.deleteBtn} onClick={onDelete} disabled={saving}>Delete</button>
             )}
             <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={saving}>Cancel</button>
-            <button type="submit" className={styles.submitBtn} disabled={saving || !form.from || !form.to}>
+            <button type="submit" className={styles.submitBtn} disabled={saving || !form.from || !form.to || phoneMissing}>
               {saving ? "Saving…" : isEdit ? "Save changes" : "Add period"}
             </button>
           </div>

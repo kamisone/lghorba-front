@@ -1,0 +1,120 @@
+.wrap { position: relative; flex: 1; }
+
+.inputWrap { position: relative; }
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: #f8fafc;
+  transition: border-color 0.15s;
+}
+.input:focus { outline: none; border-color: #6366f1; background: #fff; }
+
+.spinner {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+/* ── Selected chip ── */
+.selected {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 8px;
+}
+
+.selectedInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.selectedName  { font-size: 0.875rem; font-weight: 600; color: #3730a3; }
+.selectedPhone { font-size: 0.78rem; color: #64748b; }
+
+.rentBadge {
+  font-size: 0.7rem; font-weight: 700;
+  padding: 0.12rem 0.4rem;
+  background: rgba(99, 102, 241, 0.15);
+  color: #4338ca; border-radius: 10px;
+}
+
+.scoreDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.clearBtn {
+  background: none; border: none;
+  font-size: 0.75rem; color: #94a3b8;
+  cursor: pointer; padding: 0.1rem 0.25rem;
+  line-height: 1; flex-shrink: 0;
+  transition: color 0.15s;
+}
+.clearBtn:hover { color: #ef4444; }
+
+/* ── Dropdown ── */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  list-style: none; margin: 0; padding: 4px;
+  z-index: 300;
+  animation: fadeIn 0.12s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+.option {
+  display: flex; flex-direction: column; align-items: flex-start;
+  width: 100%; padding: 0.5rem 0.7rem;
+  border: none; border-radius: 7px;
+  background: transparent; cursor: pointer;
+  transition: background 0.12s; text-align: left;
+}
+.option:hover { background: #f1f5f9; }
+
+.optionTop {
+  display: flex; align-items: center; gap: 0.4rem;
+  width: 100%;
+}
+
+.optionName  { font-size: 0.875rem; font-weight: 600; color: #1e293b; flex: 1; }
+.optionMeta  { font-size: 0.75rem; color: #94a3b8; }
+.optionRentCount { color: #6366f1; }
+
+.hint {
+  font-size: 0.72rem; color: #cbd5e1;
+  padding: 0.4rem 0.7rem 0.25rem;
+  font-style: italic;
+}

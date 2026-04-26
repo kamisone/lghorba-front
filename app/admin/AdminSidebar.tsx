@@ -5,7 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import styles from "./AdminSidebar.module.css";
 
 const NAV = [
-  { href: "/admin/fleet", icon: "directions_car", label: "Fleet" },
+  { href: "/admin/fleet",  icon: "directions_car",      label: "Fleet"  },
+  { href: "/admin/users",  icon: "person",              label: "Users"  },
+  { href: "/admin/admins", icon: "admin_panel_settings", label: "Admins" },
 ];
 
 interface Props {
