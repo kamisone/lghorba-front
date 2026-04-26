@@ -12,6 +12,13 @@ interface PublicCar {
   description: string | null;
   hasPhoto: boolean;
   isAvailable: boolean;
+  vehicleType?: string | null;
+  energy?: string | null;
+  gearbox?: string | null;
+  numberOfSeats?: number | null;
+  mileage?: string | null;
+  vehicleCondition?: string | null;
+  modelYear?: number | null;
 }
 
 async function getCars(): Promise<PublicCar[]> {
@@ -82,7 +89,7 @@ export default async function FleetPage({ params }: { params: { locale: string }
       ) : (
         <div className={styles.grid}>
           {cars.map((car) => (
-            <div key={car.id} className={styles.card}>
+            <Link key={car.id} href={`/${locale}/fleet/${car.id}`} className={styles.card}>
               <div className={styles.photoWrap}>
                 {car.hasPhoto ? (
                   <Image
@@ -102,9 +109,18 @@ export default async function FleetPage({ params }: { params: { locale: string }
               <div className={styles.info}>
                 <h2 className={styles.carName}>{car.name}</h2>
                 {car.description && <p className={styles.carDesc}>{car.description}</p>}
-                <Link href={`/${locale}/contact`} className={styles.cta}>{t.nav.bookNow}</Link>
+                {(car.vehicleType || car.energy || car.gearbox || car.numberOfSeats || car.mileage) && (
+                  <div className={styles.specs}>
+                    {car.vehicleType   && <span className={styles.spec}>{car.vehicleType}</span>}
+                    {car.energy        && <span className={styles.spec}>{car.energy}</span>}
+                    {car.gearbox       && <span className={styles.spec}>{car.gearbox}</span>}
+                    {car.numberOfSeats && <span className={styles.spec}>{car.numberOfSeats} seats</span>}
+                    {car.mileage       && <span className={styles.spec}>{car.mileage} km</span>}
+                  </div>
+                )}
+                <span className={styles.cta}>View details →</span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

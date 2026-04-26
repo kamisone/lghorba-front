@@ -102,6 +102,9 @@
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
   transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .card:hover {
@@ -165,6 +168,23 @@
   color: #64748b;
   margin: 0;
   line-height: 1.5;
+}
+
+.specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.spec {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  border-radius: 20px;
+  background: rgba(51, 87, 101, 0.08);
+  color: #335765;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .cta {

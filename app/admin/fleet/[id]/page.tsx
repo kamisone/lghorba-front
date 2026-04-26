@@ -7,6 +7,7 @@ import type { Car } from "../data";
 import CarFormModal from "../CarFormModal";
 import styles from "./car-detail.module.css";
 import { extractMapsUrl, extractLatLng } from "./mapUtils";
+import { useToast } from "@/app/components/toast/ToastContext";
 
 interface SmsMessage {
   id: number;
@@ -42,6 +43,7 @@ const RELEASE_THRESHOLD = 3;
 export default function CarDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { toast } = useToast();
 
   const storageKey        = `car_last_msg_${id}`;
   const waitingKey        = `car_waiting_action_${id}`;
@@ -53,7 +55,11 @@ export default function CarDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [uploading, setUploading]   = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photos, setPhotos]         = useState<{ id: string }[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const fileInputRef      = useRef<HTMLInputElement>(null);
+  const photoInputRef     = useRef<HTMLInputElement>(null);
 
   const [lastConsumed, setLastConsumed] = useState<LastConsumed | null>(() => {
     if (typeof window === "undefined") return null;
@@ -87,6 +93,53 @@ export default function CarDetailPage() {
       .then((data) => setCar(data))
       .finally(() => setCarLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    fetch(`/next-api/cars/${id}/photos`, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : [])
+      .then(setPhotos)
+      .catch(() => {});
+  }, [id]);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    const formData = new FormData();
+    formData.append("photo", file);
+    try {
+      const res = await fetch(`/next-api/cars/${id}/photos`, { method: "POST", body: formData });
+      if (res.ok) {
+        const p = await res.json();
+        setPhotos(prev => [...prev, p]);
+        toast.success("Photo added");
+      } else {
+        toast.error("Failed to upload photo");
+      }
+    } catch {
+      toast.error("Failed to upload photo");
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  };
+
+  const handlePhotoDelete = async (photoId: string) => {
+    setDeletingPhotoId(photoId);
+    try {
+      const res = await fetch(`/next-api/cars/${id}/photos/${photoId}`, { method: "DELETE" });
+      if (res.ok) {
+        setPhotos(prev => prev.filter(p => p.id !== photoId));
+        toast.success("Photo removed");
+      } else {
+        toast.error("Failed to delete photo");
+      }
+    } catch {
+      toast.error("Failed to delete photo");
+    } finally {
+      setDeletingPhotoId(null);
+    }
+  };
 
   const clearWaiting = useCallback(() => {
     setWaitingAction(null);
@@ -261,6 +314,32 @@ export default function CarDetailPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* ── Photos ── */}
+      <h2 className={styles.sectionTitle}>Photos</h2>
+      <div className={styles.photosCard}>
+        <div className={styles.photosGrid}>
+          {photos.map(p => (
+            <div key={p.id} className={styles.photoThumb}>
+              <img src={`/next-api/cars/${id}/photos/${p.id}`} alt="" className={styles.photoThumbImg} />
+              <button
+                className={styles.photoDeleteBtn}
+                onClick={() => handlePhotoDelete(p.id)}
+                disabled={deletingPhotoId === p.id}
+                aria-label="Delete photo"
+              >
+                {deletingPhotoId === p.id ? <span className={styles.photoDeleteSpinner} /> : "×"}
+              </button>
+            </div>
+          ))}
+          <button className={styles.photoAddBtn} onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto}>
+            {uploadingPhoto
+              ? <span className={styles.photoAddSpinner} />
+              : <><span className={styles.photoAddIcon}>+</span><span>Add</span></>}
+          </button>
+        </div>
+        <input ref={photoInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoUpload} />
       </div>
 
       <h2 className={styles.sectionTitle}>Actions</h2>
