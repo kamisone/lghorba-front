@@ -16,29 +16,37 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
 
   return (
     <div className={styles.root}>
-
       {/* ── Navbar ── */}
       <header className={styles.navbar}>
         <div className={styles.navInner}>
           <div className={styles.logo}>
-            <span className={styles.logoIcon}>🚐</span>
-            <span className={styles.logoText}>vitecamion</span>
+            <img className={styles.logoIcon} src="assets/vitecamion-logo.png" alt="vitecamion logo" />
           </div>
           <nav className={styles.navLinks}>
-            <Link href={`/${locale}/fleet`} className={styles.navLink}>{t.nav.fleet}</Link>
-            <a href="#platforms" className={styles.navLink}>{t.nav.platforms}</a>
-            <a href="#how"       className={styles.navLink}>{t.nav.howItWorks}</a>
-            <Link href={`/${locale}/contact`} className={styles.navLink}>{t.nav.contact}</Link>
+            <Link href={`/${locale}/fleet`} className={styles.navLink}>
+              {t.nav.fleet}
+            </Link>
+            <a href="#platforms" className={styles.navLink}>
+              {t.nav.platforms}
+            </a>
+            <a href="#how" className={styles.navLink}>
+              {t.nav.howItWorks}
+            </a>
+            <Link href={`/${locale}/contact`} className={styles.navLink}>
+              {t.nav.contact}
+            </Link>
           </nav>
           <div className={styles.navRight}>
             <LangSwitcher locale={locale} />
-            <Link href={`/${locale}/contact`} className={`${styles.navCta} ${styles.navCtaDesktop}`}>{t.nav.bookNow}</Link>
+            <Link href={`/${locale}/contact`} className={`${styles.navCta} ${styles.navCtaDesktop}`}>
+              {t.nav.bookNow}
+            </Link>
             <NavHamburger
               links={[
-                { href: `/${locale}/fleet`,    label: t.nav.fleet },
-                { href: "#platforms",          label: t.nav.platforms },
-                { href: "#how",                label: t.nav.howItWorks },
-                { href: `/${locale}/contact`,  label: t.nav.contact },
+                { href: `/${locale}/fleet`, label: t.nav.fleet },
+                { href: "#platforms", label: t.nav.platforms },
+                { href: "#how", label: t.nav.howItWorks },
+                { href: `/${locale}/contact`, label: t.nav.contact },
               ]}
               ctaLabel={t.nav.bookNow}
             />
@@ -56,13 +64,18 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
         <div className={styles.heroContent}>
           <span className={styles.heroPill}>{t.hero.pill}</span>
           <h1 className={styles.heroTitle}>
-            {t.hero.title1}<br />
+            {t.hero.title1}
+            <br />
             <span className={styles.heroAccent}>{t.hero.title2}</span>
           </h1>
           <p className={styles.heroSub}>{t.hero.sub}</p>
           <div className={styles.heroBtns}>
-            <a href="#platforms" className={styles.btnPrimary}>{t.hero.cta1}</a>
-            <a href="/fleet"     className={styles.btnOutline}>{t.hero.cta2}</a>
+            <a href="#platforms" className={styles.btnPrimary}>
+              {t.hero.cta1}
+            </a>
+            <a href="/fleet" className={styles.btnOutline}>
+              {t.hero.cta2}
+            </a>
           </div>
         </div>
         <div className={styles.heroCard} aria-hidden="true">
@@ -92,22 +105,34 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           <h2 className={styles.sectionTitle}>{t.platforms.title}</h2>
           <div className={styles.platformGrid}>
             <div className={styles.platformCard}>
-              <div className={styles.platformIcon} style={{ background: "#0d2b35" }}>🚘</div>
+              <div className={styles.platformIcon} style={{ background: "#0d2b35" }}>
+                🚘
+              </div>
               <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
               <p className={styles.platformDesc}>{t.platforms.turo.desc}</p>
-              <a href="https://turo.com/us/en/drivers/49282472" className={styles.platformLink} target="_blank">{t.platforms.turo.link}</a>
+              <a href="https://turo.com/us/en/drivers/49282472" className={styles.platformLink} target="_blank">
+                {t.platforms.turo.link}
+              </a>
             </div>
             <div className={`${styles.platformCard} ${styles.platformCardFeatured}`}>
-              <div className={styles.platformIcon} style={{ background: "#0d2b35" }}>🚙</div>
+              <div className={styles.platformIcon} style={{ background: "#0d2b35" }}>
+                🚙
+              </div>
               <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
               <p className={styles.platformDesc}>{t.platforms.getaround.desc}</p>
-              <a href="https://fr.getaround.com/users/5054364" className={styles.platformLink} target="_blank">{t.platforms.getaround.link}</a>
+              <a href="https://fr.getaround.com/users/5054364" className={styles.platformLink} target="_blank">
+                {t.platforms.getaround.link}
+              </a>
             </div>
             <div className={styles.platformCard}>
-              <div className={styles.platformIcon} style={{ background: "#2e1f18" }}>🤝</div>
+              <div className={styles.platformIcon} style={{ background: "#2e1f18" }}>
+                🤝
+              </div>
               <h3 className={styles.platformName}>{t.platforms.private.name}</h3>
               <p className={styles.platformDesc}>{t.platforms.private.desc}</p>
-              <a href="/fleet" className={styles.platformLink}>{t.platforms.private.link}</a>
+              <a href="/fleet" className={styles.platformLink}>
+                {t.platforms.private.link}
+              </a>
             </div>
           </div>
         </div>
@@ -179,12 +204,15 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             © {new Date().getFullYear()} vitecamion · {t.footer.rights}
           </p>
           <div className={styles.footerLinks}>
-            <Link href={`/${locale}/privacy-policy`} className={styles.footerLink}>{t.footer.privacy}</Link>
-            <Link href="/admin" className={styles.footerLink}>{t.footer.admin}</Link>
+            <Link href={`/${locale}/privacy-policy`} className={styles.footerLink}>
+              {t.footer.privacy}
+            </Link>
+            <Link href="/admin" className={styles.footerLink}>
+              {t.footer.admin}
+            </Link>
           </div>
         </div>
       </footer>
-
     </div>
   );
 }
