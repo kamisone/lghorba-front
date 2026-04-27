@@ -33,7 +33,21 @@
 }
 
 .logoIcon {
-  width: 8rem;
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+.logoTextImg {
+  height: 24px;
+  width: auto;
+  display: block;
+}
+
+@media (max-width: 480px) {
+  .logoTextImg {
+    display: none;
+  }
 }
 
 .logoText {

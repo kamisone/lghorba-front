@@ -20,7 +20,8 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       <header className={styles.navbar}>
         <div className={styles.navInner}>
           <div className={styles.logo}>
-            <img className={styles.logoIcon} src="assets/vitecamion_logo.png" alt="vitecamion logo" />
+            <img className={styles.logoIcon} src="assets/logo_vitecamion_icon.png" alt="vitecamion" />
+            <img className={styles.logoTextImg} src="assets/logo_vitecamion_text.png" alt="" aria-hidden="true" />
           </div>
           <nav className={styles.navLinks}>
             <Link href={`/${locale}/fleet`} className={styles.navLink}>
