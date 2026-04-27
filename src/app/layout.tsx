@@ -21,9 +21,8 @@ export default function RootLayout({
 }>) {
   const headersList = headers();
   const locale = headersList.get("x-locale") ?? "en";
-  const dir = locale === "ar" ? "rtl" : "ltr";
   return (
-    <html lang={locale} dir={dir}>
+    <html lang={locale} dir="ltr">
       <body className={inter.className}>
         <ToastProvider>
           <main>

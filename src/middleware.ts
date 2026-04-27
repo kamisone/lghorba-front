@@ -8,7 +8,6 @@ function detectLocale(request: NextRequest): Locale {
   if (saved && LOCALES.includes(saved)) return saved;
   const lang = (request.headers.get("accept-language") ?? "").toLowerCase();
   if (lang.startsWith("fr") || lang.includes(",fr")) return "fr";
-  if (lang.startsWith("ar") || lang.includes(",ar")) return "ar";
   return DEFAULT_LOCALE;
 }
 
