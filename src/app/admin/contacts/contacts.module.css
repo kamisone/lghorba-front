@@ -17,7 +17,7 @@
 .title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #211951;
+  color: var(--color-admin-primary);
   margin: 0;
 }
 
@@ -25,8 +25,8 @@
   display: inline-block;
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #335765 0%, #74A8A4 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
+  color: var(--color-white);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -37,15 +37,15 @@
 .spinner {
   display: inline-block;
   width: 32px; height: 32px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #74A8A4;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-brand-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .empty {
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   text-align: center;
   padding: 4rem 0;
   font-size: 0.95rem;
@@ -59,20 +59,20 @@
 }
 
 .item {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   overflow: hidden;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .itemUnread {
-  border-color: #74A8A4;
-  box-shadow: 0 0 0 3px rgba(116,168,164,0.1);
+  border-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-accent),0.1);
 }
 
 .itemOpen {
-  box-shadow: 0 4px 16px rgba(33, 25, 81, 0.09);
+  box-shadow: 0 4px 16px rgba(var(--rgb-admin-primary), 0.09);
 }
 
 .itemHeader {
@@ -88,7 +88,7 @@
   text-align: left;
   transition: background 0.12s;
 }
-.itemHeader:hover { background: #f8fafc; }
+.itemHeader:hover { background: var(--color-surface); }
 
 .itemMeta {
   display: flex;
@@ -103,7 +103,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #74A8A4;
+  background: var(--color-brand-accent);
   flex-shrink: 0;
 }
 
@@ -116,13 +116,13 @@
 .itemName {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #211951;
+  color: var(--color-admin-primary);
   white-space: nowrap;
 }
 
 .itemContact {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
@@ -138,7 +138,7 @@
 .itemSubject {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text-primary);
   flex: 1;
   text-align: left;
   overflow: hidden;
@@ -148,20 +148,20 @@
 
 .itemDate {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .chevron {
   font-size: 0.6rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   flex-shrink: 0;
 }
 
 /* ── Expanded body ── */
 .itemBody {
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-surface-raised);
   padding: 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -170,7 +170,7 @@
 
 .messageText {
   font-size: 0.9rem;
-  color: #334155;
+  color: var(--color-text-strong);
   line-height: 1.7;
   margin: 0;
   white-space: pre-wrap;
@@ -185,24 +185,24 @@
 
 .itemDateFull {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
 }
 
 .readBtn {
   padding: 0.35rem 0.9rem;
   border-radius: 7px;
-  border: 1.5px solid #74A8A4;
-  background: #fff;
-  color: #335765;
+  border: 1.5px solid var(--color-brand-accent);
+  background: var(--color-white);
+  color: var(--color-brand-primary);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.readBtn:hover { background: #f0f8f9; border-color: #335765; }
+.readBtn:hover { background: #f0f8f9; border-color: var(--color-brand-primary); }
 
 .readLabel {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   font-style: italic;
 }

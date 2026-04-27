@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getTranslations } from "@/lib/i18n";
-import LangSwitcher from "@/components/LangSwitcher";
 import styles from "./contact.module.css";
-import landingStyles from "../../page.module.css";
+import Link from "next/link";
 
 export default function ContactPage() {
   const params = useParams();
@@ -43,19 +41,6 @@ export default function ContactPage() {
   return (
     <div className={styles.page}>
 
-      {/* ── Navbar ── */}
-      <header className={landingStyles.navbar}>
-        <div className={landingStyles.navInner}>
-          <Link href={`/${locale}`} className={landingStyles.logo}>
-            <span className={landingStyles.logoIcon}>🚐</span>
-            <span className={landingStyles.logoText}>vitecamion</span>
-          </Link>
-          <div className={landingStyles.navRight}>
-            <LangSwitcher locale={locale} />
-            <Link href={`/${locale}`} className={styles.backLink}>{t.backHome}</Link>
-          </div>
-        </div>
-      </header>
 
       {/* ── Hero ── */}
       <div className={styles.hero}>

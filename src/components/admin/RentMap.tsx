@@ -40,13 +40,13 @@ export default function RentMap({ positions, height = 280, fill = false }: Props
       const latlngs: [number, number][] = positions.map((p) => [p.lat, p.lng]);
 
       if (latlngs.length > 1) {
-        L.polyline(latlngs, { color: "#407bff", weight: 2.5, opacity: 0.75 }).addTo(map);
+        L.polyline(latlngs, { color: "#005C8F", weight: 2.5, opacity: 0.75 }).addTo(map);
       }
 
       positions.forEach((pos, i) => {
         const isFirst = i === 0;
         const isLast  = i === positions.length - 1;
-        const bg = isFirst ? "#22c55e" : isLast ? "#ef4444" : "#211951";
+        const bg = isFirst ? "#22c55e" : isLast ? "#ef4444" : "#001829";
 
         const icon = L.divIcon({
           html: `<div style="

@@ -9,9 +9,9 @@
 .btn {
   padding: 0.45rem 1rem;
   border-radius: 8px;
-  border: 1.5px solid #211951;
+  border: 1.5px solid var(--color-admin-primary);
   background: transparent;
-  color: #211951;
+  color: var(--color-admin-primary);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -19,8 +19,8 @@
 }
 
 .btn:hover:not(:disabled) {
-  background: #211951;
-  color: #fff;
+  background: var(--color-admin-primary);
+  color: var(--color-white);
 }
 
 .btn:disabled {

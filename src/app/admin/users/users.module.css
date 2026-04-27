@@ -16,7 +16,7 @@
 .title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #211951;
+  color: var(--color-admin-primary);
   margin: 0;
 }
 
@@ -30,8 +30,8 @@
 .addBtn {
   padding: 0.5rem 1.1rem;
   border-radius: 9px; border: none;
-  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
-  color: #fff; font-size: 0.85rem; font-weight: 700;
+  background: var(--gradient-admin);
+  color: var(--color-white); font-size: 0.85rem; font-weight: 700;
   cursor: pointer; white-space: nowrap;
   transition: opacity 0.15s, transform 0.1s;
 }
@@ -49,7 +49,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.1rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   pointer-events: none;
 }
 
@@ -57,29 +57,29 @@
   width: 100%;
   box-sizing: border-box;
   padding: 0.5rem 0.75rem 0.5rem 2rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 9px;
   font-size: 0.875rem;
-  color: #1e293b;
-  background: #f8fafc;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
   transition: border-color 0.15s;
 }
-.searchInput:focus { outline: none; border-color: #6366f1; background: #fff; }
+.searchInput:focus { outline: none; border-color: var(--color-admin-indigo); background: var(--color-white); }
 
 .loadingRow { display: flex; justify-content: center; padding: 4rem 0; }
 
 .spinner {
   display: inline-block;
   width: 32px; height: 32px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #407bff;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-admin-secondary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .empty {
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   text-align: center;
   padding: 4rem 0;
   font-size: 0.9rem;
@@ -89,11 +89,11 @@
 }
 
 .tableWrap {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   overflow-x: auto;
-  box-shadow: 0 2px 8px rgba(33, 25, 81, 0.06);
+  box-shadow: 0 2px 8px rgba(var(--rgb-admin-primary), 0.06);
 }
 
 .table {
@@ -103,15 +103,15 @@
 }
 
 .table thead tr {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .table th {
   padding: 0.75rem 1rem;
   text-align: left;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -120,13 +120,13 @@
 
 .table td {
   padding: 0.85rem 1rem;
-  color: #1e293b;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-surface-raised);
   vertical-align: middle;
 }
 
 .table tbody tr:last-child td { border-bottom: none; }
-.table tbody tr:hover td { background: #f8fafc; }
+.table tbody tr:hover td { background: var(--color-surface); }
 
 .table th:last-child,
 .table td:last-child {
@@ -134,11 +134,11 @@
   right: 0;
   z-index: 1;
 }
-.table thead th:last-child { background: #f8fafc; }
-.table tbody td:last-child { background: #fff; }
-.table tbody tr:hover td:last-child { background: #f8fafc; }
+.table thead th:last-child { background: var(--color-surface); }
+.table tbody td:last-child { background: var(--color-white); }
+.table tbody tr:hover td:last-child { background: var(--color-surface); }
 
-.table thead th:last-child { border-left: 1px solid #e2e8f0; }
+.table thead th:last-child { border-left: 1px solid var(--color-border); }
 
 .table td:last-child::before {
   content: "";
@@ -147,13 +147,13 @@
   left: -20px;
   bottom: 0;
   width: 20px;
-  background: linear-gradient(to right, transparent, rgba(0,0,0,0.07));
+  background: linear-gradient(to right, transparent, rgba(var(--rgb-black),0.07));
   pointer-events: none;
 }
 
-.nameCell { font-weight: 600; color: #211951 !important; }
-.na { color: #cbd5e1; }
-.dateCell { color: #64748b !important; font-size: 0.82rem !important; }
+.nameCell { font-weight: 600; color: var(--color-admin-primary) !important; }
+.na { color: var(--color-border-subtle); }
+.dateCell { color: var(--color-text-muted) !important; font-size: 0.82rem !important; }
 
 .rentCell {
   display: flex;
@@ -166,23 +166,23 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  background: var(--color-success-light);
+  box-shadow: 0 0 0 0 rgba(var(--rgb-success-light), 0.5);
   animation: pulse 1.8s ease-in-out infinite;
   flex-shrink: 0;
 }
 @keyframes pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
-  70%  { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(var(--rgb-success-light), 0.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(var(--rgb-success-light), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--rgb-success-light), 0); }
 }
 
 .rentBadge {
   display: inline-block;
   padding: 0.15rem 0.5rem;
   border-radius: 10px;
-  background: rgba(99, 102, 241, 0.1);
-  color: #4338ca;
+  background: rgba(var(--rgb-admin-indigo), 0.1);
+  color: var(--color-admin-indigo-dark);
   font-weight: 700;
   font-size: 0.78rem;
 }
@@ -194,20 +194,20 @@
   font-weight: 700;
   font-size: 0.78rem;
 }
-.scoreHigh { background: rgba(34, 197, 94, 0.12); color: #16a34a; }
-.scoreMid  { background: rgba(245, 158, 11, 0.12); color: #b45309; }
-.scoreLow  { background: rgba(239, 68, 68, 0.1);   color: #dc2626; }
+.scoreHigh { background: rgba(var(--rgb-success-light), 0.12); color: var(--color-success); }
+.scoreMid  { background: rgba(var(--rgb-warning-light), 0.12); color: #b45309; }
+.scoreLow  { background: rgba(var(--rgb-error-light), 0.1);   color: var(--color-error); }
 
 .viewBtn {
   display: inline-block;
   padding: 0.3rem 0.8rem;
   border-radius: 7px;
-  background: #f1f5f9;
-  color: #211951;
+  background: var(--color-surface-raised);
+  color: var(--color-admin-primary);
   font-size: 0.8rem;
   font-weight: 600;
   text-decoration: none;
   transition: background 0.15s;
   white-space: nowrap;
 }
-.viewBtn:hover { background: #e2e8f0; }
+.viewBtn:hover { background: var(--color-border); }

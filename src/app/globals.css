@@ -6,6 +6,123 @@
   box-sizing: border-box;
 }
 
+/*
+ * overflow-x: clip prevents horizontal overflow from reaching the viewport
+ * without creating a new stacking context (unlike overflow-x: hidden),
+ * so position:sticky elements continue to work correctly.
+ */
+html,
+body {
+  overflow-x: clip;
+}
+
+/*
+ * Breakpoints — unit-less px values (CSS variables cannot be used inside
+ * @media conditions; use the literal values listed below in CSS modules).
+ * Canonical definition: src/styles/breakpoints.ts
+ *
+ *   --bp-phone    640    phone   (≤ 640 px)
+ *   --bp-tablet  1024    tablet  (641 – 1024 px)
+ *   --bp-desktop 1280    desktop (≥ 1025 px)
+ */
+:root {
+  /* ── Breakpoints (unit-less, not usable inside @media) ── */
+  --bp-phone:   640;
+  --bp-tablet: 1024;
+  --bp-desktop: 1280;
+
+  /* ──────────────────────────────────────────────────────────
+   * Brand — Public  (ocean blue + lime green palette)
+   * ────────────────────────────────────────────────────────── */
+  --color-brand-darkest:   #001829;
+  --color-brand-dark:      #002B44;
+  --color-brand-primary:   #00466E;
+  --color-brand-mid:       #005C8F;
+  --color-brand-accent:    #8DC220;
+  --color-brand-light:     #C6E190;
+
+  /* raw RGB channels — for use inside rgba() */
+  --rgb-brand-darkest:     0, 24, 41;
+  --rgb-brand-primary:     0, 70, 110;
+  --rgb-brand-accent:      141, 194, 32;
+
+  /* ──────────────────────────────────────────────────────────
+   * Brand — Admin  (deep navy + lime highlight)
+   * ────────────────────────────────────────────────────────── */
+  --color-admin-primary:     #001829;
+  --color-admin-secondary:   #005C8F;
+  --color-admin-indigo:      #00466E;
+  --color-admin-indigo-dark: #002B44;
+  --color-admin-orange:      #8DC220;   /* active nav / highlight */
+  --color-admin-orange-dark: #6A9018;   /* role badge, deeper accent */
+
+  --rgb-admin-primary:       0, 24, 41;
+  --rgb-admin-secondary:     0, 92, 143;
+  --rgb-admin-indigo:        0, 70, 110;
+  --rgb-admin-orange:        141, 194, 32;
+
+  /* ──────────────────────────────────────────────────────────
+   * Neutrals — shared across public & admin
+   * ────────────────────────────────────────────────────────── */
+  --color-white:             #ffffff;
+  --color-surface:           #f8fafc;   /* default page / card bg */
+  --color-surface-raised:    #f1f5f9;   /* slightly elevated, table stripes */
+  --color-border:            #e2e8f0;   /* default borders */
+  --color-border-subtle:     #cbd5e1;   /* dividers, subtle borders */
+  --color-text-placeholder:  #94a3b8;   /* input placeholders */
+  --color-text-muted:        #64748b;   /* meta, captions */
+  --color-text-secondary:    #475569;   /* secondary body text */
+  --color-text-label:        #374151;   /* form labels */
+  --color-text-strong:       #334155;   /* heavier UI text */
+  --color-text-primary:      #1e293b;   /* primary body text */
+  --color-text-heading:      #001829;   /* page headings */
+  --color-surface-dark:      #001829;   /* dark UI backgrounds (sidebar, header) */
+  --color-dark:              #000C18;   /* deep overlay backgrounds */
+
+  --rgb-white:               255, 255, 255;
+  --rgb-black:               0, 0, 0;
+
+  /* ──────────────────────────────────────────────────────────
+   * Status — Success
+   * ────────────────────────────────────────────────────────── */
+  --color-success:           #16a34a;
+  --color-success-light:     #22c55e;
+  --color-success-bg:        #f0fdf4;
+  --color-success-border:    #bbf7d0;
+
+  --rgb-success-light:       34, 197, 94;
+
+  /* Status — Error */
+  --color-error:             #dc2626;
+  --color-error-light:       #ef4444;
+  --color-error-bg:          #fef2f2;
+  --color-error-border:      #fecaca;
+
+  --rgb-error-light:         239, 68, 68;
+
+  /* Status — Warning */
+  --color-warning:           #d97706;
+  --color-warning-light:     #f59e0b;
+  --color-warning-bg:        #fffbeb;
+  --color-warning-border:    #fde68a;
+
+  --rgb-warning-light:       245, 158, 11;
+
+  /* Status — Info */
+  --color-info:              #2563eb;
+  --color-info-light:        #3b82f6;
+  --color-info-bg:           #eff6ff;
+  --color-info-border:       #bfdbfe;
+
+  /* ──────────────────────────────────────────────────────────
+   * Gradients — frequently reused across the application
+   * ────────────────────────────────────────────────────────── */
+  --gradient-admin:   linear-gradient(135deg, var(--color-admin-primary)   0%, var(--color-admin-indigo)    100%);
+  --gradient-brand:   linear-gradient(135deg, var(--color-brand-primary)   0%, var(--color-brand-accent)    100%);
+  --gradient-accent:  linear-gradient(135deg, var(--color-brand-accent)    0%, var(--color-brand-light)     100%);
+  --gradient-hero:    linear-gradient(135deg, var(--color-brand-darkest)   0%, var(--color-brand-dark)      100%);
+}
+
 
 
 

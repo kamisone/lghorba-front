@@ -9,7 +9,7 @@
 .sidebar {
   width: 220px;
   min-height: 100vh;
-  background: #0f172a;
+  background: var(--color-surface-dark);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -17,7 +17,7 @@
   left: 0;
   bottom: 0;
   z-index: 100;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(var(--rgb-white), 0.06);
   transition: width 0.25s ease;
   overflow: hidden;
 }
@@ -27,28 +27,16 @@
   width: 60px;
 }
 
-/* Hide text, keep icons */
-.sidebarCollapsed .brandText {
-  display: none;
-}
+.sidebarCollapsed .brandText  { display: none; }
+.sidebarCollapsed .navLabel   { display: none; }
+.sidebarCollapsed .logoutLabel{ display: none; }
 
-.sidebarCollapsed .navLabel {
-  display: none;
-}
-
-.sidebarCollapsed .logoutLabel {
-  display: none;
-}
-
-/* Brand row: just the collapse button, centered */
-.sidebarCollapsed .brandIcon {
-  display: none;
-}
+.sidebarCollapsed .brandIcon  { display: none; }
 
 .sidebarCollapsed .brand {
   justify-content: center;
   padding: 0.9rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(var(--rgb-white), 0.07);
 }
 
 .sidebarCollapsed .collapseBtn {
@@ -57,17 +45,13 @@
   height: 28px;
 }
 
-/* Nav items: center the icon */
 .sidebarCollapsed .navItem {
   justify-content: center;
   padding: 0.6rem 0;
 }
 
-.sidebarCollapsed .navActiveBar {
-  display: none;
-}
+.sidebarCollapsed .navActiveBar { display: none; }
 
-/* Logout: center the icon */
 .sidebarCollapsed .logoutBtn {
   justify-content: center;
   padding: 0.6rem 0;
@@ -79,7 +63,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1.2rem 1rem 1.2rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(var(--rgb-white), 0.07);
   position: relative;
   flex-shrink: 0;
 }
@@ -99,7 +83,7 @@
 .brandName {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--color-surface);
   margin: 0;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -107,7 +91,7 @@
 
 .brandSub {
   font-size: 0.65rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -121,9 +105,9 @@
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: #94a3b8;
+  border: 1px solid rgba(var(--rgb-white), 0.12);
+  background: rgba(var(--rgb-white), 0.06);
+  color: var(--color-text-placeholder);
   font-size: 0.9rem;
   cursor: pointer;
   display: flex;
@@ -136,8 +120,8 @@
 }
 
 .collapseBtn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #e2e8f0;
+  background: rgba(var(--rgb-white), 0.12);
+  color: var(--color-border);
 }
 
 /* ── Nav ── */
@@ -157,7 +141,7 @@
   padding: 0.6rem 0.85rem;
   border-radius: 8px;
   text-decoration: none;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   font-size: 0.875rem;
   font-weight: 500;
   transition: background 0.15s, color 0.15s;
@@ -166,18 +150,18 @@
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #e2e8f0;
+  background: rgba(var(--rgb-white), 0.06);
+  color: var(--color-border);
 }
 
 .navItemActive {
-  background: rgba(249, 115, 22, 0.12);
-  color: #f97316;
+  background: rgba(var(--rgb-admin-orange), 0.12);
+  color: var(--color-admin-orange);
 }
 
 .navItemActive:hover {
-  background: rgba(249, 115, 22, 0.18);
-  color: #f97316;
+  background: rgba(var(--rgb-admin-orange), 0.18);
+  color: var(--color-admin-orange);
 }
 
 .navIcon {
@@ -200,15 +184,14 @@
   transform: translateY(-50%);
   width: 3px;
   height: 60%;
-  background: #f97316;
+  background: var(--color-warning-light);
   border-radius: 0 3px 3px 0;
 }
-
 
 /* ── Footer / logout ── */
 .footer {
   padding: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgba(var(--rgb-white), 0.07);
   flex-shrink: 0;
 }
 
@@ -221,7 +204,7 @@
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -231,8 +214,8 @@
 }
 
 .logoutBtn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
+  background: rgba(var(--rgb-error-light), 0.1);
+  color: var(--color-error-light);
 }
 
 .logoutIcon {
@@ -241,10 +224,7 @@
   text-align: center;
 }
 
-.logoutLabel {
-  transition: opacity 0.2s;
-}
-
+.logoutLabel { transition: opacity 0.2s; }
 
 /* ── Mobile close button ── */
 .mobileCloseBtn {
@@ -255,64 +235,24 @@
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: #94a3b8;
+  border: 1px solid rgba(var(--rgb-white), 0.12);
+  background: rgba(var(--rgb-white), 0.06);
+  color: var(--color-text-placeholder);
   font-size: 0.75rem;
   cursor: pointer;
   align-items: center;
   justify-content: center;
 }
 
-/* ── Mobile ── */
-@media (max-width: 768px) {
-  /* Hidden off-screen by default */
+/* ── Phone (≤ 640px): slide off-screen, hamburger takes over ── */
+@media (max-width: 640px) {
   .sidebar {
-    width: 60px;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
   }
 
-  /* Slide in when open — always icon-only (60px) */
   .sidebarMobileOpen {
     transform: translateX(0);
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
-  }
-
-  /* Force icon-only layout regardless of collapsed class */
-  .sidebar .brandText,
-  .sidebar .navLabel,
-  .sidebar .logoutLabel {
-    display: none !important;
-  }
-
-  .sidebar .brand {
-    justify-content: center;
-    padding: 0.9rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  }
-
-  .sidebar .navItem {
-    justify-content: center;
-    padding: 0.6rem 0;
-  }
-
-  .sidebar .navActiveBar {
-    display: none;
-  }
-
-  .sidebar .logoutBtn {
-    justify-content: center;
-    padding: 0.6rem 0;
-  }
-
-  /* Show collapseBtn, hide unused mobile close btn */
-  .collapseBtn {
-    display: flex;
-    margin: 0 auto;
-  }
-
-  .mobileCloseBtn {
-    display: none !important;
+    box-shadow: 4px 0 20px rgba(var(--rgb-black), 0.5);
   }
 }

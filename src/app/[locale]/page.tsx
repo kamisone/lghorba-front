@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
-import LangSwitcher from "@/components/LangSwitcher";
-import NavHamburger from "@/components/NavHamburger";
 import styles from "../page.module.css";
 
 export default function LandingPage({ params }: { params: { locale: string } }) {
@@ -16,44 +14,6 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
 
   return (
     <div className={styles.root}>
-      {/* ── Navbar ── */}
-      <header className={styles.navbar}>
-        <div className={styles.navInner}>
-          <div className={styles.logo}>
-            <img className={styles.logoIcon} src="assets/logo_vitecamion_icon.png" alt="vitecamion" />
-            <img className={styles.logoTextImg} src="assets/logo_vitecamion_text.png" alt="" aria-hidden="true" />
-          </div>
-          <nav className={styles.navLinks}>
-            <Link href={`/${locale}/fleet`} className={styles.navLink}>
-              {t.nav.fleet}
-            </Link>
-            <a href="#platforms" className={styles.navLink}>
-              {t.nav.platforms}
-            </a>
-            <a href="#how" className={styles.navLink}>
-              {t.nav.howItWorks}
-            </a>
-            <Link href={`/${locale}/contact`} className={styles.navLink}>
-              {t.nav.contact}
-            </Link>
-          </nav>
-          <div className={styles.navRight}>
-            <LangSwitcher locale={locale} />
-            <Link href={`/${locale}/contact`} className={`${styles.navCta} ${styles.navCtaDesktop}`}>
-              {t.nav.bookNow}
-            </Link>
-            <NavHamburger
-              links={[
-                { href: `/${locale}/fleet`, label: t.nav.fleet },
-                { href: "#platforms", label: t.nav.platforms },
-                { href: "#how", label: t.nav.howItWorks },
-                { href: `/${locale}/contact`, label: t.nav.contact },
-              ]}
-              ctaLabel={t.nav.bookNow}
-            />
-          </div>
-        </div>
-      </header>
 
       {/* ── Hero ── */}
       <section className={styles.hero}>

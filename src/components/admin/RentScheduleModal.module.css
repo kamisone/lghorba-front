@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 15, 30, 0.55);
+  background: rgba(var(--rgb-black), 0.55);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: flex-start;
@@ -13,9 +13,9 @@
 }
 
 .modal {
-  background: #fff;
+  background: var(--color-white);
   border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(33, 25, 81, 0.18);
+  box-shadow: 0 24px 60px rgba(var(--rgb-admin-primary), 0.18);
   width: 100%;
   max-width: 520px;
   margin: auto;
@@ -31,7 +31,7 @@
 .modalTitle {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #211951;
+  color: var(--color-admin-primary);
   margin: 0;
 }
 
@@ -39,13 +39,13 @@
   background: none;
   border: none;
   font-size: 1rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   cursor: pointer;
   padding: 0.25rem;
   line-height: 1;
   transition: color 0.15s;
 }
-.closeBtn:hover { color: #1e293b; }
+.closeBtn:hover { color: var(--color-text-primary); }
 
 .form {
   display: flex;
@@ -71,7 +71,7 @@
 .label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #374151;
+  color: var(--color-text-label);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -79,9 +79,9 @@
 .input {
   padding: 0.6rem 0.85rem;
   border-radius: 9px;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
-  color: #1e293b;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font-size: 0.88rem;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
@@ -90,35 +90,35 @@
   box-sizing: border-box;
 }
 .input:focus {
-  border-color: #407bff;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(64, 123, 255, 0.12);
+  border-color: var(--color-admin-secondary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-admin-secondary), 0.12);
 }
 
 .inputError {
-  border-color: #fca5a5 !important;
-  background: #fff5f5 !important;
+  border-color: var(--color-error-border) !important;
+  background: var(--color-error-bg) !important;
 }
 .inputError:focus {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+  border-color: var(--color-error-light) !important;
+  box-shadow: 0 0 0 3px rgba(var(--rgb-error-light), 0.1) !important;
 }
 
 .fieldError {
   font-size: 0.72rem;
-  color: #ef4444;
+  color: var(--color-error-light);
   font-weight: 500;
 }
 
 .required {
-  color: #ef4444;
+  color: var(--color-error-light);
   font-weight: 700;
 }
 
 .optional {
   font-size: 0.68rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   text-transform: none;
   letter-spacing: 0;
   margin-left: 0.2rem;
@@ -129,8 +129,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 11px;
   padding: 0.9rem 1rem;
 }
@@ -140,7 +140,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   margin: 0;
 }
 
@@ -156,25 +156,25 @@
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
 }
 
-.infoHigh { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.25); color: #16a34a; }
-.infoMid  { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.25); color: #b45309; }
-.infoLow  { background: rgba(239, 68, 68, 0.08);  border-color: rgba(239, 68, 68, 0.2);  color: #dc2626; }
+.infoHigh { background: rgba(var(--rgb-success-light), 0.08); border-color: rgba(var(--rgb-success-light), 0.25); color: var(--color-success); }
+.infoMid  { background: rgba(var(--rgb-warning-light), 0.08); border-color: rgba(var(--rgb-warning-light), 0.25); color: #b45309; }
+.infoLow  { background: rgba(var(--rgb-error-light), 0.08);  border-color: rgba(var(--rgb-error-light), 0.2);  color: var(--color-error); }
 
 .errorBanner {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   padding: 0.55rem 0.85rem;
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   border-radius: 8px;
   font-size: 0.82rem;
-  color: #dc2626;
+  color: var(--color-error);
   font-weight: 500;
 }
 
@@ -183,8 +183,8 @@
   align-items: center;
   gap: 0.3rem;
   padding: 0.35rem 0.75rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
   border-radius: 8px;
   font-size: 0.82rem;
   color: #1d4ed8;
@@ -216,18 +216,18 @@
 }
 .colorSwatch:hover { transform: scale(1.15); }
 .colorSwatchActive {
-  border-color: #1e293b;
+  border-color: var(--color-text-primary);
   transform: scale(1.18);
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px currentColor;
+  box-shadow: 0 0 0 2px var(--color-white), 0 0 0 4px currentColor;
 }
 
 .colorClear {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
-  color: #94a3b8;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-placeholder);
   font-size: 0.72rem;
   cursor: pointer;
   display: flex;
@@ -237,15 +237,15 @@
   transition: border-color 0.15s, color 0.15s;
   flex-shrink: 0;
 }
-.colorClear:hover { border-color: #ef4444; color: #ef4444; }
+.colorClear:hover { border-color: var(--color-error-light); color: var(--color-error-light); }
 
 .toggleRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.55rem 0.75rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 9px;
 }
 
@@ -258,12 +258,12 @@
 .toggleLabel {
   font-size: 0.84rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-label);
 }
 
 .toggleHint {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   font-style: italic;
 }
 
@@ -273,14 +273,14 @@
   height: 25px;
   border-radius: 999px;
   border: none;
-  background: #e2e8f0;
+  background: var(--color-border);
   cursor: pointer;
   transition: background 0.2s;
   flex-shrink: 0;
 }
 
 .toggleOn {
-  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
+  background: var(--gradient-admin);
 }
 
 .toggleDisabled {
@@ -295,8 +295,8 @@
   width: 21px;
   height: 21px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  background: var(--color-white);
+  box-shadow: 0 1px 4px rgba(var(--rgb-black), 0.2);
   transition: transform 0.2s;
 }
 
@@ -315,9 +315,9 @@
 .deleteBtn {
   padding: 0.6rem 1.1rem;
   border-radius: 9px;
-  border: 1.5px solid #fca5a5;
-  background: #fff;
-  color: #ef4444;
+  border: 1.5px solid var(--color-error-border);
+  background: var(--color-white);
+  color: var(--color-error-light);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
@@ -325,8 +325,8 @@
   margin-right: auto;
 }
 .deleteBtn:hover:not(:disabled) {
-  background: #fef2f2;
-  border-color: #ef4444;
+  background: var(--color-error-bg);
+  border-color: var(--color-error-light);
 }
 .deleteBtn:disabled {
   opacity: 0.5;
@@ -336,25 +336,25 @@
 .cancelBtn {
   padding: 0.6rem 1.1rem;
   border-radius: 9px;
-  border: 1.5px solid #e2e8f0;
-  background: #fff;
-  color: #475569;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-secondary);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 .cancelBtn:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--color-surface);
+  border-color: var(--color-border-subtle);
 }
 
 .submitBtn {
   padding: 0.6rem 1.4rem;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
-  color: #fff;
+  background: var(--gradient-admin);
+  color: var(--color-white);
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;

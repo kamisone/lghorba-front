@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 15, 30, 0.55);
+  background: rgba(var(--rgb-black), 0.55);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -11,9 +11,9 @@
 }
 
 .modal {
-  background: #fff;
+  background: var(--color-white);
   border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(33, 25, 81, 0.18);
+  box-shadow: 0 24px 60px rgba(var(--rgb-admin-primary), 0.18);
   width: 100%;
   max-width: 620px;
   display: flex;
@@ -27,14 +27,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-surface-raised);
   flex-shrink: 0;
 }
 
 .modalTitle {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #211951;
+  color: var(--color-admin-primary);
   margin: 0;
 }
 
@@ -42,13 +42,13 @@
   background: none;
   border: none;
   font-size: 1rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   cursor: pointer;
   padding: 0.25rem;
   line-height: 1;
   transition: color 0.15s;
 }
-.closeBtn:hover { color: #1e293b; }
+.closeBtn:hover { color: var(--color-text-primary); }
 
 .form {
   display: flex;
@@ -64,10 +64,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #407bff;
+  color: var(--color-admin-secondary);
   margin: 0.5rem 0 0;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 .section:first-child { margin-top: 0; }
 
@@ -76,7 +76,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
-@media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
 
 .field {
   display: flex;
@@ -87,16 +87,16 @@
 .label {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-label);
 }
 
 .optional {
   font-weight: 400;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
 }
 
 .required {
-  color: #dc2626;
+  color: var(--color-error);
   font-weight: 500;
 }
 
@@ -105,9 +105,9 @@
 .select {
   padding: 0.55rem 0.85rem;
   border-radius: 9px;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
-  color: #1e293b;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font-size: 0.875rem;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
@@ -120,19 +120,19 @@
 .select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2.2rem; }
 
 .input:focus, .textarea:focus, .select:focus {
-  border-color: #407bff;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(64, 123, 255, 0.1);
+  border-color: var(--color-admin-secondary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-admin-secondary), 0.1);
 }
 
 .error {
   margin: 0;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   font-size: 0.83rem;
-  color: #dc2626;
+  color: var(--color-error);
 }
 
 .actions {
@@ -146,22 +146,22 @@
 .cancelBtn {
   padding: 0.6rem 1.1rem;
   border-radius: 9px;
-  border: 1.5px solid #e2e8f0;
-  background: #fff;
-  color: #475569;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-secondary);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.cancelBtn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+.cancelBtn:hover:not(:disabled) { background: var(--color-surface); border-color: var(--color-border-subtle); }
 
 .submitBtn {
   padding: 0.6rem 1.4rem;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
-  color: #fff;
+  background: var(--gradient-admin);
+  color: var(--color-white);
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;

@@ -1,7 +1,7 @@
 .section {
   margin-top: 2rem;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   overflow: hidden;
   padding: 1rem 1.2rem 1.2rem;
@@ -20,7 +20,7 @@
 .sectionLabel {
   font-size: 0.92rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-text-primary);
 }
 
 /* ── Calendar nav ── */
@@ -36,10 +36,10 @@
 .navBtn {
   width: 28px;
   height: 28px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   background: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 1.1rem;
   cursor: pointer;
   display: flex;
@@ -48,12 +48,12 @@
   transition: border-color 0.15s, color 0.15s;
   line-height: 1;
 }
-.navBtn:hover { border-color: #407bff; color: #407bff; }
+.navBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }
 
 .monthLabel {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-text-primary);
 }
 
 /* ── Grid ── */
@@ -67,7 +67,7 @@
   text-align: center;
   font-size: 0.66rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   text-transform: uppercase;
   padding-bottom: 0.3rem;
 }
@@ -80,19 +80,19 @@
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 500;
-  color: #334155;
+  color: var(--color-text-strong);
 }
 
 .dayToday {
   font-weight: 800;
-  color: #407bff;
-  outline: 1.5px solid #407bff;
+  color: var(--color-admin-secondary);
+  outline: 1.5px solid var(--color-admin-secondary);
   outline-offset: -1.5px;
 }
 
 .dayRented {
-  background: linear-gradient(135deg, #211951 0%, #407bff 100%);
-  color: #fff !important;
+  background: var(--gradient-admin);
+  color: var(--color-white) !important;
   font-weight: 600;
   border-radius: 0;
 }
@@ -120,13 +120,13 @@
 }
 
 .scheduleNow {
-  border-color: #22c55e;
-  background: #f0fdf4;
+  border-color: var(--color-success-light);
+  background: var(--color-success-bg);
 }
 
 .scheduleFuture {
-  border-color: #bfdbfe;
-  background: #eff6ff;
+  border-color: var(--color-info-border);
+  background: var(--color-info-bg);
 }
 
 .scheduleMain {
@@ -146,10 +146,10 @@
   min-width: 0;
   font-size: 0.77rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-text-strong);
 }
 
-.scheduleArrow { color: #94a3b8; font-size: 0.7rem; }
+.scheduleArrow { color: var(--color-text-placeholder); font-size: 0.7rem; }
 
 .scheduleItemActions {
   display: flex;
@@ -161,9 +161,9 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #94a3b8;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-placeholder);
   font-size: 0.72rem;
   line-height: 1;
   cursor: pointer;
@@ -173,16 +173,16 @@
   padding: 0;
   transition: border-color 0.15s, color 0.15s;
 }
-.editBtn:hover { border-color: #407bff; color: #407bff; }
+.editBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }
 
 .deleteBtn {
   flex-shrink: 0;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #94a3b8;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-placeholder);
   font-size: 0.85rem;
   line-height: 1;
   cursor: pointer;
@@ -192,7 +192,7 @@
   padding: 0;
   transition: border-color 0.15s, color 0.15s;
 }
-.deleteBtn:hover:not(:disabled) { border-color: #ef4444; color: #ef4444; }
+.deleteBtn:hover:not(:disabled) { border-color: var(--color-error-light); color: var(--color-error-light); }
 
 /* ── Schedule info pills ── */
 .scheduleInfo {
@@ -207,24 +207,24 @@
   gap: 0.2rem;
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
   font-size: 0.7rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
 .infoPillEarning {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #16a34a;
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
 }
 
 .infoPillTracking {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+  color: var(--color-info);
 }
 
 /* ── Day click ── */
@@ -256,8 +256,8 @@
   justify-content: center;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  color: var(--color-white);
+  text-shadow: 0 1px 3px rgba(var(--rgb-black), 0.35);
   pointer-events: none;
 }
 
@@ -266,7 +266,7 @@
   position: fixed;
   inset: 0;
   z-index: 9000;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(var(--rgb-black), 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -274,9 +274,9 @@
 }
 
 .infoModal {
-  background: #fff;
+  background: var(--color-white);
   border-radius: 14px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 16px 48px rgba(var(--rgb-black), 0.18);
   width: 100%;
   max-width: 420px;
   overflow: hidden;
@@ -287,7 +287,7 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-surface-raised);
   border-top-left-radius: 14px;
   border-top-right-radius: 14px;
 }
@@ -300,20 +300,20 @@
   flex-wrap: wrap;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-text-primary);
   min-width: 0;
 }
 
-.infoArrow { color: #94a3b8; font-size: 0.72rem; }
+.infoArrow { color: var(--color-text-placeholder); font-size: 0.72rem; }
 
 .infoClose {
   flex-shrink: 0;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   background: none;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   font-size: 0.8rem;
   cursor: pointer;
   display: flex;
@@ -321,7 +321,7 @@
   justify-content: center;
   transition: border-color 0.15s, color 0.15s;
 }
-.infoClose:hover { border-color: #ef4444; color: #ef4444; }
+.infoClose:hover { border-color: var(--color-error-light); color: var(--color-error-light); }
 
 .infoBody {
   padding: 0.85rem 1rem;
@@ -333,7 +333,7 @@
 .infoKm {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .infoPills {
@@ -348,24 +348,24 @@
   gap: 0.2rem;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
   font-size: 0.75rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
 .infoPillEarning {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #16a34a;
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
 }
 
 .infoPillTracking {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+  color: var(--color-info);
 }
 
 .infoActions {
@@ -373,36 +373,36 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-surface-raised);
 }
 
 .infoEditBtn {
   flex: 1;
   padding: 0.5rem;
-  border: 1.5px solid #407bff;
+  border: 1.5px solid var(--color-admin-secondary);
   border-radius: 8px;
   background: none;
-  color: #407bff;
+  color: var(--color-admin-secondary);
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.infoEditBtn:hover { background: #407bff; color: #fff; }
+.infoEditBtn:hover { background: var(--color-admin-secondary); color: var(--color-white); }
 
 .infoDeleteBtn {
   flex: 1;
   padding: 0.5rem;
-  border: 1.5px solid #ef4444;
+  border: 1.5px solid var(--color-error-light);
   border-radius: 8px;
   background: none;
-  color: #ef4444;
+  color: var(--color-error-light);
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.infoDeleteBtn:hover { background: #ef4444; color: #fff; }
+.infoDeleteBtn:hover { background: var(--color-error-light); color: var(--color-white); }
 
 .infoConfirmRow {
   flex: 1;
@@ -414,7 +414,7 @@
 .infoConfirmLabel {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #ef4444;
+  color: var(--color-error-light);
   flex-shrink: 0;
 }
 
@@ -423,8 +423,8 @@
   padding: 0.45rem 0.6rem;
   border: none;
   border-radius: 7px;
-  background: #ef4444;
-  color: #fff;
+  background: var(--color-error-light);
+  color: var(--color-white);
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
@@ -434,28 +434,28 @@
 
 .infoConfirmNo {
   padding: 0.45rem 0.6rem;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--color-border);
   border-radius: 7px;
   background: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.infoConfirmNo:hover { border-color: #94a3b8; }
+.infoConfirmNo:hover { border-color: var(--color-text-placeholder); }
 
 /* ── Add button ── */
 .addBtn {
   width: 100%;
   padding: 0.5rem;
-  border: 1.5px dashed #cbd5e1;
+  border: 1.5px dashed var(--color-border-subtle);
   border-radius: 8px;
   background: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
-.addBtn:hover { border-color: #407bff; color: #407bff; }
+.addBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }

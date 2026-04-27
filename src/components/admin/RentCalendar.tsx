@@ -57,7 +57,7 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
   return cells;
 }
 
-const DEFAULT_BG = "linear-gradient(135deg, #211951 0%, #407bff 100%)";
+const DEFAULT_BG = "linear-gradient(135deg, #001829 0%, #005C8F 100%)";
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 export default function RentCalendar({ car, schedules, excludeScheduleIds, endedScheduleIds, onAdd, onUpdate, onDelete }: Props) {

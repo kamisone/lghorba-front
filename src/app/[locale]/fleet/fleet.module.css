@@ -1,13 +1,13 @@
 .page {
   min-height: 100vh;
-  background: #f8fafa;
+  background: var(--color-surface);
   padding-bottom: 5rem;
 }
 
 /* ── Hero ── */
 .hero {
   position: relative;
-  background: #0d2430;
+  background: var(--color-brand-darkest);
   overflow: hidden;
   padding: 4rem 2rem 3.5rem;
   display: flex;
@@ -25,7 +25,7 @@
   width: 800px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(116,168,164,0.16) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(var(--rgb-brand-accent),0.16) 0%, transparent 65%);
   top: -150px;
   right: -100px;
 }
@@ -34,8 +34,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    linear-gradient(rgba(var(--rgb-white),0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--rgb-white),0.025) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
@@ -56,14 +56,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #74A8A4;
+  color: var(--color-brand-accent);
   margin: 0;
 }
 
 .heroTitle {
   font-size: clamp(1.8rem, 4vw, 2.8rem);
   font-weight: 900;
-  color: #f8fafc;
+  color: var(--color-surface);
   margin: 0;
   letter-spacing: -0.025em;
   line-height: 1.1;
@@ -71,7 +71,7 @@
 
 .heroSub {
   font-size: 1rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   margin: 0;
   max-width: 480px;
   line-height: 1.6;
@@ -81,7 +81,7 @@
 .empty {
   text-align: center;
   padding: 5rem 2rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 1rem;
 }
 
@@ -97,10 +97,10 @@
 
 /* ── Card ── */
 .card {
-  background: #fff;
+  background: var(--color-white);
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 4px rgba(var(--rgb-black),0.06), 0 4px 16px rgba(var(--rgb-black),0.04);
   transition: transform 0.2s, box-shadow 0.2s;
   text-decoration: none;
   color: inherit;
@@ -109,13 +109,13 @@
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 12px 32px rgba(0,0,0,0.07);
+  box-shadow: 0 4px 12px rgba(var(--rgb-black),0.1), 0 12px 32px rgba(var(--rgb-black),0.07);
 }
 
 .photoWrap {
   position: relative;
   height: 200px;
-  background: #e2e8f0;
+  background: var(--color-border);
 }
 
 .photo { object-fit: cover; }
@@ -140,13 +140,13 @@
 }
 
 .badgeAvail {
-  background: rgba(34,197,94,0.15);
-  color: #16a34a;
+  background: rgba(var(--rgb-success-light),0.15);
+  color: var(--color-success);
 }
 
 .badgeBusy {
-  background: rgba(116,168,164,0.15);
-  color: #335765;
+  background: rgba(var(--rgb-brand-accent),0.15);
+  color: var(--color-brand-primary);
 }
 
 .info {
@@ -159,13 +159,13 @@
 .carName {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-heading);
   margin: 0;
 }
 
 .carDesc {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0;
   line-height: 1.5;
 }
@@ -181,8 +181,8 @@
   display: inline-block;
   padding: 0.18rem 0.55rem;
   border-radius: 20px;
-  background: rgba(51, 87, 101, 0.08);
-  color: #335765;
+  background: rgba(var(--rgb-brand-primary), 0.08);
+  color: var(--color-brand-primary);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -191,8 +191,8 @@
   margin-top: 0.25rem;
   display: inline-block;
   padding: 0.5rem 1.1rem;
-  background: linear-gradient(135deg, #335765 0%, #74A8A4 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
+  color: var(--color-white);
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 700;

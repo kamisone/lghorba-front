@@ -1,11 +1,8 @@
 import type { JSX } from "react";
 import Link from "next/link";
 import { getTranslations, type Locale } from "@/lib/i18n";
-import LangSwitcher from "@/components/LangSwitcher";
-import NavHamburger from "@/components/NavHamburger";
 import CarSlider from "@/components/CarSlider";
 import styles from "./car-public.module.css";
-import landingStyles from "../../../page.module.css";
 import ListingIcon from "@/icons/car/ListingIcon";
 import CarTypeIcon from "@/icons/car/CarTypeIcon";
 import ModelYearIcon from "@/icons/car/ModelYearIcon";
@@ -122,37 +119,6 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
 
   return (
     <div className={styles.page}>
-      {/* ── Navbar ── */}
-      <header className={landingStyles.navbar}>
-        <div className={landingStyles.navInner}>
-          <Link href={`/${locale}`} className={landingStyles.logo}>
-            <span className={landingStyles.logoIcon}>🚐</span>
-            <span className={landingStyles.logoText}>vitecamion</span>
-          </Link>
-          <nav className={landingStyles.navLinks}>
-            <Link href={`/${locale}`} className={landingStyles.navLink}>
-              {t.nav.home}
-            </Link>
-            <Link href={`/${locale}/fleet`} className={landingStyles.navLink}>
-              {t.nav.bookNow}
-            </Link>
-            <Link href={`/${locale}/contact`} className={landingStyles.navLink}>
-              {t.nav.contact}
-            </Link>
-          </nav>
-          <div className={landingStyles.navRight}>
-            <LangSwitcher locale={locale} />
-            <NavHamburger
-              links={[
-                { href: `/${locale}`,         label: t.nav.home },
-                { href: `/${locale}/fleet`,   label: t.nav.bookNow },
-                { href: `/${locale}/contact`, label: t.nav.contact },
-              ]}
-              ctaLabel={t.nav.bookNow}
-            />
-          </div>
-        </div>
-      </header>
 
       {/* ── Breadcrumb ── */}
       <div className={styles.breadcrumb}>

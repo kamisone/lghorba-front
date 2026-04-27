@@ -1,14 +1,14 @@
 .page {
   min-height: 100vh;
-  background: #f8fafa;
+  background: var(--color-surface);
   font-family: inherit;
-  color: #0f172a;
+  color: var(--color-text-heading);
 }
 
 /* ── Hero ── */
 .hero {
   position: relative;
-  background: #0d2430;
+  background: var(--color-brand-darkest);
   padding: 5rem 2rem 4rem;
   overflow: hidden;
   text-align: center;
@@ -25,7 +25,7 @@
   width: 700px;
   height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(116,168,164,0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--rgb-brand-accent),0.18) 0%, transparent 70%);
   top: -100px;
   left: 50%;
   transform: translateX(-50%);
@@ -35,8 +35,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    linear-gradient(rgba(var(--rgb-white),0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--rgb-white),0.025) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
@@ -53,12 +53,12 @@
 .eyebrow {
   display: inline-block;
   padding: 0.35rem 1rem;
-  background: rgba(116,168,164,0.15);
-  border: 1px solid rgba(116,168,164,0.35);
+  background: rgba(var(--rgb-brand-accent),0.15);
+  border: 1px solid rgba(var(--rgb-brand-accent),0.35);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #74A8A4;
+  color: var(--color-brand-accent);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -66,7 +66,7 @@
 .heroTitle {
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 900;
-  color: #f8fafc;
+  color: var(--color-surface);
   margin: 0;
   letter-spacing: -0.025em;
   line-height: 1.1;
@@ -74,7 +74,7 @@
 
 .heroSub {
   font-size: 1rem;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   line-height: 1.65;
   max-width: 480px;
   margin: 0;
@@ -84,18 +84,18 @@
 .backLink {
   padding: 0.45rem 1rem;
   border-radius: 8px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--color-border);
   font-size: 0.82rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-secondary);
   text-decoration: none;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
 .backLink:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #335765;
+  background: var(--color-surface-raised);
+  border-color: var(--color-border-subtle);
+  color: var(--color-brand-primary);
 }
 
 /* ── Form section ── */
@@ -108,9 +108,9 @@
 }
 
 .formCard {
-  background: #fff;
+  background: var(--color-white);
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(13, 36, 48, 0.14), 0 4px 16px rgba(13, 36, 48, 0.08);
+  box-shadow: 0 20px 60px rgba(var(--rgb-brand-darkest), 0.14), 0 4px 16px rgba(var(--rgb-brand-darkest), 0.08);
   padding: 2.5rem 2rem;
 }
 
@@ -138,22 +138,22 @@
 .label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #374151;
+  color: var(--color-text-label);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .req {
-  color: #74A8A4;
+  color: var(--color-brand-accent);
   font-weight: 800;
 }
 
 .input {
   padding: 0.7rem 0.95rem;
   border-radius: 10px;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafa;
-  color: #1e293b;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font-size: 0.9rem;
   font-family: inherit;
   outline: none;
@@ -163,9 +163,9 @@
 }
 
 .input:focus {
-  border-color: #74A8A4;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(116, 168, 164, 0.14);
+  border-color: var(--color-brand-accent);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-accent), 0.14);
 }
 
 .textarea {
@@ -176,9 +176,9 @@
 
 .errorMsg {
   font-size: 0.82rem;
-  color: #dc2626;
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   border-radius: 8px;
   padding: 0.6rem 0.9rem;
   margin: 0;
@@ -189,21 +189,21 @@
   padding: 0.75rem 2rem;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #335765 0%, #74A8A4 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
+  color: var(--color-white);
   font-size: 0.95rem;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(51, 87, 101, 0.25);
+  box-shadow: 0 4px 16px rgba(var(--rgb-brand-primary), 0.25);
   white-space: nowrap;
 }
 
 .submitBtn:hover:not(:disabled) {
   opacity: 0.92;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(51, 87, 101, 0.3);
+  box-shadow: 0 8px 24px rgba(var(--rgb-brand-primary), 0.3);
 }
 
 .submitBtn:disabled {
@@ -229,24 +229,24 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #335765 0%, #74A8A4 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
+  color: var(--color-white);
   font-size: 1.8rem;
   font-weight: 700;
-  box-shadow: 0 8px 24px rgba(51, 87, 101, 0.3);
+  box-shadow: 0 8px 24px rgba(var(--rgb-brand-primary), 0.3);
 }
 
 .successTitle {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #335765;
+  color: var(--color-brand-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .successSub {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0;
   max-width: 360px;
   line-height: 1.6;
@@ -257,9 +257,9 @@
   margin-top: 0.5rem;
   padding: 0.65rem 1.5rem;
   border-radius: 10px;
-  border: 1.5px solid #e2e8f0;
-  background: #fff;
-  color: #335765;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-brand-primary);
   font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
@@ -267,7 +267,7 @@
 }
 .backBtn:hover {
   background: #f0f8f9;
-  border-color: #74A8A4;
+  border-color: var(--color-brand-accent);
 }
 
 /* ── Responsive ── */

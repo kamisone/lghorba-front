@@ -1,10 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
-import LangSwitcher from "@/components/LangSwitcher";
-import NavHamburger from "@/components/NavHamburger";
 import styles from "./fleet.module.css";
-import landingStyles from "../../page.module.css";
 
 interface PublicCar {
   id: string;
@@ -42,33 +39,6 @@ export default async function FleetPage({ params }: { params: { locale: string }
   return (
     <div className={styles.page}>
 
-      {/* ── Navbar (same as landing) ── */}
-      <header className={landingStyles.navbar}>
-        <div className={landingStyles.navInner}>
-          <Link href={`/${locale}`} className={landingStyles.logo}>
-            <span className={landingStyles.logoIcon}>🚐</span>
-            <span className={landingStyles.logoText}>vitecamion</span>
-          </Link>
-          <nav className={landingStyles.navLinks}>
-            <Link href={`/${locale}`}         className={landingStyles.navLink}>{t.nav.home}</Link>
-            <Link href={`/${locale}#platforms`} className={landingStyles.navLink}>{t.nav.platforms}</Link>
-            <Link href={`/${locale}#how`}       className={landingStyles.navLink}>{t.nav.howItWorks}</Link>
-            <Link href={`/${locale}/contact`}   className={landingStyles.navLink}>{t.nav.contact}</Link>
-          </nav>
-          <div className={landingStyles.navRight}>
-            <LangSwitcher locale={locale} />
-            <NavHamburger
-              links={[
-                { href: `/${locale}`,           label: t.nav.home },
-                { href: `/${locale}#platforms`,  label: t.nav.platforms },
-                { href: `/${locale}#how`,         label: t.nav.howItWorks },
-                { href: `/${locale}/contact`,    label: t.nav.contact },
-              ]}
-              ctaLabel={t.nav.bookNow}
-            />
-          </div>
-        </div>
-      </header>
 
       {/* ── Hero ── */}
       <div className={styles.hero}>

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { isValidLocale, DEFAULT_LOCALE, LOCALES } from "@/lib/i18n";
+import ClientHeader from "@/components/layout/ClientHeader";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -15,5 +16,11 @@ export default function LocaleLayout({
   if (!isValidLocale(params.locale)) {
     redirect(`/${DEFAULT_LOCALE}`);
   }
-  return <>{children}</>;
+
+  return (
+    <>
+      <ClientHeader locale={params.locale} />
+      <main>{children}</main>
+    </>
+  );
 }
