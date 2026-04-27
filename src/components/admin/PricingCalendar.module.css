@@ -1,0 +1,431 @@
+/* ── Root ── */
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--color-surface-raised);
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-brand-darkest);
+  margin: 0;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-primary);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+.navBtn:hover { background: var(--color-surface-raised); }
+
+.todayBtn {
+  height: 30px;
+  padding: 0 0.75rem;
+  border-radius: 7px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.todayBtn:hover { background: var(--color-surface-raised); }
+
+.periodLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 160px;
+  text-align: right;
+}
+
+/* ── States ── */
+.state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 2rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.stateError {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem;
+  color: var(--color-error);
+  font-size: 0.875rem;
+  background: var(--color-error-bg);
+  border-bottom: 1px solid var(--color-error-border);
+}
+
+.retryBtn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-error-border);
+  background: var(--color-white);
+  color: var(--color-error);
+  cursor: pointer;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-brand-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Scroll container ── */
+.scrollWrap {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  /* hide scrollbar in Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+.scrollWrap::-webkit-scrollbar { width: 8px; height: 8px; }
+.scrollWrap::-webkit-scrollbar-track { background: transparent; }
+.scrollWrap::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+
+.dragging { cursor: crosshair; user-select: none; }
+
+/* ── Grid ── */
+.grid {
+  display: grid;
+  /* grid-template-columns set inline */
+  width: max-content;
+  min-width: 100%;
+}
+
+/* ── Corner cells ── */
+.cornerA {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  background: var(--color-surface-dark);
+  color: rgba(255,255,255,0.5);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 0.75rem;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.cornerB {
+  position: sticky;
+  top: 32px;
+  left: 0;
+  z-index: 35;
+  background: var(--color-surface-raised);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 2px solid var(--color-border);
+  height: 48px;
+}
+
+/* ── Month headers ── */
+.monthHeader {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--color-surface-dark);
+  color: rgba(255,255,255,0.85);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0 0.6rem;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ── Day headers ── */
+.dayHeader {
+  position: sticky;
+  top: 32px;
+  z-index: 25;
+  width: 28px;
+  height: 48px;
+  background: var(--color-surface-raised);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 2px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.dayWkd {
+  font-size: 0.52rem;
+  font-weight: 600;
+  color: var(--color-text-placeholder);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.dayNum {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.dayWeekend {
+  background: #faf5f5;
+}
+
+.dayWeekend .dayWkd {
+  color: #d1b0b0;
+}
+
+.dayWeekend .dayNum {
+  color: #c4a0a0;
+}
+
+.dayToday {
+  background: rgba(var(--rgb-brand-primary), 0.05);
+}
+
+.dayToday .dayWkd {
+  color: var(--color-brand-primary);
+  font-weight: 700;
+}
+
+.dayToday .dayNum {
+  background: var(--color-brand-primary);
+  color: #fff;
+  font-weight: 800;
+}
+
+/* ── Car name cells ── */
+.carName {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: var(--color-white);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  height: 46px;
+  padding: 0 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.carThumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carThumbPlaceholder {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.carInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.carInfoName {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.carInfoImmat {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+/* ── Cells ── */
+.cell {
+  width: 28px;
+  height: 46px;
+  border-right: 1px solid transparent;
+  border-bottom: 1px solid var(--color-border);
+  cursor: crosshair;
+  position: relative;
+  overflow: visible;
+  transition: filter 0.08s;
+}
+
+.cell:hover:not(.cellSel):not(.cellPriced) {
+  background: rgba(var(--rgb-brand-accent), 0.08);
+}
+
+.cell:hover.cellPriced {
+  filter: brightness(0.92);
+}
+
+.cellWeekend {
+  background: #fdf8f8 !important;
+}
+
+.cellToday {
+  outline: 1px solid rgba(var(--rgb-brand-primary), 0.35);
+  outline-offset: -1px;
+}
+
+.cellPriced {
+  /* background set inline */
+  border-right: 1px solid transparent;
+}
+
+.cellSel {
+  background: rgba(141, 194, 32, 0.28) !important;
+  outline: 1px solid var(--color-brand-accent);
+  outline-offset: -1px;
+  z-index: 5;
+}
+
+/* ── Cell badge (price label on first day of range) ── */
+.cellBadge {
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.58rem;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  line-height: 1;
+}
+
+.cellBadgeLabel {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+/* ── Empty state ── */
+.emptyMsg {
+  padding: 2rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--color-white);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.legendSwatch {
+  display: inline-block;
+  width: 20px;
+  height: 12px;
+  border-radius: 3px;
+}

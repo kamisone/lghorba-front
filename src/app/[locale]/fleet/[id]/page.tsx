@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import Link from "next/link";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import CarSlider from "@/components/CarSlider";
+import BookingPanel from "./BookingPanel";
 import styles from "./car-public.module.css";
 import ListingIcon from "@/icons/car/ListingIcon";
 import CarTypeIcon from "@/icons/car/CarTypeIcon";
@@ -139,44 +140,46 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
 
       {/* ── Content ── */}
       <div className={styles.content}>
-        {/* Title + CTA row */}
+        {/* Title row */}
         <div className={styles.titleRow}>
           <div>
             <h1 className={styles.carName}>{title}</h1>
             {title !== car.name && <p className={styles.carSub}>{car.name}</p>}
           </div>
-          <Link href={`/${locale}/contact`} className={styles.bookBtn}>
-            {t.nav.bookNow}
-          </Link>
         </div>
 
-        {/* Translated description */}
-        {car.description && <p className={styles.description}>{car.description}</p>}
+        {/* Two-column layout: specs + booking */}
+        <div className={styles.twoCol}>
+          {/* Left: description + specs */}
+          <div className={styles.colMain}>
+            {car.description && <p className={styles.description}>{car.description}</p>}
 
-        {/* Specs list */}
-        {specs.length > 0 && (
-          <div className={styles.specsSection}>
-            <h2 className={styles.specsTitle}>{t.carDetail.specifications}</h2>
-            <div className={styles.specsList}>
-              {specs.map((s) => (
-                <div key={s.key} className={styles.specRow}>
-                  <span className={styles.specLeft}>
-                    <span className={styles.specIcon}>{SPEC_ICONS[s.key]}</span>
-                    <span className={styles.specLabel}>{t.carDetail.specs[s.key]}</span>
-                  </span>
-                  <span className={styles.specValue}>{s.value}</span>
+            {specs.length > 0 && (
+              <div className={styles.specsSection}>
+                <h2 className={styles.specsTitle}>{t.carDetail.specifications}</h2>
+                <div className={styles.specsList}>
+                  {specs.map((s) => (
+                    <div key={s.key} className={styles.specRow}>
+                      <span className={styles.specLeft}>
+                        <span className={styles.specIcon}>{SPEC_ICONS[s.key]}</span>
+                        <span className={styles.specLabel}>{t.carDetail.specs[s.key]}</span>
+                      </span>
+                      <span className={styles.specValue}>{s.value}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Bottom CTA */}
-        <div className={styles.ctaSection}>
-          <p className={styles.ctaText}>{t.carDetail.interested}</p>
-          <Link href={`/${locale}/contact`} className={styles.bookBtnLarge}>
-            {t.nav.bookNow}
-          </Link>
+          {/* Right: booking panel (sticky on desktop) */}
+          <div className={styles.colSide}>
+            <BookingPanel
+              carId={car.id}
+              locale={locale}
+              labels={t.booking}
+            />
+          </div>
         </div>
       </div>
     </div>

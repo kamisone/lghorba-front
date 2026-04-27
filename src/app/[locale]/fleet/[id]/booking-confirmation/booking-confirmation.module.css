@@ -1,0 +1,181 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 8px 40px rgba(var(--rgb-brand-darkest), 0.09);
+  text-align: center;
+}
+
+/* ── Icon ── */
+.iconWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(var(--rgb-brand-primary), 0.35);
+}
+
+.checkIcon {
+  font-size: 1.8rem;
+  color: var(--color-white);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-brand-darkest);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.sub {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Details ── */
+.detailsGrid {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: left;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailRow:last-child {
+  border-bottom: none;
+}
+
+.detailLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.detailValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+.detailPrice {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--color-brand-darkest);
+}
+
+/* ── Status pill ── */
+.statusPill {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.status_pending {
+  background: rgba(var(--rgb-warning-light), 0.12);
+  color: var(--color-warning);
+  border: 1px solid rgba(var(--rgb-warning-light), 0.3);
+}
+
+.status_confirmed {
+  background: rgba(var(--rgb-success-light), 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(var(--rgb-success-light), 0.3);
+}
+
+.status_cancelled {
+  background: rgba(var(--rgb-error-light), 0.1);
+  color: var(--color-error);
+  border: 1px solid rgba(var(--rgb-error-light), 0.25);
+}
+
+/* ── Actions ── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.backBtn {
+  display: block;
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
+  color: var(--color-white);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(var(--rgb-brand-primary), 0.28);
+  transition: opacity 0.15s;
+}
+.backBtn:hover { opacity: 0.9; }
+
+.fleetBtn {
+  display: block;
+  padding: 0.7rem 1.5rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.fleetBtn:hover {
+  background: var(--color-surface);
+  border-color: var(--color-border-subtle);
+}
+
+.errorText {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.backLink {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-brand-primary);
+  text-decoration: none;
+}
+.backLink:hover { text-decoration: underline; }

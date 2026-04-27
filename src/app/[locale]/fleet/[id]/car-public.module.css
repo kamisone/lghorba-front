@@ -391,5 +391,32 @@
 }
 .bookBtnLarge:hover { opacity: 0.9; transform: translateY(-2px); }
 
+/* ── Two-column layout (specs + booking panel) ── */
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.colMain {
+  min-width: 0;
+}
+
+.colSide {
+  position: sticky;
+  top: calc(52px + 1.5rem); /* header height + gap */
+}
+
+@media (max-width: 900px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+  .colSide {
+    position: static;
+    order: -1; /* booking panel above specs on mobile */
+  }
+}
+
 /* ── fleet card update ── */
 .card { text-decoration: none; color: inherit; cursor: pointer; display: block; }
