@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import Link from "next/link";
-import { getTranslations } from "@/lib/i18n";
+import { getTranslations, type Locale } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
 import NavHamburger from "@/components/NavHamburger";
 import CarSlider from "@/components/CarSlider";
@@ -16,6 +16,7 @@ import MileageIcon from "@/icons/car/MileageIcon";
 import DoorsCarIcon from "@/icons/car/DoorsCarIcon";
 import SeatsCarIcon from "@/icons/car/SeatsCarIcon";
 import PaintPaletteIcon from "@/icons/car/PaintPaletteIcon";
+import type { Translations } from "@/lib/i18n/translations";
 
 interface PublicCarDetail {
   id: string;
@@ -39,9 +40,12 @@ interface PublicCarDetail {
 
 const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
-async function getCar(id: string): Promise<PublicCarDetail | null> {
+async function getCar(id: string, lang: string): Promise<PublicCarDetail | null> {
   try {
-    const res = await fetch(`${API}/api/public/cars/${id}`, { cache: "no-store" });
+    const res = await fetch(
+      `${API}/api/public/cars/${id}?lang=${encodeURIComponent(lang)}`,
+      { cache: "no-store" },
+    );
     return res.ok ? res.json() : null;
   } catch {
     return null;
@@ -57,55 +61,56 @@ async function getPhotos(id: string): Promise<{ id: string }[]> {
   }
 }
 
-// Material Design SVG icons (24px viewBox)
-const MuiIcons: Record<string, JSX.Element> = {
-  Type: <CarTypeIcon />,
-  Brand: <ListingIcon />,
-  Model: <ListingIcon />,
-  Finishing: <ListingIcon />,
-  Year: <ModelYearIcon />,
-  Energy: <FuelIcon />,
-  Gearbox: <GearboxIcon />,
-  Power: <DINIcon />,
-  Mileage: <MileageIcon />,
-  Doors: <DoorsCarIcon />,
-  Seats: <SeatsCarIcon />,
-  Color: <PaintPaletteIcon />,
-  Condition: <ListingIcon />,
+const SPEC_ICONS: Record<string, JSX.Element> = {
+  type:      <CarTypeIcon />,
+  brand:     <ListingIcon />,
+  model:     <ListingIcon />,
+  finishing: <ListingIcon />,
+  year:      <ModelYearIcon />,
+  energy:    <FuelIcon />,
+  gearbox:   <GearboxIcon />,
+  power:     <DINIcon />,
+  mileage:   <MileageIcon />,
+  doors:     <DoorsCarIcon />,
+  seats:     <SeatsCarIcon />,
+  color:     <PaintPaletteIcon />,
+  condition: <ListingIcon />,
 };
 
-type SpecItem = { iconKey: string; label: string; value: string };
+type SpecLabels = Translations["carDetail"]["specs"];
+type SpecItem = { key: keyof SpecLabels; value: string };
 
 function buildSpecs(car: PublicCarDetail): SpecItem[] {
   const items: (SpecItem | false)[] = [
-    !!car.vehicleType && { iconKey: "Type", label: "Type", value: car.vehicleType },
-    !!car.brand && { iconKey: "Brand", label: "Brand", value: car.brand! },
-    !!car.model && { iconKey: "Model", label: "Model", value: car.model! },
-    !!car.finishing && { iconKey: "Finishing", label: "Finishing", value: car.finishing! },
-    !!car.modelYear && { iconKey: "Year", label: "Year", value: String(car.modelYear) },
-    !!car.energy && { iconKey: "Energy", label: "Energy", value: car.energy! },
-    !!car.gearbox && { iconKey: "Gearbox", label: "Gearbox", value: car.gearbox! },
-    !!car.din && { iconKey: "Power", label: "Power", value: `${car.din} hp` },
-    !!car.mileage && { iconKey: "Mileage", label: "Mileage", value: `${car.mileage} km` },
-    !!car.numberOfDoors && { iconKey: "Doors", label: "Doors", value: String(car.numberOfDoors) },
-    !!car.numberOfSeats && { iconKey: "Seats", label: "Seats", value: String(car.numberOfSeats) },
-    !!car.color && { iconKey: "Color", label: "Color", value: car.color! },
-    !!car.vehicleCondition && { iconKey: "Condition", label: "Condition", value: car.vehicleCondition! },
+    !!car.vehicleType    && { key: "type",      value: car.vehicleType },
+    !!car.brand          && { key: "brand",     value: car.brand! },
+    !!car.model          && { key: "model",     value: car.model! },
+    !!car.finishing      && { key: "finishing", value: car.finishing! },
+    !!car.modelYear      && { key: "year",      value: String(car.modelYear) },
+    !!car.energy         && { key: "energy",    value: car.energy! },
+    !!car.gearbox        && { key: "gearbox",   value: car.gearbox! },
+    !!car.din            && { key: "power",     value: `${car.din} hp` },
+    !!car.mileage        && { key: "mileage",   value: `${car.mileage} km` },
+    !!car.numberOfDoors  && { key: "doors",     value: String(car.numberOfDoors) },
+    !!car.numberOfSeats  && { key: "seats",     value: String(car.numberOfSeats) },
+    !!car.color          && { key: "color",     value: car.color! },
+    !!car.vehicleCondition && { key: "condition", value: car.vehicleCondition! },
   ];
   return items.filter(Boolean) as SpecItem[];
 }
 
 export default async function CarDetailPage({ params }: { params: { locale: string; id: string } }) {
-  const { locale, id } = params;
+  const locale = params.locale as Locale;
+  const id = params.id;
   const t = getTranslations(locale);
-  const [car, photos] = await Promise.all([getCar(id), getPhotos(id)]);
+  const [car, photos] = await Promise.all([getCar(id, locale), getPhotos(id)]);
 
   if (!car) {
     return (
       <div className={styles.notFound}>
         <p>Vehicle not found.</p>
         <Link href={`/${locale}/fleet`} className={styles.backLink}>
-          ← Back to Fleet
+          ← {t.fleet.title}
         </Link>
       </div>
     );
@@ -139,8 +144,8 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
             <LangSwitcher locale={locale} />
             <NavHamburger
               links={[
-                { href: `/${locale}`, label: t.nav.home },
-                { href: `/${locale}/fleet`, label: t.nav.bookNow },
+                { href: `/${locale}`,         label: t.nav.home },
+                { href: `/${locale}/fleet`,   label: t.nav.bookNow },
                 { href: `/${locale}/contact`, label: t.nav.contact },
               ]}
               ctaLabel={t.nav.bookNow}
@@ -149,14 +154,14 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
         </div>
       </header>
 
-      {/* ── Back breadcrumb ── */}
+      {/* ── Breadcrumb ── */}
       <div className={styles.breadcrumb}>
         <Link href={`/${locale}/fleet`} className={styles.backLink}>
           ← {t.fleet.title}
         </Link>
       </div>
 
-      {/* ── Slider hero ── */}
+      {/* ── Photo slider ── */}
       <div className={styles.sliderSection}>
         <CarSlider carId={car.id} photoIds={photoIds} carName={car.name} />
         <div className={styles.sliderBadge}>
@@ -179,19 +184,19 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
           </Link>
         </div>
 
-        {/* Description */}
+        {/* Translated description */}
         {car.description && <p className={styles.description}>{car.description}</p>}
 
         {/* Specs list */}
         {specs.length > 0 && (
           <div className={styles.specsSection}>
-            <h2 className={styles.specsTitle}>Specifications</h2>
+            <h2 className={styles.specsTitle}>{t.carDetail.specifications}</h2>
             <div className={styles.specsList}>
               {specs.map((s) => (
-                <div key={s.label} className={styles.specRow}>
+                <div key={s.key} className={styles.specRow}>
                   <span className={styles.specLeft}>
-                    <span className={styles.specIcon}>{MuiIcons[s.iconKey]}</span>
-                    <span className={styles.specLabel}>{s.label}</span>
+                    <span className={styles.specIcon}>{SPEC_ICONS[s.key]}</span>
+                    <span className={styles.specLabel}>{t.carDetail.specs[s.key]}</span>
                   </span>
                   <span className={styles.specValue}>{s.value}</span>
                 </div>
@@ -202,7 +207,7 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
 
         {/* Bottom CTA */}
         <div className={styles.ctaSection}>
-          <p className={styles.ctaText}>Interested in this vehicle?</p>
+          <p className={styles.ctaText}>{t.carDetail.interested}</p>
           <Link href={`/${locale}/contact`} className={styles.bookBtnLarge}>
             {t.nav.bookNow}
           </Link>

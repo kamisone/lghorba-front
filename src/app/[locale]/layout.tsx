@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
-import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n";
+import { isValidLocale, DEFAULT_LOCALE, LOCALES } from "@/lib/i18n";
+
+export function generateStaticParams() {
+  return LOCALES.map((locale) => ({ locale }));
+}
 
 export default function LocaleLayout({
   children,

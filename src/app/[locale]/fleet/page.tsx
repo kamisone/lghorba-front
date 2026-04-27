@@ -21,10 +21,10 @@ interface PublicCar {
   modelYear?: number | null;
 }
 
-async function getCars(): Promise<PublicCar[]> {
+async function getCars(lang: string): Promise<PublicCar[]> {
   try {
     const res = await fetch(
-      `${process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000"}/api/public/cars`,
+      `${process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000"}/api/public/cars?lang=${encodeURIComponent(lang)}`,
       { cache: "no-store" },
     );
     if (!res.ok) return [];
@@ -37,7 +37,7 @@ async function getCars(): Promise<PublicCar[]> {
 export default async function FleetPage({ params }: { params: { locale: string } }) {
   const t = getTranslations(params.locale);
   const locale = params.locale;
-  const cars = await getCars();
+  const cars = await getCars(locale);
 
   return (
     <div className={styles.page}>
@@ -118,7 +118,7 @@ export default async function FleetPage({ params }: { params: { locale: string }
                     {car.mileage       && <span className={styles.spec}>{car.mileage} km</span>}
                   </div>
                 )}
-                <span className={styles.cta}>View details →</span>
+                <span className={styles.cta}>{t.carDetail.viewDetails}</span>
               </div>
             </Link>
           ))}
