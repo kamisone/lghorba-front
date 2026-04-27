@@ -40,6 +40,10 @@ export const en = {
       link: "See the fleet →",
     },
   },
+  featuredFleet: {
+    eyebrow: "Featured vehicles",
+    title: "Pick your ride",
+  },
   fleet: {
     eyebrow: "Our vehicles",
     title: "A fleet for every journey",
@@ -190,6 +194,10 @@ export const fr: Translations = {
       desc: "Réservation directe sans frais de plateforme. Durées personnalisées, livraison disponible, meilleurs tarifs garantis.",
       link: "Voir les voitures →",
     },
+  },
+  featuredFleet: {
+    eyebrow: "Véhicules en vedette",
+    title: "Choisissez votre véhicule",
   },
   fleet: {
     eyebrow: "Nos véhicules",

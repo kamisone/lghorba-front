@@ -1,10 +1,25 @@
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
+import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import styles from "../page.module.css";
 
-export default function LandingPage({ params }: { params: { locale: string } }) {
+async function getPublicCars(locale: string): Promise<CarouselCar[]> {
+  try {
+    const res = await fetch(
+      `${process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000"}/api/public/cars?lang=${encodeURIComponent(locale)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export default async function LandingPage({ params }: { params: { locale: string } }) {
   const t = getTranslations(params.locale);
   const locale = params.locale;
+  const cars = await getPublicCars(locale);
 
   const fleetItems = [
     { icon: "🚗", ...t.fleet.city },
@@ -58,6 +73,21 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           </div>
         </div>
       </section>
+
+      {/* ── Featured fleet carousel ── */}
+      {cars.length > 0 && (
+        <FleetCarousel
+          cars={cars}
+          locale={locale}
+          labels={{
+            eyebrow:     t.featuredFleet.eyebrow,
+            title:       t.featuredFleet.title,
+            available:   t.fleet.available,
+            rented:      t.fleet.rented,
+            viewDetails: t.carDetail.viewDetails,
+          }}
+        />
+      )}
 
       {/* ── Platforms ── */}
       <section id="platforms" className={styles.platforms}>
