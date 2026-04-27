@@ -254,5 +254,32 @@
   .sidebarMobileOpen {
     transform: translateX(0);
     box-shadow: 4px 0 20px rgba(var(--rgb-black), 0.5);
+    width: 60px;
+  }
+
+  .sidebarMobileOpen .brandText   { display: none; }
+  .sidebarMobileOpen .navLabel    { display: none; }
+  .sidebarMobileOpen .logoutLabel { display: none; }
+  .sidebarMobileOpen .navActiveBar { display: none; }
+
+  .sidebarMobileOpen .brand {
+    justify-content: center;
+    padding: 0.9rem 0;
+  }
+
+  .sidebarMobileOpen .collapseBtn {
+    margin: 0 auto;
+    width: 28px;
+    height: 28px;
+  }
+
+  .sidebarMobileOpen .navItem {
+    justify-content: center;
+    padding: 0.6rem 0;
+  }
+
+  .sidebarMobileOpen .logoutBtn {
+    justify-content: center;
+    padding: 0.6rem 0;
   }
 }
