@@ -1,6 +1,6 @@
 export type MileageRange =
-  | "0-50k" | "50k-100k" | "100k-150k"
-  | "150k-200k" | "200k-250k" | "250k-300k" | "300k+";
+  | "0-50" | "50-100" | "100-150"
+  | "150-200" | "200-250" | "250-300" | "300+";
 
 export type VehicleType =
   | "4x4" | "SUV" | "Sedan" | "Estate" | "Convertible"
