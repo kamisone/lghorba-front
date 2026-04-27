@@ -7,7 +7,7 @@ export default function Header() {
 
     return (
         <article className={styles.header_container}>
-            <img src="assets/vitecamion-logo.png" alt="vitecamion logo" />
+            <img src="assets/vitecamion_logo.png" alt="vitecamion logo" />
             <section>
                 <ul>
                     <li><Link href={"/cars"}>Cars</Link></li>
