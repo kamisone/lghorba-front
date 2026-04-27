@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
-const ACCESS_COOKIE  = "lghorba_auth";
-const REFRESH_COOKIE = "lghorba_refresh";
+const ACCESS_COOKIE  = "vitecamion_auth";
+const REFRESH_COOKIE = "vitecamion_refresh";
 // Browser cookie lifetime = refresh token lifetime (5 days).
 // The JWT itself expires after 15 min; TokenRefresher rotates it silently.
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 5;

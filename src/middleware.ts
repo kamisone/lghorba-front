@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LOCALES, DEFAULT_LOCALE, type Locale } from "@/lib/i18n";
 
-const COOKIE_NAME = "lghorba_auth";
+const COOKIE_NAME = "vitecamion_auth";
 
 function detectLocale(request: NextRequest): Locale {
   const saved = request.cookies.get("vitecamion_locale")?.value as Locale | undefined;
