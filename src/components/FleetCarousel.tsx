@@ -8,6 +8,7 @@ export interface CarouselCar {
   id: string;
   name: string;
   hasPhoto: boolean;
+  photoIds: string[];
   vehicleType?: string | null;
   energy?: string | null;
   gearbox?: string | null;
@@ -28,51 +29,143 @@ interface Props {
   };
 }
 
-const CARD_GAP = 24;
+// ── In-card photo slider ──────────────────────────────────────────────────────
+
+function CardSlider({
+  carId, carName, photoIds, hasPhoto, available, availableLabel, rentedLabel,
+}: {
+  carId: string; carName: string; photoIds: string[]; hasPhoto: boolean;
+  available: boolean; availableLabel: string; rentedLabel: string;
+}) {
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const touchRef = useRef<number | null>(null);
+  const total = photoIds.length;
+
+  const prev = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    setPhotoIdx(i => (i - 1 + total) % total);
+  }, [total]);
+
+  const next = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    setPhotoIdx(i => (i + 1) % total);
+  }, [total]);
+
+  const onTouchStart = (e: React.TouchEvent) => { touchRef.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e: React.TouchEvent) => {
+    if (touchRef.current === null) return;
+    const d = touchRef.current - e.changedTouches[0].clientX;
+    if (Math.abs(d) > 30) d > 0 ? next(e) : prev(e);
+    touchRef.current = null;
+  };
+
+  const src = total > 0
+    ? `/next-api/public/cars/${carId}/photos/${photoIds[photoIdx]}`
+    : hasPhoto ? `/next-api/public/cars/${carId}/photo` : null;
+
+  return (
+    <div
+      className={styles.photoWrap}
+      onTouchStart={total > 1 ? onTouchStart : undefined}
+      onTouchEnd={total > 1 ? onTouchEnd : undefined}
+    >
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={src} src={src} alt={carName} className={styles.photo} />
+      ) : (
+        <div className={styles.photoFallback}>🚗</div>
+      )}
+      <div className={styles.photoGradient} />
+      {total > 1 && (
+        <>
+          <button className={`${styles.photoBtn} ${styles.photoBtnPrev}`} onClick={prev} aria-label="Previous photo">‹</button>
+          <button className={`${styles.photoBtn} ${styles.photoBtnNext}`} onClick={next} aria-label="Next photo">›</button>
+          <div className={styles.photoDots}>
+            {photoIds.map((_, i) => (
+              <span key={i} className={`${styles.photoDot} ${i === photoIdx ? styles.photoDotActive : ""}`} />
+            ))}
+          </div>
+        </>
+      )}
+      <span className={`${styles.badge} ${available ? styles.badgeAvail : styles.badgeBusy}`}>
+        {available ? availableLabel : rentedLabel}
+      </span>
+    </div>
+  );
+}
+
+// ── Layout helpers ────────────────────────────────────────────────────────────
+
+const CARD_GAP = 20;
+
+/**
+ * Given the container pixel width, returns:
+ *   - visible: how many cards fit
+ *   - cardW:   each card's width so cards fill the container exactly with no remainder
+ */
+function computeLayout(containerW: number): { visible: number; cardW: number } {
+  const visible = containerW >= 900 ? 3 : containerW >= 560 ? 2 : 1;
+  const cardW   = Math.floor((containerW - (visible - 1) * CARD_GAP) / visible);
+  return { visible, cardW };
+}
+
+// ── Carousel ──────────────────────────────────────────────────────────────────
 
 export default function FleetCarousel({ cars, locale, labels }: Props) {
-  const [index, setIndex]       = useState(0);
-  const [cardW, setCardW]       = useState(360);
-  const [containerW, setContW]  = useState(0);
-  const [ready, setReady]       = useState(false);
-  const wrapRef                 = useRef<HTMLDivElement>(null);
-  const touchStartX             = useRef<number | null>(null);
-  const total                   = cars.length;
+  const total = cars.length;
 
+  const [offset,    setOffset]   = useState(0);   // cards scrolled from the left
+  const [cardW,     setCardW]    = useState(360);
+  const [visible,   setVisible]  = useState(3);
+  const [ready,     setReady]    = useState(false);
+  // When true: suppress CSS transition (used during resize to avoid a jarring slide)
+  const [noAnim,    setNoAnim]   = useState(false);
+
+  const wrapRef     = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
+
+  // Recompute layout and clamp offset on every resize.
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const update = () => {
+    const update = (animate: boolean) => {
       const w = el.offsetWidth;
-      setContW(w);
-      setCardW(w < 520 ? w - 48 : Math.min(380, w - 160));
+      const { visible: v, cardW: cw } = computeLayout(w);
+      const maxOff = Math.max(0, total - v);
+      if (!animate) setNoAnim(true);
+      setCardW(cw);
+      setVisible(v);
+      setOffset(prev => Math.min(prev, maxOff));
       setReady(true);
+      if (!animate) requestAnimationFrame(() => setNoAnim(false));
     };
-    update();
-    const ro = new ResizeObserver(update);
+    update(false); // no slide animation on initial mount / resize
+    const ro = new ResizeObserver(() => update(false));
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
-
-  const go = useCallback((dir: 1 | -1) => {
-    setIndex(i => (i + dir + total) % total);
   }, [total]);
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-  const onTouchEnd = (e: React.TouchEvent) => {
+  const maxOffset  = Math.max(0, total - visible);
+  const canGoLeft  = offset > 0;
+  const canGoRight = offset < maxOffset;
+
+  // pixels the track must translate left
+  const trackX = -(offset * (cardW + CARD_GAP));
+
+  const go = useCallback((dir: 1 | -1) => {
+    setOffset(prev => Math.max(0, Math.min(prev + dir, maxOffset)));
+  }, [maxOffset]);
+
+  // Outer swipe: left swipe = go right, right swipe = go left
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
-    const delta = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(delta) > 40) go(delta > 0 ? 1 : -1);
+    const d = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(d) > 50) go(d > 0 ? 1 : -1);
     touchStartX.current = null;
   };
 
   if (!total) return null;
-
-  const trackX = ready
-    ? -(index * (cardW + CARD_GAP)) + (containerW - cardW) / 2
-    : 0;
 
   return (
     <section className={styles.section}>
@@ -83,39 +176,39 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
 
       <div
         ref={wrapRef}
-        className={styles.viewport}
+        className={[
+          styles.viewport,
+          canGoLeft  ? styles.fadeLeft  : "",
+          canGoRight ? styles.fadeRight : "",
+        ].filter(Boolean).join(" ")}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
+        {/* Track */}
         <div
-          className={`${styles.track} ${ready ? "" : styles.trackHidden}`}
+          className={[
+            styles.track,
+            !ready || noAnim ? styles.trackNoTransition : "",
+            !ready           ? styles.trackHidden       : "",
+          ].filter(Boolean).join(" ")}
           style={{ transform: `translateX(${trackX}px)` }}
         >
-          {cars.map((car, i) => (
+          {cars.map((car) => (
             <div
               key={car.id}
-              className={`${styles.slide} ${i === index ? styles.slideActive : ""}`}
+              className={styles.slide}
               style={{ width: cardW, flexShrink: 0 }}
-              aria-hidden={i !== index}
             >
               <Link href={`/${locale}/fleet/${car.id}`} className={styles.card}>
-                <div className={styles.photoWrap}>
-                  {car.hasPhoto ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={`/next-api/public/cars/${car.id}/photo`}
-                      alt={car.name}
-                      className={styles.photo}
-                    />
-                  ) : (
-                    <div className={styles.photoFallback}>🚗</div>
-                  )}
-                  <div className={styles.photoGradient} />
-                  <span className={`${styles.badge} ${car.isAvailable ? styles.badgeAvail : styles.badgeBusy}`}>
-                    {car.isAvailable ? labels.available : labels.rented}
-                  </span>
-                </div>
-
+                <CardSlider
+                  carId={car.id}
+                  carName={car.name}
+                  photoIds={car.photoIds}
+                  hasPhoto={car.hasPhoto}
+                  available={car.isAvailable}
+                  availableLabel={labels.available}
+                  rentedLabel={labels.rented}
+                />
                 <div className={styles.info}>
                   <div className={styles.nameRow}>
                     {car.modelYear && <span className={styles.year}>{car.modelYear}</span>}
@@ -136,26 +229,21 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
           ))}
         </div>
 
-        {total > 1 && (
-          <>
-            <button className={`${styles.arrow} ${styles.arrowPrev}`} onClick={() => go(-1)} aria-label="Previous vehicle">‹</button>
-            <button className={`${styles.arrow} ${styles.arrowNext}`} onClick={() => go(1)}  aria-label="Next vehicle">›</button>
-          </>
-        )}
-      </div>
+        {/* Arrows — shown only when there is content in that direction */}
+        <button
+          className={`${styles.arrow} ${styles.arrowPrev} ${!canGoLeft ? styles.arrowHidden : ""}`}
+          onClick={() => go(-1)}
+          disabled={!canGoLeft}
+          aria-label="Previous vehicles"
+        >‹</button>
 
-      {total > 1 && (
-        <div className={styles.dots}>
-          {cars.map((_, i) => (
-            <button
-              key={i}
-              className={`${styles.dot} ${i === index ? styles.dotActive : ""}`}
-              onClick={() => setIndex(i)}
-              aria-label={`Vehicle ${i + 1}`}
-            />
-          ))}
-        </div>
-      )}
+        <button
+          className={`${styles.arrow} ${styles.arrowNext} ${!canGoRight ? styles.arrowHidden : ""}`}
+          onClick={() => go(1)}
+          disabled={!canGoRight}
+          aria-label="Next vehicles"
+        >›</button>
+      </div>
     </section>
   );
 }

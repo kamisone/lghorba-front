@@ -39,12 +39,41 @@
   padding: 1.5rem 0 2rem;
 }
 
+/*
+ * Edge-fade gradients: appear when content overflows that side.
+ * Classes are added by the component via canGoLeft / canGoRight.
+ */
+.viewport::before,
+.viewport::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 72px;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.viewport::before {
+  left: 0;
+  background: linear-gradient(to right, var(--color-brand-darkest) 0%, transparent 100%);
+}
+.viewport::after {
+  right: 0;
+  background: linear-gradient(to left, var(--color-brand-darkest) 0%, transparent 100%);
+}
+
+.fadeLeft::before  { opacity: 1; }
+.fadeRight::after  { opacity: 1; }
+
 /* ── Track ── */
 .track {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   align-items: stretch;
-  transition: transform 0.52s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
 }
 
@@ -52,16 +81,13 @@
   opacity: 0;
 }
 
-/* ── Slide ── */
-.slide {
-  transition: transform 0.4s ease, opacity 0.4s ease;
-  opacity: 0.45;
-  transform: scale(0.9);
+.trackNoTransition {
+  transition: none !important;
 }
 
-.slideActive {
-  opacity: 1;
-  transform: scale(1);
+/* ── Slide ── */
+.slide {
+  flex-shrink: 0;
 }
 
 /* ── Card ── */
@@ -97,6 +123,7 @@
   object-fit: cover;
   display: block;
   transition: transform 0.45s ease;
+  animation: photoFade 0.25s ease;
 }
 
 .card:hover .photo {
@@ -122,6 +149,68 @@
     transparent 100%
   );
   pointer-events: none;
+}
+
+/* ── In-card photo navigation ── */
+@keyframes photoFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.photoBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 6;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.photoWrap:hover .photoBtn {
+  opacity: 1;
+}
+
+.photoBtn:hover {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.photoBtnPrev { left: 8px; }
+.photoBtnNext { right: 8px; }
+
+.photoDots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 6;
+}
+
+.photoDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.photoDotActive {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.35);
 }
 
 /* ── Badge ── */
@@ -225,9 +314,9 @@
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
@@ -236,48 +325,31 @@
   justify-content: center;
   padding-bottom: 2px;
   z-index: 10;
-  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s,
+              opacity 0.2s ease, transform 0.2s ease;
 }
 
-.arrow:hover {
-  background: rgba(141, 194, 32, 0.15);
-  border-color: rgba(141, 194, 32, 0.4);
+.arrow:hover:not(:disabled) {
+  background: rgba(141, 194, 32, 0.18);
+  border-color: rgba(141, 194, 32, 0.45);
   color: var(--color-brand-accent);
   transform: translateY(-50%) scale(1.1);
 }
 
-.arrowPrev { left: 16px; }
-.arrowNext { right: 16px; }
-
-/* ── Dots ── */
-.dots {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 0.75rem;
+/* Hidden state: fade out and slightly shrink */
+.arrowHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.85);
 }
 
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.22s, width 0.22s;
-}
-
-.dotActive {
-  width: 22px;
-  background: var(--color-brand-accent);
-}
+.arrowPrev { left: 12px; }
+.arrowNext { right: 12px; }
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .section   { padding: 4rem 0 3rem; }
-  .arrowPrev { left: 8px; }
-  .arrowNext { right: 8px; }
-  .arrow     { width: 38px; height: 38px; font-size: 1.3rem; }
+  .arrowPrev { left: 6px; }
+  .arrowNext { right: 6px; }
+  .arrow     { width: 36px; height: 36px; font-size: 1.3rem; }
 }

@@ -3,14 +3,29 @@ import { getTranslations } from "@/lib/i18n";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import styles from "../page.module.css";
 
+const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
+
 async function getPublicCars(locale: string): Promise<CarouselCar[]> {
   try {
     const res = await fetch(
-      `${process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000"}/api/public/cars?lang=${encodeURIComponent(locale)}`,
+      `${API_SERVER}/api/public/cars?lang=${encodeURIComponent(locale)}`,
       { cache: "no-store" },
     );
     if (!res.ok) return [];
-    return res.json();
+    const cars: CarouselCar[] = await res.json();
+
+    // Fetch photo IDs for each car in parallel so the in-card slider has content
+    return Promise.all(
+      cars.map(async (car) => {
+        try {
+          const r = await fetch(`${API_SERVER}/api/public/cars/${car.id}/photos`, { cache: "no-store" });
+          const photos: { id: string }[] = r.ok ? await r.json() : [];
+          return { ...car, photoIds: photos.map((p) => p.id) };
+        } catch {
+          return { ...car, photoIds: [] };
+        }
+      }),
+    );
   } catch {
     return [];
   }
