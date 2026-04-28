@@ -117,6 +117,7 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
   const [offset,    setOffset]   = useState(0);   // cards scrolled from the left
   const [cardW,     setCardW]    = useState(360);
   const [visible,   setVisible]  = useState(3);
+  const [arrowW,    setArrowW]   = useState(52);  // matches CSS .arrow { width }
   const [ready,     setReady]    = useState(false);
   // When true: suppress CSS transition (used during resize to avoid a jarring slide)
   const [noAnim,    setNoAnim]   = useState(false);
@@ -129,12 +130,14 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
     const el = wrapRef.current;
     if (!el) return;
     const update = (animate: boolean) => {
-      const w = el.offsetWidth;
-      const { visible: v, cardW: cw } = computeLayout(w);
+      const w  = el.offsetWidth;
+      const aw = w < 640 ? 40 : 52;            // mirrors CSS breakpoint for .arrow
+      const { visible: v, cardW: cw } = computeLayout(w - 2 * aw);
       const maxOff = Math.max(0, total - v);
       if (!animate) setNoAnim(true);
       setCardW(cw);
       setVisible(v);
+      setArrowW(aw);
       setOffset(prev => Math.min(prev, maxOff));
       setReady(true);
       if (!animate) requestAnimationFrame(() => setNoAnim(false));
@@ -149,8 +152,10 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
   const canGoLeft  = offset > 0;
   const canGoRight = offset < maxOffset;
 
-  // pixels the track must translate left
-  const trackX = -(offset * (cardW + CARD_GAP));
+  // Shift the track right by arrowW so cards start after the left arrow zone.
+  // At offset=0: first card at arrowW from viewport left.
+  // At offset=maxOffset: last card's right edge at containerW − arrowW (before right arrow).
+  const trackX = arrowW - (offset * (cardW + CARD_GAP));
 
   const go = useCallback((dir: 1 | -1) => {
     setOffset(prev => Math.max(0, Math.min(prev + dir, maxOffset)));
