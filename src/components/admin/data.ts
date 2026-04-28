@@ -33,4 +33,5 @@ export interface Car {
   mileage?: MileageRange | null;
   vehicleCondition?: string | null;
   basePricePerDay?: number | null;
+  basePricePerWeekendDay?: number | null;
 }

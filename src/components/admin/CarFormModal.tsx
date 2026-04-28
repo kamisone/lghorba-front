@@ -24,7 +24,7 @@ type FormValues = {
   brand: string; model: string; finishing: string; modelYear: string; color: string;
   vehicleType: string; energy: string; gearbox: string;
   din: string; mileage: string; numberOfDoors: string; numberOfSeats: string;
-  vehicleCondition: string; basePricePerDay: string;
+  vehicleCondition: string; basePricePerDay: string; basePricePerWeekendDay: string;
 };
 
 const EMPTY: FormValues = {
@@ -32,7 +32,7 @@ const EMPTY: FormValues = {
   brand: "", model: "", finishing: "", modelYear: "", color: "",
   vehicleType: "", energy: "", gearbox: "",
   din: "", mileage: "", numberOfDoors: "", numberOfSeats: "",
-  vehicleCondition: "", basePricePerDay: "",
+  vehicleCondition: "", basePricePerDay: "", basePricePerWeekendDay: "",
 };
 
 type EnTranslations = Record<TranslatableField, string>;
@@ -69,7 +69,8 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
         numberOfDoors:    car.numberOfDoors    != null ? String(car.numberOfDoors)    : "",
         numberOfSeats:    car.numberOfSeats    != null ? String(car.numberOfSeats)    : "",
         vehicleCondition: car.vehicleCondition ?? "",
-        basePricePerDay:  car.basePricePerDay  != null ? String(car.basePricePerDay)  : "",
+        basePricePerDay:        car.basePricePerDay        != null ? String(car.basePricePerDay)        : "",
+        basePricePerWeekendDay: car.basePricePerWeekendDay != null ? String(car.basePricePerWeekendDay) : "",
       });
     }
   }, [car]);
@@ -125,7 +126,8 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
         numberOfDoors:    form.numberOfDoors    ? Number(form.numberOfDoors)    : null,
         numberOfSeats:    form.numberOfSeats    ? Number(form.numberOfSeats)    : null,
         vehicleCondition: form.vehicleCondition || null,
-        basePricePerDay:  Number(form.basePricePerDay),
+        basePricePerDay:        Number(form.basePricePerDay),
+        basePricePerWeekendDay: form.basePricePerWeekendDay ? Number(form.basePricePerWeekendDay) : null,
       };
       const url = isEdit ? `/next-api/cars/${car.id}` : "/next-api/cars";
       const res = await fetch(url, {
@@ -281,18 +283,32 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
 
           {/* ── Pricing ── */}
           <p className={styles.section}>Pricing</p>
-          <div className={styles.field}>
-            <label className={styles.label}>Base price / day (€) <span className={styles.required}>*</span></label>
-            <input
-              className={styles.input}
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={form.basePricePerDay}
-              onChange={set("basePricePerDay")}
-              placeholder="49.00"
-              required
-            />
+          <div className={styles.row}>
+            <div className={styles.field}>
+              <label className={styles.label}>Base price / day (€) <span className={styles.required}>*</span></label>
+              <input
+                className={styles.input}
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={form.basePricePerDay}
+                onChange={set("basePricePerDay")}
+                placeholder="49.00"
+                required
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Weekend price / day (€)</label>
+              <input
+                className={styles.input}
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={form.basePricePerWeekendDay}
+                onChange={set("basePricePerWeekendDay")}
+                placeholder="59.00"
+              />
+            </div>
           </div>
 
           {/* ── Details ── */}
