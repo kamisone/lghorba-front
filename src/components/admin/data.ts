@@ -32,4 +32,5 @@ export interface Car {
   color?: string | null;
   mileage?: MileageRange | null;
   vehicleCondition?: string | null;
+  basePricePerDay?: number | null;
 }
