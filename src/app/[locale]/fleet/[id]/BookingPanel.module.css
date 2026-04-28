@@ -1,58 +1,160 @@
+/* ── Panel card ──────────────────────────────────────────────────────────────*/
 .panel {
   background: var(--color-white);
-  border: 1.5px solid var(--color-border);
-  border-radius: 16px;
-  padding: 1.75rem;
+  border-radius: 18px;
+  padding: 2rem 2rem 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  box-shadow: 0 4px 20px rgba(var(--rgb-brand-darkest), 0.07);
+  box-shadow:
+    0 0 0 1px rgba(var(--rgb-brand-darkest), 0.06),
+    0 8px 32px rgba(var(--rgb-brand-darkest), 0.12),
+    0 2px 8px  rgba(var(--rgb-brand-darkest), 0.06);
 }
 
-.panelTitle {
-  font-size: 1.1rem;
+/* ── Step progress indicator ─────────────────────────────────────────────────*/
+.stepFlow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding-bottom: 0.25rem;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.stepBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
   font-weight: 800;
-  color: var(--color-brand-darkest);
-  margin: 0;
+  flex-shrink: 0;
+  transition: background 0.25s, color 0.25s;
 }
 
-/* ── Date row ── */
-.dateRow {
+.stepBadge span {
+  font-size: 15px;
+  font-variation-settings: 'wght' 700;
+}
+
+.stepActive .stepBadge {
+  background: var(--color-brand-primary);
+  color: var(--color-white);
+}
+
+.stepDone .stepBadge {
+  background: var(--color-brand-accent);
+  color: var(--color-white);
+}
+
+.stepPending .stepBadge {
+  background: var(--color-border);
+  color: var(--color-text-placeholder);
+}
+
+.stepInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.stepLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  transition: color 0.25s;
+}
+
+.stepActive  .stepLabel { color: var(--color-brand-primary); }
+.stepDone    .stepLabel { color: var(--color-brand-accent); }
+.stepPending .stepLabel { color: var(--color-text-placeholder); }
+
+.stepValue {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Connector line between steps */
+.stepLine {
+  flex: 1;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-border);
+  margin: 0 0.6rem;
+  transition: background 0.3s;
+}
+
+.stepLineDone {
+  background: var(--color-brand-accent);
+}
+
+/* ── Pickers row ─────────────────────────────────────────────────────────────*/
+.pickersRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
   gap: 0.75rem;
 }
 
-.dateField {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+.pickerWrap {
+  transition: opacity 0.2s;
 }
 
-.dateLabel {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.pickerWrapDone {
+  opacity: 1;
 }
 
-.dateInput {
-  padding: 0.6rem 0.75rem;
-  border: 1.5px solid var(--color-border);
-  border-radius: 9px;
-  font-size: 0.9rem;
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  outline: none;
-  transition: border-color 0.15s;
-  width: 100%;
-  font-family: inherit;
-}
-
-.dateInput:focus {
+/* Highlight the currently active picker step */
+.pickerWrapActive :global(.DateTimePicker_trigger__*),
+.pickerWrapActive [class*="trigger"] {
   border-color: var(--color-brand-primary);
   background: var(--color-white);
+}
+
+/* Pulse animation when the end picker becomes the active step */
+@keyframes pickerPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(var(--rgb-brand-primary), 0.35); }
+  60%  { box-shadow: 0 0 0 8px rgba(var(--rgb-brand-primary), 0);    }
+  100% { box-shadow: 0 0 0 0   rgba(var(--rgb-brand-primary), 0);    }
+}
+
+.pickerWrapPulse {
+  animation: pickerPulse 0.6s ease 0.12s;
+  border-radius: 9px;
+}
+
+/* Arrow between pickers */
+.pickersArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 2px; /* aligns with trigger midline */
+  color: var(--color-border);
+  transition: color 0.3s;
+}
+
+.pickersArrow span {
+  font-size: 20px;
+}
+
+.pickersArrowActive {
+  color: var(--color-brand-accent);
 }
 
 /* ── Status row ── */
@@ -84,7 +186,6 @@
   flex-shrink: 0;
 }
 
-/* Loading spinner */
 .spinner {
   display: inline-block;
   width: 14px;
@@ -96,9 +197,7 @@
   flex-shrink: 0;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .statusText {
   font-size: 0.88rem;
@@ -173,26 +272,10 @@
   gap: 0.1rem;
 }
 
-.breakdownDates {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
-
-.breakdownLabel {
-  font-size: 0.75rem;
-  color: var(--color-brand-accent);
-  font-weight: 600;
-}
-
-.breakdownAmt {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
-
-.breakdownAmt strong {
-  color: var(--color-text-primary);
-  font-weight: 700;
-}
+.breakdownDates  { font-size: 0.8rem; color: var(--color-text-secondary); }
+.breakdownLabel  { font-size: 0.75rem; color: var(--color-brand-accent); font-weight: 600; }
+.breakdownAmt    { font-size: 0.8rem; color: var(--color-text-muted); }
+.breakdownAmt strong { color: var(--color-text-primary); font-weight: 700; }
 
 /* ── Contact fields ── */
 .contactFields {
@@ -224,12 +307,62 @@
   color: var(--color-text-primary);
   background: var(--color-surface);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .fieldInput:focus {
   border-color: var(--color-brand-primary);
   background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-primary), 0.1);
+}
+
+.fieldInputError {
+  border-color: var(--color-error) !important;
+  background: var(--color-error-bg);
+}
+
+.fieldInputError:focus {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.fieldError {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  color: var(--color-error);
+  margin-top: 3px;
+}
+
+.fieldError::before {
+  content: "!";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-error);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.requiredMark {
+  color: var(--color-error);
+  font-weight: 700;
+}
+
+.requiredNote {
+  font-size: 0.72rem;
+  color: var(--color-text-placeholder);
+  margin: 0;
+  padding-top: 0.25rem;
 }
 
 /* ── Error ── */
@@ -246,17 +379,18 @@
 /* ── Book button ── */
 .bookBtn {
   width: 100%;
-  padding: 0.85rem 1.5rem;
-  border-radius: 10px;
+  padding: 0.9rem 1.5rem;
+  border-radius: 11px;
   border: none;
   background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
   color: var(--color-white);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(var(--rgb-brand-primary), 0.3);
+  box-shadow: 0 4px 16px rgba(var(--rgb-brand-primary), 0.35);
   transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.01em;
 }
 
 .bookBtn:hover:not(:disabled) {
@@ -273,6 +407,16 @@
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
-  .dateRow { grid-template-columns: 1fr; }
-  .panel   { padding: 1.25rem; }
+  .panel { padding: 1.5rem 1.25rem; }
+
+  .pickersRow {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .pickersArrow {
+    display: none;
+  }
+
+  .stepValue { display: none; }
 }

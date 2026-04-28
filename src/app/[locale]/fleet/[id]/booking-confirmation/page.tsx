@@ -5,8 +5,8 @@ import styles from "./booking-confirmation.module.css";
 interface BookingDetail {
   id: string;
   carId: string;
-  startDate: string;
-  endDate: string;
+  startDateTime: string;
+  endDateTime: string;
   totalPrice: string | number;
   status: "pending" | "confirmed" | "cancelled";
   car?: { name: string };
@@ -23,9 +23,10 @@ async function getBooking(bookingId: string): Promise<BookingDetail | null> {
   }
 }
 
-function fmt(date: string) {
-  return new Date(date + "T00:00:00Z").toLocaleDateString(undefined, {
-    day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
+function fmtDT(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    day: "numeric", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
   });
 }
 
@@ -82,7 +83,7 @@ export default async function BookingConfirmationPage({
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>{t.booking.confirmDates}</span>
             <span className={styles.detailValue}>
-              {fmt(booking.startDate)} → {fmt(booking.endDate)}
+              {fmtDT(booking.startDateTime)} → {fmtDT(booking.endDateTime)}
             </span>
           </div>
           <div className={styles.detailRow}>
@@ -94,7 +95,7 @@ export default async function BookingConfirmationPage({
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>{t.booking.confirmStatus}</span>
             <span className={`${styles.statusPill} ${styles[`status_${booking.status}`]}`}>
-              {booking.status === "pending"   ? t.booking.confirmPending  : booking.status}
+              {booking.status === "pending" ? t.booking.confirmPending : booking.status}
             </span>
           </div>
         </div>

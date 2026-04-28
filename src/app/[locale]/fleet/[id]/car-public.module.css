@@ -418,5 +418,40 @@
   }
 }
 
+/* ── Booking section – full-bleed, visually highlighted ──────────────────────*/
+.bookingSection {
+  background: linear-gradient(150deg, var(--color-brand-darkest) 0%, #002B44 55%, #00375A 100%);
+  border-top: 3px solid var(--color-brand-accent);
+  padding: 3rem 1.5rem 4rem;
+  margin-top: 2rem;
+}
+
+.bookingInner {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.bookingSectionHead {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.bookingSectionEyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-brand-accent);
+  margin: 0 0 0.4rem;
+}
+
+.bookingSectionTitle {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-white);
+  margin: 0;
+  line-height: 1.2;
+}
+
 /* ── fleet card update ── */
 .card { text-decoration: none; color: inherit; cursor: pointer; display: block; }

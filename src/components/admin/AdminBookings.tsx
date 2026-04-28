@@ -16,8 +16,8 @@ export interface AdminBooking {
   id: string;
   carId: string;
   car: BookingCar | null;
-  startDate: string;
-  endDate: string;
+  startDateTime: string;
+  endDateTime: string;
   totalPrice: number | string;
   status: "pending" | "confirmed" | "cancelled";
   customerName: string | null;
@@ -32,13 +32,14 @@ type StatusFilter = "all" | "pending" | "confirmed" | "cancelled";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function daysDiff(start: string, end: string): number {
-  const ms = new Date(`${end}T00:00:00Z`).getTime() - new Date(`${start}T00:00:00Z`).getTime();
-  return Math.max(1, Math.round(ms / 86_400_000));
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  return Math.max(1, Math.ceil(ms / 86_400_000));
 }
 
 function fmtDate(d: string): string {
-  return new Date(`${d}T00:00:00Z`).toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
+  return new Date(d).toLocaleString("en-GB", {
+    day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
   });
 }
 
@@ -75,7 +76,7 @@ interface ModalProps {
 }
 
 function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, onDelete }: ModalProps) {
-  const duration = daysDiff(booking.startDate, booking.endDate);
+  const duration = daysDiff(booking.startDateTime, booking.endDateTime);
   const pricePerDay = Number(booking.totalPrice) / duration;
 
   useEffect(() => {
@@ -120,11 +121,11 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
           <div className={styles.priceSummary}>
             <div className={styles.priceRow}>
               <span className={styles.priceLabel}>Pick-up</span>
-              <span className={styles.priceValue}>{fmtDate(booking.startDate)}</span>
+              <span className={styles.priceValue}>{fmtDate(booking.startDateTime)}</span>
             </div>
             <div className={styles.priceRow}>
               <span className={styles.priceLabel}>Return</span>
-              <span className={styles.priceValue}>{fmtDate(booking.endDate)}</span>
+              <span className={styles.priceValue}>{fmtDate(booking.endDateTime)}</span>
             </div>
             <div className={styles.priceDivider} />
             <div className={styles.priceRow}>
@@ -410,9 +411,9 @@ export default function AdminBookings() {
                   </td>
 
                   <td className={styles.mono}>{b.car?.immatriculation ?? "—"}</td>
-                  <td className={styles.dateCell}>{fmtDate(b.startDate)}</td>
-                  <td className={styles.dateCell}>{fmtDate(b.endDate)}</td>
-                  <td className={styles.center}>{daysDiff(b.startDate, b.endDate)}</td>
+                  <td className={styles.dateCell}>{fmtDate(b.startDateTime)}</td>
+                  <td className={styles.dateCell}>{fmtDate(b.endDateTime)}</td>
+                  <td className={styles.center}>{daysDiff(b.startDateTime, b.endDateTime)}</td>
                   <td className={styles.priceCell}>{fmtPrice(b.totalPrice)}</td>
 
                   <td><StatusBadge status={b.status} /></td>

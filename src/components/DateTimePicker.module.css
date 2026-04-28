@@ -1,0 +1,348 @@
+/* ── Wrapper ─────────────────────────────────────────────────────────────────*/
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Anchors the popup – must be position:relative so the absolute popup
+   is measured from the trigger's own bounding box. */
+.triggerWrap {
+  position: relative;
+}
+
+.label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Trigger button ─────────────────────────────────────────────────────────*/
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  text-align: left;
+}
+
+.trigger:hover {
+  border-color: var(--color-brand-primary);
+  background: var(--color-white);
+}
+
+.triggerOpen {
+  border-color: var(--color-brand-primary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-primary), 0.1);
+}
+
+.triggerError {
+  border-color: var(--color-error);
+}
+
+.triggerError:focus,
+.triggerError.triggerOpen {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.calIcon {
+  font-size: 17px;
+  color: var(--color-brand-primary);
+  flex-shrink: 0;
+}
+
+.triggerText {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.triggerPlaceholder {
+  color: var(--color-text-placeholder);
+  font-weight: 400;
+}
+
+.chevron {
+  font-size: 17px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.errorHint {
+  font-size: 0.76rem;
+  color: var(--color-error);
+  margin-top: 1px;
+}
+
+/* ── Popup – anchored below the trigger via position:absolute ───────────────*/
+.popup {
+  position: absolute;
+  top: calc(100% + 6px); /* 6px gap between trigger bottom edge and popup */
+  left: 0;
+  z-index: 200;
+  width: 288px;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow:
+    0 4px 6px -1px  rgba(var(--rgb-brand-darkest), 0.06),
+    0 10px 30px -4px rgba(var(--rgb-brand-darkest), 0.14);
+  overflow: hidden;
+  animation: fadeDown 0.14s ease;
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+/* ── Calendar navigation ────────────────────────────────────────────────────*/
+.calNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.monthYear {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: background 0.12s, color 0.12s;
+}
+
+.navBtn:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-brand-primary);
+}
+
+.navBtn span {
+  font-size: 20px;
+}
+
+/* ── Day-of-week row ────────────────────────────────────────────────────────*/
+.dayRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 8px 10px 2px;
+}
+
+.dayLabel {
+  text-align: center;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ── Day grid ───────────────────────────────────────────────────────────────*/
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  padding: 2px 10px 10px;
+}
+
+.dayBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 0.82rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.dayBtn:hover:not(:disabled) {
+  background: rgba(var(--rgb-brand-primary), 0.08);
+  color: var(--color-brand-primary);
+}
+
+.dayDisabled {
+  color: var(--color-text-placeholder) !important;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dayToday {
+  border: 1.5px solid var(--color-brand-accent);
+  color: var(--color-brand-primary);
+  font-weight: 700;
+}
+
+.dayActive {
+  background: var(--color-brand-primary) !important;
+  color: var(--color-white) !important;
+  font-weight: 700;
+  border-color: transparent !important;
+}
+
+/* ── Calendar footer (clear) ────────────────────────────────────────────────*/
+.calFooter {
+  padding: 6px 12px 10px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.clearBtn {
+  border: none;
+  background: none;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 3px 8px;
+  border-radius: 5px;
+  transition: color 0.12s, background 0.12s;
+}
+
+.clearBtn:hover {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+/* ── Time picker header ─────────────────────────────────────────────────────*/
+.timeHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px 10px;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--rgb-brand-primary), 0.04),
+    transparent
+  );
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s;
+}
+
+.backBtn:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-brand-primary);
+}
+
+.backBtn span {
+  font-size: 16px;
+}
+
+.pendingLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Time grid ──────────────────────────────────────────────────────────────*/
+.timeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  padding: 10px 10px 12px;
+  max-height: 196px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.timeGrid::-webkit-scrollbar { width: 4px; }
+.timeGrid::-webkit-scrollbar-track { background: transparent; }
+.timeGrid::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.timeSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 7px;
+  background: transparent;
+  font-size: 0.77rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.timeSlot:hover {
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  background: rgba(var(--rgb-brand-primary), 0.05);
+}
+
+.timeActive {
+  background: var(--color-brand-primary) !important;
+  border-color: var(--color-brand-primary) !important;
+  color: var(--color-white) !important;
+  font-weight: 700;
+}
+
+.noSlots {
+  padding: 1.25rem 1rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+}

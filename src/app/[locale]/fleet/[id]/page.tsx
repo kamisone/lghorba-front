@@ -138,9 +138,8 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* ── Content: title + specs ── */}
       <div className={styles.content}>
-        {/* Title row */}
         <div className={styles.titleRow}>
           <div>
             <h1 className={styles.carName}>{title}</h1>
@@ -148,40 +147,40 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
           </div>
         </div>
 
-        {/* Two-column layout: specs + booking */}
-        <div className={styles.twoCol}>
-          {/* Left: description + specs */}
-          <div className={styles.colMain}>
-            {car.description && <p className={styles.description}>{car.description}</p>}
+        {car.description && <p className={styles.description}>{car.description}</p>}
 
-            {specs.length > 0 && (
-              <div className={styles.specsSection}>
-                <h2 className={styles.specsTitle}>{t.carDetail.specifications}</h2>
-                <div className={styles.specsList}>
-                  {specs.map((s) => (
-                    <div key={s.key} className={styles.specRow}>
-                      <span className={styles.specLeft}>
-                        <span className={styles.specIcon}>{SPEC_ICONS[s.key]}</span>
-                        <span className={styles.specLabel}>{t.carDetail.specs[s.key]}</span>
-                      </span>
-                      <span className={styles.specValue}>{s.value}</span>
-                    </div>
-                  ))}
+        {specs.length > 0 && (
+          <div className={styles.specsSection}>
+            <h2 className={styles.specsTitle}>{t.carDetail.specifications}</h2>
+            <div className={styles.specsList}>
+              {specs.map((s) => (
+                <div key={s.key} className={styles.specRow}>
+                  <span className={styles.specLeft}>
+                    <span className={styles.specIcon}>{SPEC_ICONS[s.key]}</span>
+                    <span className={styles.specLabel}>{t.carDetail.specs[s.key]}</span>
+                  </span>
+                  <span className={styles.specValue}>{s.value}</span>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-
-          {/* Right: booking panel (sticky on desktop) */}
-          <div className={styles.colSide}>
-            <BookingPanel
-              carId={car.id}
-              locale={locale}
-              labels={t.booking}
-            />
-          </div>
-        </div>
+        )}
       </div>
+
+      {/* ── Booking section – full-bleed highlighted row ── */}
+      <section className={styles.bookingSection} aria-label={t.booking.title}>
+        <div className={styles.bookingInner}>
+          <div className={styles.bookingSectionHead}>
+            <p className={styles.bookingSectionEyebrow}>{t.booking.title}</p>
+            <h2 className={styles.bookingSectionTitle}>{title}</h2>
+          </div>
+          <BookingPanel
+            carId={car.id}
+            locale={locale}
+            labels={t.booking}
+          />
+        </div>
+      </section>
     </div>
   );
 }
