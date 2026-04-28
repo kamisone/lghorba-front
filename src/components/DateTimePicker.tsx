@@ -26,14 +26,16 @@ function toYMD(y: number, m: number, d: number) {
   return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
 
-function formatTrigger(value: string): string {
-  if (!value || value.length < 16) return "";
-  const [datePart, timePart] = value.split("T");
-  const [y, mo, d] = datePart.split("-").map(Number);
-  const dateStr = new Date(Date.UTC(y, mo - 1, d)).toLocaleDateString("en-GB", {
+function triggerDateStr(value: string): string {
+  if (!value || value.length < 10) return "";
+  const [y, mo, d] = value.slice(0, 10).split("-").map(Number);
+  return new Date(Date.UTC(y, mo - 1, d)).toLocaleDateString("en-GB", {
     weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
   });
-  return `${dateStr},  ${timePart.slice(0, 5)}`;
+}
+
+function triggerTimeStr(value: string): string {
+  return value.length >= 16 ? value.slice(11, 16) : "";
 }
 
 // ── Public handle ─────────────────────────────────────────────────────────────
@@ -180,9 +182,16 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
           aria-expanded={open}
         >
           <span className={`material-symbols-outlined ${styles.calIcon}`}>calendar_month</span>
-          <span className={`${styles.triggerText} ${!value ? styles.triggerPlaceholder : ""}`}>
-            {value ? formatTrigger(value) : placeholder}
-          </span>
+
+          {value ? (
+            <span className={styles.triggerValue}>
+              <span className={styles.triggerDate}>{triggerDateStr(value)}</span>
+              <span className={styles.triggerSep} aria-hidden="true" />
+              <span className={styles.triggerTime}>{triggerTimeStr(value)}</span>
+            </span>
+          ) : (
+            <span className={styles.triggerPlaceholder}>{placeholder}</span>
+          )}
           <span className={`material-symbols-outlined ${styles.chevron} ${open ? styles.chevronOpen : ""}`}>
             expand_more
           </span>

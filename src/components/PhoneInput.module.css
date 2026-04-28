@@ -1,0 +1,219 @@
+/* ── Root – positioning context for the dropdown ────────────────────────────*/
+.root {
+  position: relative;
+}
+
+/* ── Unified input row ──────────────────────────────────────────────────────*/
+.inputRow {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  overflow: hidden;           /* clips flat inner edges of children */
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.inputRow:focus-within {
+  border-color: var(--color-brand-primary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-primary), 0.1);
+}
+
+.inputRowError {
+  border-color: var(--color-error);
+}
+
+.inputRowError:focus-within {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* ── Country selector button ─────────────────────────────────────────────────*/
+.countryBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0.55rem 0 0.7rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.countryBtn:hover,
+.countryBtnOpen {
+  background: rgba(var(--rgb-brand-primary), 0.05);
+}
+
+.flag {
+  font-size: 1.1rem;
+  line-height: 1;
+  display: block;
+}
+
+.dialCode {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: 0.01em;
+}
+
+.caret {
+  font-size: 15px;
+  color: var(--color-text-muted);
+  transition: transform 0.18s ease;
+}
+
+.caretOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Vertical divider ────────────────────────────────────────────────────────*/
+.rule {
+  display: block;
+  width: 1px;
+  align-self: stretch;
+  background: var(--color-border);
+  margin: 6px 0;
+  flex-shrink: 0;
+}
+
+/* ── National number input ──────────────────────────────────────────────────*/
+.numberInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 0.55rem 0.75rem 0.55rem 0.6rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.numberInput::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+/* ── Dropdown ────────────────────────────────────────────────────────────────*/
+.dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  min-width: 230px;
+  z-index: 200;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: 11px;
+  box-shadow:
+    0 4px 6px -1px  rgba(var(--rgb-brand-darkest), 0.06),
+    0 10px 28px -4px rgba(var(--rgb-brand-darkest), 0.14);
+  overflow: hidden;
+  animation: phoneDropIn 0.13s ease;
+}
+
+@keyframes phoneDropIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);     }
+}
+
+/* ── Search row ──────────────────────────────────────────────────────────────*/
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.searchIcon {
+  font-size: 16px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.83rem;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+/* ── Country list ────────────────────────────────────────────────────────────*/
+.list {
+  max-height: 216px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.list::-webkit-scrollbar { width: 4px; }
+.list::-webkit-scrollbar-track { background: transparent; }
+.list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.option:hover {
+  background: var(--color-surface);
+}
+
+.optionActive {
+  background: rgba(var(--rgb-brand-primary), 0.07);
+}
+
+.optionFlag {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.optionName {
+  flex: 1;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionDial {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.noResults {
+  padding: 0.85rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+}

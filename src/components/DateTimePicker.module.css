@@ -61,20 +61,58 @@
   flex-shrink: 0;
 }
 
-.triggerText {
+/* Filled-state wrapper */
+.triggerValue {
   flex: 1;
-  font-size: 0.875rem;
-  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Date portion — regular weight, secondary colour */
+.triggerDate {
+  font-size: 0.85rem;
   font-weight: 500;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
 
+/* Thin vertical rule between date and time */
+.triggerSep {
+  width: 1px;
+  height: 14px;
+  background: var(--color-border-subtle);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+/* Time portion — bold, brand colour, subtle chip background */
+.triggerTime {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+  background: rgba(var(--rgb-brand-primary), 0.09);
+  padding: 2px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
 .triggerPlaceholder {
+  flex: 1;
+  font-size: 0.875rem;
   color: var(--color-text-placeholder);
   font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .chevron {

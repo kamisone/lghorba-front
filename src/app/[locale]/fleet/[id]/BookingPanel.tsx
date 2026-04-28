@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DateTimePicker, { type DateTimePickerHandle } from "@/components/DateTimePicker";
+import PhoneInput from "@/components/PhoneInput";
 import styles from "./BookingPanel.module.css";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -72,7 +73,12 @@ function fmtBreakdownDate(date: string) {
 function validateField(field: "name" | "email" | "phone", value: string): string {
   const v = value.trim();
   if (field === "name")  return v ? "" : "Name is required";
-  if (field === "phone") return v ? "" : "Phone number is required";
+  if (field === "phone") {
+    if (!v) return "Phone number is required";
+    // Require at least 6 digits total (dial code + national number)
+    if (v.replace(/\D/g, "").length < 6) return "Enter a valid phone number";
+    return "";
+  }
   if (field === "email") {
     if (!v) return "Email is required";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "Enter a valid email address";
@@ -457,19 +463,14 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
             <label htmlFor="bp-phone" className={styles.fieldLabel}>
               {labels.phoneLabel}<span className={styles.requiredMark} aria-hidden="true"> *</span>
             </label>
-            <input
+            <PhoneInput
               id="bp-phone"
-              type="tel"
-              className={`${styles.fieldInput} ${touched.phone && fieldErrors.phone ? styles.fieldInputError : ""}`}
-              placeholder={labels.phonePlaceholder}
               value={phone}
-              required
-              aria-required="true"
-              aria-invalid={!!(touched.phone && fieldErrors.phone)}
-              aria-describedby={touched.phone && fieldErrors.phone ? "bp-phone-err" : undefined}
-              onChange={e => {
-                setPhone(e.target.value);
-                if (touched.phone) setFieldErrors(prev => ({ ...prev, phone: validateField("phone", e.target.value) }));
+              error={!!(touched.phone && fieldErrors.phone)}
+              placeholder="6 12 34 56 78"
+              onChange={v => {
+                setPhone(v);
+                if (touched.phone) setFieldErrors(prev => ({ ...prev, phone: validateField("phone", v) }));
               }}
               onBlur={() => {
                 setTouched(prev => ({ ...prev, phone: true }));
