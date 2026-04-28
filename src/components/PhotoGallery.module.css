@@ -1,0 +1,139 @@
+/* ── Full-screen overlay ────────────────────────────────────────────────────*/
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #080808;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  animation: galleryIn 0.18s ease;
+}
+
+@keyframes galleryIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Sticky header ──────────────────────────────────────────────────────────*/
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  background: rgba(8, 8, 8, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.headerMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.headerName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerCount {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+
+/* ── Close button ───────────────────────────────────────────────────────────*/
+.closeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 0.45rem 1rem 0.45rem 0.7rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 100px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.03);
+}
+
+.closeBtn span.material-symbols-outlined {
+  font-size: 17px;
+}
+
+.closeBtnLabel {
+  /* hidden on small screens */
+}
+
+/* ── Photo list ─────────────────────────────────────────────────────────────*/
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 1rem 1rem 5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── Individual photo item ──────────────────────────────────────────────────*/
+.item {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+  line-height: 0; /* remove gap below inline img */
+}
+
+.photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+/* ── Photo number badge ─────────────────────────────────────────────────────*/
+.badge {
+  position: absolute;
+  bottom: 0.7rem;
+  right: 0.7rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.18rem 0.55rem;
+  border-radius: 100px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────*/
+@media (max-width: 640px) {
+  .list { padding: 0.5rem 0.5rem 4rem; gap: 4px; }
+  .item { border-radius: 6px; }
+  .photo { max-height: 80vh; }
+  .closeBtnLabel { display: none; }
+  .closeBtn { padding: 0.45rem 0.6rem; }
+}

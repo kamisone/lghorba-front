@@ -68,6 +68,54 @@
   box-shadow: 0 2px 8px rgba(var(--rgb-black),0.15);
 }
 
+/* ── "View all photos" affordance inside the track ── */
+.viewGalleryBtn {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 1rem;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.35rem 0.7rem 0.35rem 0.5rem;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.viewGalleryBtn:hover {
+  background: rgba(0, 0, 0, 0.78);
+}
+.viewGalleryBtn span {
+  font-size: 14px;
+}
+
+/* Makes the track clickable with a subtle hover darkening */
+.sliderTrackClickable {
+  cursor: pointer;
+}
+.sliderTrackClickable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  transition: background 0.2s;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+.sliderTrackClickable:hover::after {
+  background: rgba(0, 0, 0, 0.08);
+}
+
 /* ── Slider component ── */
 .slider {
   position: relative;
