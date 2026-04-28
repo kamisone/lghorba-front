@@ -87,16 +87,6 @@ function validateField(field: "name" | "email" | "phone", value: string): string
   return "";
 }
 
-function fmtStepValue(iso: string): string {
-  if (!iso || iso.length < 16) return "";
-  const [datePart, timePart] = iso.split("T");
-  const [y, mo, d] = datePart.split("-").map(Number);
-  const dateStr = new Date(Date.UTC(y, mo - 1, d)).toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", timeZone: "UTC",
-  });
-  return `${dateStr} · ${timePart.slice(0, 5)}`;
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function BookingPanel({ carId, locale, labels }: Props) {
@@ -249,56 +239,30 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
   return (
     <div className={styles.panel}>
 
-      {/* ── Step progress indicator ── */}
-      <div className={styles.stepFlow} aria-label="Booking steps">
-        {/* Step 1 */}
+      {/* ── Unified date-range panel ── */}
+      <div className={[
+        styles.dateRangePanel,
+        startDone && endDone ? styles.dateRangePanelComplete : "",
+      ].filter(Boolean).join(" ")}>
+
+        {/* Start date half */}
         <div className={[
-          styles.stepItem,
-          stepState === 0 ? styles.stepActive :
-          startDone       ? styles.stepDone   : styles.stepPending,
-        ].join(" ")}>
-          <span className={styles.stepBadge}>
-            {startDone
-              ? <span className="material-symbols-outlined">check</span>
-              : "1"}
-          </span>
-          <div className={styles.stepInfo}>
-            <span className={styles.stepLabel}>{labels.startDate}</span>
-            {startDone && <span className={styles.stepValue}>{fmtStepValue(startDateTime)}</span>}
-          </div>
-        </div>
-
-        {/* Connector */}
-        <span className={`${styles.stepLine} ${startDone ? styles.stepLineDone : ""}`} aria-hidden="true" />
-
-        {/* Step 2 */}
-        <div className={[
-          styles.stepItem,
-          stepState === 1 ? styles.stepActive :
-          endDone         ? styles.stepDone   : styles.stepPending,
-        ].join(" ")}>
-          <span className={styles.stepBadge}>
-            {endDone
-              ? <span className="material-symbols-outlined">check</span>
-              : "2"}
-          </span>
-          <div className={styles.stepInfo}>
-            <span className={styles.stepLabel}>{labels.endDate}</span>
-            {endDone && <span className={styles.stepValue}>{fmtStepValue(endDateTime)}</span>}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Date / time pickers ── */}
-      <div className={styles.pickersRow}>
-
-        <div className={[
-          styles.pickerWrap,
-          stepState === 0 ? styles.pickerWrapActive : "",
-          startDone       ? styles.pickerWrapDone   : "",
+          styles.dateRangeHalf,
+          stepState === 0 ? styles.dateRangeHalfActive : "",
         ].filter(Boolean).join(" ")}>
+          <span className={[
+            styles.dateRangeHalfHead,
+            stepState === 0 ? styles.dateRangeHalfHeadCurrent :
+            startDone       ? styles.dateRangeHalfHeadDone    : "",
+          ].filter(Boolean).join(" ")}>
+            <span className={styles.dateRangeStepBadge}>
+              {startDone
+                ? <span className="material-symbols-outlined">check</span>
+                : "1"}
+            </span>
+            {labels.startDate}
+          </span>
           <DateTimePicker
-            label={labels.startDate}
             value={startDateTime}
             onChange={setStartDateTime}
             minValue={minStart}
@@ -307,19 +271,33 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
           />
         </div>
 
-        <span className={`${styles.pickersArrow} ${startDone ? styles.pickersArrowActive : ""}`} aria-hidden="true">
-          <span className="material-symbols-outlined">arrow_forward</span>
-        </span>
+        {/* Vertical divider */}
+        <span
+          className={`${styles.dateRangeDivider} ${startDone ? styles.dateRangeDividerFilled : ""}`}
+          aria-hidden="true"
+        />
 
+        {/* End date half */}
         <div className={[
-          styles.pickerWrap,
-          stepState === 1 ? styles.pickerWrapActive : "",
-          endDone         ? styles.pickerWrapDone   : "",
-          stepState === 1 ? styles.pickerWrapPulse  : "",
+          styles.dateRangeHalf,
+          styles.dateRangeHalfRight,
+          stepState === 1 ? styles.dateRangeHalfActive : "",
+          stepState === 1 ? styles.dateRangeHalfPulse  : "",
         ].filter(Boolean).join(" ")}>
+          <span className={[
+            styles.dateRangeHalfHead,
+            stepState === 1 ? styles.dateRangeHalfHeadCurrent :
+            endDone         ? styles.dateRangeHalfHeadDone    : "",
+          ].filter(Boolean).join(" ")}>
+            <span className={styles.dateRangeStepBadge}>
+              {endDone
+                ? <span className="material-symbols-outlined">check</span>
+                : "2"}
+            </span>
+            {labels.endDate}
+          </span>
           <DateTimePicker
             ref={endPickerRef}
-            label={labels.endDate}
             value={endDateTime}
             onChange={setEndDateTime}
             minValue={startDateTime || minStart}
