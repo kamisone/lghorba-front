@@ -215,7 +215,9 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
       });
       const data = await res.json();
       if (!res.ok) { setSubmitError(data?.message ?? "Something went wrong."); return; }
-      router.push(`/${locale}/fleet/${carId}/booking-confirmation?bookingId=${data.id}`);
+      // Store the clientSecret in sessionStorage — retrieved by the payment page
+      sessionStorage.setItem(`stripe_cs_${data.id}`, data.clientSecret);
+      router.push(`/${locale}/fleet/${carId}/payment?bookingId=${data.id}`);
     } catch {
       setSubmitError("Network error — please try again.");
     } finally {

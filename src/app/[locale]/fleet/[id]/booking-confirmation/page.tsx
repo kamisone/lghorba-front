@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslations, type Locale } from "@/lib/i18n";
+import PaymentStatusPoller from "./PaymentStatusPoller";
 import styles from "./booking-confirmation.module.css";
 
 interface BookingDetail {
@@ -8,7 +9,7 @@ interface BookingDetail {
   startDateTime: string;
   endDateTime: string;
   totalPrice: string | number;
-  status: "pending" | "confirmed" | "cancelled";
+  status: "pending_payment" | "pending" | "confirmed" | "cancelled";
   car?: { name: string };
 }
 
@@ -56,21 +57,30 @@ export default async function BookingConfirmationPage({
     );
   }
 
-  const carName = booking.car?.name ?? "";
+  const carName    = booking.car?.name ?? "";
   const totalPrice = typeof booking.totalPrice === "string"
     ? parseFloat(booking.totalPrice)
     : booking.totalPrice;
+  const isPendingPayment = booking.status === "pending_payment";
 
   return (
     <div className={styles.page}>
       <div className={styles.card}>
+        {isPendingPayment && <PaymentStatusPoller bookingId={booking.id} />}
+
         {/* Icon */}
-        <div className={styles.iconWrap} aria-hidden="true">
-          <span className={styles.checkIcon}>✓</span>
+        <div className={`${styles.iconWrap} ${isPendingPayment ? styles.iconWrapPending : ""}`} aria-hidden="true">
+          <span className={styles.checkIcon}>{isPendingPayment ? "⏳" : "✓"}</span>
         </div>
 
-        <h1 className={styles.title}>{t.booking.confirmTitle}</h1>
-        <p className={styles.sub}>{t.booking.confirmSub}</p>
+        <h1 className={styles.title}>
+          {isPendingPayment ? "Payment processing…" : t.booking.confirmTitle}
+        </h1>
+        <p className={styles.sub}>
+          {isPendingPayment
+            ? "Your payment is being confirmed. This page will update automatically."
+            : t.booking.confirmSub}
+        </p>
 
         {/* Details */}
         <div className={styles.detailsGrid}>
