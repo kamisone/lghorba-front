@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { getTranslations } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
 import HamburgerMenu from "./HamburgerMenu";
@@ -12,8 +13,11 @@ interface Props {
 }
 
 export default function ClientHeader({ locale }: Props) {
-  const t = getTranslations(locale);
-  const [hidden, setHidden] = useState(false);
+  const t        = getTranslations(locale);
+  const pathname = usePathname();
+
+  const [hidden,   setHidden]   = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const lastY = useRef(0);
 
   useEffect(() => {
@@ -21,6 +25,7 @@ export default function ClientHeader({ locale }: Props) {
 
     const onScroll = () => {
       const y = window.scrollY;
+      setScrolled(y > 10);
       if (y < 80) {
         setHidden(false);
       } else if (y > lastY.current) {
@@ -45,35 +50,58 @@ export default function ClientHeader({ locale }: Props) {
 
   const ctaHref = `/${locale}/contact`;
 
+  const isActive = (href: string) => {
+    if (href.includes("#")) return false; // anchor links never "active" server-side
+    return pathname === href || pathname.startsWith(href + "/");
+  };
+
+  const headerClass = [
+    styles.header,
+    hidden   ? styles.headerHidden : "",
+    scrolled ? styles.scrolled     : "",
+  ].filter(Boolean).join(" ");
+
   return (
     <>
       <div className={styles.headerSpacer} aria-hidden="true" />
-      <header className={`${styles.header} ${hidden ? styles.headerHidden : ""}`}>
+      <header className={headerClass}>
         <div className={styles.inner}>
-          <Link href={`/${locale}`} className={styles.logo}>
+
+          {/* ── Logo ── */}
+          <Link href={`/${locale}`} className={styles.logo} aria-label="vitecamion — home">
             <img
               className={styles.logoIcon}
               src="/assets/logo_vitecamion_icon.png"
-              alt="vitecamion"
+              alt=""
+              aria-hidden="true"
             />
             <img
               className={styles.logoTextImg}
               src="/assets/logo_vitecamion_text.png"
-              alt=""
-              aria-hidden="true"
+              alt="vitecamion"
             />
           </Link>
 
+          {/* ── Desktop nav ── */}
           <nav className={styles.navLinks} aria-label="Main navigation">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={styles.navLink}>
+              <Link
+                key={link.href}
+                href={link.href}
+                className={[
+                  styles.navLink,
+                  isActive(link.href) ? styles.navLinkActive : "",
+                ].filter(Boolean).join(" ")}
+              >
                 {link.label}
               </Link>
             ))}
           </nav>
 
+          {/* ── Right slot ── */}
           <div className={styles.navRight}>
             <LangSwitcher locale={locale} />
+            <span className={styles.navDivider} aria-hidden="true" />
             <Link href={ctaHref} className={styles.navCta}>
               {t.nav.bookNow}
             </Link>
@@ -81,8 +109,11 @@ export default function ClientHeader({ locale }: Props) {
               links={navLinks}
               ctaHref={ctaHref}
               ctaLabel={t.nav.bookNow}
+              locale={locale}
+              activeHref={pathname}
             />
           </div>
+
         </div>
       </header>
     </>
