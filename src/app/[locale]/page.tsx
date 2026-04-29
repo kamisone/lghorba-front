@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import styles from "../page.module.css";
@@ -199,26 +198,6 @@ export default async function LandingPage({ params }: { params: { locale: string
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <div className={styles.footerLogo}>
-            <span className={styles.logoIcon}>🚐</span>
-            <span className={styles.logoText}>vitecamion</span>
-          </div>
-          <p className={styles.footerCopy}>
-            © {new Date().getFullYear()} vitecamion · {t.footer.rights}
-          </p>
-          <div className={styles.footerLinks}>
-            <Link href={`/${locale}/privacy-policy`} className={styles.footerLink}>
-              {t.footer.privacy}
-            </Link>
-            <Link href="/admin" className={styles.footerLink}>
-              {t.footer.admin}
-            </Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
