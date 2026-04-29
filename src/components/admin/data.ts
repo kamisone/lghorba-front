@@ -8,6 +8,34 @@ export type VehicleType =
 
 export type EnergyType = "Petrol" | "Diesel" | "Hybrid" | "Electric";
 export type GearboxType = "Manual" | "Automatic";
+export type BookingSource = "private" | "turo" | "getaround";
+
+export interface BookingUser {
+  id: string;
+  name: string;
+  phone: string | null;
+  email?: string | null;
+  score?: number | null;
+  turoJoinDate?: string | null;
+  getaroundJoinDate?: string | null;
+}
+
+export interface CalendarBooking {
+  id: string;
+  carId: string;
+  startDateTime: string;
+  endDateTime: string;
+  source: BookingSource;
+  status: "pending" | "confirmed" | "cancelled";
+  reservationNumber?: string | null;
+  totalEarning?: number | null;
+  autoStartTracking: boolean;
+  color?: string | null;
+  user?: BookingUser | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerEmail?: string | null;
+}
 
 export interface Car {
   id: string;

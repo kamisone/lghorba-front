@@ -1,39 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { Car } from "./data";
-import RentScheduleModal from "./RentScheduleModal";
+import type { CalendarBooking, Car } from "./data";
+import BookingAdminModal from "./BookingAdminModal";
 import styles from "./RentCalendar.module.css";
 
-export interface RentScheduleUser {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string | null;
-  score?: number | null;
-  turoJoinDate?: string | null;
-  getaroundJoinDate?: string | null;
-}
-
-export interface RentSchedule {
-  id: string;
-  carId: string;
-  fromDate: string;
-  toDate: string;
-  reservationNumber?: string | null;
-  totalEarning?: number | null;
-  autoStartTracking: boolean;
-  color?: string | null;
-  user?: RentScheduleUser | null;
-}
+// Re-export so RentTracker can still import without changes to its type alias
+export type { CalendarBooking };
 
 interface Props {
   car: Car;
-  schedules: RentSchedule[];
-  excludeScheduleIds?: string[];
-  endedScheduleIds?: string[];
-  onAdd: (saved: RentSchedule) => void;
-  onUpdate: (updated: RentSchedule) => void;
+  bookings: CalendarBooking[];
+  excludeBookingIds?: string[];
+  endedBookingIds?: string[];
+  onUpdate: (updated: CalendarBooking) => void;
   onDelete: (id: string) => void;
 }
 
@@ -60,34 +40,28 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
 const DEFAULT_BG = "linear-gradient(135deg, #001829 0%, #005C8F 100%)";
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-export default function RentCalendar({ car, schedules, excludeScheduleIds, endedScheduleIds, onAdd, onUpdate, onDelete }: Props) {
-  const [viewDate,         setViewDate]         = useState(() => new Date());
-  const [showAddModal,     setShowAddModal]     = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState<RentSchedule | null>(null);
-  const [showEditModal,    setShowEditModal]    = useState(false);
-  const [deletingId,       setDeletingId]       = useState<string | null>(null);
+export default function RentCalendar({ car, bookings, excludeBookingIds, endedBookingIds, onUpdate, onDelete }: Props) {
+  const [viewDate,        setViewDate]        = useState(() => new Date());
+  const [selectedBooking, setSelectedBooking] = useState<CalendarBooking | null>(null);
+  const [showEditModal,   setShowEditModal]   = useState(false);
+  const [deletingId,      setDeletingId]      = useState<string | null>(null);
 
   const today = startOfDay(new Date());
 
-  const handleNewSaved = (saved: RentSchedule) => {
-    onAdd(saved);
-    setShowAddModal(false);
-  };
-
-  const handleEditSaved = (updated: RentSchedule) => {
+  const handleEditSaved = (updated: CalendarBooking) => {
     onUpdate(updated);
-    setSelectedSchedule(null);
+    setSelectedBooking(null);
     setShowEditModal(false);
   };
 
   const handleDelete = async () => {
-    if (!selectedSchedule) return;
-    setDeletingId(selectedSchedule.id);
+    if (!selectedBooking) return;
+    setDeletingId(selectedBooking.id);
     try {
-      const res = await fetch(`/next-api/cars/${car.id}/rent-schedules/${selectedSchedule.id}`, { method: "DELETE" });
-      if (res.ok) {
-        onDelete(selectedSchedule.id);
-        setSelectedSchedule(null);
+      const res = await fetch(`/next-api/bookings/${selectedBooking.id}`, { method: "DELETE" });
+      if (res.ok || res.status === 204) {
+        onDelete(selectedBooking.id);
+        setSelectedBooking(null);
         setShowEditModal(false);
       }
     } finally {
@@ -95,24 +69,24 @@ export default function RentCalendar({ car, schedules, excludeScheduleIds, ended
     }
   };
 
-  const visibleSchedules = excludeScheduleIds?.length
-    ? schedules.filter(s => !excludeScheduleIds.includes(s.id))
-    : schedules;
+  const visibleBookings = excludeBookingIds?.length
+    ? bookings.filter(b => !excludeBookingIds.includes(b.id))
+    : bookings;
 
-  const getSchedulesForDay = (date: Date): RentSchedule[] => {
+  const getBookingsForDay = (date: Date): CalendarBooking[] => {
     const d = date.getTime();
-    return visibleSchedules.filter(s => {
-      const from = startOfDay(new Date(s.fromDate)).getTime();
-      const to   = startOfDay(new Date(s.toDate)).getTime();
+    return visibleBookings.filter(b => {
+      const from = startOfDay(new Date(b.startDateTime)).getTime();
+      const to   = startOfDay(new Date(b.endDateTime)).getTime();
       return d >= from && d <= to;
     });
   };
 
-  const isEdge = (date: Date, s: RentSchedule, which: "from" | "to") =>
-    isSameDay(date, startOfDay(new Date(which === "from" ? s.fromDate : s.toDate)));
+  const isEdge = (date: Date, b: CalendarBooking, which: "start" | "end") =>
+    isSameDay(date, startOfDay(new Date(which === "start" ? b.startDateTime : b.endDateTime)));
 
-  const openSchedule = (s: RentSchedule) => {
-    setSelectedSchedule(s);
+  const openBooking = (b: CalendarBooking) => {
+    setSelectedBooking(b);
     setShowEditModal(true);
   };
 
@@ -138,10 +112,10 @@ export default function RentCalendar({ car, schedules, excludeScheduleIds, ended
           {DAYS.map(d => <span key={d} className={styles.dayHeader}>{d}</span>)}
           {cells.map((date, i) => {
             if (!date) return <span key={i} />;
-            const daySchedules = getSchedulesForDay(date);
-            const isT          = isSameDay(date, today);
+            const dayBookings = getBookingsForDay(date);
+            const isT         = isSameDay(date, today);
 
-            if (daySchedules.length === 0) {
+            if (dayBookings.length === 0) {
               return (
                 <span key={i} className={[styles.day, isT ? styles.dayToday : ""].filter(Boolean).join(" ")}>
                   {date.getDate()}
@@ -149,10 +123,10 @@ export default function RentCalendar({ car, schedules, excludeScheduleIds, ended
               );
             }
 
-            if (daySchedules.length === 1) {
-              const s       = daySchedules[0];
-              const isStart = isEdge(date, s, "from");
-              const isEnd   = isEdge(date, s, "to");
+            if (dayBookings.length === 1) {
+              const b       = dayBookings[0];
+              const isStart = isEdge(date, b, "start");
+              const isEnd   = isEdge(date, b, "end");
               return (
                 <span
                   key={i}
@@ -164,23 +138,23 @@ export default function RentCalendar({ car, schedules, excludeScheduleIds, ended
                     isT     ? styles.dayToday : "",
                     styles.dayClickable,
                   ].filter(Boolean).join(" ")}
-                  style={s.color ? { background: s.color } : undefined}
-                  onClick={() => openSchedule(s)}
+                  style={b.color ? { background: b.color } : undefined}
+                  onClick={() => openBooking(b)}
                 >
                   {date.getDate()}
                 </span>
               );
             }
 
-            // Multiple overlapping schedules — split cell vertically
+            // Multiple overlapping bookings — split cell vertically
             return (
               <span key={i} className={[styles.day, styles.dayMulti, isT ? styles.dayToday : ""].filter(Boolean).join(" ")}>
-                {daySchedules.map(s => (
+                {dayBookings.map(b => (
                   <span
-                    key={s.id}
+                    key={b.id}
                     className={`${styles.daySlice} ${styles.dayClickable}`}
-                    style={{ background: s.color ?? DEFAULT_BG }}
-                    onClick={() => openSchedule(s)}
+                    style={{ background: b.color ?? DEFAULT_BG }}
+                    onClick={() => openBooking(b)}
                   />
                 ))}
                 <span className={styles.dayNum}>{date.getDate()}</span>
@@ -190,27 +164,15 @@ export default function RentCalendar({ car, schedules, excludeScheduleIds, ended
         </div>
       </div>
 
-      <button className={styles.addBtn} onClick={() => setShowAddModal(true)}>+ Add rent period</button>
-
-      {/* ── Add modal ── */}
-      {showAddModal && (
-        <RentScheduleModal
-          car={car}
-          existingSchedules={endedScheduleIds?.length ? schedules.filter(s => !endedScheduleIds.includes(s.id)) : schedules}
-          onClose={() => setShowAddModal(false)}
-          onSaved={handleNewSaved}
-        />
-      )}
-
       {/* ── Edit modal ── */}
-      {showEditModal && selectedSchedule && (
-        <RentScheduleModal
+      {showEditModal && selectedBooking && (
+        <BookingAdminModal
           car={car}
-          schedule={selectedSchedule}
-          existingSchedules={endedScheduleIds?.length ? schedules.filter(s => !endedScheduleIds.includes(s.id)) : schedules}
-          onClose={() => { setShowEditModal(false); setSelectedSchedule(null); }}
+          booking={selectedBooking}
+          existingBookings={endedBookingIds?.length ? bookings.filter(b => !endedBookingIds.includes(b.id)) : bookings}
+          onClose={() => { setShowEditModal(false); setSelectedBooking(null); }}
           onSaved={handleEditSaved}
-          onDelete={deletingId === selectedSchedule.id ? undefined : handleDelete}
+          onDelete={deletingId === selectedBooking.id ? undefined : handleDelete}
         />
       )}
     </div>

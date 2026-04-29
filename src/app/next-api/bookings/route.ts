@@ -7,6 +7,21 @@ function bearer(req: NextRequest): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const res = await fetch(`${BACKEND_URL}/api/bookings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...bearer(req) },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

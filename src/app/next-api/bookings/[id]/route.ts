@@ -20,6 +20,21 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const body = await req.json();
+    const res = await fetch(`${BACKEND_URL}/api/bookings/${params.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...bearer(req) },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
+  }
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();

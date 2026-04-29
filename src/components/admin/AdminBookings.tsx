@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import type { Car } from "./data";
+import BookingAdminModal from "./BookingAdminModal";
 import styles from "./AdminBookings.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -20,14 +22,18 @@ export interface AdminBooking {
   endDateTime: string;
   totalPrice: number | string;
   status: "pending" | "confirmed" | "cancelled";
+  source: "private" | "turo" | "getaround";
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
+  reservationNumber: string | null;
+  totalEarning: number | string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 type StatusFilter = "all" | "pending" | "confirmed" | "cancelled";
+type SourceFilter = "all" | "private" | "turo" | "getaround";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -54,12 +60,26 @@ function fmtPrice(p: number | string): string {
   return `€${Number(p).toFixed(2)}`;
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+// ── Badges ────────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: AdminBooking["status"] }) {
   return (
     <span className={`${styles.badge} ${styles[`badge_${status}`]}`}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+const SOURCE_LABELS: Record<AdminBooking["source"], string> = {
+  private: "Private",
+  turo: "Turo",
+  getaround: "Getaround",
+};
+
+function SourceBadge({ source }: { source: AdminBooking["source"] }) {
+  return (
+    <span className={`${styles.badge} ${styles[`badge_source_${source}`]}`}>
+      {SOURCE_LABELS[source]}
     </span>
   );
 }
@@ -101,6 +121,12 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
         </div>
 
         <div className={styles.modalBody}>
+          {/* Source */}
+          <div className={styles.modalRow}>
+            <span className={styles.modalRowLabel}>Source</span>
+            <SourceBadge source={booking.source} />
+          </div>
+
           {/* Car */}
           <div className={styles.modalCar}>
             <div className={styles.modalCarThumb}>
@@ -143,13 +169,15 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
             </div>
           </div>
 
-          {/* Customer info */}
-          {(booking.customerName || booking.customerEmail || booking.customerPhone) && (
+          {/* Customer / guest info */}
+          {(booking.customerName || booking.customerEmail || booking.customerPhone || booking.reservationNumber) && (
             <div className={styles.customerSection}>
-              <p className={styles.sectionLabel}>Customer</p>
+              <p className={styles.sectionLabel}>{booking.source === "private" ? "Customer" : "Guest"}</p>
               {booking.customerName  && <p className={styles.customerRow}><span>Name</span>{booking.customerName}</p>}
               {booking.customerEmail && <p className={styles.customerRow}><span>Email</span>{booking.customerEmail}</p>}
               {booking.customerPhone && <p className={styles.customerRow}><span>Phone</span>{booking.customerPhone}</p>}
+              {booking.reservationNumber && <p className={styles.customerRow}><span>Reservation #</span>{booking.reservationNumber}</p>}
+              {booking.totalEarning != null && <p className={styles.customerRow}><span>Earning</span>{fmtPrice(booking.totalEarning)} €</p>}
             </div>
           )}
 
@@ -203,10 +231,16 @@ export default function AdminBookings() {
   const [error,         setError]         = useState<string | null>(null);
   const [search,        setSearch]        = useState("");
   const [statusFilter,  setStatusFilter]  = useState<StatusFilter>("all");
+  const [sourceFilter,  setSourceFilter]  = useState<SourceFilter>("all");
   const [dateFrom,      setDateFrom]      = useState("");
   const [dateTo,        setDateTo]        = useState("");
   const [selected,      setSelected]      = useState<AdminBooking | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const [showCarPicker, setShowCarPicker] = useState(false);
+  const [pickerCars,    setPickerCars]    = useState<Car[]>([]);
+  const [pickerLoading, setPickerLoading] = useState(false);
+  const [createCar,     setCreateCar]     = useState<Car | null>(null);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
 
@@ -216,6 +250,7 @@ export default function AdminBookings() {
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
+      if (sourceFilter !== "all") params.set("source", sourceFilter);
       if (dateFrom) params.set("startDate", dateFrom);
       if (dateTo)   params.set("endDate",   dateTo);
       const qs  = params.toString();
@@ -227,7 +262,7 @@ export default function AdminBookings() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, dateFrom, dateTo]);
+  }, [statusFilter, sourceFilter, dateFrom, dateTo]);
 
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
 
@@ -240,7 +275,8 @@ export default function AdminBookings() {
       b.car?.name?.toLowerCase().includes(q) ||
       b.car?.immatriculation?.toLowerCase().includes(q) ||
       b.customerName?.toLowerCase().includes(q) ||
-      b.customerEmail?.toLowerCase().includes(q),
+      b.customerEmail?.toLowerCase().includes(q) ||
+      b.reservationNumber?.toLowerCase().includes(q),
     );
   }, [bookings, search]);
 
@@ -277,10 +313,32 @@ export default function AdminBookings() {
     }
   }, []);
 
-  const clearFilters = () => {
-    setSearch(""); setStatusFilter("all"); setDateFrom(""); setDateTo("");
+  const openCarPicker = async () => {
+    setShowCarPicker(true);
+    if (pickerCars.length > 0) return;
+    setPickerLoading(true);
+    try {
+      const res = await fetch("/next-api/cars", { cache: "no-store" });
+      if (res.ok) setPickerCars(await res.json());
+    } finally {
+      setPickerLoading(false);
+    }
   };
-  const hasFilters = search || statusFilter !== "all" || dateFrom || dateTo;
+
+  const handleCarSelected = (car: Car) => {
+    setCreateCar(car);
+    setShowCarPicker(false);
+  };
+
+  const handleBookingCreated = () => {
+    setCreateCar(null);
+    fetchBookings();
+  };
+
+  const clearFilters = () => {
+    setSearch(""); setStatusFilter("all"); setSourceFilter("all"); setDateFrom(""); setDateTo("");
+  };
+  const hasFilters = search || statusFilter !== "all" || sourceFilter !== "all" || dateFrom || dateTo;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -294,6 +352,7 @@ export default function AdminBookings() {
             {filtered.length} / {bookings.length} booking{bookings.length !== 1 ? "s" : ""}
           </span>
         )}
+        <button className={styles.newBookingBtn} onClick={openCarPicker}>+ New booking</button>
       </div>
 
       {/* Filters */}
@@ -317,6 +376,17 @@ export default function AdminBookings() {
           <option value="pending">Pending</option>
           <option value="confirmed">Confirmed</option>
           <option value="cancelled">Cancelled</option>
+        </select>
+
+        <select
+          className={styles.select}
+          value={sourceFilter}
+          onChange={(e) => setSourceFilter(e.target.value as SourceFilter)}
+        >
+          <option value="all">All sources</option>
+          <option value="private">Private</option>
+          <option value="turo">Turo</option>
+          <option value="getaround">Getaround</option>
         </select>
 
         <label className={styles.dateField}>
@@ -382,6 +452,7 @@ export default function AdminBookings() {
                 <th>Return</th>
                 <th className={styles.center}>Days</th>
                 <th>Total</th>
+                <th>Source</th>
                 <th>Status</th>
                 <th className={styles.center}>Actions</th>
               </tr>
@@ -416,6 +487,7 @@ export default function AdminBookings() {
                   <td className={styles.center}>{daysDiff(b.startDateTime, b.endDateTime)}</td>
                   <td className={styles.priceCell}>{fmtPrice(b.totalPrice)}</td>
 
+                  <td><SourceBadge source={b.source} /></td>
                   <td><StatusBadge status={b.status} /></td>
 
                   {/* Row actions */}
@@ -461,6 +533,53 @@ export default function AdminBookings() {
           onConfirm={(id) => updateStatus(id, "confirmed")}
           onCancel={(id)  => updateStatus(id, "cancelled")}
           onDelete={deleteBooking}
+        />
+      )}
+
+      {/* Car picker modal */}
+      {showCarPicker && (
+        <div className={styles.backdrop} onMouseDown={() => setShowCarPicker(false)}>
+          <div className={styles.modal} onMouseDown={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Select a vehicle</h2>
+              <button className={styles.closeBtn} onClick={() => setShowCarPicker(false)} aria-label="Close">✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              {pickerLoading ? (
+                <div className={styles.stateCenter}><span className={styles.spinner} /><span>Loading…</span></div>
+              ) : pickerCars.length === 0 ? (
+                <p className={styles.pickerEmpty}>No vehicles found.</p>
+              ) : (
+                <div className={styles.pickerList}>
+                  {pickerCars.map(car => (
+                    <button key={car.id} className={styles.pickerItem} onClick={() => handleCarSelected(car)}>
+                      <div className={styles.pickerCarThumb}>
+                        {car.photo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={`/next-api/cars/${car.id}/photo`} alt="" className={styles.carImg} />
+                        ) : (
+                          <span className={styles.carFallback}>🚗</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className={styles.pickerCarName}>{car.name}</p>
+                        <p className={styles.pickerCarPlate}>{car.immatriculation}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create booking modal */}
+      {createCar && (
+        <BookingAdminModal
+          car={createCar}
+          onClose={() => setCreateCar(null)}
+          onSaved={handleBookingCreated}
         />
       )}
     </div>

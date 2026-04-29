@@ -3,8 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { Car } from "@/components/admin/data";
-import type { RentSchedule } from "@/components/admin/RentCalendar";
+import type { CalendarBooking, Car } from "@/components/admin/data";
 import RentTracker from "@/components/admin/RentTracker";
 import RentCalendar from "@/components/admin/RentCalendar";
 import styles from "./rent.module.css";
@@ -12,11 +11,11 @@ import styles from "./rent.module.css";
 export default function RentPage() {
   const { id } = useParams<{ id: string }>();
 
-  const [car,             setCar]             = useState<Car | null>(null);
-  const [loading,         setLoading]         = useState(true);
-  const [schedules,        setSchedules]        = useState<RentSchedule[]>([]);
-  const [usedScheduleIds,  setUsedScheduleIds]  = useState<string[]>([]);
-  const [endedScheduleIds, setEndedScheduleIds] = useState<string[]>([]);
+  const [car,            setCar]            = useState<Car | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [bookings,       setBookings]       = useState<CalendarBooking[]>([]);
+  const [usedBookingIds, setUsedBookingIds] = useState<string[]>([]);
+  const [endedBookingIds, setEndedBookingIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetch(`/next-api/cars/${id}`, { cache: "no-store" })
@@ -26,20 +25,17 @@ export default function RentPage() {
   }, [id]);
 
   useEffect(() => {
-    fetch(`/next-api/cars/${id}/rent-schedules`, { cache: "no-store" })
+    fetch(`/next-api/bookings/calendar?carId=${id}`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : [])
-      .then(setSchedules)
+      .then(setBookings)
       .catch(() => {});
   }, [id]);
 
-  const handleScheduleAdd    = (saved: RentSchedule) =>
-    setSchedules(prev => [...prev, saved]);
+  const handleBookingUpdate = (updated: CalendarBooking) =>
+    setBookings(prev => prev.map(b => b.id === updated.id ? updated : b));
 
-  const handleScheduleUpdate = (updated: RentSchedule) =>
-    setSchedules(prev => prev.map(s => s.id === updated.id ? updated : s));
-
-  const handleScheduleDelete = (deletedId: string) =>
-    setSchedules(prev => prev.filter(s => s.id !== deletedId));
+  const handleBookingDelete = (deletedId: string) =>
+    setBookings(prev => prev.filter(b => b.id !== deletedId));
 
   if (loading) {
     return (
@@ -70,19 +66,18 @@ export default function RentPage() {
 
       <RentTracker
         car={car}
-        onScheduleUpdate={handleScheduleUpdate}
-        onScheduleDelete={handleScheduleDelete}
-        onUsedScheduleIdsChange={setUsedScheduleIds}
-        onEndedScheduleIdsChange={setEndedScheduleIds}
+        onBookingUpdate={handleBookingUpdate}
+        onBookingDelete={handleBookingDelete}
+        onUsedBookingIdsChange={setUsedBookingIds}
+        onEndedBookingIdsChange={setEndedBookingIds}
       />
       <RentCalendar
         car={car}
-        schedules={schedules}
-        excludeScheduleIds={usedScheduleIds}
-        endedScheduleIds={endedScheduleIds}
-        onAdd={handleScheduleAdd}
-        onUpdate={handleScheduleUpdate}
-        onDelete={handleScheduleDelete}
+        bookings={bookings}
+        excludeBookingIds={usedBookingIds}
+        endedBookingIds={endedBookingIds}
+        onUpdate={handleBookingUpdate}
+        onDelete={handleBookingDelete}
       />
     </div>
   );
