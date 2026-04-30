@@ -23,7 +23,10 @@ interface LastConsumed {
   outbound: SmsMessage | null;
 }
 
-type ActionKey = "open" | "close" | "parking" | "location" | "sleep" | "wake" | "stoplocation" | "network";
+type ActionKey = "open" | "close" | "parking" | "location" | "sleep" | "wake" | "stoplocation" | "network"
+  | "parkingplus" | "parkingminus" | "openplus" | "openminus" | "closeplus" | "closeminus";
+
+interface SendableAction { key: ActionKey; message: string; }
 
 const ACTIONS: { key: ActionKey; label: string; icon: string; message: string }[] = [
   { key: "open",         label: "Open Car",      icon: "🔓", message: "open" },
@@ -36,6 +39,15 @@ const ACTIONS: { key: ActionKey; label: string; icon: string; message: string }[
   { key: "network",      label: "Network",       icon: "📡", message: "network" },
 ];
 
+
+const FINE_ACTIONS: { key: ActionKey; label: string; sign: "+" | "−"; message: string }[] = [
+  { key: "parkingplus",  label: "Parking", sign: "+", message: "parkingplus" },
+  { key: "parkingminus", label: "Parking", sign: "−", message: "parkingminus" },
+  { key: "openplus",     label: "Open",    sign: "+", message: "openplus" },
+  { key: "openminus",    label: "Open",    sign: "−", message: "openminus" },
+  { key: "closeplus",    label: "Close",   sign: "+", message: "closeplus" },
+  { key: "closeminus",   label: "Close",   sign: "−", message: "closeminus" },
+];
 
 const POLL_INTERVAL = 3000;
 const RELEASE_THRESHOLD = 3;
@@ -189,7 +201,7 @@ export default function CarDetailPage() {
     else setReleaseClicks(next);
   };
 
-  const sendAction = async (action: (typeof ACTIONS)[number]) => {
+  const sendAction = async (action: SendableAction) => {
     if (!car || sendingAction || waitingAction) return;
     setSendingAction(action.key);
     setSendError(null);
@@ -378,6 +390,33 @@ export default function CarDetailPage() {
           );
         })}
       </div>
+
+        <div className={styles.fineActionsSection}>
+          <span className={styles.fineActionsLabel}>Fine-tune</span>
+          <div className={styles.fineActionsGrid}>
+            {FINE_ACTIONS.map((action) => {
+              const isSending = sendingAction === action.key;
+              const isWaiting = waitingAction === action.key;
+              const isErr     = sendError === action.key;
+              const canUnlock = isWaiting && unlockAvailable;
+              const isLoading = isSending || (isWaiting && !unlockAvailable);
+              return (
+                <button
+                  key={action.key}
+                  className={`${styles.fineActionBtn} ${styles[action.key]} ${isLoading ? styles.sending : ""} ${canUnlock ? styles.waiting : ""} ${isErr ? styles.err : ""}`}
+                  onClick={() => isWaiting ? handleWaitingClick() : sendAction(action)}
+                  disabled={!isWaiting && isBlocked}
+                >
+                  {isLoading
+                    ? <span className={styles.sendingSpinner} />
+                    : <span className={styles.fineActionSign}>{action.sign}</span>
+                  }
+                  <span className={styles.fineActionName}>{action.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <h2 className={styles.sectionTitle}>
