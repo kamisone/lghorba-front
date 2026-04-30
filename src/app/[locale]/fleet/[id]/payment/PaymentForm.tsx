@@ -25,12 +25,15 @@ function CheckoutForm({
   const elements = useElements();
   const t        = getTranslations(locale);
 
-  const [paying,   setPaying]   = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [paying,        setPaying]        = useState(false);
+  const [elementsReady, setElementsReady] = useState(false);
+  const [errorMsg,      setErrorMsg]      = useState("");
+
+  const isLoading = !stripe || !elementsReady;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || paying) return;
 
     setPaying(true);
     setErrorMsg("");
@@ -42,21 +45,60 @@ function CheckoutForm({
       },
     });
 
-    // confirmPayment only returns here on error — success redirects the page
+    // confirmPayment only returns on error — success redirects the page
     if (error) {
       setErrorMsg(error.message ?? t.payment.failed);
       setPaying(false);
     }
+    // On success: paying stays true until the redirect completes
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.elementsWrap}>
-      <PaymentElement />
-      {errorMsg && <p className={styles.errorMsg}>{errorMsg}</p>}
-      <button className={styles.payBtn} type="submit" disabled={!stripe || paying}>
-        {paying ? t.payment.processing : t.payment.payNow}
+    <form
+      onSubmit={handleSubmit}
+      className={styles.elementsWrap}
+      aria-busy={paying}
+    >
+      {/* PaymentElement with loading overlay */}
+      <div className={`${styles.elementContainer} ${(isLoading || paying) ? styles.elementContainerLocked : ""}`}>
+        <PaymentElement onReady={() => setElementsReady(true)} />
+        {isLoading && (
+          <div className={styles.elementOverlay}>
+            <span className={styles.spinner} />
+            <span className={styles.elementOverlayText}>{t.payment.preparing}</span>
+          </div>
+        )}
+      </div>
+
+      {errorMsg && (
+        <p className={styles.errorMsg} role="alert">
+          <span className={styles.errorIcon} aria-hidden="true">⚠</span>
+          {errorMsg}
+        </p>
+      )}
+
+      <button
+        className={`${styles.payBtn} ${paying ? styles.payBtnProcessing : ""}`}
+        type="submit"
+        disabled={isLoading || paying}
+      >
+        {(paying || isLoading) && <span className={styles.btnSpinner} />}
+        <span>
+          {paying
+            ? t.payment.processing
+            : isLoading
+            ? t.payment.preparing
+            : t.payment.payNow}
+        </span>
       </button>
-      <p className={styles.secure}>🔒 {t.payment.secure}</p>
+
+      {paying ? (
+        <p className={styles.processingNote}>
+          {t.booking.paymentConfirmingDesc}
+        </p>
+      ) : (
+        <p className={styles.secure}>🔒 {t.payment.secure}</p>
+      )}
     </form>
   );
 }

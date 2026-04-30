@@ -64,6 +64,40 @@
   gap: 1.25rem;
 }
 
+/* Wrapper that hosts the PaymentElement + loading overlay */
+.elementContainer {
+  position: relative;
+  border-radius: 8px;
+  min-height: 120px;
+}
+
+.elementContainerLocked {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* Overlay shown while Stripe or PaymentElement is loading */
+.elementOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  background: rgba(var(--rgb-white), 0.82);
+  backdrop-filter: blur(2px);
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.elementOverlayText {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* ── Pay button ── */
 .payBtn {
   width: 100%;
   padding: 0.9rem;
@@ -75,13 +109,56 @@
   font-weight: 800;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, transform 0.1s;
   box-shadow: 0 4px 14px rgba(var(--rgb-brand-primary), 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
 }
-.payBtn:hover:not(:disabled) { opacity: 0.9; }
+.payBtn:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+.payBtn:active:not(:disabled) { transform: translateY(0); }
 .payBtn:disabled { opacity: 0.55; cursor: not-allowed; }
 
+/* Shimmer sweep while processing */
+.payBtnProcessing {
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-primary) 0%,
+    var(--color-brand-accent) 35%,
+    var(--color-brand-primary) 50%,
+    var(--color-brand-accent) 65%,
+    var(--color-brand-primary) 100%
+  );
+  background-size: 250% 100%;
+  animation: btnShimmer 1.6s linear infinite;
+}
+
+@keyframes btnShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Small white spinner inside the button */
+.btnSpinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Error message ── */
 .errorMsg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
   font-size: 0.875rem;
   color: var(--color-error);
   background: var(--color-error-bg);
@@ -89,6 +166,28 @@
   border-radius: 8px;
   padding: 0.65rem 0.9rem;
   margin: 0;
+  line-height: 1.5;
+}
+
+.errorIcon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Processing notice ── */
+.processingNote {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Loading / missing secret states ── */
@@ -103,12 +202,13 @@
 }
 
 .spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid var(--color-border);
+  width: 26px;
+  height: 26px;
+  border: 2.5px solid var(--color-border);
   border-top-color: var(--color-brand-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
