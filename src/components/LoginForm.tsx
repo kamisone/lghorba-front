@@ -40,7 +40,9 @@ export default function LoginForm({ t }: { t: T }) {
   return (
     <div className={styles.card}>
       <div className={styles.brand}>
-        <div className={styles.brandMark}>🚐</div>
+        <div className={styles.brandMark}>
+          <img src="/assets/logo_vitecamion_icon.png" alt="vitecamion" className={styles.logoIcon} />
+        </div>
         <h1 className={styles.title}>vitecamion</h1>
         <p className={styles.subtitle}>{t.sub}</p>
       </div>
