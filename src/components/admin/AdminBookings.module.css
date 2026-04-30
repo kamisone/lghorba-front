@@ -788,35 +788,84 @@
   color: var(--color-brand-darkest);
 }
 
-/* Customer section */
+/* ── Customer / guest card ── */
 .customerSection {
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.customerSectionHead {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: var(--color-surface-raised);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.customerSectionIcon {
+  font-size: 0.9rem;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .sectionLabel {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
-  margin: 0 0 0.1rem;
-}
-
-.customerRow {
-  display: flex;
-  gap: 0.75rem;
-  font-size: 0.875rem;
-  color: var(--color-text-primary);
   margin: 0;
 }
 
-.customerRow span {
-  width: 48px;
+.customerRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.customerRow {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.customerRow:last-child { border-bottom: none; }
+
+.customerRowLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--color-text-muted);
-  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
   flex-shrink: 0;
+}
+
+.customerRowValue {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+.customerRowMono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  font-size: 0.83rem;
+}
+
+.customerRowEarning {
+  background: var(--color-success-bg);
+  border-top: 1px solid var(--color-success-border);
+}
+
+.customerRowEarningValue {
+  font-weight: 700;
+  color: var(--color-success);
+  font-size: 0.9rem;
 }
 
 /* Timestamps */

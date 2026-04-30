@@ -14,10 +14,18 @@ interface BookingCar {
   immatriculation: string;
 }
 
+interface BookingGuest {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+}
+
 export interface AdminBooking {
   id: string;
   carId: string;
   car: BookingCar | null;
+  user: BookingGuest | null;
   startDateTime: string;
   endDateTime: string;
   totalPrice: number | string;
@@ -98,6 +106,8 @@ function matchesSearch(b: AdminBooking, q: string): boolean {
     (b.car?.immatriculation?.toLowerCase().includes(s) ?? false) ||
     (b.customerName?.toLowerCase().includes(s)         ?? false) ||
     (b.customerEmail?.toLowerCase().includes(s)        ?? false) ||
+    (b.user?.name?.toLowerCase().includes(s)           ?? false) ||
+    (b.user?.email?.toLowerCase().includes(s)          ?? false) ||
     (b.reservationNumber?.toLowerCase().includes(s)    ?? false)
   );
 }
@@ -205,16 +215,63 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
             </div>
           </div>
 
-          {(booking.customerName || booking.customerEmail || booking.customerPhone || booking.reservationNumber) && (
-            <div className={styles.customerSection}>
-              <p className={styles.sectionLabel}>{booking.source === "private" ? "Customer" : "Guest"}</p>
-              {booking.customerName      && <p className={styles.customerRow}><span>Name</span>{booking.customerName}</p>}
-              {booking.customerEmail     && <p className={styles.customerRow}><span>Email</span>{booking.customerEmail}</p>}
-              {booking.customerPhone     && <p className={styles.customerRow}><span>Phone</span>{booking.customerPhone}</p>}
-              {booking.reservationNumber && <p className={styles.customerRow}><span>Reservation #</span>{booking.reservationNumber}</p>}
-              {booking.totalEarning != null && <p className={styles.customerRow}><span>Earning</span>{fmtPrice(booking.totalEarning)} €</p>}
-            </div>
-          )}
+          {/* For platform bookings, guest info lives on booking.user.
+              For private bookings, it's on customerName/Email/Phone. */}
+          {(() => {
+            const isPrivate = booking.source === "private";
+            const name  = isPrivate ? booking.customerName  : (booking.user?.name  ?? booking.customerName);
+            const email = isPrivate ? booking.customerEmail : (booking.user?.email ?? booking.customerEmail);
+            const phone = isPrivate ? booking.customerPhone : (booking.user?.phone ?? booking.customerPhone);
+            if (!name && !email && !phone && !booking.reservationNumber && booking.totalEarning == null) return null;
+            return (
+              <div className={styles.customerSection}>
+                <div className={styles.customerSectionHead}>
+                  <span className={styles.customerSectionIcon} aria-hidden="true">
+                    {isPrivate ? "👤" : "✈️"}
+                  </span>
+                  <span className={styles.sectionLabel}>
+                    {isPrivate ? "Customer" : "Guest"}
+                  </span>
+                </div>
+                <div className={styles.customerRows}>
+                  {name && (
+                    <div className={styles.customerRow}>
+                      <span className={styles.customerRowLabel}>Name</span>
+                      <span className={styles.customerRowValue}>{name}</span>
+                    </div>
+                  )}
+                  {email && (
+                    <div className={styles.customerRow}>
+                      <span className={styles.customerRowLabel}>Email</span>
+                      <span className={`${styles.customerRowValue} ${styles.customerRowMono}`}>{email}</span>
+                    </div>
+                  )}
+                  {phone && (
+                    <div className={styles.customerRow}>
+                      <span className={styles.customerRowLabel}>Phone</span>
+                      <span className={`${styles.customerRowValue} ${styles.customerRowMono}`}>{phone}</span>
+                    </div>
+                  )}
+                  {booking.reservationNumber && (
+                    <div className={styles.customerRow}>
+                      <span className={styles.customerRowLabel}>Ref #</span>
+                      <span className={`${styles.customerRowValue} ${styles.customerRowMono}`}>
+                        {booking.reservationNumber}
+                      </span>
+                    </div>
+                  )}
+                  {booking.totalEarning != null && (
+                    <div className={`${styles.customerRow} ${styles.customerRowEarning}`}>
+                      <span className={styles.customerRowLabel}>Earning</span>
+                      <span className={`${styles.customerRowValue} ${styles.customerRowEarningValue}`}>
+                        {fmtPrice(booking.totalEarning)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className={styles.timestamps}>
             <p>Created {fmtDateTime(booking.createdAt)}</p>
@@ -271,8 +328,10 @@ function EventCard({ event, onOpen }: { event: TimelineEvent; onOpen: (b: AdminB
           {booking.car?.immatriculation && (
             <span className={styles.eventPlate}>{booking.car.immatriculation}</span>
           )}
-          {booking.customerName && (
-            <span className={styles.eventCustomer}>· {booking.customerName}</span>
+          {(booking.customerName ?? booking.user?.name) && (
+            <span className={styles.eventCustomer}>
+              · {booking.customerName ?? booking.user?.name}
+            </span>
           )}
         </div>
       </div>
