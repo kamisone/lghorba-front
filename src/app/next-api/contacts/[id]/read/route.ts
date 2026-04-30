@@ -11,7 +11,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const res = await fetch(`${BACKEND_URL}/api/contacts/${params.id}/read`, {
+  const res = await fetch(`${BACKEND_URL}/contacts/${params.id}/read`, {
     method: "PATCH",
     headers: bearer(request),
   });

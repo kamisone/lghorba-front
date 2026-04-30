@@ -9,7 +9,7 @@ function bearer(req: NextRequest): Record<string, string> {
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/bookings/${params.id}`, {
+    const res = await fetch(`${BACKEND_URL}/bookings/${params.id}`, {
       cache: "no-store",
       headers: bearer(req),
     });
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/api/bookings/${params.id}`, {
+    const res = await fetch(`${BACKEND_URL}/bookings/${params.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...bearer(req) },
       body: JSON.stringify(body),
@@ -38,7 +38,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/api/bookings/${params.id}/status`, {
+    const res = await fetch(`${BACKEND_URL}/bookings/${params.id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...bearer(req) },
       body: JSON.stringify(body),
@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/bookings/${params.id}`, {
+    const res = await fetch(`${BACKEND_URL}/bookings/${params.id}`, {
       method: "DELETE",
       headers: bearer(req),
     });

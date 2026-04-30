@@ -16,7 +16,7 @@ interface BookingDetail {
 
 async function getBooking(bookingId: string): Promise<BookingDetail | null> {
   try {
-    const res = await fetch(`${API}/api/public/bookings/${bookingId}`, { cache: "no-store" });
+    const res = await fetch(`${API}/public/bookings/${bookingId}`, { cache: "no-store" });
     return res.ok ? res.json() : null;
   } catch {
     return null;

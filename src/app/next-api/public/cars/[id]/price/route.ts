@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const endDateTime   = searchParams.get("endDateTime");
 
   try {
-    const url = `${BACKEND_URL}/api/public/cars/${params.id}/price?startDateTime=${encodeURIComponent(startDateTime ?? "")}&endDateTime=${encodeURIComponent(endDateTime ?? "")}`;
+    const url = `${BACKEND_URL}/public/cars/${params.id}/price?startDateTime=${encodeURIComponent(startDateTime ?? "")}&endDateTime=${encodeURIComponent(endDateTime ?? "")}`;
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return NextResponse.json(await res.json(), { status: res.status });
     return NextResponse.json(await res.json());

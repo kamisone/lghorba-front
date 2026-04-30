@@ -41,7 +41,7 @@ const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 async function getCar(id: string, lang: string): Promise<PublicCarDetail | null> {
   try {
     const res = await fetch(
-      `${API}/api/public/cars/${id}?lang=${encodeURIComponent(lang)}`,
+      `${API}/public/cars/${id}?lang=${encodeURIComponent(lang)}`,
       { cache: "no-store" },
     );
     return res.ok ? res.json() : null;
@@ -52,7 +52,7 @@ async function getCar(id: string, lang: string): Promise<PublicCarDetail | null>
 
 async function getPhotos(id: string): Promise<{ id: string }[]> {
   try {
-    const res = await fetch(`${API}/api/public/cars/${id}/photos`, { cache: "no-store" });
+    const res = await fetch(`${API}/public/cars/${id}/photos`, { cache: "no-store" });
     return res.ok ? res.json() : [];
   } catch {
     return [];

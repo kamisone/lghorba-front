@@ -10,7 +10,7 @@ function bearer(request: NextRequest): Record<string, string> {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const res = await fetch(`${BACKEND_URL}/api/translations/bulk`, {
+    const res = await fetch(`${BACKEND_URL}/translations/bulk`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...bearer(request) },
       body: JSON.stringify(body),

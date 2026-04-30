@@ -14,7 +14,7 @@ export async function PATCH(
   try {
     const body = await req.json();
     const res = await fetch(
-      `${BACKEND_URL}/api/cars/${params.id}/pricings/${params.pricingId}`,
+      `${BACKEND_URL}/cars/${params.id}/pricings/${params.pricingId}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...bearer(req) },
@@ -33,7 +33,7 @@ export async function DELETE(
 ) {
   try {
     const res = await fetch(
-      `${BACKEND_URL}/api/cars/${params.id}/pricings/${params.pricingId}`,
+      `${BACKEND_URL}/cars/${params.id}/pricings/${params.pricingId}`,
       { method: "DELETE", headers: bearer(req) },
     );
     return new NextResponse(null, { status: res.status });

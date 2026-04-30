@@ -9,7 +9,7 @@ function bearer(request: NextRequest): Record<string, string> {
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/cars/${params.id}/photo`, {
+    const res = await fetch(`${BACKEND_URL}/cars/${params.id}/photo`, {
       headers: bearer(request),
     });
     if (!res.ok) return new NextResponse(null, { status: res.status });
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const formData = await request.formData();
-    const res = await fetch(`${BACKEND_URL}/api/cars/${params.id}/photo`, {
+    const res = await fetch(`${BACKEND_URL}/cars/${params.id}/photo`, {
       method: "POST",
       headers: bearer(request),
       body: formData,
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/cars/${params.id}/photo`, {
+    const res = await fetch(`${BACKEND_URL}/cars/${params.id}/photo`, {
       method: "DELETE",
       headers: bearer(request),
     });

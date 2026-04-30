@@ -9,7 +9,7 @@ function bearer(req: NextRequest): Record<string, string> {
 
 export async function GET(request: NextRequest) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/admins`, {
+    const res = await fetch(`${BACKEND_URL}/admins`, {
       cache: "no-store",
       headers: bearer(request),
     });
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const res = await fetch(`${BACKEND_URL}/api/admins`, {
+    const res = await fetch(`${BACKEND_URL}/admins`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...bearer(request) },
       body: JSON.stringify(body),

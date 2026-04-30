@@ -17,7 +17,7 @@ const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
 async function getBooking(bookingId: string): Promise<BookingDetail | null> {
   try {
-    const res = await fetch(`${API}/api/public/bookings/${bookingId}`, { cache: "no-store" });
+    const res = await fetch(`${API}/public/bookings/${bookingId}`, { cache: "no-store" });
     return res.ok ? res.json() : null;
   } catch {
     return null;

@@ -12,7 +12,7 @@ export async function DELETE(
   { params }: { params: { id: string } },
 ) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/translations/entry/${params.id}`, {
+    const res = await fetch(`${BACKEND_URL}/translations/entry/${params.id}`, {
       method: "DELETE",
       headers: bearer(request),
     });

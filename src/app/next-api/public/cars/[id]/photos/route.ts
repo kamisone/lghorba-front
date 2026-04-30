@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/public/cars/${params.id}/photos`, { cache: "no-store" });
+    const res = await fetch(`${BACKEND_URL}/public/cars/${params.id}/photos`, { cache: "no-store" });
     if (!res.ok) return NextResponse.json([], { status: res.status });
     return NextResponse.json(await res.json());
   } catch {

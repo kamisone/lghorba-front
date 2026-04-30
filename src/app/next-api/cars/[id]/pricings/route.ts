@@ -9,7 +9,7 @@ function bearer(req: NextRequest): Record<string, string> {
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/cars/${params.id}/pricings`, {
+    const res = await fetch(`${BACKEND_URL}/cars/${params.id}/pricings`, {
       cache: "no-store",
       headers: bearer(req),
     });
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/api/cars/${params.id}/pricings`, {
+    const res = await fetch(`${BACKEND_URL}/cars/${params.id}/pricings`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...bearer(req) },
       body: JSON.stringify(body),

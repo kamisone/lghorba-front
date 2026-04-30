@@ -10,7 +10,7 @@ function bearer(req: NextRequest): Record<string, string> {
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json();
-    const res = await fetch(`${BACKEND_URL}/api/admins/${params.id}/reset-password`, {
+    const res = await fetch(`${BACKEND_URL}/admins/${params.id}/reset-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...bearer(request) },
       body: JSON.stringify(body),

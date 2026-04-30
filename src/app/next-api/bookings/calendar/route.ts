@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const carId = searchParams.get("carId");
     if (!carId) return NextResponse.json({ error: "carId is required" }, { status: 400 });
-    const res = await fetch(`${BACKEND_URL}/api/bookings/calendar?carId=${carId}`, {
+    const res = await fetch(`${BACKEND_URL}/bookings/calendar?carId=${carId}`, {
       cache: "no-store",
       headers: bearer(req),
     });

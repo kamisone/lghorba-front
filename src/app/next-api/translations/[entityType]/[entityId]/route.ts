@@ -15,7 +15,7 @@ export async function GET(
     const lang = request.nextUrl.searchParams.get("lang") ?? "";
     const qs = lang ? `?lang=${encodeURIComponent(lang)}` : "";
     const res = await fetch(
-      `${BACKEND_URL}/api/translations/${params.entityType}/${params.entityId}${qs}`,
+      `${BACKEND_URL}/translations/${params.entityType}/${params.entityId}${qs}`,
       { cache: "no-store", headers: bearer(request) },
     );
     const data = await res.json();

@@ -7,7 +7,7 @@ const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 async function getPublicCars(locale: string): Promise<CarouselCar[]> {
   try {
     const res = await fetch(
-      `${API_SERVER}/api/public/cars?lang=${encodeURIComponent(locale)}`,
+      `${API_SERVER}/public/cars?lang=${encodeURIComponent(locale)}`,
       { cache: "no-store" },
     );
     if (!res.ok) return [];
@@ -17,7 +17,7 @@ async function getPublicCars(locale: string): Promise<CarouselCar[]> {
     return Promise.all(
       cars.map(async (car) => {
         try {
-          const r = await fetch(`${API_SERVER}/api/public/cars/${car.id}/photos`, { cache: "no-store" });
+          const r = await fetch(`${API_SERVER}/public/cars/${car.id}/photos`, { cache: "no-store" });
           const photos: { id: string }[] = r.ok ? await r.json() : [];
           return { ...car, photoIds: photos.map((p) => p.id) };
         } catch {

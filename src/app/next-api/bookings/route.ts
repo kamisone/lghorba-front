@@ -10,7 +10,7 @@ function bearer(req: NextRequest): Record<string, string> {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/api/bookings`, {
+    const res = await fetch(`${BACKEND_URL}/bookings`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...bearer(req) },
       body: JSON.stringify(body),
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const qs = searchParams.toString();
     const res = await fetch(
-      `${BACKEND_URL}/api/bookings${qs ? `?${qs}` : ""}`,
+      `${BACKEND_URL}/bookings${qs ? `?${qs}` : ""}`,
       { cache: "no-store", headers: bearer(req) },
     );
     const data = await res.json();

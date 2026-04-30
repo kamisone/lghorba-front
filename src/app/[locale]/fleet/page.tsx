@@ -21,7 +21,7 @@ interface PublicCar {
 async function getCars(lang: string): Promise<PublicCar[]> {
   try {
     const res = await fetch(
-      `${process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000"}/api/public/cars?lang=${encodeURIComponent(lang)}`,
+      `${process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000"}/public/cars?lang=${encodeURIComponent(lang)}`,
       { cache: "no-store" },
     );
     if (!res.ok) return [];
