@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations, type Locale } from "@/lib/i18n";
-import PaymentStatusPoller from "./PaymentStatusPoller";
+import PaymentWaitingState from "./PaymentWaitingState";
 import styles from "./booking-confirmation.module.css";
 
 interface BookingDetail {
@@ -66,21 +66,20 @@ export default async function BookingConfirmationPage({
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        {isPendingPayment && <PaymentStatusPoller bookingId={booking.id} />}
 
-        {/* Icon */}
-        <div className={`${styles.iconWrap} ${isPendingPayment ? styles.iconWrapPending : ""}`} aria-hidden="true">
-          <span className={styles.checkIcon}>{isPendingPayment ? "⏳" : "✓"}</span>
-        </div>
+        {isPendingPayment ? (
+          <PaymentWaitingState bookingId={booking.id} locale={locale} />
+        ) : (
+          <>
+            <div className={styles.iconWrap} aria-hidden="true">
+              <span className={styles.checkIcon}>✓</span>
+            </div>
+            <h1 className={styles.title}>{t.booking.confirmTitle}</h1>
+            <p className={styles.sub}>{t.booking.confirmSub}</p>
+          </>
+        )}
 
-        <h1 className={styles.title}>
-          {isPendingPayment ? t.booking.paymentProcessing : t.booking.confirmTitle}
-        </h1>
-        <p className={styles.sub}>
-          {isPendingPayment ? t.booking.paymentConfirmingDesc : t.booking.confirmSub}
-        </p>
-
-        {/* Details */}
+        {/* Booking details — always visible */}
         <div className={styles.detailsGrid}>
           {carName && (
             <div className={styles.detailRow}>
@@ -108,14 +107,17 @@ export default async function BookingConfirmationPage({
           </div>
         </div>
 
-        <div className={styles.actions}>
-          <Link href={`/${locale}/fleet/${params.id}`} className={styles.backBtn}>
-            {t.booking.backToVehicle}
-          </Link>
-          <Link href={`/${locale}/fleet`} className={styles.fleetBtn}>
-            {t.booking.backToFleet}
-          </Link>
-        </div>
+        {/* Action links — hidden while payment is pending */}
+        {!isPendingPayment && (
+          <div className={styles.actions}>
+            <Link href={`/${locale}/fleet/${params.id}`} className={styles.backBtn}>
+              {t.booking.backToVehicle}
+            </Link>
+            <Link href={`/${locale}/fleet`} className={styles.fleetBtn}>
+              {t.booking.backToFleet}
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

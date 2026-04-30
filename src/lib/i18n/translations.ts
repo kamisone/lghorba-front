@@ -121,6 +121,10 @@ export const en = {
     confirmStatus: "Status",
     confirmPending: "Pending confirmation",
     backToFleet: "← Back to fleet",
+    paymentStep1: "Processing your payment…",
+    paymentStep2: "Awaiting confirmation…",
+    paymentStep3: "Almost done, please do not leave this page.",
+    paymentWarning: "Do not close or refresh this tab — your transaction is in progress.",
     validation: {
       nameRequired: "Name is required",
       phoneRequired: "Phone number is required",
@@ -349,6 +353,10 @@ export const fr: Translations = {
     confirmStatus: "Statut",
     confirmPending: "En attente de confirmation",
     backToFleet: "← Retour à la flotte",
+    paymentStep1: "Traitement de votre paiement…",
+    paymentStep2: "En attente de confirmation…",
+    paymentStep3: "Presque terminé — ne quittez pas cette page.",
+    paymentWarning: "Ne fermez pas ou ne rafraîchissez pas cet onglet — votre transaction est en cours.",
     validation: {
       nameRequired: "Le nom est requis",
       phoneRequired: "Le numéro de téléphone est requis",
