@@ -48,7 +48,7 @@ export default async function BookingConfirmationPage({
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <p className={styles.errorText}>Booking not found.</p>
+          <p className={styles.errorText}>{t.booking.notFound}</p>
           <Link href={`/${locale}/fleet`} className={styles.backLink}>
             {t.booking.backToFleet}
           </Link>
@@ -74,19 +74,17 @@ export default async function BookingConfirmationPage({
         </div>
 
         <h1 className={styles.title}>
-          {isPendingPayment ? "Payment processing…" : t.booking.confirmTitle}
+          {isPendingPayment ? t.booking.paymentProcessing : t.booking.confirmTitle}
         </h1>
         <p className={styles.sub}>
-          {isPendingPayment
-            ? "Your payment is being confirmed. This page will update automatically."
-            : t.booking.confirmSub}
+          {isPendingPayment ? t.booking.paymentConfirmingDesc : t.booking.confirmSub}
         </p>
 
         {/* Details */}
         <div className={styles.detailsGrid}>
           {carName && (
             <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Vehicle</span>
+              <span className={styles.detailLabel}>{t.payment.vehicle}</span>
               <span className={styles.detailValue}>{carName}</span>
             </div>
           )}
@@ -112,7 +110,7 @@ export default async function BookingConfirmationPage({
 
         <div className={styles.actions}>
           <Link href={`/${locale}/fleet/${params.id}`} className={styles.backBtn}>
-            ← Back to vehicle
+            {t.booking.backToVehicle}
           </Link>
           <Link href={`/${locale}/fleet`} className={styles.fleetBtn}>
             {t.booking.backToFleet}

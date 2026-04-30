@@ -10,10 +10,8 @@ export default function LocaleNotFound() {
     <div className={styles.inLayout}>
       <p className={`${styles.code} ${styles.codeLight}`}>404</p>
       <div className={styles.accentBar} />
-      <h1 className={`${styles.title} ${styles.titleLight}`}>Page not found</h1>
-      <p className={`${styles.sub} ${styles.subLight}`}>
-        The page you are looking for does not exist or has been moved.
-      </p>
+      <h1 className={`${styles.title} ${styles.titleLight}`}>{t.errors.notFound}</h1>
+      <p className={`${styles.sub} ${styles.subLight}`}>{t.errors.notFoundDesc}</p>
       <div className={styles.actions}>
         <a href={`/${locale}`} className={styles.btnPrimary}>
           {t.nav.home}

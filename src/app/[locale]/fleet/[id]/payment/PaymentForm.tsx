@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { getTranslations } from "@/lib/i18n";
 import styles from "./payment.module.css";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "");
@@ -23,6 +23,7 @@ function CheckoutForm({
 }) {
   const stripe   = useStripe();
   const elements = useElements();
+  const t        = getTranslations(locale);
 
   const [paying,   setPaying]   = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -43,7 +44,7 @@ function CheckoutForm({
 
     // confirmPayment only returns here on error — success redirects the page
     if (error) {
-      setErrorMsg(error.message ?? "Payment failed. Please try again.");
+      setErrorMsg(error.message ?? t.payment.failed);
       setPaying(false);
     }
   };
@@ -53,9 +54,9 @@ function CheckoutForm({
       <PaymentElement />
       {errorMsg && <p className={styles.errorMsg}>{errorMsg}</p>}
       <button className={styles.payBtn} type="submit" disabled={!stripe || paying}>
-        {paying ? "Processing…" : "Pay now"}
+        {paying ? t.payment.processing : t.payment.payNow}
       </button>
-      <p className={styles.secure}>🔒 Secured by Stripe</p>
+      <p className={styles.secure}>🔒 {t.payment.secure}</p>
     </form>
   );
 }
@@ -79,7 +80,8 @@ export default function PaymentForm({
   startDateTime: string;
   endDateTime: string;
 }) {
-  const router = useRouter();
+  const t = getTranslations(locale);
+
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [missing,      setMissing]      = useState(false);
 
@@ -87,7 +89,6 @@ export default function PaymentForm({
     const cs = sessionStorage.getItem(`stripe_cs_${bookingId}`);
     if (cs) {
       setClientSecret(cs);
-      // Remove from sessionStorage — one-time use
       sessionStorage.removeItem(`stripe_cs_${bookingId}`);
     } else {
       setMissing(true);
@@ -107,8 +108,10 @@ export default function PaymentForm({
     return (
       <div className={styles.card}>
         <div className={styles.stateCenter}>
-          <p>Payment session not found.</p>
-          <a href={`/${locale}/fleet/${carId}`} className={styles.backLink}>← Back to vehicle</a>
+          <p>{t.payment.sessionNotFound}</p>
+          <a href={`/${locale}/fleet/${carId}`} className={styles.backLink}>
+            {t.booking.backToVehicle}
+          </a>
         </div>
       </div>
     );
@@ -119,7 +122,7 @@ export default function PaymentForm({
       <div className={styles.card}>
         <div className={styles.stateCenter}>
           <span className={styles.spinner} />
-          <p>Preparing payment…</p>
+          <p>{t.payment.preparing}</p>
         </div>
       </div>
     );
@@ -128,50 +131,39 @@ export default function PaymentForm({
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Complete your booking</h1>
-        <p className={styles.sub}>Enter your payment details below</p>
+        <h1 className={styles.title}>{t.payment.title}</h1>
+        <p className={styles.sub}>{t.payment.subtitle}</p>
       </div>
 
       <div className={styles.summary}>
         {carName && (
           <div className={styles.summaryRow}>
-            <span className={styles.summaryLabel}>Vehicle</span>
+            <span className={styles.summaryLabel}>{t.payment.vehicle}</span>
             <span className={styles.summaryValue}>{carName}</span>
           </div>
         )}
         <div className={styles.summaryRow}>
-          <span className={styles.summaryLabel}>Pick-up</span>
+          <span className={styles.summaryLabel}>{t.payment.pickup}</span>
           <span className={styles.summaryValue}>{fmtDT(startDateTime)}</span>
         </div>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryLabel}>Return</span>
+          <span className={styles.summaryLabel}>{t.payment.return}</span>
           <span className={styles.summaryValue}>{fmtDT(endDateTime)}</span>
         </div>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryLabel}>Total</span>
+          <span className={styles.summaryLabel}>{t.payment.total}</span>
           <span className={`${styles.summaryValue} ${styles.summaryTotal}`}>
             €{totalPrice.toFixed(2)}
           </span>
         </div>
       </div>
 
-      <Elements
-        stripe={stripePromise}
-        options={{
-          clientSecret,
-          appearance: { theme: "stripe" },
-        }}
-      >
-        <CheckoutForm
-          bookingId={bookingId}
-          carId={carId}
-          locale={locale}
-          returnBase={returnBase}
-        />
+      <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
+        <CheckoutForm bookingId={bookingId} carId={carId} locale={locale} returnBase={returnBase} />
       </Elements>
 
       <a href={`/${locale}/fleet/${carId}`} className={styles.backLink}>
-        ← Cancel and go back
+        {t.payment.cancelGoBack}
       </a>
     </div>
   );

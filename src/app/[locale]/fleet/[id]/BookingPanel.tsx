@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DateTimePicker, { type DateTimePickerHandle } from "@/components/DateTimePicker";
 import PhoneInput from "@/components/PhoneInput";
+import { getTranslations } from "@/lib/i18n";
 import styles from "./BookingPanel.module.css";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -70,18 +71,23 @@ function fmtBreakdownDate(date: string) {
   });
 }
 
-function validateField(field: "name" | "email" | "phone", value: string): string {
-  const v = value.trim();
-  if (field === "name")  return v ? "" : "Name is required";
+type ValidationMessages = ReturnType<typeof getTranslations>["booking"]["validation"];
+
+function validateField(
+  field: "name" | "email" | "phone",
+  value: string,
+  v: ValidationMessages,
+): string {
+  const s = value.trim();
+  if (field === "name")  return s ? "" : v.nameRequired;
   if (field === "phone") {
-    if (!v) return "Phone number is required";
-    // Require at least 6 digits total (dial code + national number)
-    if (v.replace(/\D/g, "").length < 6) return "Enter a valid phone number";
+    if (!s) return v.phoneRequired;
+    if (s.replace(/\D/g, "").length < 6) return v.phoneInvalid;
     return "";
   }
   if (field === "email") {
-    if (!v) return "Email is required";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "Enter a valid email address";
+    if (!s) return v.emailRequired;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return v.emailInvalid;
     return "";
   }
   return "";
@@ -91,6 +97,7 @@ function validateField(field: "name" | "email" | "phone", value: string): string
 
 export default function BookingPanel({ carId, locale, labels }: Props) {
   const router = useRouter();
+  const t = getTranslations(locale);
 
   const [startDateTime, setStartDateTimeRaw] = useState("");
   const [endDateTime,   setEndDateTimeRaw]   = useState("");
@@ -170,7 +177,7 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
     const start = new Date(startDateTime);
     const end   = new Date(endDateTime);
     if (start <= new Date()) {
-      setDateError("Pick-up time must be in the future");
+      setDateError(t.booking.pickupFuture);
       setAvailable(null); setPriceResult(null);
       return;
     }
@@ -190,9 +197,9 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
 
     // Validate all contact fields before submitting
     const errors = {
-      name:  validateField("name",  name),
-      email: validateField("email", email),
-      phone: validateField("phone", phone),
+      name:  validateField("name",  name,  t.booking.validation),
+      email: validateField("email", email, t.booking.validation),
+      phone: validateField("phone", phone, t.booking.validation),
     };
     setFieldErrors(errors);
     setTouched({ name: true, email: true, phone: true });
@@ -214,12 +221,12 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
         }),
       });
       const data = await res.json();
-      if (!res.ok) { setSubmitError(data?.message ?? "Something went wrong."); return; }
+      if (!res.ok) { setSubmitError(data?.message ?? t.booking.genericError); return; }
       // Store the clientSecret in sessionStorage — retrieved by the payment page
       sessionStorage.setItem(`stripe_cs_${data.id}`, data.clientSecret);
       router.push(`/${locale}/fleet/${carId}/payment?bookingId=${data.id}`);
     } catch {
-      setSubmitError("Network error — please try again.");
+      setSubmitError(t.booking.networkError);
     } finally {
       setSubmitting(false);
     }
@@ -397,11 +404,11 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
               aria-describedby={touched.name && fieldErrors.name ? "bp-name-err" : undefined}
               onChange={e => {
                 setName(e.target.value);
-                if (touched.name) setFieldErrors(prev => ({ ...prev, name: validateField("name", e.target.value) }));
+                if (touched.name) setFieldErrors(prev => ({ ...prev, name: validateField("name", e.target.value, t.booking.validation) }));
               }}
               onBlur={() => {
                 setTouched(prev => ({ ...prev, name: true }));
-                setFieldErrors(prev => ({ ...prev, name: validateField("name", name) }));
+                setFieldErrors(prev => ({ ...prev, name: validateField("name", name, t.booking.validation) }));
               }}
             />
             {touched.name && fieldErrors.name && (
@@ -426,11 +433,11 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
               aria-describedby={touched.email && fieldErrors.email ? "bp-email-err" : undefined}
               onChange={e => {
                 setEmail(e.target.value);
-                if (touched.email) setFieldErrors(prev => ({ ...prev, email: validateField("email", e.target.value) }));
+                if (touched.email) setFieldErrors(prev => ({ ...prev, email: validateField("email", e.target.value, t.booking.validation) }));
               }}
               onBlur={() => {
                 setTouched(prev => ({ ...prev, email: true }));
-                setFieldErrors(prev => ({ ...prev, email: validateField("email", email) }));
+                setFieldErrors(prev => ({ ...prev, email: validateField("email", email, t.booking.validation) }));
               }}
             />
             {touched.email && fieldErrors.email && (
@@ -450,11 +457,11 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
               placeholder="6 12 34 56 78"
               onChange={v => {
                 setPhone(v);
-                if (touched.phone) setFieldErrors(prev => ({ ...prev, phone: validateField("phone", v) }));
+                if (touched.phone) setFieldErrors(prev => ({ ...prev, phone: validateField("phone", v, t.booking.validation) }));
               }}
               onBlur={() => {
                 setTouched(prev => ({ ...prev, phone: true }));
-                setFieldErrors(prev => ({ ...prev, phone: validateField("phone", phone) }));
+                setFieldErrors(prev => ({ ...prev, phone: validateField("phone", phone, t.booking.validation) }));
               }}
             />
             {touched.phone && fieldErrors.phone && (

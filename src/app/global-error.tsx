@@ -1,13 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
+import { getTranslations, LOCALES } from "@/lib/i18n";
 
 interface Props {
   error: Error & { digest?: string };
   reset: () => void;
 }
 
+function detectLocale(): string {
+  if (typeof window === "undefined") return "en";
+  const segment = window.location.pathname.split("/")[1] ?? "";
+  return LOCALES.includes(segment as (typeof LOCALES)[number]) ? segment : "en";
+}
+
 export default function GlobalError({ error, reset }: Props) {
+  const t = getTranslations(detectLocale());
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -41,44 +50,33 @@ export default function GlobalError({ error, reset }: Props) {
         <div style={{ width: 40, height: 3, borderRadius: 3, background: "#8DC220", margin: "0 auto 1.75rem" }} />
 
         <h1 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0 0 0.6rem", textAlign: "center" }}>
-          Something went wrong
+          {t.errors.unexpected}
         </h1>
         <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,.55)", maxWidth: 360, textAlign: "center", margin: "0 0 2rem", lineHeight: 1.65 }}>
-          A critical error occurred. Please try again or come back later.
+          {t.errors.critical}
         </p>
 
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
           <button
             onClick={reset}
             style={{
-              padding: "0.7rem 1.75rem",
-              borderRadius: 9,
-              background: "#8DC220",
-              color: "#001829",
-              fontWeight: 700,
-              fontSize: "0.9rem",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "inherit",
+              padding: "0.7rem 1.75rem", borderRadius: 9, background: "#8DC220",
+              color: "#001829", fontWeight: 700, fontSize: "0.9rem",
+              border: "none", cursor: "pointer", fontFamily: "inherit",
             }}
           >
-            Try again
+            {t.errors.tryAgain}
           </button>
           <a
             href="/"
             style={{
-              padding: "0.7rem 1.5rem",
-              borderRadius: 9,
-              background: "rgba(255,255,255,.08)",
-              color: "rgba(255,255,255,.75)",
-              border: "1px solid rgba(255,255,255,.12)",
-              fontWeight: 600,
-              fontSize: "0.9rem",
-              textDecoration: "none",
-              fontFamily: "inherit",
+              padding: "0.7rem 1.5rem", borderRadius: 9,
+              background: "rgba(255,255,255,.08)", color: "rgba(255,255,255,.75)",
+              border: "1px solid rgba(255,255,255,.12)", fontWeight: 600,
+              fontSize: "0.9rem", textDecoration: "none", fontFamily: "inherit",
             }}
           >
-            Go to home
+            {t.errors.goHome}
           </a>
         </div>
       </body>
