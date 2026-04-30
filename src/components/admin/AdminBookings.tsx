@@ -314,6 +314,15 @@ function EventCard({ event, onOpen }: { event: TimelineEvent; onOpen: (b: AdminB
         {isPickup ? "↑" : "↓"}
       </span>
 
+      <div className={styles.carThumb} aria-hidden="true">
+        {booking.car?.photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/next-api/cars/${booking.car.id}/photo`} alt="" className={styles.carImg} loading="lazy" />
+        ) : (
+          <span className={styles.carFallback}>🚗</span>
+        )}
+      </div>
+
       <div className={styles.eventBody}>
         <div className={styles.eventTop}>
           <span className={`${styles.eventTypeLabel} ${isPickup ? styles.eventTypeLabelPickup : styles.eventTypeLabelReturn}`}>
