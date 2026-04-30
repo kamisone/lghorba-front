@@ -36,10 +36,12 @@ export default async function LandingPage({ params }: { params: { locale: string
   const cars = await getPublicCars(locale);
 
   const fleetItems = [
-    { icon: "🚗", ...t.fleet.city },
-    { icon: "🚙", ...t.fleet.suv },
-    { icon: "🚐", ...t.fleet.van },
+    { icon: "🚗", variantClass: "fleetCardCity", ...t.fleet.city },
+    { icon: "🚙", variantClass: "fleetCardSuv",  ...t.fleet.suv },
+    { icon: "🚐", variantClass: "fleetCardVan",  ...t.fleet.van },
   ];
+
+  const HOW_ICONS = ["🔍", "📅", "🚗"];
 
   return (
     <div className={styles.root}>
@@ -63,7 +65,7 @@ export default async function LandingPage({ params }: { params: { locale: string
             <a href="#platforms" className={styles.btnPrimary}>
               {t.hero.cta1}
             </a>
-            <a href="/fleet" className={styles.btnOutline}>
+            <a href={`/${locale}/fleet`} className={styles.btnOutline}>
               {t.hero.cta2}
             </a>
           </div>
@@ -106,39 +108,76 @@ export default async function LandingPage({ params }: { params: { locale: string
       {/* ── Platforms ── */}
       <section id="platforms" className={styles.platforms}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEyebrow}>{t.platforms.eyebrow}</p>
-          <h2 className={styles.sectionTitle}>{t.platforms.title}</h2>
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionEyebrow}>{t.platforms.eyebrow}</p>
+            <h2 className={styles.sectionTitle}>{t.platforms.title}</h2>
+            <p className={styles.sectionSub}>{t.platforms.sub}</p>
+          </div>
           <div className={styles.platformGrid}>
-            <div className={styles.platformCard}>
-              <div className={styles.platformIcon} style={{ background: "#0d2b35" }}>
-                🚘
+
+            {/* Turo */}
+            <div className={`${styles.platformCard} ${styles.platformCardTuro}`}>
+              <div className={styles.platformTop}>
+                <div className={styles.platformIconWrap}>🚘</div>
+                <div className={styles.platformTopMeta}>
+                  <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
+                </div>
               </div>
-              <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
-              <p className={styles.platformDesc}>{t.platforms.turo.desc}</p>
-              <a href="https://turo.com/us/en/drivers/49282472" className={styles.platformLink} target="_blank">
-                {t.platforms.turo.link}
-              </a>
-            </div>
-            <div className={`${styles.platformCard} ${styles.platformCardFeatured}`}>
-              <div className={styles.platformIcon} style={{ background: "#0d2b35" }}>
-                🚙
+              <div className={styles.platformBody}>
+                <div className={styles.platformTags}>
+                  {t.platforms.turo.features.map((f: string) => (
+                    <span key={f} className={styles.platformTag}>{f}</span>
+                  ))}
+                </div>
+                <p className={styles.platformDesc}>{t.platforms.turo.desc}</p>
+                <a href="https://turo.com/us/en/drivers/49282472" className={styles.platformCta} target="_blank" rel="noopener noreferrer">
+                  {t.platforms.turo.link}
+                </a>
               </div>
-              <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
-              <p className={styles.platformDesc}>{t.platforms.getaround.desc}</p>
-              <a href="https://fr.getaround.com/users/5054364" className={styles.platformLink} target="_blank">
-                {t.platforms.getaround.link}
-              </a>
             </div>
-            <div className={styles.platformCard}>
-              <div className={styles.platformIcon} style={{ background: "#2e1f18" }}>
-                🤝
+
+            {/* Getaround */}
+            <div className={`${styles.platformCard} ${styles.platformCardGetaround}`}>
+              <div className={styles.platformTop}>
+                <div className={styles.platformIconWrap}>🚙</div>
+                <div className={styles.platformTopMeta}>
+                  <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
+                </div>
               </div>
-              <h3 className={styles.platformName}>{t.platforms.private.name}</h3>
-              <p className={styles.platformDesc}>{t.platforms.private.desc}</p>
-              <a href="/fleet" className={styles.platformLink}>
-                {t.platforms.private.link}
-              </a>
+              <div className={styles.platformBody}>
+                <div className={styles.platformTags}>
+                  {t.platforms.getaround.features.map((f: string) => (
+                    <span key={f} className={styles.platformTag}>{f}</span>
+                  ))}
+                </div>
+                <p className={styles.platformDesc}>{t.platforms.getaround.desc}</p>
+                <a href="https://fr.getaround.com/users/5054364" className={styles.platformCta} target="_blank" rel="noopener noreferrer">
+                  {t.platforms.getaround.link}
+                </a>
+              </div>
             </div>
+
+            {/* Private */}
+            <div className={`${styles.platformCard} ${styles.platformCardPrivate}`}>
+              <div className={styles.platformTop}>
+                <div className={styles.platformIconWrap}>🤝</div>
+                <div className={styles.platformTopMeta}>
+                  <h3 className={styles.platformName}>{t.platforms.private.name}</h3>
+                </div>
+              </div>
+              <div className={styles.platformBody}>
+                <div className={styles.platformTags}>
+                  {t.platforms.private.features.map((f: string) => (
+                    <span key={f} className={styles.platformTag}>{f}</span>
+                  ))}
+                </div>
+                <p className={styles.platformDesc}>{t.platforms.private.desc}</p>
+                <a href={`/${locale}/fleet`} className={styles.platformCta}>
+                  {t.platforms.private.link}
+                </a>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
@@ -146,16 +185,30 @@ export default async function LandingPage({ params }: { params: { locale: string
       {/* ── Fleet ── */}
       <section id="fleet" className={styles.fleet}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEyebrow}>{t.fleet.eyebrow}</p>
-          <h2 className={styles.sectionTitle}>{t.fleet.title}</h2>
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionEyebrow}>{t.fleet.eyebrow}</p>
+            <h2 className={styles.sectionTitle}>{t.fleet.title}</h2>
+          </div>
           <div className={styles.fleetGrid}>
-            {fleetItems.map(({ icon, type, desc }) => (
-              <div key={type} className={styles.fleetCard}>
-                <div className={styles.fleetCardEmoji}>{icon}</div>
-                <h3 className={styles.fleetCardType}>{type}</h3>
-                <p className={styles.fleetCardDesc}>{desc}</p>
+            {fleetItems.map(({ icon, variantClass, type, desc, uses }) => (
+              <div key={type} className={`${styles.fleetCard} ${styles[variantClass]}`}>
+                <div className={styles.fleetCardVisual}>
+                  <span className={styles.fleetCardEmoji}>{icon}</span>
+                </div>
+                <div className={styles.fleetCardBody}>
+                  <h3 className={styles.fleetCardType}>{type}</h3>
+                  <p className={styles.fleetCardDesc}>{desc}</p>
+                  <div className={styles.fleetCardUses}>
+                    {uses.map((u: string) => (
+                      <span key={u} className={styles.fleetCardUse}>{u}</span>
+                    ))}
+                  </div>
+                </div>
               </div>
             ))}
+          </div>
+          <div className={styles.fleetCta}>
+            <a href={`/${locale}/fleet`} className={styles.fleetCtaBtn}>{t.fleet.sub}</a>
           </div>
         </div>
       </section>
@@ -163,12 +216,17 @@ export default async function LandingPage({ params }: { params: { locale: string
       {/* ── How it works ── */}
       <section id="how" className={styles.how}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEyebrow}>{t.how.eyebrow}</p>
-          <h2 className={styles.sectionTitle}>{t.how.title}</h2>
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionEyebrow}>{t.how.eyebrow}</p>
+            <h2 className={styles.sectionTitle}>{t.how.title}</h2>
+          </div>
           <div className={styles.howSteps}>
-            {t.how.steps.map(({ n, title, desc }) => (
+            {t.how.steps.map(({ n, title, desc }, i) => (
               <div key={n} className={styles.howStep}>
-                <span className={styles.howStepNum}>{n}</span>
+                <div className={styles.howStepBadge}>
+                  <span className={styles.howStepN}>{n}</span>
+                  <span className={styles.howStepIcon}>{HOW_ICONS[i]}</span>
+                </div>
                 <h3 className={styles.howStepTitle}>{title}</h3>
                 <p className={styles.howStepDesc}>{desc}</p>
               </div>

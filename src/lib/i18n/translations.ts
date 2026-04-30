@@ -23,21 +23,25 @@ export const en = {
   platforms: {
     eyebrow: "Where to find us",
     title: "Available on every platform",
+    sub: "Same vehicles, multiple booking channels — choose the option that works best for you.",
     turo: {
       name: "Turo",
       desc: "Book instantly on Turo. Flexible pickup, contactless handover, and comprehensive insurance included.",
       link: "View on Turo →",
+      features: ["Instant booking", "Insurance included", "Flexible pickup"],
     },
     getaround: {
       name: "Getaround",
       badge: "Most popular",
       desc: "Connect & drive in minutes. Available 24/7 with keyless entry. Perfect for same-day bookings.",
       link: "View on Getaround →",
+      features: ["24/7 access", "Keyless entry", "Same-day bookings"],
     },
     private: {
       name: "Private rental",
       desc: "Direct booking with no platform fees. Custom durations, delivery available, best rates guaranteed.",
-      link: "See the fleet →",
+      link: "Browse the fleet →",
+      features: ["No platform fees", "Best rates", "Delivery available"],
     },
   },
   featuredFleet: {
@@ -50,9 +54,9 @@ export const en = {
     sub: "Browse our available vehicles and book the one that fits your needs.",
     available: "Available",
     rented: "Rented",
-    city: { type: "City car", desc: "Compact & fuel-efficient. Perfect for urban trips and daily use." },
-    suv:  { type: "SUV",      desc: "Spacious, comfortable — ideal for families or weekend road trips." },
-    van:  { type: "Van",      desc: "Full cargo capacity for moves, events, or group travel." },
+    city: { type: "City car", desc: "Compact & fuel-efficient. Perfect for urban trips and daily use.", uses: ["Urban trips", "Daily commute", "Easy parking"] },
+    suv:  { type: "SUV",      desc: "Spacious, comfortable — ideal for families or weekend road trips.", uses: ["Family travel", "Road trips", "Extra space"] },
+    van:  { type: "Van",      desc: "Full cargo capacity for moves, events, or group travel.", uses: ["Moving & cargo", "Group travel", "Events"] },
   },
   how: {
     eyebrow: "Simple process",
@@ -247,21 +251,25 @@ export const fr: Translations = {
   platforms: {
     eyebrow: "Où nous trouver",
     title: "Disponible sur toutes les plateformes",
+    sub: "Les mêmes véhicules, plusieurs canaux de réservation — choisissez celui qui vous convient.",
     turo: {
       name: "Turo",
       desc: "Réservez instantanément sur Turo. Prise en charge flexible, remise sans contact, assurance complète incluse.",
       link: "Voir sur Turo →",
+      features: ["Réservation instantanée", "Assurance incluse", "Retrait flexible"],
     },
     getaround: {
       name: "Getaround",
       badge: "Le plus populaire",
       desc: "Connectez-vous et conduisez en quelques minutes. Disponible 24h/24 avec accès sans clé. Parfait pour les réservations du jour.",
       link: "Voir sur Getaround →",
+      features: ["Accès 24h/24", "Sans clé", "Disponible le jour même"],
     },
     private: {
       name: "Location privée",
       desc: "Réservation directe sans frais de plateforme. Durées personnalisées, livraison disponible, meilleurs tarifs garantis.",
-      link: "Voir les voitures →",
+      link: "Voir la flotte →",
+      features: ["Sans frais plateforme", "Meilleurs tarifs", "Livraison possible"],
     },
   },
   featuredFleet: {
@@ -274,9 +282,9 @@ export const fr: Translations = {
     sub: "Parcourez nos véhicules disponibles et réservez celui qui correspond à vos besoins.",
     available: "Disponible",
     rented: "Loué",
-    city: { type: "Citadine",   desc: "Compacte et économique. Parfaite pour les trajets urbains et le quotidien." },
-    suv:  { type: "SUV",        desc: "Spacieux et confortable — idéal pour les familles ou les week-ends en road trip." },
-    van:  { type: "Van",        desc: "Grande capacité de chargement pour les déménagements, événements ou voyages en groupe." },
+    city: { type: "Citadine",   desc: "Compacte et économique. Parfaite pour les trajets urbains et le quotidien.", uses: ["Trajets urbains", "Usage quotidien", "Facile à garer"] },
+    suv:  { type: "SUV",        desc: "Spacieux et confortable — idéal pour les familles ou les week-ends en road trip.", uses: ["Voyage en famille", "Road trips", "Plus d'espace"] },
+    van:  { type: "Van",        desc: "Grande capacité de chargement pour les déménagements, événements ou voyages en groupe.", uses: ["Déménagement", "Voyage en groupe", "Événements"] },
   },
   how: {
     eyebrow: "Processus simple",

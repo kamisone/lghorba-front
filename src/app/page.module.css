@@ -212,6 +212,19 @@
   line-height: 1.15;
 }
 
+/* ── Shared section head ── */
+.sectionHead {
+  margin-bottom: 2.75rem;
+}
+
+.sectionSub {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  max-width: 520px;
+  line-height: 1.65;
+  margin: -1.5rem 0 0;
+}
+
 /* ── Platforms ── */
 .platforms {
   padding: 6rem 0;
@@ -221,79 +234,124 @@
 .platformGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .platformCard {
-  position: relative;
-  background: var(--color-surface);
+  background: var(--color-white);
   border: 1.5px solid var(--color-border);
   border-radius: 16px;
-  padding: 2rem;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .platformCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(var(--rgb-black),0.1);
-  border-color: var(--color-brand-accent);
+  box-shadow: 0 12px 32px rgba(var(--rgb-black), 0.1);
+  border-color: rgba(var(--rgb-brand-accent), 0.55);
 }
 
-.platformCardFeatured {
-  border-color: var(--color-brand-accent);
-  background: #f0f8f9;
+/* Per-platform accent colors */
+.platformCardTuro     { --plat-top-bg: #f0faf9; --plat-icon-bg: rgba(0, 150, 136, 0.12); }
+.platformCardGetaround{ --plat-top-bg: #fffbf0; --plat-icon-bg: rgba(249, 115, 22, 0.12); }
+.platformCardPrivate  { --plat-top-bg: #f4f6f9; --plat-icon-bg: rgba(0, 42, 74, 0.09); }
+
+
+.platformTop {
+  background: var(--plat-top-bg, var(--color-surface));
+  border-bottom: 1.5px solid var(--color-border);
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
 }
 
-.platformBadge {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #7F543D;
-  color: var(--color-white);
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  white-space: nowrap;
-  letter-spacing: 0.04em;
-}
-
-.platformIcon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+.platformIconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
+  background: var(--plat-icon-bg, rgba(0, 0, 0, 0.06));
+  flex-shrink: 0;
+}
+
+.platformTopMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
 }
 
 .platformName {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--color-text-heading);
   margin: 0;
 }
 
+.platformBadge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-brand-accent);
+  color: var(--color-brand-darkest);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.platformBody {
+  padding: 1.25rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
+}
+
+.platformTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.platformTag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.22rem 0.6rem;
+  border-radius: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
 .platformDesc {
   font-size: 0.875rem;
   color: var(--color-text-muted);
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
   flex: 1;
 }
 
-.platformLink {
-  font-size: 0.875rem;
-  font-weight: 600;
+.platformCta {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--color-brand-primary);
   text-decoration: none;
-  transition: gap 0.15s;
+  transition: color 0.15s, letter-spacing 0.15s;
+  padding-top: 0.1rem;
 }
-.platformLink:hover { text-decoration: underline; }
+.platformCta:hover {
+  color: var(--color-brand-dark);
+  letter-spacing: 0.01em;
+}
 
 /* ── Fleet ── */
 .fleet {
@@ -304,32 +362,55 @@
 .fleetGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
+
+/* Per-type accent colors */
+.fleetCardCity { --fleet-bg: rgba(14, 165, 233, 0.09);  --fleet-emoji-filter: none; }
+.fleetCardSuv  { --fleet-bg: rgba(34, 197, 94, 0.09);   --fleet-emoji-filter: none; }
+.fleetCardVan  { --fleet-bg: rgba(251, 146, 60, 0.1);   --fleet-emoji-filter: none; }
 
 .fleetCard {
   background: var(--color-white);
-  border: 1px solid var(--color-border);
+  border: 1.5px solid var(--color-border);
   border-radius: 16px;
-  padding: 2rem;
-  text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .fleetCard:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(var(--rgb-black),0.08);
+  box-shadow: 0 8px 28px rgba(var(--rgb-black), 0.1);
+  border-color: rgba(var(--rgb-brand-accent), 0.45);
+}
+
+.fleetCardVisual {
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fleet-bg, var(--color-surface));
 }
 
 .fleetCardEmoji {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.fleetCardBody {
+  padding: 1.25rem 1.4rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
 }
 
 .fleetCardType {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: var(--color-text-heading);
-  margin: 0 0 0.5rem;
+  margin: 0;
 }
 
 .fleetCardDesc {
@@ -339,6 +420,47 @@
   margin: 0;
 }
 
+.fleetCardUses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+
+.fleetCardUse {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.fleetCta {
+  margin-top: 2.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+.fleetCtaBtn {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  border-radius: 10px;
+  background: transparent;
+  border: 1.5px solid var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, transform 0.12s;
+}
+.fleetCtaBtn:hover {
+  background: var(--color-brand-primary);
+  color: var(--color-white);
+  transform: translateY(-1px);
+}
+
 /* ── How it works ── */
 .how {
   padding: 6rem 0;
@@ -346,27 +468,70 @@
 }
 
 .howSteps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3rem;
+  display: flex;
+  gap: 2rem;
+  position: relative;
+}
+
+/* Connector line between step badges */
+.howSteps::before {
+  content: "";
+  position: absolute;
+  top: 27px;
+  left: 28px;
+  right: 28px;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 0%,
+    rgba(var(--rgb-brand-accent), 0.45) 50%,
+    var(--color-border) 100%
+  );
+  z-index: 0;
 }
 
 .howStep {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
+  text-align: center;
+  gap: 1.1rem;
+  position: relative;
+  z-index: 1;
 }
 
-.howStepNum {
-  font-size: 2.5rem;
-  font-weight: 900;
+.howStepBadge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--color-brand-accent);
+  background: var(--color-white);
+  box-shadow: 0 0 0 5px rgba(var(--rgb-brand-accent), 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.howStepN {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   color: var(--color-brand-accent);
-  opacity: 0.4;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.howStepIcon {
+  font-size: 1.05rem;
   line-height: 1;
 }
 
 .howStepTitle {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-text-heading);
   margin: 0;
@@ -533,13 +698,26 @@
 .footerLink:hover { color: var(--color-text-placeholder); }
 
 /* ── Responsive ── */
-/* tablet (1024px) — layout only */
+/* tablet (1024px) */
 @media (max-width: 1024px) {
   .hero { padding: 5rem 1.5rem 3rem; }
 
   .platformGrid,
-  .fleetGrid,
-  .howSteps { grid-template-columns: 1fr; }
+  .fleetGrid { grid-template-columns: 1fr; }
+
+  /* How steps: stack vertically and hide connector line */
+  .howSteps {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .howSteps::before { display: none; }
+  .howStep {
+    flex-direction: row;
+    text-align: left;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+  .howStepBadge { flex-shrink: 0; }
 
   .whyGrid { grid-template-columns: 1fr; gap: 2rem; }
   .whyFeatures { grid-template-columns: 1fr; }
@@ -551,4 +729,5 @@
 @media (max-width: 640px) {
   .heroBtns { flex-direction: column; align-items: stretch; }
   .btnPrimary, .btnOutline { text-align: center; }
+  .sectionSub { font-size: 0.9rem; }
 }

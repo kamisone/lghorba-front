@@ -51,7 +51,8 @@ export default function ClientHeader({ locale }: Props) {
   const ctaHref = `/${locale}/contact`;
 
   const isActive = (href: string) => {
-    if (href.includes("#")) return false; // anchor links never "active" server-side
+    if (href.includes("#")) return false;
+    if (href === `/${locale}`) return pathname === `/${locale}`;
     return pathname === href || pathname.startsWith(href + "/");
   };
 
