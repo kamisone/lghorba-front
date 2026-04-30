@@ -112,6 +112,249 @@
 }
 .clearBtn:hover { background: var(--color-surface-raised); }
 
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--color-text-primary); }
+
+.tabActive {
+  color: var(--color-brand-primary);
+  border-bottom-color: var(--color-brand-primary);
+}
+
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+.tabBadgeActive {
+  background: rgba(var(--rgb-brand-primary), 0.1);
+  color: var(--color-brand-primary);
+}
+
+/* ── Timeline ── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dayGroup {
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  background: var(--color-white);
+}
+
+.dayGroupToday {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 1px rgba(var(--rgb-brand-primary), 0.15),
+              0 4px 12px rgba(var(--rgb-brand-primary), 0.08);
+}
+
+.dayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  background: var(--color-surface-raised);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dayGroupToday .dayHeader {
+  background: rgba(var(--rgb-brand-primary), 0.06);
+  border-bottom-color: rgba(var(--rgb-brand-primary), 0.18);
+}
+
+.dayLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dayGroupToday .dayLabel { color: var(--color-brand-primary); }
+
+.todayDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-primary), 0.2);
+  flex-shrink: 0;
+}
+
+.dayCount {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.dayEvents {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Event card ── */
+.eventCard {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.8rem 1rem 0.8rem 0.85rem;
+  background: var(--color-white);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.13s;
+}
+.eventCard:last-child { border-bottom: none; }
+
+/* Pick-up: green left stripe + green hover tint */
+.eventCardPickup {
+  border-left-color: var(--color-success);
+}
+.eventCardPickup:hover { background: var(--color-success-bg); }
+
+/* Return: red left stripe + red hover tint */
+.eventCardReturn {
+  border-left-color: var(--color-error);
+}
+.eventCardReturn:hover { background: var(--color-error-bg); }
+
+/* Circular icon */
+.eventIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.eventIconPickup {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1.5px solid var(--color-success-border);
+}
+
+.eventIconReturn {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1.5px solid var(--color-error-border);
+}
+
+.eventBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.eventTop {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+/* Colored type label ("Pick-up" / "Return") */
+.eventTypeLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.eventTypeLabelPickup { color: var(--color-success); }
+.eventTypeLabelReturn  { color: var(--color-error);   }
+
+.eventTimeSep {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+.eventTime {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.eventMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.eventCar {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.eventPlate {
+  font-size: 0.73rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.eventCustomer {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
 /* ── States ── */
 .stateCenter {
   display: flex;
