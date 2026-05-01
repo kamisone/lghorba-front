@@ -22,17 +22,17 @@ interface Invoice {
 }
 
 const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  draft:  "Brouillon",
+  draft: "Brouillon",
   issued: "Émise",
-  paid:   "Payée",
-  void:   "Annulée",
+  paid: "Payée",
+  void: "Annulée",
 };
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
-  draft:  "#94a3b8",
+  draft: "#94a3b8",
   issued: "#3b82f6",
-  paid:   "#22c55e",
-  void:   "#ef4444",
+  paid: "#22c55e",
+  void: "#ef4444",
 };
 
 function fmtEur(n: number) {
@@ -46,8 +46,8 @@ function fmtDate(s: string | null) {
 
 export default function AdminInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [filter, setFilter]     = useState<InvoiceStatus | "">("");
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<InvoiceStatus | "">("");
 
   const load = async (status?: InvoiceStatus | "") => {
     setLoading(true);
@@ -60,7 +60,9 @@ export default function AdminInvoices() {
     }
   };
 
-  useEffect(() => { load(filter || undefined); }, [filter]);
+  useEffect(() => {
+    load(filter || undefined);
+  }, [filter]);
 
   return (
     <div style={{ padding: "24px" }}>
@@ -68,12 +70,14 @@ export default function AdminInvoices() {
         <h1 style={{ fontSize: "22px", fontWeight: 700 }}>Factures</h1>
         <select
           value={filter}
-          onChange={e => setFilter(e.target.value as InvoiceStatus | "")}
+          onChange={(e) => setFilter(e.target.value as InvoiceStatus | "")}
           style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "13px" }}
         >
           <option value="">Tous les statuts</option>
-          {(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map(s => (
-            <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+          {(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map((s) => (
+            <option key={s} value={s}>
+              {STATUS_LABEL[s]}
+            </option>
           ))}
         </select>
       </div>
@@ -87,29 +91,45 @@ export default function AdminInvoices() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
             <thead>
               <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                {["N° Facture", "Statut", "Client", "Montant", "Émise le", "PDF", "Email", "Réservation"].map(h => (
-                  <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 600, color: "#475569", whiteSpace: "nowrap" }}>{h}</th>
+                {["N° Facture", "Statut", "Client", "Montant", "Émise le", "PDF", "Email", "Réservation"].map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: "10px 12px",
+                      textAlign: "left",
+                      fontWeight: 600,
+                      color: "#475569",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {invoices.map(inv => (
+              {invoices.map((inv) => (
                 <tr key={inv.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                   <td style={{ padding: "10px 12px" }}>
-                    <Link href={`/admin/invoices/${inv.id}`} style={{ color: "#0f172a", fontWeight: 600, textDecoration: "none" }}>
+                    <Link
+                      href={`/admin/invoices/${inv.id}`}
+                      style={{ color: "#0f172a", fontWeight: 600, textDecoration: "none" }}
+                    >
                       {inv.invoiceNumber ?? "—"}
                     </Link>
                   </td>
                   <td style={{ padding: "10px 12px" }}>
-                    <span style={{
-                      background: `${STATUS_COLOR[inv.status]}20`,
-                      color: STATUS_COLOR[inv.status],
-                      padding: "2px 8px",
-                      borderRadius: "999px",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                    }}>
+                    <span
+                      style={{
+                        background: `${STATUS_COLOR[inv.status]}20`,
+                        color: STATUS_COLOR[inv.status],
+                        padding: "2px 8px",
+                        borderRadius: "999px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                      }}
+                    >
                       {STATUS_LABEL[inv.status]}
                     </span>
                   </td>
@@ -122,21 +142,27 @@ export default function AdminInvoices() {
                   </td>
                   <td style={{ padding: "10px 12px", color: "#475569" }}>{fmtDate(inv.issuedAt)}</td>
                   <td style={{ padding: "10px 12px" }}>
-                    {inv.pdfGeneratedAt
-                      ? <span style={{ color: "#22c55e" }}>✓</span>
-                      : <span style={{ color: "#94a3b8" }}>—</span>}
+                    {inv.pdfGeneratedAt ? (
+                      <span style={{ color: "#22c55e" }}>✓</span>
+                    ) : (
+                      <span style={{ color: "#94a3b8" }}>—</span>
+                    )}
                   </td>
                   <td style={{ padding: "10px 12px" }}>
-                    {inv.emailSentAt
-                      ? <span style={{ color: "#22c55e" }}>✓</span>
-                      : <span style={{ color: "#94a3b8" }}>—</span>}
+                    {inv.emailSentAt ? (
+                      <span style={{ color: "#22c55e" }}>✓</span>
+                    ) : (
+                      <span style={{ color: "#94a3b8" }}>—</span>
+                    )}
                   </td>
                   <td style={{ padding: "10px 12px" }}>
                     {inv.booking ? (
-                      <Link href={`/admin/bookings`} style={{ color: "#3b82f6", fontSize: "11px" }}>
+                      <Link href={`/admin/bookings/${inv.booking.id}`} style={{ color: "#3b82f6", fontSize: "11px" }}>
                         voir
                       </Link>
-                    ) : "—"}
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               ))}
