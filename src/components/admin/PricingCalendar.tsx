@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PricingModal, { type CarPricing } from "./PricingModal";
+import { useModalUrl } from "@/hooks/useModalUrl";
 import styles from "./PricingCalendar.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -252,6 +253,7 @@ export default function PricingCalendar() {
 
   // ─ Modal
   const [modal, setModal] = useState<ModalState | null>(null);
+  const { openModal, closeModal } = useModalUrl();
 
   // ─ Derived
   const { days, months } = useMemo(() => buildCalendar(baseDate, NUM_MONTHS), [baseDate]);
@@ -305,6 +307,34 @@ export default function PricingCalendar() {
     return () => { cancelled = true; };
   }, []);
 
+  const pendingPricingEditRef = React.useRef<{ carId: string; pricingId: string } | null>(null);
+
+  // ─ URL modal restore (mount: read params; deferred: wait for data)
+  useEffect(() => {
+    const sp    = new URLSearchParams(window.location.search);
+    const mName = sp.get("modal");
+    if (mName === "pricing-create") {
+      const carId     = sp.get("carId");
+      const startDate = sp.get("from");
+      const endDate   = sp.get("to");
+      if (carId && startDate && endDate) setModal({ mode: "create", carId, startDate, endDate });
+    } else if (mName === "pricing-edit") {
+      const carId     = sp.get("carId");
+      const pricingId = sp.get("pricingId");
+      if (carId && pricingId) pendingPricingEditRef.current = { carId, pricingId };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loading || !pendingPricingEditRef.current) return;
+    const { carId, pricingId } = pendingPricingEditRef.current;
+    const pricing = (pricings[carId] ?? []).find(p => p.id === pricingId);
+    if (pricing) {
+      setModal({ mode: "edit", carId, pricing });
+      pendingPricingEditRef.current = null;
+    }
+  }, [loading, pricings]);
+
   // ─ Mouse up (global)
   useEffect(() => {
     if (!dragging) return;
@@ -312,6 +342,7 @@ export default function PricingCalendar() {
       if (dragCarId && selStart && selEnd) {
         const [s, e] = selStart <= selEnd ? [selStart, selEnd] : [selEnd, selStart];
         setModal({ mode: "create", carId: dragCarId, startDate: s, endDate: e });
+        openModal("pricing-create", { carId: dragCarId, from: s, to: e });
       }
       setDragging(false);
       setDragCarId(null);
@@ -320,7 +351,7 @@ export default function PricingCalendar() {
     };
     document.addEventListener("mouseup", up);
     return () => document.removeEventListener("mouseup", up);
-  }, [dragging, dragCarId, selStart, selEnd]);
+  }, [dragging, dragCarId, selStart, selEnd, openModal]);
 
   // ─ Callbacks
   const handleCellDown = useCallback((
@@ -329,13 +360,14 @@ export default function PricingCalendar() {
     e.preventDefault();
     if (pricing) {
       setModal({ mode: "edit", carId, pricing });
+      openModal("pricing-edit", { carId, pricingId: pricing.id });
       return;
     }
     setDragging(true);
     setDragCarId(carId);
     setSelStart(date);
     setSelEnd(date);
-  }, []);
+  }, [openModal]);
 
   const handleCellEnter = useCallback((carId: string, date: string) => {
     if (!dragging || dragCarId !== carId) return;
@@ -385,7 +417,8 @@ export default function PricingCalendar() {
       }));
     }
     setModal(null);
-  }, [modal]);
+    closeModal();
+  }, [modal, closeModal]);
 
   const handleDelete = useCallback(async () => {
     if (!modal || modal.mode !== "edit") return;
@@ -399,7 +432,8 @@ export default function PricingCalendar() {
       [modal.carId]: (prev[modal.carId] ?? []).filter((p) => p.id !== modal.pricing.id),
     }));
     setModal(null);
-  }, [modal]);
+    closeModal();
+  }, [modal, closeModal]);
 
   // ─ Navigation
   const shift = (n: number) =>
@@ -536,7 +570,7 @@ export default function PricingCalendar() {
           )}
           onSave={handleSave}
           onDelete={modal.mode === "edit" ? handleDelete : undefined}
-          onClose={() => setModal(null)}
+          onClose={() => { setModal(null); closeModal(); }}
         />
       )}
     </div>

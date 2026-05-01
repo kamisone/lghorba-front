@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import type { Car } from "./data";
 import BookingAdminModal from "./BookingAdminModal";
+import { useModalUrl } from "@/hooks/useModalUrl";
 import styles from "./AdminBookings.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -369,6 +370,67 @@ export default function AdminBookings() {
   const [pickerLoading, setPickerLoading] = useState(false);
   const [createCar,     setCreateCar]     = useState<Car | null>(null);
 
+  const { openModal, closeModal } = useModalUrl();
+
+  // ── URL modal restore ─────────────────────────────────────────────────────
+
+  const [restoreBookingId,  setRestoreBookingId]  = useState<string | null>(null);
+  const [restoreCreateCarId, setRestoreCreateCarId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const sp    = new URLSearchParams(window.location.search);
+    const modal = sp.get("modal");
+    if (modal === "booking")        setRestoreBookingId(sp.get("id"));
+    else if (modal === "booking-create") setRestoreCreateCarId(sp.get("carId"));
+  }, []);
+
+  // Restore booking detail modal once bookings are loaded
+  useEffect(() => {
+    if (loading || !restoreBookingId) return;
+    const b = bookings.find(b => b.id === restoreBookingId);
+    if (b) setSelected(b);
+    setRestoreBookingId(null);
+  }, [loading, restoreBookingId, bookings]);
+
+  // Restore create booking modal by fetching cars
+  useEffect(() => {
+    if (!restoreCreateCarId) return;
+    let cancelled = false;
+    setPickerLoading(true);
+    fetch("/next-api/cars", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : [])
+      .then((cars: Car[]) => {
+        if (cancelled) return;
+        setPickerCars(cars);
+        const car = cars.find(c => c.id === restoreCreateCarId);
+        if (car) setCreateCar(car);
+        setRestoreCreateCarId(null);
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setPickerLoading(false); });
+    return () => { cancelled = true; };
+  }, [restoreCreateCarId]);
+
+  const openBookingDetail = useCallback((b: AdminBooking) => {
+    setSelected(b);
+    openModal("booking", { id: b.id });
+  }, [openModal]);
+
+  const closeBookingDetail = useCallback(() => {
+    setSelected(null);
+    closeModal();
+  }, [closeModal]);
+
+  const openBookingCreate = useCallback((car: Car) => {
+    setCreateCar(car);
+    openModal("booking-create", { carId: car.id });
+  }, [openModal]);
+
+  const closeBookingCreate = useCallback(() => {
+    setCreateCar(null);
+    closeModal();
+  }, [closeModal]);
+
   // ── Fetch all bookings (client-side split between tabs) ───────────────────
 
   const fetchBookings = useCallback(async () => {
@@ -476,12 +538,15 @@ export default function AdminBookings() {
       const res = await fetch(`/next-api/bookings/${id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
         setBookings(prev => prev.filter(b => b.id !== id));
-        setSelected(prev => prev?.id === id ? null : prev);
+        setSelected(prev => {
+          if (prev?.id === id) { closeModal(); return null; }
+          return prev;
+        });
       }
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [closeModal]);
 
   const openCarPicker = async () => {
     setShowCarPicker(true);
@@ -595,7 +660,7 @@ export default function AdminBookings() {
                   </div>
                   <div className={styles.dayEvents}>
                     {group.events.map((ev, i) => (
-                      <EventCard key={`${ev.booking.id}-${i}`} event={ev} onOpen={setSelected} />
+                      <EventCard key={`${ev.booking.id}-${i}`} event={ev} onOpen={openBookingDetail} />
                     ))}
                   </div>
                 </div>
@@ -669,9 +734,9 @@ export default function AdminBookings() {
                     <tr
                       key={b.id}
                       className={styles.row}
-                      onClick={() => setSelected(b)}
+                      onClick={() => openBookingDetail(b)}
                       tabIndex={0}
-                      onKeyDown={e => e.key === "Enter" && setSelected(b)}
+                      onKeyDown={e => e.key === "Enter" && openBookingDetail(b)}
                     >
                       <td>
                         <div className={styles.carCell}>
@@ -718,7 +783,7 @@ export default function AdminBookings() {
         <BookingModal
           booking={selected}
           actionLoading={actionLoading}
-          onClose={() => setSelected(null)}
+          onClose={closeBookingDetail}
           onConfirm={id => updateStatus(id, "confirmed")}
           onCancel={id  => updateStatus(id, "cancelled")}
           onDelete={deleteBooking}
@@ -741,7 +806,7 @@ export default function AdminBookings() {
               ) : (
                 <div className={styles.pickerList}>
                   {pickerCars.map(car => (
-                    <button key={car.id} className={styles.pickerItem} onClick={() => { setCreateCar(car); setShowCarPicker(false); }}>
+                    <button key={car.id} className={styles.pickerItem} onClick={() => { openBookingCreate(car); setShowCarPicker(false); }}>
                       <div className={styles.pickerCarThumb}>
                         {car.photo ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -767,8 +832,8 @@ export default function AdminBookings() {
       {createCar && (
         <BookingAdminModal
           car={createCar}
-          onClose={() => setCreateCar(null)}
-          onSaved={() => { setCreateCar(null); fetchBookings(); }}
+          onClose={closeBookingCreate}
+          onSaved={() => { closeBookingCreate(); fetchBookings(); }}
         />
       )}
     </div>

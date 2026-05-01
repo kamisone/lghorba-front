@@ -8,6 +8,7 @@ import CarFormModal from "@/components/admin/CarFormModal";
 import styles from "./car-detail.module.css";
 import { extractMapsUrl, extractLatLng } from "@/components/admin/mapUtils";
 import { useToast } from "@/components/toast/ToastContext";
+import { useModalUrl } from "@/hooks/useModalUrl";
 
 interface SmsMessage {
   id: number;
@@ -61,6 +62,8 @@ export default function CarDetailPage() {
   const waitingKey        = `car_waiting_action_${id}`;
   const inboundIdAtSendKey = `car_inbound_id_at_send_${id}`;
 
+  const { openModal, closeModal } = useModalUrl();
+
   const [car, setCar]               = useState<Car | null>(null);
   const [carLoading, setCarLoading] = useState(true);
   const [showEdit, setShowEdit]     = useState(false);
@@ -105,6 +108,11 @@ export default function CarDetailPage() {
       .then((data) => setCar(data))
       .finally(() => setCarLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("modal") === "car-edit") setShowEdit(true);
+  }, []);
 
   useEffect(() => {
     fetch(`/next-api/cars/${id}/photos`, { cache: "no-store" })
@@ -316,7 +324,7 @@ export default function CarDetailPage() {
           <p className={styles.phone}>{car.phoneNumber}</p>
           {car.description && <p className={styles.desc}>{car.description}</p>}
           <div className={styles.carActions}>
-            <button className={styles.editBtn} onClick={() => setShowEdit(true)}>Edit</button>
+            <button className={styles.editBtn} onClick={() => { setShowEdit(true); openModal("car-edit"); }}>Edit</button>
             {confirmDelete ? (
               <button className={styles.confirmDeleteBtn} onClick={handleDelete} disabled={deleting}>
                 {deleting ? "Deleting…" : "Confirm delete?"}
@@ -484,8 +492,8 @@ export default function CarDetailPage() {
       {showEdit && (
         <CarFormModal
           car={car}
-          onClose={() => setShowEdit(false)}
-          onSaved={(updated) => { setCar(updated); setShowEdit(false); }}
+          onClose={() => { setShowEdit(false); closeModal(); }}
+          onSaved={(updated) => { setCar(updated); setShowEdit(false); closeModal(); }}
         />
       )}
     </div>

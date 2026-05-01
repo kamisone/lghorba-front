@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { CalendarBooking, Car } from "./data";
 import BookingAdminModal from "./BookingAdminModal";
+import { useModalUrl } from "@/hooks/useModalUrl";
 import styles from "./RentCalendar.module.css";
 
 // Re-export so RentTracker can still import without changes to its type alias
@@ -41,17 +42,32 @@ const DEFAULT_BG = "linear-gradient(135deg, #001829 0%, #005C8F 100%)";
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 export default function RentCalendar({ car, bookings, excludeBookingIds, endedBookingIds, onUpdate, onDelete }: Props) {
+  const { openModal, closeModal } = useModalUrl();
+
   const [viewDate,        setViewDate]        = useState(() => new Date());
   const [selectedBooking, setSelectedBooking] = useState<CalendarBooking | null>(null);
   const [showEditModal,   setShowEditModal]   = useState(false);
   const [deletingId,      setDeletingId]      = useState<string | null>(null);
+  const restoredRef = React.useRef(false);
 
   const today = startOfDay(new Date());
+
+  // Restore from URL once bookings are available
+  useEffect(() => {
+    if (restoredRef.current) return;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("modal") !== "cal-booking-edit") { restoredRef.current = true; return; }
+    const bookingId = sp.get("bookingId");
+    if (!bookingId) { restoredRef.current = true; return; }
+    const b = bookings.find(b => b.id === bookingId);
+    if (b) { setSelectedBooking(b); setShowEditModal(true); restoredRef.current = true; }
+  }, [bookings]);
 
   const handleEditSaved = (updated: CalendarBooking) => {
     onUpdate(updated);
     setSelectedBooking(null);
     setShowEditModal(false);
+    closeModal();
   };
 
   const handleDelete = async () => {
@@ -63,6 +79,7 @@ export default function RentCalendar({ car, bookings, excludeBookingIds, endedBo
         onDelete(selectedBooking.id);
         setSelectedBooking(null);
         setShowEditModal(false);
+        closeModal();
       }
     } finally {
       setDeletingId(null);
@@ -88,6 +105,7 @@ export default function RentCalendar({ car, bookings, excludeBookingIds, endedBo
   const openBooking = (b: CalendarBooking) => {
     setSelectedBooking(b);
     setShowEditModal(true);
+    openModal("cal-booking-edit", { bookingId: b.id });
   };
 
   const year       = viewDate.getFullYear();
@@ -170,7 +188,7 @@ export default function RentCalendar({ car, bookings, excludeBookingIds, endedBo
           car={car}
           booking={selectedBooking}
           existingBookings={endedBookingIds?.length ? bookings.filter(b => !endedBookingIds.includes(b.id)) : bookings}
-          onClose={() => { setShowEditModal(false); setSelectedBooking(null); }}
+          onClose={() => { setShowEditModal(false); setSelectedBooking(null); closeModal(); }}
           onSaved={handleEditSaved}
           onDelete={deletingId === selectedBooking.id ? undefined : handleDelete}
         />

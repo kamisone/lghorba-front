@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import styles from "./users.module.css";
 import CreateUserModal from "@/components/admin/CreateUserModal";
+import { useModalUrl } from "@/hooks/useModalUrl";
 
 interface User {
   id: string;
@@ -22,11 +23,18 @@ function ScoreBadge({ score }: { score: number }) {
 }
 
 export default function UsersPage() {
+  const { openModal, closeModal } = useModalUrl();
+
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("modal") === "user-create") setShowCreate(true);
+  }, []);
 
   const fetchUsers = (q: string) => {
     setLoading(true);
@@ -49,6 +57,7 @@ export default function UsersPage() {
 
   const handleCreated = () => {
     setShowCreate(false);
+    closeModal();
     fetchUsers(search);
   };
 
@@ -67,7 +76,7 @@ export default function UsersPage() {
               onChange={e => handleSearch(e.target.value)}
             />
           </div>
-          <button className={styles.addBtn} onClick={() => setShowCreate(true)}>+ Add User</button>
+          <button className={styles.addBtn} onClick={() => { setShowCreate(true); openModal("user-create"); }}>+ Add User</button>
         </div>
       </div>
 
@@ -120,7 +129,10 @@ export default function UsersPage() {
       )}
 
       {showCreate && (
-        <CreateUserModal onClose={() => setShowCreate(false)} onCreated={handleCreated} />
+        <CreateUserModal
+          onClose={() => { setShowCreate(false); closeModal(); }}
+          onCreated={handleCreated}
+        />
       )}
     </div>
   );

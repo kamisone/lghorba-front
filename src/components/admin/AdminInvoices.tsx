@@ -157,7 +157,7 @@ export default function AdminInvoices() {
                   </td>
                   <td style={{ padding: "10px 12px" }}>
                     {inv.booking ? (
-                      <Link href={`/admin/bookings/${inv.booking.id}`} style={{ color: "#3b82f6", fontSize: "11px" }}>
+                      <Link href={`/admin/bookings?modal=booking&id=${inv.booking.id}`} style={{ color: "#3b82f6", fontSize: "11px" }}>
                         voir
                       </Link>
                     ) : (

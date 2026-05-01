@@ -5,6 +5,7 @@ import type { CalendarBooking, Car } from "./data";
 import RentMap, { type RentPosition } from "./RentMap";
 import BookingAdminModal from "./BookingAdminModal";
 import { useToast } from "@/components/toast/ToastContext";
+import { useModalUrl } from "@/hooks/useModalUrl";
 import styles from "./RentTracker.module.css";
 
 interface RentSession {
@@ -39,6 +40,8 @@ interface Props {
 
 export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onUsedBookingIdsChange, onEndedBookingIdsChange }: Props) {
   const { toast } = useToast();
+  const { openModal, closeModal } = useModalUrl();
+
   const [tracking,          setTracking]          = useState(false);
   const [sessionId,         setSessionId]         = useState<string | null>(null);
   const [activeBooking,     setActiveBooking]     = useState<CalendarBooking | null>(null);
@@ -129,6 +132,23 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [car.id]);
+
+  // ── Restore booking-edit modal from URL (runs once after sessions load) ───
+
+  const trackerRestoredRef = useRef(false);
+  useEffect(() => {
+    if (!restored || trackerRestoredRef.current) return;
+    trackerRestoredRef.current = true;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("modal") !== "tracker-booking-edit") return;
+    const bookingId = sp.get("bookingId");
+    if (!bookingId) return;
+    const candidate =
+      activeBooking?.id === bookingId ? activeBooking
+      : sessions.flatMap(s => s.booking ? [s.booking] : []).find(b => b.id === bookingId)
+      ?? null;
+    if (candidate) { setEditingBooking(candidate); setShowEditModal(true); }
+  }, [restored, activeBooking, sessions]);
 
   // ── Poll: sync session state from backend every 5s ───────────────────────
 
@@ -294,12 +314,14 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
   const openEditBooking = (b: CalendarBooking) => {
     setEditingBooking(b);
     setShowEditModal(true);
+    openModal("tracker-booking-edit", { bookingId: b.id });
   };
 
   const handleBookingSaved = (updated: CalendarBooking) => {
     onBookingUpdate(updated);
     setShowEditModal(false);
     setEditingBooking(null);
+    closeModal();
   };
 
   const handleBookingDelete = async (bk: CalendarBooking) => {
@@ -582,7 +604,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
           car={car}
           booking={editingBooking}
           sessionStarted={hasSession}
-          onClose={() => { setShowEditModal(false); setEditingBooking(null); }}
+          onClose={() => { setShowEditModal(false); setEditingBooking(null); closeModal(); }}
           onSaved={handleBookingSaved}
         />
       )}
