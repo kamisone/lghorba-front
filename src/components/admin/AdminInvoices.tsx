@@ -22,10 +22,10 @@ interface Invoice {
 }
 
 const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  draft: "Brouillon",
-  issued: "Émise",
-  paid: "Payée",
-  void: "Annulée",
+  draft: "Draft",
+  issued: "Issued",
+  paid: "Paid",
+  void: "Void",
 };
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
@@ -36,12 +36,12 @@ const STATUS_COLOR: Record<InvoiceStatus, string> = {
 };
 
 function fmtEur(n: number) {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(n);
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(n);
 }
 
 function fmtDate(s: string | null) {
   if (!s) return "—";
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(s));
+  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(s));
 }
 
 export default function AdminInvoices() {
@@ -67,13 +67,13 @@ export default function AdminInvoices() {
   return (
     <div style={{ padding: "24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h1 style={{ fontSize: "22px", fontWeight: 700 }}>Factures</h1>
+        <h1 style={{ fontSize: "22px", fontWeight: 700 }}>Invoices</h1>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value as InvoiceStatus | "")}
           style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "13px" }}
         >
-          <option value="">Tous les statuts</option>
+          <option value="">All statuses</option>
           {(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map((s) => (
             <option key={s} value={s}>
               {STATUS_LABEL[s]}
@@ -83,15 +83,15 @@ export default function AdminInvoices() {
       </div>
 
       {loading ? (
-        <p style={{ color: "#64748b" }}>Chargement…</p>
+        <p style={{ color: "#64748b" }}>Loading…</p>
       ) : invoices.length === 0 ? (
-        <p style={{ color: "#64748b" }}>Aucune facture.</p>
+        <p style={{ color: "#64748b" }}>No invoices.</p>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
             <thead>
               <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                {["N° Facture", "Statut", "Client", "Montant", "Émise le", "PDF", "Email", "Réservation"].map((h) => (
+                {["Invoice #", "Status", "Customer", "Amount", "Issued", "PDF", "Email", "Booking"].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -158,7 +158,7 @@ export default function AdminInvoices() {
                   <td style={{ padding: "10px 12px" }}>
                     {inv.booking ? (
                       <Link href={`/admin/bookings?modal=booking&id=${inv.booking.id}`} style={{ color: "#3b82f6", fontSize: "11px" }}>
-                        voir
+                        view
                       </Link>
                     ) : (
                       "—"

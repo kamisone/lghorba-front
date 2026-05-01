@@ -44,18 +44,18 @@ interface Invoice {
 }
 
 const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  draft: "Brouillon", issued: "Émise", paid: "Payée", void: "Annulée",
+  draft: "Draft", issued: "Issued", paid: "Paid", void: "Void",
 };
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
   draft: "#94a3b8", issued: "#3b82f6", paid: "#22c55e", void: "#ef4444",
 };
 
 function fmtEur(n: number) {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(n);
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(n);
 }
 function fmtDate(s: string | null) {
   if (!s) return "—";
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(s));
+  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(s));
 }
 
 export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
@@ -70,10 +70,10 @@ export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
     setLoading(true);
     try {
       const res = await fetch(`/next-api/invoices/${invoiceId}`);
-      if (!res.ok) { setError("Facture introuvable"); return; }
+      if (!res.ok) { setError("Invoice not found"); return; }
       setInvoice(await res.json());
     } catch {
-      setError("Erreur de chargement");
+      setError("Failed to load");
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
     setDl(true);
     try {
       const res = await fetch(`/next-api/invoices/${invoiceId}/download`);
-      if (!res.ok) { alert("PDF non disponible"); return; }
+      if (!res.ok) { alert("PDF not available"); return; }
       const { url } = await res.json();
       window.open(url, "_blank");
     } finally {
@@ -94,19 +94,19 @@ export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
   };
 
   const handleVoid = async () => {
-    if (!confirm("Annuler cette facture ? Cette action est irréversible.")) return;
+    if (!confirm("Void this invoice? This cannot be undone.")) return;
     setVoiding(true);
     try {
       const res = await fetch(`/next-api/invoices/${invoiceId}/void`, { method: "POST" });
-      if (!res.ok) { alert("Échec de l'annulation"); return; }
+      if (!res.ok) { alert("Failed to void invoice"); return; }
       await load();
     } finally {
       setVoiding(false);
     }
   };
 
-  if (loading) return <div style={{ padding: "24px" }}>Chargement…</div>;
-  if (error || !invoice) return <div style={{ padding: "24px", color: "#ef4444" }}>{error ?? "Introuvable"}</div>;
+  if (loading) return <div style={{ padding: "24px" }}>Loading…</div>;
+  if (error || !invoice) return <div style={{ padding: "24px", color: "#ef4444" }}>{error ?? "Not found"}</div>;
 
   const addr = invoice.sellerAddress;
 
@@ -116,10 +116,10 @@ export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
         <div>
           <button onClick={() => router.push("/admin/invoices")} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", fontSize: "13px", padding: 0, marginBottom: "8px" }}>
-            ← Retour aux factures
+            ← Back to invoices
           </button>
           <h1 style={{ fontSize: "22px", fontWeight: 700, margin: 0 }}>
-            {invoice.invoiceNumber ?? "Brouillon"}
+            {invoice.invoiceNumber ?? "Draft"}
           </h1>
           <span style={{
             display: "inline-block", marginTop: "6px",
@@ -137,7 +137,7 @@ export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
               disabled={downloading}
               style={{ padding: "8px 16px", background: "#0f172a", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}
             >
-              {downloading ? "…" : "Télécharger PDF"}
+              {downloading ? "…" : "Download PDF"}
             </button>
           )}
           {(invoice.status === "issued" || invoice.status === "paid") && (
@@ -146,7 +146,7 @@ export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
               disabled={voiding}
               style={{ padding: "8px 16px", background: "#fff", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}
             >
-              {voiding ? "…" : "Annuler"}
+              {voiding ? "…" : "Void"}
             </button>
           )}
         </div>
@@ -154,36 +154,36 @@ export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
 
       {/* Meta grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
-        <InfoCard title="Prestataire">
+        <InfoCard title="Seller">
           <b>{invoice.sellerName}</b><br />
           {addr.line1}<br />
           {addr.zip} {addr.city}<br />
-          {invoice.sellerSiret   && <span>SIRET : {invoice.sellerSiret}<br /></span>}
-          {invoice.sellerVatNumber && <span>TVA : {invoice.sellerVatNumber}</span>}
+          {invoice.sellerSiret     && <span>SIRET: {invoice.sellerSiret}<br /></span>}
+          {invoice.sellerVatNumber && <span>VAT: {invoice.sellerVatNumber}</span>}
         </InfoCard>
-        <InfoCard title="Client">
+        <InfoCard title="Customer">
           {invoice.customerName ?? "—"}<br />
           {invoice.customerEmail ?? "—"}
         </InfoCard>
         <InfoCard title="Dates">
-          <Row label="Émise le" value={fmtDate(invoice.issuedAt)} />
-          <Row label="Payée le" value={fmtDate(invoice.paidAt)} />
-          {invoice.voidedAt && <Row label="Annulée le" value={fmtDate(invoice.voidedAt)} />}
+          <Row label="Issued"  value={fmtDate(invoice.issuedAt)} />
+          <Row label="Paid"    value={fmtDate(invoice.paidAt)} />
+          {invoice.voidedAt && <Row label="Voided" value={fmtDate(invoice.voidedAt)} />}
         </InfoCard>
-        <InfoCard title="Références">
+        <InfoCard title="References">
           {invoice.paymentIntentId && <Row label="Stripe PI" value={invoice.paymentIntentId} mono />}
-          <Row label="PDF généré" value={fmtDate(invoice.pdfGeneratedAt)} />
-          <Row label="Email envoyé" value={fmtDate(invoice.emailSentAt)} />
+          <Row label="PDF generated" value={fmtDate(invoice.pdfGeneratedAt)} />
+          <Row label="Email sent"    value={fmtDate(invoice.emailSentAt)} />
         </InfoCard>
       </div>
 
       {/* Lines */}
       <div style={{ background: "#f8fafc", borderRadius: "8px", padding: "16px", marginBottom: "24px" }}>
-        <h2 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "12px", color: "#0f172a" }}>Lignes de facturation</h2>
+        <h2 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "12px", color: "#0f172a" }}>Line items</h2>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #e2e8f0" }}>
-              {["Description", "Qté (j)", "Prix unit. TTC", "Total TTC"].map(h => (
+              {["Description", "Qty (days)", "Unit price", "Total"].map(h => (
                 <th key={h} style={{ padding: "6px 0", textAlign: h === "Description" ? "left" : "right", fontWeight: 600, color: "#475569", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.4px" }}>{h}</th>
               ))}
             </tr>
@@ -204,9 +204,9 @@ export default function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
       {/* Summary */}
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <div style={{ width: "260px" }}>
-          <SummaryRow label="Montant HT" value={fmtEur(Number(invoice.subtotalAmount))} />
-          <SummaryRow label={invoice.taxRateLabel} value={fmtEur(Number(invoice.taxAmount))} />
-          <SummaryRow label="Total TTC" value={fmtEur(Number(invoice.totalAmount))} total />
+          <SummaryRow label="Subtotal (excl. tax)" value={fmtEur(Number(invoice.subtotalAmount))} />
+          <SummaryRow label={invoice.taxRateLabel}  value={fmtEur(Number(invoice.taxAmount))} />
+          <SummaryRow label="Total (incl. tax)"     value={fmtEur(Number(invoice.totalAmount))} total />
         </div>
       </div>
     </div>
