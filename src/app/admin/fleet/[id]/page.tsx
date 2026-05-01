@@ -9,7 +9,6 @@ import styles from "./car-detail.module.css";
 import { extractMapsUrl, extractLatLng } from "@/components/admin/mapUtils";
 import { useToast } from "@/components/toast/ToastContext";
 import { useModalUrl } from "@/hooks/useModalUrl";
-import GuestTokenManager from "@/components/admin/GuestTokenManager";
 
 interface SmsMessage {
   id: number;
@@ -477,11 +476,6 @@ export default function CarDetailPage() {
         ) : (
           <p className={styles.noMessage}>No messages yet.</p>
         )}
-      </div>
-
-      {/* ── Guest Access ── */}
-      <div style={{ marginTop: "24px", background: "#f8fafc", borderRadius: "12px", padding: "20px" }}>
-        <GuestTokenManager carId={car.id} />
       </div>
 
       <Link href={`/admin/fleet/${car.id}/rent`} className={styles.rentCard}>

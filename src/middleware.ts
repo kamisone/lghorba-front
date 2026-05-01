@@ -48,6 +48,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // ── Guest-access pages: self-contained, handle lang via ?lang= param ──────
+  if (pathname.startsWith("/guest-access/")) {
+    return NextResponse.next();
+  }
+
   // ── Public pages: locale routing ─────────────────────────────────────────
   const pathnameHasLocale = LOCALES.some(
     (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
