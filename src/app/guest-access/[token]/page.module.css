@@ -1,0 +1,427 @@
+/* ── Page shell ─────────────────────────────────────────────── */
+.page {
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at 50% 20%, #1c2a4a 0%, #0d111c 65%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 32px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow: hidden;
+}
+
+/* decorative orb — bottom right */
+.page::after {
+  content: "";
+  position: absolute;
+  bottom: -120px;
+  right: -80px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 390px;
+  position: relative;
+  z-index: 1;
+  animation: page-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Top chip ───────────────────────────────────────────────── */
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 auto 28px;
+  width: fit-content;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ── Hero ───────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.heroIcon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 16px;
+}
+.heroIconGlow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,179,237,0.18) 0%, transparent 70%);
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+.heroIconBg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  backdrop-filter: blur(8px);
+}
+.heroLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  margin-top: 2px;
+}
+
+/* ── Action buttons ─────────────────────────────────────────── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 0 20px 0 8px;
+  height: 72px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s, border-color 0.18s, transform 0.1s, box-shadow 0.18s, opacity 0.2s;
+  outline: none;
+  overflow: hidden;
+  text-align: left;
+}
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+/* colour variants */
+.btnOpen   { --btn-color: #22c55e; --btn-rgb: 34,197,94;  }
+.btnClose  { --btn-color: #ef4444; --btn-rgb: 239,68,68;  }
+.btnParking{ --btn-color: #3b82f6; --btn-rgb: 59,130,246; }
+
+.btn:not(:disabled):hover {
+  background: rgba(var(--btn-rgb), 0.12);
+  border-color: rgba(var(--btn-rgb), 0.35);
+  box-shadow: 0 0 0 4px rgba(var(--btn-rgb), 0.08);
+}
+.btnIdle {
+  box-shadow: 0 4px 24px rgba(var(--btn-rgb), 0.15);
+}
+
+/* blocked / inactive state */
+.btnBlocked {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* ── Icon badge ─────────────────────────────────────────────── */
+.iconBadge {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(var(--btn-rgb), 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  transition: background 0.2s;
+  position: relative;
+}
+.btn:not(:disabled):hover .iconBadge {
+  background: rgba(var(--btn-rgb), 0.3);
+}
+
+/* success badge */
+.iconBadgeSuccess {
+  background: rgba(34,197,94,0.25) !important;
+}
+.iconBadgeTimeout {
+  background: rgba(34,197,94,0.15) !important;
+}
+.iconBadgeError {
+  background: rgba(239,68,68,0.2) !important;
+}
+
+/* ── Ring inside badge ──────────────────────────────────────── */
+.ringWrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ringIcon {
+  position: absolute;
+  font-size: 20px;
+  line-height: 1;
+  z-index: 1;
+}
+.ringSvg {
+  position: absolute;
+  inset: 0;
+  width: 52px;
+  height: 52px;
+  transform: rotate(-90deg);
+}
+
+/* ── Button text area ───────────────────────────────────────── */
+.btnText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.btnLabel {
+  font-size: 17px;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+  transition: color 0.15s;
+}
+.btnSub {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.3;
+}
+.btnSubActive {
+  color: rgba(255,255,255,0.65);
+}
+
+/* chevron */
+.chevron {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: rgba(255,255,255,0.25);
+  transition: color 0.15s, transform 0.15s;
+  font-style: normal;
+}
+.btn:not(:disabled):hover .chevron {
+  color: rgba(255,255,255,0.5);
+  transform: translateX(2px);
+}
+
+/* ── Footer meta ────────────────────────────────────────────── */
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px 0;
+}
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.3);
+}
+.metaDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+.metaExpiringSoon { color: #f59e0b !important; }
+.metaDotExpiringSoon { background: #f59e0b !important; }
+
+/* ── Skeleton loading ───────────────────────────────────────── */
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.skeletonBtn {
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.skeletonMeta {
+  height: 14px;
+  width: 160px;
+  border-radius: 8px;
+  margin: 8px auto 0;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite 0.2s;
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ── Error / expired state ──────────────────────────────────── */
+.errorWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 0;
+  animation: page-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.errorIconCircle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+  animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both 0.1s;
+}
+@keyframes pop-in {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.errorTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0 0 8px;
+  letter-spacing: -0.3px;
+}
+.errorSub {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+  margin: 0 0 32px;
+  max-width: 280px;
+}
+/* countdown ring */
+.countdownWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.countdownRing {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+.countdownRingSvg {
+  width: 72px;
+  height: 72px;
+  transform: rotate(-90deg);
+}
+.countdownNumber {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+.countdownText {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.4);
+}
+
+/* unavailable (no redirect) */
+.retryBtn {
+  margin-top: 24px;
+  padding: 12px 28px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.retryBtn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.25);
+}
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes ring-fill {
+  from { stroke-dashoffset: var(--circ); }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes ring-drain {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: var(--circ); }
+}
+@keyframes result-pop {
+  0%   { transform: scale(0.7); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}

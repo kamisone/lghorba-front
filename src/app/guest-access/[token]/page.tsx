@@ -1,59 +1,90 @@
 "use client";
 
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import styles from "./page.module.css";
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 
 const T = {
   fr: {
-    title:       "Accès au véhicule",
-    open:        "Ouvrir",
-    close:       "Fermer",
-    parking:     "Parking",
-    openIcon:    "🔓",
-    closeIcon:   "🔒",
-    parkingIcon: "🅿️",
-    loading:     "Chargement…",
-    sending:     "Envoi…",
-    waiting:     "En attente de réponse…",
-    success:     "Commande reçue !",
-    timeout:     "Commande envoyée",
-    error:       "Échec — réessayez",
-    invalid:     "Ce lien est invalide ou a expiré.",
-    revoked:     "Ce lien a été révoqué.",
-    unavailable: "Impossible de charger les informations d'accès.",
-    usageLabel:  "Utilisations",
-    expiresLabel:"Expire dans",
-    hours:       "h",
-    minutes:     "min",
+    appName:         "Accès invité",
+    carAccess:       "Accès véhicule",
+    open:            "Ouvrir",
+    openSub:         "Déverrouiller le véhicule",
+    close:           "Fermer",
+    closeSub:        "Verrouiller le véhicule",
+    parking:         "Parking",
+    parkingSub:      "Activer le mode parking",
+    openIcon:        "🔓",
+    closeIcon:       "🔒",
+    parkingIcon:     "🅿️",
+    waiting:         "En attente de réponse…",
+    success:         "Commande reçue !",
+    successSub:      "Opération effectuée",
+    timeout:         "Commande envoyée",
+    timeoutSub:      "En attente de confirmation",
+    error:           "Échec",
+    errorSub:        "Réessayez dans un instant",
+    usageLabel:      "Utilisations",
+    expiresLabel:    "Expire dans",
+    expiringSoon:    "Expire bientôt",
+    hours:           "h",
+    minutes:         "min",
+    expiredTitle:    "Lien expiré",
+    expiredSub:      "Ce lien d'accès a expiré. Contactez l'administrateur pour obtenir un nouveau lien.",
+    revokedTitle:    "Lien révoqué",
+    revokedSub:      "Ce lien d'accès a été révoqué. Contactez l'administrateur pour obtenir un nouveau lien.",
+    invalidTitle:    "Lien invalide",
+    invalidSub:      "Ce lien n'est pas valide. Vérifiez que vous utilisez le bon lien.",
+    unavailableTitle:"Service indisponible",
+    unavailableSub:  "Impossible de charger les informations d'accès. Veuillez réessayer.",
+    redirecting:     "Redirection dans",
+    seconds:         "secondes",
+    retry:           "Réessayer",
   },
   en: {
-    title:       "Car Access",
-    open:        "Unlock",
-    close:       "Lock",
-    parking:     "Parking",
-    openIcon:    "🔓",
-    closeIcon:   "🔒",
-    parkingIcon: "🅿️",
-    loading:     "Loading…",
-    sending:     "Sending…",
-    waiting:     "Waiting for response…",
-    success:     "Command received!",
-    timeout:     "Command sent",
-    error:       "Failed — try again",
-    invalid:     "This link is invalid or has expired.",
-    revoked:     "This link has been revoked.",
-    unavailable: "Could not load access information.",
-    usageLabel:  "Uses",
-    expiresLabel:"Expires in",
-    hours:       "h",
-    minutes:     "min",
+    appName:         "Guest Access",
+    carAccess:       "Car Access",
+    open:            "Unlock",
+    openSub:         "Unlock the vehicle",
+    close:           "Lock",
+    closeSub:        "Lock the vehicle",
+    parking:         "Parking",
+    parkingSub:      "Activate parking mode",
+    openIcon:        "🔓",
+    closeIcon:       "🔒",
+    parkingIcon:     "🅿️",
+    waiting:         "Waiting for response…",
+    success:         "Command received!",
+    successSub:      "Operation completed",
+    timeout:         "Command sent",
+    timeoutSub:      "Waiting for confirmation",
+    error:           "Failed",
+    errorSub:        "Try again in a moment",
+    usageLabel:      "Uses",
+    expiresLabel:    "Expires in",
+    expiringSoon:    "Expiring soon",
+    hours:           "h",
+    minutes:         "min",
+    expiredTitle:    "Link Expired",
+    expiredSub:      "This access link has expired. Contact the administrator to get a new link.",
+    revokedTitle:    "Link Revoked",
+    revokedSub:      "This access link has been revoked. Contact the administrator to get a new link.",
+    invalidTitle:    "Invalid Link",
+    invalidSub:      "This link is not valid. Please check that you are using the correct link.",
+    unavailableTitle:"Service Unavailable",
+    unavailableSub:  "Could not load access information. Please try again.",
+    redirecting:     "Redirecting in",
+    seconds:         "seconds",
+    retry:           "Retry",
   },
 } as const;
 
 type Lang = keyof typeof T;
 type GuestAction = "open" | "close" | "parking";
+type Phase = "idle" | "loading" | "success" | "timeout" | "error";
+type ErrorType = "expired" | "revoked" | "invalid" | "unavailable";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -72,48 +103,139 @@ interface CarStatus {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const MIN_LOADING_MS = 10_000;
-const POLL_TIMEOUT_MS = 30_000;
+const MIN_LOADING_MS   = 10_000;
+const POLL_TIMEOUT_MS  = 30_000;
 const POLL_INTERVAL_MS = 3_000;
-const RING_R = 44;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R; // ~276.5
+const REDIRECT_SECS    = 5;
 
-// ─── Inner component (needs useSearchParams) ────────────────────────────────
+// Ring geometry for action buttons (52×52 viewBox)
+const BTN_RING_R    = 22;
+const BTN_RING_CIRC = 2 * Math.PI * BTN_RING_R; // ≈ 138.2
+
+// Ring geometry for countdown (70×70 viewBox)
+const CD_RING_R    = 30;
+const CD_RING_CIRC = 2 * Math.PI * CD_RING_R;   // ≈ 188.5
+
+// ─── Countdown error ─────────────────────────────────────────────────────────
+
+const ERROR_CONFIG = {
+  expired:  { icon: "⏰", bg: "rgba(245,158,11,0.18)",  stroke: "#f59e0b" },
+  revoked:  { icon: "🚫", bg: "rgba(239,68,68,0.18)",   stroke: "#ef4444" },
+  invalid:  { icon: "❓", bg: "rgba(99,102,241,0.18)",  stroke: "#818cf8" },
+};
+
+type Translations = typeof T[Lang];
+
+function CountdownError({
+  errorType,
+  t,
+  onRedirect,
+}: {
+  errorType: "expired" | "revoked" | "invalid";
+  t: Translations;
+  onRedirect: () => void;
+}) {
+  const [secs, setSecs] = useState(REDIRECT_SECS);
+
+  useEffect(() => {
+    const tick = setInterval(() => {
+      setSecs((s) => {
+        if (s <= 1) { clearInterval(tick); onRedirect(); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(tick);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { icon, bg, stroke } = ERROR_CONFIG[errorType];
+  const offset = CD_RING_CIRC * (1 - secs / REDIRECT_SECS);
+
+  const titleKey = `${errorType}Title` as const;
+  const subKey   = `${errorType}Sub`   as const;
+
+  return (
+    <div className={styles.errorWrap}>
+      <div className={styles.errorIconCircle} style={{ background: bg }}>
+        {icon}
+      </div>
+      <h2 className={styles.errorTitle}>{t[titleKey]}</h2>
+      <p  className={styles.errorSub}>{t[subKey]}</p>
+
+      <div className={styles.countdownWrap}>
+        <div className={styles.countdownRing}>
+          <svg className={styles.countdownRingSvg} viewBox="0 0 70 70">
+            <circle cx="35" cy="35" r={CD_RING_R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
+            <circle
+              cx="35" cy="35" r={CD_RING_R}
+              fill="none"
+              stroke={stroke}
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeDasharray={CD_RING_CIRC}
+              strokeDashoffset={offset}
+              style={{ transition: "stroke-dashoffset 0.9s linear" }}
+            />
+          </svg>
+          <div className={styles.countdownNumber}>{secs}</div>
+        </div>
+        <p className={styles.countdownText}>{t.redirecting} {secs} {t.seconds}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Unavailable error ───────────────────────────────────────────────────────
+
+function UnavailableError({ t, onRetry }: { t: Translations; onRetry: () => void }) {
+  return (
+    <div className={styles.errorWrap}>
+      <div className={styles.errorIconCircle} style={{ background: "rgba(100,116,139,0.18)" }}>⚠️</div>
+      <h2 className={styles.errorTitle}>{t.unavailableTitle}</h2>
+      <p  className={styles.errorSub}>{t.unavailableSub}</p>
+      <button className={styles.retryBtn} onClick={onRetry}>{t.retry}</button>
+    </div>
+  );
+}
+
+// ─── Main guest page ─────────────────────────────────────────────────────────
 
 function GuestPage() {
-  const { token }       = useParams<{ token: string }>();
-  const searchParams    = useSearchParams();
-  const lang: Lang      = (searchParams.get("lang") === "en" ? "en" : "fr");
-  const t               = T[lang];
+  const { token }    = useParams<{ token: string }>();
+  const searchParams = useSearchParams();
+  const router       = useRouter();
+  const lang: Lang   = searchParams.get("lang") === "en" ? "en" : "fr";
+  const t            = T[lang];
 
   const [info, setInfo]           = useState<TokenInfo | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<ErrorType | null>(null);
 
-  // Per-button phases
-  type Phase = "idle" | "loading" | "success" | "timeout" | "error";
-  const [phases, setPhases]       = useState<Record<GuestAction, Phase>>({ open: "idle", close: "idle", parking: "idle" });
-  const [ringKey, setRingKey]     = useState(0); // forces CSS animation restart
+  const [phases, setPhases]   = useState<Record<GuestAction, Phase>>({ open: "idle", close: "idle", parking: "idle" });
+  const [ringKey, setRingKey] = useState(0);
 
-  // Polling refs
-  const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timeoutRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const minWaitRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const activeAction  = useRef<GuestAction | null>(null);
-  const baselineId    = useRef<number | null>(null);
-  const gotResult     = useRef<Phase>("idle"); // result received before min-wait ends
+  const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minWaitRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeAction = useRef<GuestAction | null>(null);
+  const baselineId   = useRef<number | null>(null);
+  const gotResult    = useRef<Phase>("idle");
 
   // ── Load token info ─────────────────────────────────────────────────────
   useEffect(() => {
     fetch(`/next-api/guest-access/${token}/info`)
       .then(async (res) => {
         if (!res.ok) {
-          setLoadError(t.invalid);
+          const body = await res.json().catch(() => ({}));
+          const msg  = (body.message ?? "").toLowerCase();
+          if (msg.includes("expired"))       setErrorType("expired");
+          else if (msg.includes("revoked"))  setErrorType("revoked");
+          else                               setErrorType("invalid");
           return;
         }
         setInfo(await res.json());
       })
-      .catch(() => setLoadError(t.unavailable));
-  }, [token, t.invalid, t.unavailable]);
+      .catch(() => setErrorType("unavailable"));
+  }, [token]);
 
   // ── Cleanup ─────────────────────────────────────────────────────────────
   const clearTimers = useCallback(() => {
@@ -125,16 +247,15 @@ function GuestPage() {
 
   useEffect(() => () => clearTimers(), [clearTimers]);
 
-  // ── Settle: called when we have a final phase after min-wait elapsed ────
+  // ── Settle ──────────────────────────────────────────────────────────────
   const settle = useCallback((action: GuestAction, phase: Phase) => {
     clearTimers();
     activeAction.current = null;
     setPhases((p) => ({ ...p, [action]: phase }));
-    // auto-reset after 3s
     setTimeout(() => setPhases((p) => ({ ...p, [action]: "idle" })), 3000);
   }, [clearTimers]);
 
-  // ── Poll for SMS response ────────────────────────────────────────────────
+  // ── Poll ────────────────────────────────────────────────────────────────
   const startPolling = useCallback((action: GuestAction, baseline: number | null) => {
     baselineId.current = baseline;
     gotResult.current  = "idle";
@@ -145,60 +266,41 @@ function GuestPage() {
         if (!res.ok) return;
         const status: CarStatus = await res.json();
         if (status.lastInboundId !== null && status.lastInboundId !== baselineId.current) {
-          // New inbound received — record success
-          if (minWaitRef.current) {
-            // Min-wait still running; store result and settle when it fires
-            gotResult.current = "success";
-          } else {
-            settle(action, "success");
-          }
+          if (minWaitRef.current) { gotResult.current = "success"; }
+          else                    { settle(action, "success"); }
           clearInterval(pollRef.current!);
           pollRef.current = null;
         }
       } catch { /* keep polling */ }
     }, POLL_INTERVAL_MS);
 
-    // Hard timeout: settle as "timeout" (command sent, no confirmation)
     timeoutRef.current = setTimeout(() => {
       clearInterval(pollRef.current!);
       pollRef.current = null;
-      if (minWaitRef.current) {
-        gotResult.current = "timeout";
-      } else {
-        settle(action, "timeout");
-      }
+      if (minWaitRef.current) { gotResult.current = "timeout"; }
+      else                    { settle(action, "timeout"); }
     }, POLL_TIMEOUT_MS);
 
-    // Minimum wait: after 10s, check if result already received
     minWaitRef.current = setTimeout(() => {
       minWaitRef.current = null;
-      if (gotResult.current !== "idle") {
-        settle(action, gotResult.current);
-      }
-      // else: keep waiting (poll + timeout still running)
+      if (gotResult.current !== "idle") settle(action, gotResult.current);
     }, MIN_LOADING_MS);
   }, [token, settle]);
 
-  // ── Handle button click ──────────────────────────────────────────────────
+  // ── Handle action ───────────────────────────────────────────────────────
   const handleAction = useCallback(async (action: GuestAction) => {
-    if (activeAction.current !== null) return; // one at a time
+    if (activeAction.current !== null) return;
     activeAction.current = action;
-
     setPhases((p) => ({ ...p, [action]: "loading" }));
-    setRingKey((k) => k + 1); // restart CSS ring animation
+    setRingKey((k) => k + 1);
 
     try {
-      // 1. Record baseline inbound id
       let baseline: number | null = null;
       try {
         const sr = await fetch(`/next-api/guest-access/${token}/car-status`);
-        if (sr.ok) {
-          const s: CarStatus = await sr.json();
-          baseline = s.lastInboundId;
-        }
-      } catch { /* proceed without baseline */ }
+        if (sr.ok) baseline = ((await sr.json()) as CarStatus).lastInboundId;
+      } catch { /* proceed */ }
 
-      // 2. Enqueue the action
       const res = await fetch(`/next-api/guest-access/${token}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -206,254 +308,207 @@ function GuestPage() {
       });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
         clearTimers();
         activeAction.current = null;
         setPhases((p) => ({ ...p, [action]: "error" }));
         setTimeout(() => setPhases((p) => ({ ...p, [action]: "idle" })), 3000);
-        if (res.status === 401) setLoadError(body.message ?? t.revoked);
+        if (res.status === 401) {
+          const body = await res.json().catch(() => ({}));
+          const msg  = (body.message ?? "").toLowerCase();
+          setErrorType(msg.includes("revoked") ? "revoked" : msg.includes("expired") ? "expired" : "invalid");
+        }
         return;
       }
 
-      // 3. Start polling for SMS response
       startPolling(action, baseline);
-
     } catch {
       clearTimers();
       activeAction.current = null;
       setPhases((p) => ({ ...p, [action]: "error" }));
       setTimeout(() => setPhases((p) => ({ ...p, [action]: "idle" })), 3000);
     }
-  }, [token, t.revoked, clearTimers, startPolling]);
+  }, [token, clearTimers, startPolling]);
 
-  // ── Expiry display ───────────────────────────────────────────────────────
-  const expiresText = (() => {
-    if (!info) return "";
-    const mins = Math.max(0, Math.round((new Date(info.expiresAt).getTime() - Date.now()) / 60_000));
-    if (mins >= 60) return `${Math.floor(mins / 60)}${t.hours} ${mins % 60}${t.minutes}`;
-    return `${mins} ${t.minutes}`;
-  })();
+  // ── Expiry ───────────────────────────────────────────────────────────────
+  const minsLeft = info
+    ? Math.max(0, Math.round((new Date(info.expiresAt).getTime() - Date.now()) / 60_000))
+    : 0;
+  const expiresText = info
+    ? minsLeft >= 60
+      ? `${Math.floor(minsLeft / 60)}${t.hours} ${minsLeft % 60}${t.minutes}`
+      : `${minsLeft} ${t.minutes}`
+    : "";
+  const isExpiringSoon = info ? minsLeft < 60 : false;
+  const isBlocked      = activeAction.current !== null;
 
-  const isBlocked = activeAction.current !== null;
-
-  return (
-    <>
-      {/* Ring animation keyframes */}
-      <style>{`
-        @keyframes ring-fill {
-          from { stroke-dashoffset: ${RING_CIRCUMFERENCE}; }
-          to   { stroke-dashoffset: 0; }
-        }
-        @keyframes ring-spin {
-          from { transform: rotate(-90deg); }
-          to   { transform: rotate(270deg); }
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: scale(0.8); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        .action-btn { -webkit-tap-highlight-color: transparent; }
-        .action-btn:active:not(:disabled) { transform: scale(0.97); }
-      `}</style>
-
-      <div style={{
-        minHeight: "100dvh",
-        background: "linear-gradient(160deg, #0f172a 0%, #1e293b 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px 16px",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif",
-        WebkitFontSmoothing: "antialiased",
-      }}>
-        <div style={{ width: "100%", maxWidth: "380px" }}>
-
-          {/* Header */}
-          <div style={{ textAlign: "center", marginBottom: "36px" }}>
-            <div style={{ fontSize: "44px", marginBottom: "10px", filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4))" }}>🚗</div>
-            <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#f1f5f9", margin: 0, letterSpacing: "-0.3px" }}>
-              {t.title}
-            </h1>
-            {info?.label && (
-              <p style={{ color: "#94a3b8", fontSize: "14px", margin: "8px 0 0", fontWeight: 500 }}>
-                {info.label}
-              </p>
-            )}
-          </div>
-
-          {/* Error state */}
-          {loadError && (
-            <div style={{
-              background: "rgba(239,68,68,0.15)",
-              border: "1px solid rgba(239,68,68,0.4)",
-              borderRadius: "16px",
-              padding: "20px",
-              color: "#fca5a5",
-              fontSize: "15px",
-              textAlign: "center",
-              lineHeight: 1.6,
-            }}>
-              {loadError}
-            </div>
-          )}
-
-          {/* Loading skeleton */}
-          {!loadError && !info && (
-            <div style={{ textAlign: "center", color: "#475569", fontSize: "15px" }}>
-              {t.loading}
-            </div>
-          )}
-
-          {/* Main content */}
-          {info && !loadError && (
-            <>
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "28px" }}>
-                {info.allowedActions.map((action) => {
-                  const phase = phases[action];
-                  const isThis = activeAction.current === action;
-
-                  const baseColor: Record<GuestAction, string> = {
-                    open:    "#22c55e",
-                    close:   "#ef4444",
-                    parking: "#3b82f6",
-                  };
-                  const color = phase === "success" || phase === "timeout" ? "#22c55e"
-                              : phase === "error"   ? "#ef4444"
-                              : baseColor[action];
-
-                  const icon = phase === "success" ? "✓"
-                             : phase === "timeout"  ? "✓"
-                             : phase === "error"    ? "✗"
-                             : action === "open"    ? t.openIcon
-                             : action === "close"   ? t.closeIcon
-                             : t.parkingIcon;
-
-                  const label = phase === "loading" && isThis ? ""  // hidden while ring shows
-                              : phase === "success"  ? t.success
-                              : phase === "timeout"  ? t.timeout
-                              : phase === "error"    ? t.error
-                              : action === "open"    ? t.open
-                              : action === "close"   ? t.close
-                              : t.parking;
-
-                  return (
-                    <button
-                      key={action}
-                      className="action-btn"
-                      onClick={() => handleAction(action)}
-                      disabled={isBlocked || phase === "success" || phase === "timeout"}
-                      style={{
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "12px",
-                        padding: "20px 24px",
-                        minHeight: "72px",
-                        background: phase === "idle" || phase === "loading"
-                          ? `linear-gradient(135deg, ${color}dd, ${color}aa)`
-                          : color,
-                        border: "none",
-                        borderRadius: "18px",
-                        color: "#fff",
-                        fontSize: "18px",
-                        fontWeight: 800,
-                        cursor: isBlocked || phase === "success" || phase === "timeout" ? "not-allowed" : "pointer",
-                        opacity: isBlocked && !isThis ? 0.45 : 1,
-                        transition: "opacity 0.2s, background 0.3s",
-                        boxShadow: phase === "idle" ? `0 4px 20px ${color}44` : "none",
-                        letterSpacing: "0.1px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {/* Circular progress ring — only for the active loading button */}
-                      {phase === "loading" && isThis && (
-                        <div style={{ position: "relative", width: "52px", height: "52px", flexShrink: 0 }}>
-                          <svg
-                            key={ringKey}
-                            width="52" height="52"
-                            viewBox="0 0 96 96"
-                            style={{ transform: "rotate(-90deg)" }}
-                          >
-                            {/* Track */}
-                            <circle
-                              cx="48" cy="48" r={RING_R}
-                              fill="none"
-                              stroke="rgba(255,255,255,0.25)"
-                              strokeWidth="6"
-                            />
-                            {/* Animated fill */}
-                            <circle
-                              cx="48" cy="48" r={RING_R}
-                              fill="none"
-                              stroke="#fff"
-                              strokeWidth="6"
-                              strokeLinecap="round"
-                              strokeDasharray={RING_CIRCUMFERENCE}
-                              strokeDashoffset={RING_CIRCUMFERENCE}
-                              style={{
-                                animation: `ring-fill ${MIN_LOADING_MS / 1000}s linear forwards`,
-                              }}
-                            />
-                          </svg>
-                          {/* Icon centred inside ring */}
-                          <span style={{
-                            position: "absolute", inset: 0,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: "20px",
-                          }}>
-                            {action === "open" ? t.openIcon : action === "close" ? t.closeIcon : t.parkingIcon}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Normal icon */}
-                      {!(phase === "loading" && isThis) && (
-                        <span style={{
-                          fontSize: "24px",
-                          animation: phase === "success" || phase === "timeout" ? "fade-in 0.3s ease" : "none",
-                        }}>
-                          {icon}
-                        </span>
-                      )}
-
-                      {/* Label */}
-                      <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                        <span>{label}</span>
-                        {phase === "loading" && isThis && (
-                          <span style={{ fontSize: "12px", fontWeight: 500, opacity: 0.85, marginTop: "2px" }}>
-                            {t.waiting}
-                          </span>
-                        )}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Footer meta */}
-              <div style={{
-                background: "rgba(255,255,255,0.05)",
-                backdropFilter: "blur(8px)",
-                borderRadius: "12px",
-                padding: "12px 18px",
-                fontSize: "12px",
-                color: "#64748b",
-                display: "flex",
-                justifyContent: "space-between",
-              }}>
-                <span>{t.usageLabel}: {info.usageCount}</span>
-                <span>{t.expiresLabel}: {expiresText}</span>
-              </div>
-            </>
-          )}
+  // ── Error states ─────────────────────────────────────────────────────────
+  if (errorType === "unavailable") {
+    return (
+      <div className={styles.page}>
+        <div className={styles.wrap}>
+          <UnavailableError t={t} onRetry={() => window.location.reload()} />
         </div>
       </div>
-    </>
+    );
+  }
+
+  if (errorType) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.wrap}>
+          <CountdownError
+            errorType={errorType}
+            t={t}
+            onRedirect={() => router.replace("/")}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main UI ──────────────────────────────────────────────────────────────
+  return (
+    <div className={styles.page}>
+      {/* Inline keyframe for action ring — references computed CIRC value */}
+      <style>{`@keyframes ring-fill{from{stroke-dashoffset:${BTN_RING_CIRC}}to{stroke-dashoffset:0}}`}</style>
+
+      <div className={styles.wrap}>
+        {/* App chip */}
+        <div className={styles.chip}>
+          <span>🔑</span>
+          <span>{t.appName}</span>
+        </div>
+
+        {/* Hero */}
+        <div className={styles.hero}>
+          <div className={styles.heroIcon}>
+            <div className={styles.heroIconGlow} />
+            <div className={styles.heroIconBg}>🚗</div>
+          </div>
+          <div className={styles.heroLabel}>
+            {info?.label
+              ? <><span>📋</span><span>{info.label}</span></>
+              : <><span>🔑</span><span>{t.carAccess}</span></>
+            }
+          </div>
+        </div>
+
+        {/* Skeleton */}
+        {!info && (
+          <div className={styles.skeletons}>
+            <div className={styles.skeletonBtn} />
+            <div className={styles.skeletonBtn} />
+            <div className={styles.skeletonMeta} />
+          </div>
+        )}
+
+        {/* Action buttons */}
+        {info && (
+          <>
+            <div className={styles.actions}>
+              {info.allowedActions.map((action) => {
+                const phase  = phases[action];
+                const isThis = activeAction.current === action;
+                const blocked = isBlocked && !isThis;
+
+                // CSS class names
+                const colorClass = styles[`btn${action.charAt(0).toUpperCase()}${action.slice(1)}` as keyof typeof styles];
+                const btnClass = [
+                  styles.btn,
+                  colorClass,
+                  phase === "idle" && !isBlocked ? styles.btnIdle : "",
+                  blocked ? styles.btnBlocked : "",
+                ].filter(Boolean).join(" ");
+
+                const badgeClass = [
+                  styles.iconBadge,
+                  phase === "success" || phase === "timeout" ? styles.iconBadgeSuccess : "",
+                  phase === "error"   ? styles.iconBadgeError   : "",
+                ].filter(Boolean).join(" ");
+
+                const iconMap: Record<GuestAction, string> = { open: t.openIcon, close: t.closeIcon, parking: t.parkingIcon };
+                const labelMap: Record<GuestAction, string> = { open: t.open,     close: t.close,     parking: t.parking     };
+                const subMap:   Record<GuestAction, string> = { open: t.openSub,  close: t.closeSub,  parking: t.parkingSub  };
+
+                const displayLabel = phase === "success" ? t.success
+                                   : phase === "timeout" ? t.timeout
+                                   : phase === "error"   ? t.error
+                                   : labelMap[action];
+                const displaySub   = phase === "loading" && isThis ? t.waiting
+                                   : phase === "success"  ? t.successSub
+                                   : phase === "timeout"  ? t.timeoutSub
+                                   : phase === "error"    ? t.errorSub
+                                   : subMap[action];
+                const displayIcon  = phase === "success" || phase === "timeout" ? "✓"
+                                   : phase === "error"   ? "✗"
+                                   : iconMap[action];
+
+                return (
+                  <button
+                    key={action}
+                    className={btnClass}
+                    onClick={() => handleAction(action)}
+                    disabled={blocked || phase === "success" || phase === "timeout" || (phase === "loading" && isThis)}
+                    aria-label={labelMap[action]}
+                  >
+                    {/* Icon / ring area */}
+                    {phase === "loading" && isThis ? (
+                      <div className={styles.ringWrap}>
+                        <span className={styles.ringIcon}>{iconMap[action]}</span>
+                        <svg key={ringKey} className={styles.ringSvg} viewBox="0 0 52 52">
+                          <circle cx="26" cy="26" r={BTN_RING_R} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="4" />
+                          <circle
+                            cx="26" cy="26" r={BTN_RING_R}
+                            fill="none"
+                            stroke="rgba(255,255,255,0.85)"
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                            strokeDasharray={BTN_RING_CIRC}
+                            strokeDashoffset={BTN_RING_CIRC}
+                            style={{ animation: `ring-fill ${MIN_LOADING_MS / 1000}s linear forwards` }}
+                          />
+                        </svg>
+                      </div>
+                    ) : (
+                      <div className={badgeClass}>
+                        <span style={{ fontSize: "22px", lineHeight: 1 }}>{displayIcon}</span>
+                      </div>
+                    )}
+
+                    {/* Text */}
+                    <div className={styles.btnText}>
+                      <span className={styles.btnLabel}>{displayLabel}</span>
+                      <span className={`${styles.btnSub} ${phase === "loading" && isThis ? styles.btnSubActive : ""}`}>
+                        {displaySub}
+                      </span>
+                    </div>
+
+                    {/* Chevron — only on idle */}
+                    {phase === "idle" && <i className={styles.chevron}>›</i>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Footer meta */}
+            <div className={styles.meta}>
+              <div className={styles.metaItem}>
+                <div className={styles.metaDot} />
+                <span>{t.usageLabel}: {info.usageCount}</span>
+              </div>
+              <div className={`${styles.metaItem} ${isExpiringSoon ? styles.metaExpiringSoon : ""}`}>
+                <div className={`${styles.metaDot} ${isExpiringSoon ? styles.metaDotExpiringSoon : ""}`} />
+                <span>{isExpiringSoon ? t.expiringSoon : `${t.expiresLabel} ${expiresText}`}</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
-// ─── Page export (Suspense required for useSearchParams) ────────────────────
+// ─── Page export (Suspense required for useSearchParams) ─────────────────────
 
 export default function GuestAccessPage() {
   return (
