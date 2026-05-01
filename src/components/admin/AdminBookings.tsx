@@ -361,6 +361,7 @@ export default function AdminBookings() {
   const [search,        setSearch]        = useState("");
   const [statusFilter,  setStatusFilter]  = useState<StatusFilter>("all");
   const [sourceFilter,  setSourceFilter]  = useState<SourceFilter>("all");
+  const [carFilter,     setCarFilter]     = useState<string>("all");
   const [dateFrom,      setDateFrom]      = useState("");
   const [dateTo,        setDateTo]        = useState("");
   const [selected,      setSelected]      = useState<AdminBooking | null>(null);
@@ -449,6 +450,19 @@ export default function AdminBookings() {
 
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
 
+  // ── Unique cars for filter dropdown ──────────────────────────────────────
+
+  const carOptions = useMemo(() => {
+    const seen = new Map<string, { id: string; label: string }>();
+    for (const b of bookings) {
+      if (b.car && !seen.has(b.car.id)) {
+        const label = [b.car.name, b.car.immatriculation].filter(Boolean).join(" · ");
+        seen.set(b.car.id, { id: b.car.id, label });
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [bookings]);
+
   // ── Active tab: build timeline grouped by day ─────────────────────────────
 
   const timeline = useMemo(() => {
@@ -462,6 +476,7 @@ export default function AdminBookings() {
 
       if (search && !matchesSearch(b, search)) continue;
       if (sourceFilter !== "all" && b.source !== sourceFilter) continue;
+      if (carFilter !== "all" && b.carId !== carFilter) continue;
 
       const start = new Date(b.startDateTime);
       if (start > now) {
@@ -485,7 +500,7 @@ export default function AdminBookings() {
       g.events.push(ev);
     }
     return groups;
-  }, [bookings, search, sourceFilter]);
+  }, [bookings, search, sourceFilter, carFilter]);
 
   // ── History tab: filter past + cancelled ──────────────────────────────────
 
@@ -499,11 +514,12 @@ export default function AdminBookings() {
       if (search && !matchesSearch(b, search)) return false;
       if (statusFilter !== "all" && b.status !== statusFilter) return false;
       if (sourceFilter !== "all" && b.source !== sourceFilter) return false;
+      if (carFilter !== "all" && b.carId !== carFilter) return false;
       if (dateFrom && b.startDateTime < `${dateFrom}T00:00:00`) return false;
       if (dateTo   && b.startDateTime > `${dateTo}T23:59:59`)   return false;
       return true;
     });
-  }, [bookings, search, statusFilter, sourceFilter, dateFrom, dateTo]);
+  }, [bookings, search, statusFilter, sourceFilter, carFilter, dateFrom, dateTo]);
 
   // ── Counts for tab badges ─────────────────────────────────────────────────
 
@@ -561,9 +577,9 @@ export default function AdminBookings() {
   };
 
   const clearHistoryFilters = () => {
-    setSearch(""); setStatusFilter("all"); setSourceFilter("all"); setDateFrom(""); setDateTo("");
+    setSearch(""); setStatusFilter("all"); setSourceFilter("all"); setCarFilter("all"); setDateFrom(""); setDateTo("");
   };
-  const hasHistoryFilters = search || statusFilter !== "all" || sourceFilter !== "all" || dateFrom || dateTo;
+  const hasHistoryFilters = search || statusFilter !== "all" || sourceFilter !== "all" || carFilter !== "all" || dateFrom || dateTo;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -617,7 +633,7 @@ export default function AdminBookings() {
       {/* ══ ACTIVE TAB ══════════════════════════════════════════════════════ */}
       {!loading && !error && tab === "active" && (
         <>
-          {/* Search + source filter */}
+          {/* Search + source + car filter */}
           <div className={styles.filters}>
             <div className={styles.searchWrap}>
               <span className={styles.searchIcon}>🔍</span>
@@ -634,8 +650,14 @@ export default function AdminBookings() {
               <option value="turo">Turo</option>
               <option value="getaround">Getaround</option>
             </select>
-            {(search || sourceFilter !== "all") && (
-              <button className={styles.clearBtn} onClick={() => { setSearch(""); setSourceFilter("all"); }}>Clear</button>
+            {carOptions.length > 1 && (
+              <select className={styles.select} value={carFilter} onChange={e => setCarFilter(e.target.value)}>
+                <option value="all">All cars</option>
+                {carOptions.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            )}
+            {(search || sourceFilter !== "all" || carFilter !== "all") && (
+              <button className={styles.clearBtn} onClick={() => { setSearch(""); setSourceFilter("all"); setCarFilter("all"); }}>Clear</button>
             )}
           </div>
 
@@ -696,6 +718,12 @@ export default function AdminBookings() {
               <option value="turo">Turo</option>
               <option value="getaround">Getaround</option>
             </select>
+            {carOptions.length > 1 && (
+              <select className={styles.select} value={carFilter} onChange={e => setCarFilter(e.target.value)}>
+                <option value="all">All cars</option>
+                {carOptions.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            )}
             <label className={styles.dateField}>
               <span className={styles.dateFieldLabel}>From</span>
               <input type="date" className={styles.dateInput} value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
