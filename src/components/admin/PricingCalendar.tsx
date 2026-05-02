@@ -34,6 +34,22 @@ type ModalState =
   | { mode: "create"; carId: string; startDate: string; endDate: string }
   | { mode: "edit";   carId: string; pricing: CarPricing };
 
+interface CalendarBooking {
+  id: string;
+  carId: string;
+  startDate: string;   // YYYY-MM-DD
+  endDate: string;     // YYYY-MM-DD
+  status: "pending_payment" | "pending" | "confirmed" | "cancelled";
+  customerName: string | null;
+  source: "private" | "turo" | "getaround";
+}
+
+interface BookingBarInfo {
+  booking: CalendarBooking;
+  spanDays: number;  // how many days the bar spans within the visible window
+  stackIndex: number;
+}
+
 // ── Colors ────────────────────────────────────────────────────────────────────
 
 const PALETTE = [
@@ -51,6 +67,20 @@ function colorForId(id: string) {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
   return PALETTE[Math.abs(h) % PALETTE.length];
+}
+
+function bookingColor(status: CalendarBooking["status"]) {
+  if (status === "confirmed")        return "rgba(16, 185, 129, 0.80)";
+  if (status === "pending")          return "rgba(245, 158, 11, 0.80)";
+  if (status === "pending_payment")  return "rgba(249, 115, 22, 0.80)";
+  return "rgba(107, 114, 128, 0.65)";
+}
+
+function bookingLabel(status: CalendarBooking["status"]) {
+  if (status === "confirmed")        return "Confirmed";
+  if (status === "pending")          return "Pending";
+  if (status === "pending_payment")  return "Awaiting payment";
+  return status;
 }
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
@@ -117,13 +147,14 @@ interface CellProps {
   isSelected: boolean;
   isWeekend: boolean;
   isToday: boolean;
+  bookingBars: BookingBarInfo[];
   onDown: (carId: string, date: string, pricing: CarPricing | null, e: React.MouseEvent) => void;
   onEnter: (carId: string, date: string) => void;
 }
 
 const Cell = React.memo(function Cell({
   date, carId, pricing, isFirst, isLast, isSelected,
-  isWeekend, isToday, onDown, onEnter,
+  isWeekend, isToday, bookingBars, onDown, onEnter,
 }: CellProps) {
   const color  = pricing ? colorForId(pricing.id) : null;
   const title  = pricing
@@ -154,6 +185,19 @@ const Cell = React.memo(function Cell({
           {pricing.label ? <span className={styles.cellBadgeLabel}> {pricing.label}</span> : null}
         </span>
       )}
+      {bookingBars.map(({ booking, spanDays, stackIndex }) => (
+        <div
+          key={booking.id}
+          className={styles.bookingBar}
+          style={{
+            background: bookingColor(booking.status),
+            width: `${spanDays * 28 - 2}px`,
+            bottom: `${4 + stackIndex * 7}px`,
+          }}
+          data-tooltip={`${bookingLabel(booking.status)}${booking.customerName ? ` · ${booking.customerName}` : ""} · ${booking.startDate} → ${booking.endDate}`}
+          onMouseDown={(e) => e.stopPropagation()}
+        />
+      ))}
     </div>
   );
 });
@@ -161,20 +205,54 @@ const Cell = React.memo(function Cell({
 // ── Car row (memoised) ────────────────────────────────────────────────────────
 
 interface CarRowProps {
-  car:       Car;
-  days:      DayInfo[];
-  dayMap:    Record<string, CarPricing>;  // date → pricing
-  selCarId:  string | null;
-  selStart:  string | null;
-  selEnd:    string | null;
-  onDown:    CellProps["onDown"];
-  onEnter:   CellProps["onEnter"];
+  car:          Car;
+  days:         DayInfo[];
+  dayMap:       Record<string, CarPricing>;  // date → pricing
+  selCarId:     string | null;
+  selStart:     string | null;
+  selEnd:       string | null;
+  carBookings:  CalendarBooking[];
+  onDown:       CellProps["onDown"];
+  onEnter:      CellProps["onEnter"];
 }
 
 const CarRow = React.memo(function CarRow({
-  car, days, dayMap, selCarId, selStart, selEnd, onDown, onEnter,
+  car, days, dayMap, selCarId, selStart, selEnd, carBookings, onDown, onEnter,
 }: CarRowProps) {
-  const label = [car.brand, car.model].filter(Boolean).join(" ") || car.name;
+  const label    = [car.brand, car.model].filter(Boolean).join(" ") || car.name;
+  const firstDay = days[0]?.date ?? "";
+  const lastDay  = days[days.length - 1]?.date ?? "";
+
+  // Compute which cells should render a booking bar start, with overlap stacking
+  const bookingBarStarts = useMemo<Record<string, BookingBarInfo[]>>(() => {
+    const map: Record<string, BookingBarInfo[]> = {};
+    const sorted = [...carBookings].sort((a, b) => a.startDate.localeCompare(b.startDate));
+    const assigned: Array<{ start: string; end: string; level: number }> = [];
+
+    for (const booking of sorted) {
+      if (booking.endDate < firstDay || booking.startDate > lastDay) continue;
+
+      // assign lowest free stack level (no overlap with existing)
+      const usedLevels = new Set(
+        assigned
+          .filter(a => a.start <= booking.endDate && a.end >= booking.startDate)
+          .map(a => a.level),
+      );
+      let level = 0;
+      while (usedLevels.has(level)) level++;
+      assigned.push({ start: booking.startDate, end: booking.endDate, level });
+
+      const visibleStart = booking.startDate >= firstDay ? booking.startDate : firstDay;
+      const visibleEnd   = booking.endDate   <= lastDay  ? booking.endDate   : lastDay;
+      let spanDays = 0;
+      let d = visibleStart;
+      while (d <= visibleEnd) { spanDays++; d = addDay(d); }
+
+      if (!map[visibleStart]) map[visibleStart] = [];
+      map[visibleStart].push({ booking, spanDays, stackIndex: level });
+    }
+    return map;
+  }, [carBookings, firstDay, lastDay]);
 
   return (
     <>
@@ -218,6 +296,7 @@ const CarRow = React.memo(function CarRow({
             isSelected={isSelected}
             isWeekend={d.isWeekend}
             isToday={d.isToday}
+            bookingBars={bookingBarStarts[d.date] ?? []}
             onDown={onDown}
             onEnter={onEnter}
           />
@@ -235,6 +314,7 @@ export default function PricingCalendar() {
   // ─ Data
   const [cars,     setCars]     = useState<Car[]>([]);
   const [pricings, setPricings] = useState<Record<string, CarPricing[]>>({});
+  const [bookings, setBookings] = useState<Record<string, CalendarBooking[]>>({});
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
 
@@ -285,18 +365,41 @@ export default function PricingCalendar() {
         if (cancelled) return;
         setCars(carsData);
 
-        const results = await Promise.all(
-          carsData.map(async (c) => {
-            try {
-              const r = await fetch(`/next-api/cars/${c.id}/pricings`, { cache: "no-store" });
-              return [c.id, r.ok ? await r.json() : []] as [string, CarPricing[]];
-            } catch {
-              return [c.id, []] as [string, CarPricing[]];
-            }
-          }),
-        );
+        const [pricingResults, rawBookings] = await Promise.all([
+          Promise.all(
+            carsData.map(async (c) => {
+              try {
+                const r = await fetch(`/next-api/cars/${c.id}/pricings`, { cache: "no-store" });
+                return [c.id, r.ok ? await r.json() : []] as [string, CarPricing[]];
+              } catch {
+                return [c.id, []] as [string, CarPricing[]];
+              }
+            }),
+          ),
+          fetch("/next-api/bookings", { cache: "no-store" })
+            .then(r => r.ok ? r.json() : [])
+            .catch(() => []),
+        ]);
         if (cancelled) return;
-        setPricings(Object.fromEntries(results));
+        setPricings(Object.fromEntries(pricingResults));
+
+        const grouped: Record<string, CalendarBooking[]> = {};
+        for (const b of rawBookings as Array<{
+          id: string; carId: string; startDateTime: string; endDateTime: string;
+          status: string; customerName?: string | null; source: string;
+        }>) {
+          const cb: CalendarBooking = {
+            id: b.id,
+            carId: b.carId,
+            startDate: b.startDateTime.slice(0, 10),
+            endDate:   b.endDateTime.slice(0, 10),
+            status:    b.status as CalendarBooking["status"],
+            customerName: b.customerName ?? null,
+            source:    b.source as CalendarBooking["source"],
+          };
+          (grouped[cb.carId] ??= []).push(cb);
+        }
+        setBookings(grouped);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Load failed");
       } finally {
@@ -527,6 +630,7 @@ export default function PricingCalendar() {
                 selCarId={dragCarId}
                 selStart={selStart}
                 selEnd={selEnd}
+                carBookings={bookings[car.id] ?? []}
                 onDown={handleCellDown}
                 onEnter={handleCellEnter}
               />
@@ -549,6 +653,19 @@ export default function PricingCalendar() {
           <span className={styles.legendItem}>
             <span className={styles.legendSwatch} style={{ background: "rgba(var(--rgb-brand-primary),0.12)", border: "1px solid var(--color-brand-primary)" }} />
             Today
+          </span>
+          <span className={styles.legendDivider} />
+          <span className={styles.legendItem}>
+            <span className={styles.legendBar} style={{ background: "rgba(16,185,129,0.80)" }} />
+            Confirmed
+          </span>
+          <span className={styles.legendItem}>
+            <span className={styles.legendBar} style={{ background: "rgba(245,158,11,0.80)" }} />
+            Pending
+          </span>
+          <span className={styles.legendItem}>
+            <span className={styles.legendBar} style={{ background: "rgba(249,115,22,0.80)" }} />
+            Awaiting payment
           </span>
         </div>
       )}
