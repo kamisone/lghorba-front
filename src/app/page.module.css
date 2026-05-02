@@ -187,6 +187,62 @@
   background: rgba(var(--rgb-white),0.1);
 }
 
+/* ── Search section ── */
+.searchSection {
+  position: relative;
+  background: var(--color-white);
+  padding: 0 0 4rem;
+  /* Top rounded edge smoothly caps the dark hero */
+  border-radius: 32px 32px 0 0;
+  margin-top: -32px;
+  z-index: 1;
+}
+
+.searchInner {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 3.5rem 2rem 0;
+}
+
+.searchHead {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.searchEyebrow {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-brand-accent);
+  margin: 0 0 0.5rem;
+}
+
+.searchTitle {
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  font-weight: 900;
+  color: var(--color-text-heading);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.searchCard {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.07), 0 1px 6px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 640px) {
+  .searchSection {
+    border-radius: 20px 20px 0 0;
+    margin-top: -20px;
+  }
+  .searchCard { padding: 1.25rem; }
+  .searchInner { padding: 2rem 1rem 0; }
+}
+
 /* ── Shared section styles ── */
 .sectionInner {
   max-width: 1120px;

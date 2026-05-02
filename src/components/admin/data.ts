@@ -62,4 +62,11 @@ export interface Car {
   vehicleCondition?: string | null;
   basePricePerDay?: number | null;
   basePricePerWeekendDay?: number | null;
+  // Location & delivery
+  parkingAddress?: string | null;
+  parkingLat?: number | null;
+  parkingLng?: number | null;
+  deliveryType?: "none" | "radius" | "whitelist" | null;
+  deliveryRadiusKm?: number | null;
+  deliveryAddresses?: { label: string; lat: number; lng: number }[] | null;
 }

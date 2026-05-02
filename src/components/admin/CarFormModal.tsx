@@ -4,6 +4,7 @@ import { useState, FormEvent, useEffect } from "react";
 import type { Car, MileageRange, VehicleType, EnergyType, GearboxType } from "./data";
 import styles from "./CarFormModal.module.css";
 import BilingualField from "./BilingualField";
+import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
 
 interface Props {
   car?: Car;
@@ -47,6 +48,22 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
   const [enTranslationIds, setEnTranslationIds]   = useState<EnTranslationIds>({});
   const [loading, setLoading]                     = useState(false);
   const [error, setError]                         = useState("");
+
+  // Location & delivery state
+  const [parkingAddress, setParkingAddress] = useState<SelectedAddress | null>(null);
+  const [deliveryType, setDeliveryType]     = useState<"none" | "radius" | "whitelist">("none");
+  const [deliveryRadius, setDeliveryRadius] = useState("");
+
+  // Populate location/delivery from car
+  useEffect(() => {
+    if (car) {
+      if (car.parkingLat != null && car.parkingLng != null && car.parkingAddress) {
+        setParkingAddress({ label: car.parkingAddress, lat: car.parkingLat, lng: car.parkingLng });
+      }
+      setDeliveryType((car.deliveryType as "none" | "radius" | "whitelist") ?? "none");
+      setDeliveryRadius(car.deliveryRadiusKm != null ? String(car.deliveryRadiusKm) : "");
+    }
+  }, [car]);
 
   // Populate FR fields from the car entity
   useEffect(() => {
@@ -128,6 +145,11 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
         vehicleCondition: form.vehicleCondition || null,
         basePricePerDay:        Number(form.basePricePerDay),
         basePricePerWeekendDay: form.basePricePerWeekendDay ? Number(form.basePricePerWeekendDay) : null,
+        parkingAddress:   parkingAddress?.label ?? null,
+        parkingLat:       parkingAddress?.lat   ?? null,
+        parkingLng:       parkingAddress?.lng   ?? null,
+        deliveryType:     deliveryType,
+        deliveryRadiusKm: deliveryType === "radius" && deliveryRadius ? Number(deliveryRadius) : null,
       };
       const url = isEdit ? `/next-api/cars/${car.id}` : "/next-api/cars";
       const res = await fetch(url, {
@@ -310,6 +332,52 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
               />
             </div>
           </div>
+
+          {/* ── Location & Delivery ── */}
+          <p className={styles.section}>Location &amp; Delivery</p>
+
+          <div className={styles.field}>
+            <label className={styles.label}>Parking address</label>
+            <AddressAutocomplete
+              value={parkingAddress}
+              onChange={setParkingAddress}
+              placeholder="Search parking address in France…"
+            />
+            {parkingAddress && (
+              <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", margin: "4px 0 0 2px" }}>
+                📍 {parkingAddress.lat.toFixed(5)}, {parkingAddress.lng.toFixed(5)}
+              </p>
+            )}
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>Delivery option</label>
+            <select
+              className={styles.select}
+              value={deliveryType}
+              onChange={(e) => setDeliveryType(e.target.value as "none" | "radius" | "whitelist")}
+            >
+              <option value="none">No delivery (pickup only)</option>
+              <option value="radius">Delivery within radius (km)</option>
+              <option value="whitelist">Delivery to specific addresses</option>
+            </select>
+          </div>
+
+          {deliveryType === "radius" && (
+            <div className={styles.field}>
+              <label className={styles.label}>Delivery radius (km)</label>
+              <input
+                className={styles.input}
+                type="number"
+                min="1"
+                max="200"
+                step="0.5"
+                value={deliveryRadius}
+                onChange={(e) => setDeliveryRadius(e.target.value)}
+                placeholder="e.g. 20"
+              />
+            </div>
+          )}
 
           {/* ── Details ── */}
           <p className={styles.section}>Details</p>

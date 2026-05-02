@@ -1,5 +1,6 @@
 import { getTranslations } from "@/lib/i18n";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
+import CarSearchForm from "@/components/CarSearchForm";
 import styles from "../page.module.css";
 
 const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
@@ -86,6 +87,33 @@ export default async function LandingPage({ params }: { params: { locale: string
               <span className={styles.heroStatNum}>{t.hero.stat3.num}</span>
               <span className={styles.heroStatLabel}>{t.hero.stat3.label}</span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Search section ── */}
+      <section className={styles.searchSection}>
+        <div className={styles.searchInner}>
+          <div className={styles.searchHead}>
+            <p className={styles.searchEyebrow}>{t.search.eyebrow}</p>
+            <h2 className={styles.searchTitle}>{t.search.title}</h2>
+          </div>
+          <div className={styles.searchCard}>
+            <CarSearchForm
+              locale={locale}
+              labels={{
+                eyebrow:            t.search.eyebrow,
+                title:              t.search.title,
+                fromLabel:          t.search.fromLabel,
+                toLabel:            t.search.toLabel,
+                addressLabel:       t.search.addressLabel,
+                addressPlaceholder: t.search.addressPlaceholder,
+                searchBtn:          t.search.searchBtn,
+                dateError:          t.search.dateError,
+                addressRequired:    t.search.addressRequired,
+                selectFromList:     t.search.selectFromList,
+              }}
+            />
           </div>
         </div>
       </section>

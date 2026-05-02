@@ -1,0 +1,153 @@
+.wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* ── Input wrapper ── */
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-white);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  overflow: hidden;
+}
+.inputWrap:focus-within {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-primary), 0.1);
+}
+.inputError {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
+}
+.inputValid {
+  border-color: var(--color-success) !important;
+}
+
+.inputIcon {
+  padding: 0 0 0 14px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  padding: 14px 10px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  min-width: 0;
+}
+.input::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-brand-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.clearBtn {
+  padding: 0 12px;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-placeholder);
+  font-size: 13px;
+  transition: color 0.13s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.clearBtn:hover { color: var(--color-text-primary); }
+
+/* ── Error message ── */
+.errorMsg {
+  font-size: 0.78rem;
+  color: var(--color-error);
+  margin: 4px 0 0 4px;
+  font-weight: 500;
+}
+
+/* ── Dropdown ── */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: 200;
+  list-style: none;
+  overflow: hidden;
+  animation: dropdown-in 0.12s ease;
+}
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.option:hover, .optionActive {
+  background: var(--color-surface);
+}
+.option + .option {
+  border-top: 1px solid var(--color-surface-raised);
+}
+
+.optionIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.optionLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.optionCity {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.powered {
+  padding: 6px 14px;
+  font-size: 0.68rem;
+  color: var(--color-text-placeholder);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  text-align: right;
+}
