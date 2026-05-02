@@ -3,6 +3,11 @@
   font-family: inherit;
   color: var(--color-text-heading);
   overflow-x: hidden;
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(rgba(0, 70, 110, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 70, 110, 0.07) 1px, transparent 1px);
+  background-size: 60px 60px;
 }
 
 
@@ -49,8 +54,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(var(--rgb-white),0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(var(--rgb-white),0.03) 1px, transparent 1px);
+    linear-gradient(rgba(100, 180, 230, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 180, 230, 0.10) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
@@ -190,23 +195,28 @@
 /* ── Search section ── */
 .searchSection {
   position: relative;
-  background: var(--color-white);
-  padding: 0 0 4rem;
-  /* Top rounded edge smoothly caps the dark hero */
+  background-color: var(--color-brand-darkest);
+  background-image:
+    linear-gradient(rgba(100, 180, 230, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 180, 230, 0.10) 1px, transparent 1px);
+  background-size: 60px 60px;
+  padding: 0 0 5rem;
   border-radius: 32px 32px 0 0;
   margin-top: -32px;
   z-index: 1;
 }
 
 .searchInner {
-  max-width: 1000px;
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 3.5rem 2rem 0;
+  padding: 4rem 2rem 0;
 }
 
 .searchHead {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .searchEyebrow {
@@ -218,20 +228,26 @@
   margin: 0 0 0.5rem;
 }
 
+/* Title sits on dark background → must be white */
 .searchTitle {
-  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
   font-weight: 900;
-  color: var(--color-text-heading);
+  color: var(--color-surface);
   margin: 0;
   letter-spacing: -0.02em;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.18);
 }
 
+/* Card floats above the gradient — needs stronger shadow */
 .searchCard {
   background: var(--color-white);
   border: 1.5px solid var(--color-border);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.07), 0 1px 6px rgba(0, 0, 0, 0.04);
+  border-radius: 24px;
+  padding: 2.5rem 3rem;
+  box-shadow:
+    0 24px 72px rgba(0, 0, 0, 0.26),
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 @media (max-width: 640px) {
@@ -239,7 +255,7 @@
     border-radius: 20px 20px 0 0;
     margin-top: -20px;
   }
-  .searchCard { padding: 1.25rem; }
+  .searchCard { padding: 1.5rem; }
   .searchInner { padding: 2rem 1rem 0; }
 }
 
@@ -284,7 +300,12 @@
 /* ── Platforms ── */
 .platforms {
   padding: 6rem 0;
-  background: var(--color-white);
+  position: relative;
+  z-index: 3;
+  /* Caps over the dark bottom of the FleetCarousel */
+  border-radius: 32px 32px 0 0;
+  margin-top: -32px;
+  background: transparent;
 }
 
 .platformGrid {
@@ -412,7 +433,11 @@
 /* ── Fleet ── */
 .fleet {
   padding: 6rem 0;
-  background: var(--color-surface);
+  position: relative;
+  z-index: 4;
+  border-radius: 32px 32px 0 0;
+  margin-top: -32px;
+  background: transparent;
 }
 
 .fleetGrid {
@@ -520,7 +545,11 @@
 /* ── How it works ── */
 .how {
   padding: 6rem 0;
-  background: var(--color-white);
+  position: relative;
+  z-index: 5;
+  border-radius: 32px 32px 0 0;
+  margin-top: -32px;
+  background: transparent;
 }
 
 .howSteps {
@@ -603,7 +632,24 @@
 /* ── Why us ── */
 .why {
   padding: 6rem 0;
-  background: var(--color-brand-dark);
+  position: relative;
+  z-index: 6;
+  border-radius: 32px 32px 0 0;
+  margin-top: -32px;
+  background-color: var(--color-brand-darkest);
+  background-image:
+    linear-gradient(rgba(100, 180, 230, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 180, 230, 0.10) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Content above pseudo-element overlays for all decorated sections */
+.platforms > .sectionInner,
+.fleet     > .sectionInner,
+.how       > .sectionInner,
+.why       > .sectionInner {
+  position: relative;
+  z-index: 1;
 }
 
 .why .sectionEyebrow {
@@ -786,4 +832,12 @@
   .heroBtns { flex-direction: column; align-items: stretch; }
   .btnPrimary, .btnOutline { text-align: center; }
   .sectionSub { font-size: 0.9rem; }
+
+  .platforms,
+  .fleet,
+  .how,
+  .why {
+    border-radius: 20px 20px 0 0;
+    margin-top: -20px;
+  }
 }

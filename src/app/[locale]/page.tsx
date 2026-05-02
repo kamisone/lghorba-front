@@ -102,16 +102,14 @@ export default async function LandingPage({ params }: { params: { locale: string
             <CarSearchForm
               locale={locale}
               labels={{
-                eyebrow:            t.search.eyebrow,
-                title:              t.search.title,
                 fromLabel:          t.search.fromLabel,
                 toLabel:            t.search.toLabel,
                 addressLabel:       t.search.addressLabel,
                 addressPlaceholder: t.search.addressPlaceholder,
+                addressOptional:    t.search.addressOptional,
+                addressHelper:      t.search.addressHelper,
                 searchBtn:          t.search.searchBtn,
                 dateError:          t.search.dateError,
-                addressRequired:    t.search.addressRequired,
-                selectFromList:     t.search.selectFromList,
               }}
             />
           </div>

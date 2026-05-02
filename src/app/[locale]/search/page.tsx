@@ -33,6 +33,8 @@ interface SearchResult {
 
 type SortKey = "relevance" | "price_asc" | "price_desc" | "distance";
 
+const DIST_MAX_KM = 50;
+
 // ── Inner page (needs useSearchParams) ────────────────────────────────────────
 
 function SearchPage() {
@@ -47,13 +49,15 @@ function SearchPage() {
   const lng     = searchParams.get("lng")     ?? "";
   const address = searchParams.get("address") ?? "";
 
+  const hasAddress = Boolean(address && lat && lng);
+
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
   const [sort,    setSort]    = useState<SortKey>("relevance");
 
   const search = useCallback(async () => {
-    if (!start || !end || !lat || !lng || !address) {
+    if (!start || !end) {
       setError(t.search.invalidParams);
       setLoading(false);
       return;
@@ -61,16 +65,16 @@ function SearchPage() {
     setLoading(true);
     setError(null);
     try {
+      const body: Record<string, unknown> = { startDateTime: start, endDateTime: end };
+      if (lat && lng && address) {
+        body.addressLat   = parseFloat(lat);
+        body.addressLng   = parseFloat(lng);
+        body.addressLabel = address;
+      }
       const res = await fetch("/next-api/public/cars/search", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          startDateTime: start,
-          endDateTime:   end,
-          addressLat:    parseFloat(lat),
-          addressLng:    parseFloat(lng),
-          addressLabel:  address,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error();
       setResults(await res.json());
@@ -83,7 +87,12 @@ function SearchPage() {
 
   useEffect(() => { search(); }, [search]);
 
-  const sorted = [...results].sort((a, b) => {
+  // Filter out cars > 50 km when an address is provided
+  const filtered = hasAddress
+    ? results.filter((c) => c.distanceKm === null || c.distanceKm <= DIST_MAX_KM)
+    : results;
+
+  const sorted = [...filtered].sort((a, b) => {
     if (sort === "price_asc")  return (a.basePricePerDay ?? Infinity) - (b.basePricePerDay ?? Infinity);
     if (sort === "price_desc") return (b.basePricePerDay ?? 0) - (a.basePricePerDay ?? 0);
     if (sort === "distance")   return (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity);
@@ -91,6 +100,18 @@ function SearchPage() {
     if (a.deliveryAvailable !== b.deliveryAvailable) return a.deliveryAvailable ? -1 : 1;
     return (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity);
   });
+
+  const excludedCount = results.length - filtered.length;
+
+  function getDistanceBadge(km: number): { label: string; cls: string } {
+    if (km < 10)  return { label: t.search.distClose,  cls: styles.distClose  };
+    if (km <= 15) return { label: t.search.distNearby, cls: styles.distNearby };
+    return               { label: t.search.distFar,    cls: styles.distFar    };
+  }
+
+  function fmtDist(km: number): string {
+    return km < 1 ? `${Math.round(km * 1000)} m` : `${km} km`;
+  }
 
   const startFmt = start ? new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
     dateStyle: "medium", timeStyle: "short",
@@ -115,8 +136,12 @@ function SearchPage() {
           <h1 className={styles.headerTitle}>{t.search.resultsTitle}</h1>
           <div className={styles.headerMeta}>
             <span className={styles.headerMetaItem}>📅 {startFmt} → {endFmt}</span>
-            <span className={styles.headerMetaSep}>·</span>
-            <span className={styles.headerMetaItem}>📍 {address}</span>
+            {address && (
+              <>
+                <span className={styles.headerMetaSep}>·</span>
+                <span className={styles.headerMetaItem}>📍 {address}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -124,15 +149,27 @@ function SearchPage() {
       {/* ── Results area ── */}
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          {!loading && !error && (
-            <p className={styles.count}>
-              {sorted.length === 0
-                ? t.search.noResults
-                : locale === "fr"
-                ? `${sorted.length} véhicule${sorted.length > 1 ? "s" : ""} disponible${sorted.length > 1 ? "s" : ""}`
-                : `${sorted.length} vehicle${sorted.length > 1 ? "s" : ""} available`}
-            </p>
-          )}
+          <div className={styles.toolbarLeft}>
+            {!loading && !error && (
+              <p className={styles.count}>
+                {sorted.length === 0
+                  ? t.search.noResults
+                  : locale === "fr"
+                  ? `${sorted.length} véhicule${sorted.length > 1 ? "s" : ""} disponible${sorted.length > 1 ? "s" : ""}`
+                  : `${sorted.length} vehicle${sorted.length > 1 ? "s" : ""} available`}
+              </p>
+            )}
+            {hasAddress && !loading && !error && (
+              <span className={styles.radiusChip}>
+                📍 {t.search.distRadius}
+                {excludedCount > 0 && (
+                  <span className={styles.radiusChipCount}>
+                    {` · ${excludedCount} hidden`}
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
           {!loading && sorted.length > 0 && (
             <div className={styles.sortWrap}>
               <label className={styles.sortLabel}>{t.search.sortBy}</label>
@@ -142,7 +179,7 @@ function SearchPage() {
                 onChange={(e) => setSort(e.target.value as SortKey)}
               >
                 <option value="relevance">{t.search.sortRelevance}</option>
-                <option value="distance">{t.search.sortDistance}</option>
+                {hasAddress && <option value="distance">{t.search.sortDistance}</option>}
                 <option value="price_asc">{t.search.sortPriceAsc}</option>
                 <option value="price_desc">{t.search.sortPriceDesc}</option>
               </select>
@@ -179,74 +216,90 @@ function SearchPage() {
 
         {!loading && !error && sorted.length > 0 && (
           <div className={styles.grid}>
-            {sorted.map((car) => (
-              <Link key={car.id} href={`/${locale}/fleet/${car.id}`} className={styles.card}>
+            {sorted.map((car) => {
+              const badge = hasAddress && car.distanceKm != null
+                ? getDistanceBadge(car.distanceKm)
+                : null;
 
-                {/* Photo */}
-                <div className={styles.cardPhoto}>
-                  {car.hasPhoto ? (
-                    <Image
-                      src={`/next-api/public/cars/${car.id}/photo`}
-                      alt={car.name}
-                      fill
-                      className={styles.cardImg}
-                      sizes="(max-width: 640px) 100vw, 380px"
-                    />
-                  ) : (
-                    <div className={styles.cardPhotoPlaceholder}>🚗</div>
-                  )}
+              return (
+                <Link key={car.id} href={`/${locale}/fleet/${car.id}`} className={styles.card}>
 
-                  {/* Delivery badge */}
-                  {car.deliveryType !== "none" && (
-                    <span className={`${styles.deliveryBadge} ${car.deliveryAvailable ? styles.deliveryYes : styles.deliveryNo}`}>
-                      {car.deliveryAvailable ? "🚚 " + t.search.deliveryAvail : "📍 " + t.search.pickupOnly}
-                    </span>
-                  )}
-                </div>
+                  {/* Photo */}
+                  <div className={styles.cardPhoto}>
+                    {car.hasPhoto ? (
+                      <Image
+                        src={`/next-api/public/cars/${car.id}/photo`}
+                        alt={car.name}
+                        fill
+                        className={styles.cardImg}
+                        sizes="(max-width: 640px) 100vw, 380px"
+                      />
+                    ) : (
+                      <div className={styles.cardPhotoPlaceholder}>🚗</div>
+                    )}
 
-                {/* Content */}
-                <div className={styles.cardBody}>
-                  <div className={styles.cardTop}>
-                    <h2 className={styles.cardName}>{car.name}</h2>
-                    {car.basePricePerDay != null && (
-                      <div className={styles.cardPrice}>
-                        <span className={styles.cardPriceNum}>{car.basePricePerDay} €</span>
-                        <span className={styles.cardPriceSub}>/{t.search.perDay}</span>
+                    {/* Distance badge – top right */}
+                    {badge && (
+                      <span className={`${styles.distanceBadge} ${badge.cls}`}>
+                        {fmtDist(car.distanceKm!)} · {badge.label}
+                      </span>
+                    )}
+
+                    {/* Delivery badge – bottom left */}
+                    {car.deliveryType !== "none" && (
+                      <span className={`${styles.deliveryBadge} ${car.deliveryAvailable ? styles.deliveryYes : styles.deliveryNo}`}>
+                        {car.deliveryAvailable ? "🚚 " + t.search.deliveryAvail : "📍 " + t.search.pickupOnly}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className={styles.cardBody}>
+                    <div className={styles.cardTop}>
+                      <h2 className={styles.cardName}>{car.name}</h2>
+                      {car.basePricePerDay != null && (
+                        <div className={styles.cardPrice}>
+                          <span className={styles.cardPriceNum}>{car.basePricePerDay} €</span>
+                          <span className={styles.cardPriceSub}>/{t.search.perDay}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Specs */}
+                    {(car.vehicleType || car.energy || car.gearbox || car.numberOfSeats) && (
+                      <div className={styles.cardSpecs}>
+                        {car.vehicleType    && <span className={styles.spec}>{car.vehicleType}</span>}
+                        {car.energy         && <span className={styles.spec}>{car.energy}</span>}
+                        {car.gearbox        && <span className={styles.spec}>{car.gearbox}</span>}
+                        {car.numberOfSeats  && <span className={styles.spec}>{car.numberOfSeats} {t.search.seats}</span>}
                       </div>
                     )}
-                  </div>
 
-                  {/* Specs */}
-                  {(car.vehicleType || car.energy || car.gearbox || car.numberOfSeats) && (
-                    <div className={styles.cardSpecs}>
-                      {car.vehicleType    && <span className={styles.spec}>{car.vehicleType}</span>}
-                      {car.energy         && <span className={styles.spec}>{car.energy}</span>}
-                      {car.gearbox        && <span className={styles.spec}>{car.gearbox}</span>}
-                      {car.numberOfSeats  && <span className={styles.spec}>{car.numberOfSeats} {t.search.seats}</span>}
+                    {/* Distance & delivery info */}
+                    <div className={styles.cardMeta}>
+                      {car.distanceKm != null && (
+                        <span className={styles.cardMetaItem}>
+                          📍 {fmtDist(car.distanceKm)}
+                          {car.parkingAddress && ` · ${car.parkingAddress}`}
+                        </span>
+                      )}
+                      {!hasAddress && car.parkingAddress && car.distanceKm == null && (
+                        <span className={styles.cardMetaItem}>
+                          📍 {car.parkingAddress}
+                        </span>
+                      )}
+                      {car.deliveryNote && (
+                        <span className={`${styles.cardMetaItem} ${car.deliveryAvailable ? styles.cardMetaGreen : styles.cardMetaOrange}`}>
+                          {car.deliveryAvailable ? "✓" : "ℹ"} {car.deliveryNote}
+                        </span>
+                      )}
                     </div>
-                  )}
 
-                  {/* Distance & delivery info */}
-                  <div className={styles.cardMeta}>
-                    {car.distanceKm != null && (
-                      <span className={styles.cardMetaItem}>
-                        📍 {car.distanceKm < 1
-                          ? `${Math.round(car.distanceKm * 1000)} m`
-                          : `${car.distanceKm} km`}
-                        {car.parkingAddress && ` · ${car.parkingAddress}`}
-                      </span>
-                    )}
-                    {car.deliveryNote && (
-                      <span className={`${styles.cardMetaItem} ${car.deliveryAvailable ? styles.cardMetaGreen : styles.cardMetaOrange}`}>
-                        {car.deliveryAvailable ? "✓" : "ℹ"} {car.deliveryNote}
-                      </span>
-                    )}
+                    <span className={styles.cardCta}>{t.carDetail.viewDetails}</span>
                   </div>
-
-                  <span className={styles.cardCta}>{t.carDetail.viewDetails}</span>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

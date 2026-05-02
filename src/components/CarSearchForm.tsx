@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import AddressAutocomplete, { type SelectedAddress } from "./AddressAutocomplete";
 import styles from "./CarSearchForm.module.css";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 function nowPlusHours(h: number): { date: string; time: string } {
   const d = new Date(Date.now() + h * 3_600_000);
   return {
@@ -15,27 +13,21 @@ function nowPlusHours(h: number): { date: string; time: string } {
   };
 }
 
-// ── Labels type ───────────────────────────────────────────────────────────────
-
 export interface SearchFormLabels {
-  eyebrow:             string;
-  title:               string;
   fromLabel:           string;
   toLabel:             string;
   addressLabel:        string;
   addressPlaceholder:  string;
+  addressOptional:     string;
+  addressHelper:       string;
   searchBtn:           string;
   dateError:           string;
-  addressRequired:     string;
-  selectFromList:      string;
 }
 
 interface Props {
   locale:  string;
   labels:  SearchFormLabels;
 }
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CarSearchForm({ locale, labels }: Props) {
   const router = useRouter();
@@ -48,39 +40,38 @@ export default function CarSearchForm({ locale, labels }: Props) {
   const [endDate,   setEndDate]   = useState(defaultEnd.date);
   const [endTime,   setEndTime]   = useState(defaultEnd.time);
   const [address,   setAddress]   = useState<SelectedAddress | null>(null);
-  const [errors,    setErrors]    = useState<{ date?: string; address?: string }>({});
+  const [dateError, setDateError] = useState<string | undefined>();
 
   const validate = useCallback((): boolean => {
-    const errs: typeof errors = {};
     const start = new Date(`${startDate}T${startTime}`);
     const end   = new Date(`${endDate}T${endTime}`);
-    if (end <= start) errs.date    = labels.dateError;
-    if (!address)     errs.address = labels.addressRequired;
-    else if (false)   errs.address = labels.selectFromList; // guard for typed-but-not-selected
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  }, [startDate, startTime, endDate, endTime, address, labels]);
+    if (end <= start) {
+      setDateError(labels.dateError);
+      return false;
+    }
+    setDateError(undefined);
+    return true;
+  }, [startDate, startTime, endDate, endTime, labels.dateError]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
     const start = new Date(`${startDate}T${startTime}`).toISOString();
     const end   = new Date(`${endDate}T${endTime}`).toISOString();
-    const params = new URLSearchParams({
-      start:   start,
-      end:     end,
-      lat:     String(address!.lat),
-      lng:     String(address!.lng),
-      address: address!.label,
-    });
+    const params = new URLSearchParams({ start, end });
+    if (address) {
+      params.set("lat",     String(address.lat));
+      params.set("lng",     String(address.lng));
+      params.set("address", address.label);
+    }
     router.push(`/${locale}/search?${params.toString()}`);
   };
 
   return (
     <form onSubmit={handleSubmit} className={styles.form} noValidate>
-      <div className={styles.fields}>
 
-        {/* From */}
+      {/* ── Dates row ── */}
+      <div className={styles.datesRow}>
         <div className={styles.fieldGroup}>
           <label className={styles.fieldLabel}>
             <span className={styles.fieldIcon}>📅</span>
@@ -104,10 +95,10 @@ export default function CarSearchForm({ locale, labels }: Props) {
           </div>
         </div>
 
-        {/* Separator arrow */}
-        <div className={styles.arrow} aria-hidden="true">→</div>
+        <div className={styles.arrowWrap} aria-hidden="true">
+          <span className={styles.arrow}>→</span>
+        </div>
 
-        {/* To */}
         <div className={styles.fieldGroup}>
           <label className={styles.fieldLabel}>
             <span className={styles.fieldIcon}>🏁</span>
@@ -116,44 +107,48 @@ export default function CarSearchForm({ locale, labels }: Props) {
           <div className={styles.datetimeRow}>
             <input
               type="date"
-              className={`${styles.dateInput} ${errors.date ? styles.inputErr : ""}`}
+              className={`${styles.dateInput} ${dateError ? styles.inputErr : ""}`}
               value={endDate}
-              onChange={(e) => { setEndDate(e.target.value); setErrors((p) => ({ ...p, date: undefined })); }}
+              onChange={(e) => { setEndDate(e.target.value); setDateError(undefined); }}
               required
             />
             <input
               type="time"
-              className={`${styles.timeInput} ${errors.date ? styles.inputErr : ""}`}
+              className={`${styles.timeInput} ${dateError ? styles.inputErr : ""}`}
               value={endTime}
-              onChange={(e) => { setEndTime(e.target.value); setErrors((p) => ({ ...p, date: undefined })); }}
+              onChange={(e) => { setEndTime(e.target.value); setDateError(undefined); }}
               required
             />
           </div>
-          {errors.date && <p className={styles.errMsg}>{errors.date}</p>}
+          {dateError && <p className={styles.errMsg}>{dateError}</p>}
         </div>
+      </div>
 
-        {/* Address */}
-        <div className={`${styles.fieldGroup} ${styles.fieldGroupAddress}`}>
+      {/* ── Address row ── */}
+      <div className={styles.addressRow}>
+        <div className={styles.fieldGroup}>
           <label className={styles.fieldLabel} htmlFor="search-address">
             <span className={styles.fieldIcon}>📍</span>
-            {labels.addressLabel}
+            <span className={styles.fieldLabelText}>{labels.addressLabel}</span>
+            <span className={styles.optionalBadge}>{labels.addressOptional}</span>
           </label>
           <AddressAutocomplete
             id="search-address"
             value={address}
-            onChange={(a) => { setAddress(a); setErrors((p) => ({ ...p, address: undefined })); }}
+            onChange={setAddress}
             placeholder={labels.addressPlaceholder}
-            required
-            error={errors.address}
+            required={false}
           />
+          <p className={styles.fieldHelper}>{labels.addressHelper}</p>
         </div>
-
       </div>
 
+      {/* ── Submit ── */}
       <button type="submit" className={styles.searchBtn}>
         <span className={styles.searchBtnIcon}>🔍</span>
         {labels.searchBtn}
       </button>
+
     </form>
   );
 }
