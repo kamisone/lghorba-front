@@ -7,8 +7,9 @@ import styles from "./PricingCalendar.module.css";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CELL_W  = 44;   // px — day column width
-const CAR_COL = 240;  // px — sticky car-name column width
+const CELL_W           = 44;   // px — day column width
+const CAR_COL_EXPANDED  = 240;  // px — sticky car-name column (expanded)
+const CAR_COL_COLLAPSED =  52;  // px — sticky car-name column (collapsed)
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -271,6 +272,7 @@ interface CarRowProps {
   selStart:               string | null;
   selEnd:                 string | null;
   carBookings:            CalendarBooking[];
+  collapsed:              boolean;
   onDown:                 CellProps["onDown"];
   onEnter:                CellProps["onEnter"];
   onBookingClick:         CellProps["onBookingClick"];
@@ -279,7 +281,7 @@ interface CarRowProps {
 const CarRow = React.memo(function CarRow({
   car, days, dayMap, basePricePerDay, basePricePerWeekendDay,
   selCarId, selStart, selEnd,
-  carBookings, onDown, onEnter, onBookingClick,
+  carBookings, collapsed, onDown, onEnter, onBookingClick,
 }: CarRowProps) {
   const label    = [car.brand, car.model].filter(Boolean).join(" ") || car.name;
   const firstDay = days[0]?.date ?? "";
@@ -321,7 +323,10 @@ const CarRow = React.memo(function CarRow({
 
   return (
     <>
-      <div className={styles.carName} title={`${label}${car.immatriculation ? ` · ${car.immatriculation}` : ""}`}>
+      <div
+        className={`${styles.carName} ${collapsed ? styles.carNameCollapsed : ""}`}
+        title={`${label}${car.immatriculation ? ` · ${car.immatriculation}` : ""}`}
+      >
         <div className={styles.carThumb}>
           {car.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -335,7 +340,7 @@ const CarRow = React.memo(function CarRow({
             <span className={styles.carThumbPlaceholder}>🚗</span>
           )}
         </div>
-        <div className={styles.carInfo}>
+        <div className={`${styles.carInfo} ${collapsed ? styles.carInfoHidden : ""}`}>
           <span className={styles.carInfoName}>{label}</span>
           {car.immatriculation && (
             <span className={styles.carInfoImmat}>{car.immatriculation}</span>
@@ -412,6 +417,9 @@ export default function PricingCalendar() {
   // ─ Booking popover
   const [bookingPopover, setBookingPopover] = useState<BookingPopoverState | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  // ─ Sidebar collapse (persisted in localStorage)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // ─ Derived
   const { days, months } = useMemo(() => buildCalendar(baseDate, NUM_MONTHS), [baseDate]);
@@ -515,6 +523,13 @@ export default function PricingCalendar() {
     }
   }, []);
 
+  // Load sidebar collapse preference (client-only to avoid hydration mismatch)
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("pricing-sidebar-collapsed") === "1") setSidebarCollapsed(true);
+    } catch {}
+  }, []);
+
   useEffect(() => {
     if (loading || !pendingPricingEditRef.current) return;
     const { carId, pricingId } = pendingPricingEditRef.current;
@@ -580,6 +595,14 @@ export default function PricingCalendar() {
     if (!dragging || dragCarId !== carId) return;
     setSelEnd(date);
   }, [dragging, dragCarId]);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      try { localStorage.setItem("pricing-sidebar-collapsed", next ? "1" : "0"); } catch {}
+      return next;
+    });
+  }, []);
 
   const handleBookingClick = useCallback((booking: CalendarBooking, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -654,7 +677,8 @@ export default function PricingCalendar() {
 
   // ─ Render
   const numDays  = days.length;
-  const gridCols = `${CAR_COL}px repeat(${numDays}, ${CELL_W}px)`;
+  const carColW  = sidebarCollapsed ? CAR_COL_COLLAPSED : CAR_COL_EXPANDED;
+  const gridCols = `var(--car-col-w) repeat(${numDays}, ${CELL_W}px)`;
 
   // Popover position: above cursor, clamped so it doesn't bleed off-screen
   const popoverStyle = bookingPopover ? (() => {
@@ -702,10 +726,25 @@ export default function PricingCalendar() {
       {/* Calendar grid */}
       {!loading && !error && (
         <div className={`${styles.scrollWrap} ${dragging ? styles.dragging : ""}`}>
-          <div className={styles.grid} style={{ gridTemplateColumns: gridCols }}>
+          <div
+            className={styles.grid}
+            style={{ '--car-col-w': `${carColW}px`, gridTemplateColumns: gridCols } as React.CSSProperties}
+          >
 
             {/* ── Row 0: Month headers ── */}
-            <div className={styles.cornerA}>Cars</div>
+            <div className={`${styles.cornerA} ${sidebarCollapsed ? styles.cornerACollapsed : ""}`}>
+              <span className={`${styles.cornerALabel} ${sidebarCollapsed ? styles.cornerALabelHidden : ""}`}>
+                Cars
+              </span>
+              <button
+                className={styles.collapseBtn}
+                onClick={toggleSidebar}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <span className={`${styles.chevron} ${sidebarCollapsed ? styles.chevronCollapsed : ""}`}>‹</span>
+              </button>
+            </div>
             {months.map((m) => (
               <div key={m.key} className={styles.monthHeader} style={{ gridColumn: `span ${m.days}` }}>
                 {m.label}
@@ -747,6 +786,7 @@ export default function PricingCalendar() {
                 selStart={selStart}
                 selEnd={selEnd}
                 carBookings={bookings[car.id] ?? []}
+                collapsed={sidebarCollapsed}
                 onDown={handleCellDown}
                 onEnter={handleCellEnter}
                 onBookingClick={handleBookingClick}

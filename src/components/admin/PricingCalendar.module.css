@@ -1,3 +1,10 @@
+/* ── Animated CSS variable for the sticky car column width ── */
+@property --car-col-w {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 240px;
+}
+
 /* ── Root ── */
 .root {
   display: flex;
@@ -146,9 +153,10 @@
 /* ── Grid ── */
 .grid {
   display: grid;
-  /* grid-template-columns set inline */
+  /* grid-template-columns set inline; first column animates via --car-col-w */
   width: max-content;
   min-width: 100%;
+  transition: --car-col-w 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── Corner cells ── */
@@ -158,17 +166,78 @@
   left: 0;
   z-index: 40;
   background: var(--color-surface-dark);
-  color: rgba(255,255,255,0.5);
+  padding: 0 0.6rem 0 0.75rem;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+/* Collapsed: centre just the chevron button */
+.cornerACollapsed {
+  padding: 0;
+  justify-content: center;
+}
+
+/* "Cars" label inside cornerA */
+.cornerALabel {
+  flex: 1;
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 0 0.75rem;
-  height: 34px;
+  color: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 160px;
+  transition: opacity 0.18s ease, max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cornerALabelHidden {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+}
+
+/* Collapse / expand chevron button */
+.collapseBtn {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  border-right: 1px solid rgba(255,255,255,0.1);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.collapseBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+/* Chevron character – rotates to indicate state */
+.chevron {
+  font-size: 0.95rem;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Default: ‹ points left → "click to collapse" */
+}
+
+/* Sidebar is collapsed: rotate 180° so ‹ becomes › → "click to expand" */
+.chevronCollapsed {
+  transform: rotate(180deg);
 }
 
 .cornerB {
@@ -281,6 +350,12 @@
   align-items: center;
   gap: 0.6rem;
   min-width: 0;
+  overflow: hidden;
+}
+
+.carNameCollapsed {
+  justify-content: center;
+  padding: 0;
 }
 
 .carThumb {
@@ -313,6 +388,15 @@
   flex-direction: column;
   min-width: 0;
   gap: 3px;
+  overflow: hidden;
+  max-width: 200px;
+  transition: opacity 0.18s ease, max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carInfoHidden {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
 }
 
 .carInfoName {
