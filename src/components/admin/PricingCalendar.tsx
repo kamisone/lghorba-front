@@ -19,6 +19,8 @@ interface Car {
   model?: string | null;
   immatriculation?: string | null;
   photo?: string | null;
+  basePricePerDay?: number | string | null;
+  basePricePerWeekendDay?: number | string | null;
 }
 
 interface DayInfo {
@@ -175,6 +177,7 @@ interface CellProps {
   date: string;
   carId: string;
   pricing: CarPricing | null;
+  fallbackPrice: number | null; // base or weekend rate when no specific pricing rule
   isFirst: boolean;
   isLast: boolean;
   isSelected: boolean;
@@ -187,22 +190,25 @@ interface CellProps {
 }
 
 const Cell = React.memo(function Cell({
-  date, carId, pricing, isFirst, isLast, isSelected,
+  date, carId, pricing, fallbackPrice, isFirst, isLast, isSelected,
   isWeekend, isToday, bookingBars, onDown, onEnter, onBookingClick,
 }: CellProps) {
   const color = pricing ? colorForId(pricing.id) : null;
   const title = pricing
     ? `€${Number(pricing.pricePerDay).toFixed(2)}/day${pricing.label ? ` · ${pricing.label}` : ""}\n${pricing.startDate} → ${pricing.endDate}`
-    : date;
+    : fallbackPrice !== null
+      ? `${isWeekend ? "Weekend rate" : "Base rate"}: €${fallbackPrice.toFixed(2)}/day`
+      : date;
 
   return (
     <div
       className={[
         styles.cell,
-        isSelected ? styles.cellSel     : "",
-        isWeekend  ? styles.cellWeekend : "",
-        isToday    ? styles.cellToday   : "",
-        pricing    ? styles.cellPriced  : "",
+        isSelected                          ? styles.cellSel      : "",
+        isWeekend                           ? styles.cellWeekend  : "",
+        isToday                             ? styles.cellToday    : "",
+        pricing                             ? styles.cellPriced   : "",
+        !pricing && fallbackPrice !== null  ? styles.cellFallback : "",
       ].filter(Boolean).join(" ")}
       style={!isSelected && color ? {
         background:  color.bg,
@@ -217,6 +223,11 @@ const Cell = React.memo(function Cell({
         <span className={styles.cellBadge} style={{ color: color.label }}>
           €{Number(pricing.pricePerDay).toFixed(0)}
           {pricing.label ? <span className={styles.cellBadgeLabel}> {pricing.label}</span> : null}
+        </span>
+      )}
+      {!pricing && fallbackPrice !== null && (
+        <span className={styles.cellBadgeFallback}>
+          €{fallbackPrice.toFixed(0)}
         </span>
       )}
 
@@ -251,20 +262,23 @@ const Cell = React.memo(function Cell({
 // ── Car row (memoised) ────────────────────────────────────────────────────────
 
 interface CarRowProps {
-  car:            Car;
-  days:           DayInfo[];
-  dayMap:         Record<string, CarPricing>;
-  selCarId:       string | null;
-  selStart:       string | null;
-  selEnd:         string | null;
-  carBookings:    CalendarBooking[];
-  onDown:         CellProps["onDown"];
-  onEnter:        CellProps["onEnter"];
-  onBookingClick: CellProps["onBookingClick"];
+  car:                    Car;
+  days:                   DayInfo[];
+  dayMap:                 Record<string, CarPricing>;
+  basePricePerDay:        number | string | null;
+  basePricePerWeekendDay: number | string | null;
+  selCarId:               string | null;
+  selStart:               string | null;
+  selEnd:                 string | null;
+  carBookings:            CalendarBooking[];
+  onDown:                 CellProps["onDown"];
+  onEnter:                CellProps["onEnter"];
+  onBookingClick:         CellProps["onBookingClick"];
 }
 
 const CarRow = React.memo(function CarRow({
-  car, days, dayMap, selCarId, selStart, selEnd,
+  car, days, dayMap, basePricePerDay, basePricePerWeekendDay,
+  selCarId, selStart, selEnd,
   carBookings, onDown, onEnter, onBookingClick,
 }: CarRowProps) {
   const label    = [car.brand, car.model].filter(Boolean).join(" ") || car.name;
@@ -336,12 +350,20 @@ const CarRow = React.memo(function CarRow({
           ? [selStart, selEnd] : [selEnd ?? "", selStart ?? ""];
         const isSelected = selCarId === car.id && d.date >= lo && d.date <= hi;
 
+        // Fallback: weekend base price → weekday base price → null (no display)
+        // Coerce to Number — the API may return these as strings.
+        const rawFallback = pricing ? null
+          : d.isWeekend && basePricePerWeekendDay != null ? basePricePerWeekendDay
+          : basePricePerDay ?? null;
+        const fallbackPrice = rawFallback != null ? Number(rawFallback) : null;
+
         return (
           <Cell
             key={d.date}
             date={d.date}
             carId={car.id}
             pricing={pricing}
+            fallbackPrice={fallbackPrice}
             isFirst={isFirst}
             isLast={isLast}
             isSelected={isSelected}
@@ -441,8 +463,17 @@ export default function PricingCalendar() {
         const grouped: Record<string, CalendarBooking[]> = {};
         for (const b of rawBookings as Array<{
           id: string; carId: string; startDateTime: string; endDateTime: string;
-          status: string; customerName?: string | null; source: string;
+          status: string; source: string;
+          customerName?: string | null;
+          user?: { name: string } | null;
         }>) {
+          // Platform bookings (turo/getaround) store the renter on user.name;
+          // private bookings store it on customerName directly.
+          const isPrivate  = b.source === "private";
+          const guestName  = isPrivate
+            ? (b.customerName ?? null)
+            : (b.user?.name ?? b.customerName ?? null);
+
           const cb: CalendarBooking = {
             id:            b.id,
             carId:         b.carId,
@@ -451,7 +482,7 @@ export default function PricingCalendar() {
             startDateTime: b.startDateTime,
             endDateTime:   b.endDateTime,
             status:        b.status as CalendarBooking["status"],
-            customerName:  b.customerName ?? null,
+            customerName:  guestName,
             source:        b.source as CalendarBooking["source"],
           };
           (grouped[cb.carId] ??= []).push(cb);
@@ -710,6 +741,8 @@ export default function PricingCalendar() {
                 car={car}
                 days={days}
                 dayMap={pricingMaps[car.id] ?? {}}
+                basePricePerDay={car.basePricePerDay ?? null}
+                basePricePerWeekendDay={car.basePricePerWeekendDay ?? null}
                 selCarId={dragCarId}
                 selStart={selStart}
                 selEnd={selEnd}
@@ -781,9 +814,9 @@ export default function PricingCalendar() {
             </button>
           </div>
 
-          {bookingPopover.booking.customerName && (
-            <p className={styles.popoverCustomer}>{bookingPopover.booking.customerName}</p>
-          )}
+          <p className={styles.popoverCustomer}>
+            {bookingPopover.booking.customerName ?? "Unknown guest"}
+          </p>
 
           <div className={styles.popoverDates}>
             <div className={styles.popoverDateRow}>

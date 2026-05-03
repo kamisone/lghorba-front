@@ -368,6 +368,11 @@
   border-right: 1px solid transparent;
 }
 
+/* Cells with no specific rule — show the car's base / weekend rate */
+.cellFallback {
+  background: rgba(148, 163, 184, 0.055);
+}
+
 .cellSel {
   background: rgba(141, 194, 32, 0.28) !important;
   outline: 1.5px solid var(--color-brand-accent);
@@ -391,6 +396,21 @@
 .cellBadgeLabel {
   font-weight: 500;
   opacity: 0.85;
+}
+
+/* Fallback (base/weekend rate) badge — muted, shown on every unprice cell */
+.cellBadgeFallback {
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--color-text-placeholder);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  line-height: 1;
+  opacity: 0.7;
 }
 
 /* ── Empty state ── */
