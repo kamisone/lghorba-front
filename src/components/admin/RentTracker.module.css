@@ -456,6 +456,18 @@
   color: var(--color-success);
 }
 
+/* User name pill — acts as a navigation link */
+.scheduleCardPillUser {
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.scheduleCardPillUser:hover {
+  background: #e8f1f8;
+  border-color: var(--color-admin-secondary);
+  color: var(--color-admin-secondary);
+}
+
 .scheduleCardPillTracking {
   background: var(--color-info-bg);
   border-color: var(--color-info-border);
@@ -488,6 +500,22 @@
   color: var(--color-text-secondary);
   font-weight: 500;
   white-space: nowrap;
+}
+
+/* User name in session history — navigates to user profile */
+.sessionGuestLink {
+  font-size: 0.72rem;
+  color: var(--color-admin-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+  transition: color 0.15s, border-bottom-style 0.1s;
+}
+
+.sessionGuestLink:hover {
+  color: var(--color-admin-primary);
+  border-bottom-style: solid;
 }
 
 .sessionRes {

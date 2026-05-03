@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import type { CalendarBooking, Car } from "./data";
 import RentMap, { type RentPosition } from "./RentMap";
 import BookingAdminModal from "./BookingAdminModal";
@@ -461,8 +462,17 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
             </div>
           </div>
           <div className={styles.scheduleCardMeta}>
-            {activeBooking.user?.name && <span className={styles.scheduleCardPill}>👤 {activeBooking.user.name}</span>}
-            {activeBooking.customerName && <span className={styles.scheduleCardPill}>👤 {activeBooking.customerName}</span>}
+            {activeBooking.user?.name && (
+              <Link
+                href={`/admin/users/${activeBooking.user.id}`}
+                className={`${styles.scheduleCardPill} ${styles.scheduleCardPillUser}`}
+              >
+                👤 {activeBooking.user.name}
+              </Link>
+            )}
+            {activeBooking.customerName && (
+              <span className={styles.scheduleCardPill}>👤 {activeBooking.customerName}</span>
+            )}
             {activeBooking.reservationNumber && <span className={styles.scheduleCardPill}>📋 {activeBooking.reservationNumber}</span>}
             <span className={styles.scheduleCardPill}>📏 {computeForfaitKm(activeBooking.startDateTime, activeBooking.endDateTime).toLocaleString()} km</span>
             {activeBooking.totalEarning != null && <span className={`${styles.scheduleCardPill} ${styles.scheduleCardPillEarning}`}>💶 {activeBooking.totalEarning.toLocaleString()} €</span>}
@@ -526,8 +536,18 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                       <span className={styles.sessionDate}>
                         {fmtShort(session.startedAt)} → {session.endedAt ? fmtShort(session.endedAt) : "…"}
                       </span>
-                      {linked?.user?.name && <span className={styles.sessionGuest}>👤 {linked.user.name}</span>}
-                      {linked?.customerName && <span className={styles.sessionGuest}>👤 {linked.customerName}</span>}
+                      {linked?.user?.name && (
+                        <Link
+                          href={`/admin/users/${linked.user.id}`}
+                          className={styles.sessionGuestLink}
+                          title={`View profile: ${linked.user.name}`}
+                        >
+                          👤 {linked.user.name}
+                        </Link>
+                      )}
+                      {linked?.customerName && (
+                        <span className={styles.sessionGuest}>👤 {linked.customerName}</span>
+                      )}
                       {linked?.reservationNumber && <span className={styles.sessionRes}>#{linked.reservationNumber}</span>}
                     </div>
                     <span className={styles.sessionChevron}>{isOpen ? "▲" : "▼"}</span>
