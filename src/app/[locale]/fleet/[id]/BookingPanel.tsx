@@ -48,12 +48,42 @@ interface Labels {
   dateError: string;
   minimumOneDay: string;
   noPriceConfigured: string;
+  prefillFromSearch: string;
+  prefillLastSearch: string;
 }
 
 interface Props {
   carId: string;
   locale: string;
   labels: Labels;
+  initialStart?: string;
+  initialEnd?: string;
+}
+
+type PrefillSource = "url" | "storage" | null;
+
+// ── Storage helpers ───────────────────────────────────────────────────────────
+
+const LS_KEY = "car_search_context";
+const LS_TTL = 7 * 24 * 60 * 60 * 1000;
+
+function isoToLocalDT(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function loadStoredSearch(): { start: string; end: string } | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { start?: string; end?: string; savedAt?: number };
+    if (!parsed.start || !parsed.end || !parsed.savedAt) return null;
+    if (Date.now() - parsed.savedAt > LS_TTL) { localStorage.removeItem(LS_KEY); return null; }
+    return { start: parsed.start, end: parsed.end };
+  } catch {
+    return null;
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -95,12 +125,13 @@ function validateField(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function BookingPanel({ carId, locale, labels }: Props) {
+export default function BookingPanel({ carId, locale, labels, initialStart, initialEnd }: Props) {
   const router = useRouter();
   const t = getTranslations(locale);
 
   const [startDateTime, setStartDateTimeRaw] = useState("");
   const [endDateTime,   setEndDateTimeRaw]   = useState("");
+  const [prefillSource, setPrefillSource]    = useState<PrefillSource>(null);
   const [available,     setAvailable]        = useState<boolean | null>(null);
   const [priceResult,   setPriceResult]      = useState<PriceResult | null>(null);
   const [checking,      setChecking]         = useState(false);
@@ -122,7 +153,7 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
 
   function setStartDateTime(v: string) {
     setStartDateTimeRaw(v);
-    // Clear end if it would now be invalid
+    setPrefillSource(null);
     if (endDateTime && v && new Date(endDateTime) <= new Date(v)) {
       setEndDateTimeRaw("");
     }
@@ -130,7 +161,30 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
 
   function setEndDateTime(v: string) {
     setEndDateTimeRaw(v);
+    setPrefillSource(null);
   }
+
+  // ── Init: pre-fill from URL params or localStorage ───────────────────────────
+
+  const initDone = useRef(false);
+  useEffect(() => {
+    if (initDone.current) return;
+    initDone.current = true;
+    const now = new Date();
+    if (initialStart && initialEnd && new Date(initialStart) > now) {
+      setStartDateTimeRaw(isoToLocalDT(initialStart));
+      setEndDateTimeRaw(isoToLocalDT(initialEnd));
+      setPrefillSource("url");
+      return;
+    }
+    const stored = loadStoredSearch();
+    if (stored && new Date(stored.start) > now) {
+      setStartDateTimeRaw(isoToLocalDT(stored.start));
+      setEndDateTimeRaw(isoToLocalDT(stored.end));
+      setPrefillSource("storage");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Auto-advance: start complete → open end picker ───────────────────────────
 
@@ -315,6 +369,25 @@ export default function BookingPanel({ carId, locale, labels }: Props) {
         </div>
 
       </div>
+
+      {/* ── Prefill context banner ── */}
+      {prefillSource && (
+        <div className={styles.prefillBanner}>
+          <span className={styles.prefillBannerIcon}>
+            {prefillSource === "url" ? "🔍" : "🕐"}
+          </span>
+          <span className={styles.prefillBannerText}>
+            {prefillSource === "url" ? labels.prefillFromSearch : labels.prefillLastSearch}
+          </span>
+          <button
+            className={styles.prefillBannerDismiss}
+            onClick={() => setPrefillSource(null)}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {dateError && <p className={styles.errorMsg}>{dateError}</p>}
 

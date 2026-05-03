@@ -166,11 +166,63 @@
   gap: 0.5rem;
 }
 
+/* Name + contextual price on the same row */
+.infoTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .carName {
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--color-text-heading);
   margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Contextual price tag ── */
+.priceTag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.priceTagAmount {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--color-brand-primary);
+  line-height: 1;
+}
+
+.priceTagSub {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+@keyframes fleetShimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+.priceTagSkeleton {
+  display: block;
+  width: 64px;
+  height: 34px;
+  border-radius: 5px;
+  background: linear-gradient(90deg,
+    var(--color-surface-raised) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-raised) 75%
+  );
+  background-size: 200% 100%;
+  animation: fleetShimmer 1.4s ease-in-out infinite;
 }
 
 .carDesc {

@@ -97,7 +97,13 @@ function buildSpecs(car: PublicCarDetail): SpecItem[] {
   return items.filter(Boolean) as SpecItem[];
 }
 
-export default async function CarDetailPage({ params }: { params: { locale: string; id: string } }) {
+export default async function CarDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { locale: string; id: string };
+  searchParams: { start?: string; end?: string };
+}) {
   const locale = params.locale as Locale;
   const id = params.id;
   const t = getTranslations(locale);
@@ -178,6 +184,8 @@ export default async function CarDetailPage({ params }: { params: { locale: stri
             carId={car.id}
             locale={locale}
             labels={t.booking}
+            initialStart={searchParams.start}
+            initialEnd={searchParams.end}
           />
         </div>
       </section>

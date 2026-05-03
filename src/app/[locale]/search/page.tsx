@@ -51,10 +51,12 @@ function SearchPage() {
 
   const hasAddress = Boolean(address && lat && lng);
 
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState<string | null>(null);
-  const [sort,    setSort]    = useState<SortKey>("relevance");
+  const [results,       setResults]       = useState<SearchResult[]>([]);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState<string | null>(null);
+  const [sort,          setSort]          = useState<SortKey>("relevance");
+  const [prices,        setPrices]        = useState<Map<string, { total: number; days: number }>>(new Map());
+  const [loadingPrices, setLoadingPrices] = useState(false);
 
   const search = useCallback(async () => {
     if (!start || !end) {
@@ -86,6 +88,45 @@ function SearchPage() {
   }, [start, end, lat, lng, address, t]);
 
   useEffect(() => { search(); }, [search]);
+
+  // Fetch total price for each result when dates are present
+  useEffect(() => {
+    if (!start || !end || results.length === 0) {
+      setPrices(new Map());
+      setLoadingPrices(false);
+      return;
+    }
+    const controller = new AbortController();
+    setLoadingPrices(true);
+    setPrices(new Map());
+    Promise.allSettled(
+      results.map(car =>
+        fetch(
+          `/next-api/public/cars/${car.id}/price?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
+          { signal: controller.signal },
+        ).then(r => r.ok ? (r.json() as Promise<{ totalPrice: number; numberOfDays: number }>) : null)
+      )
+    ).then(settled => {
+      if (controller.signal.aborted) return;
+      const map = new Map<string, { total: number; days: number }>();
+      settled.forEach((r, i) => {
+        if (r.status === "fulfilled" && r.value) {
+          map.set(results[i].id, { total: r.value.totalPrice, days: r.value.numberOfDays });
+        }
+      });
+      setPrices(map);
+      setLoadingPrices(false);
+    });
+    return () => controller.abort();
+  }, [results, start, end]);
+
+  // Persist search context for fleet-page pre-fill
+  useEffect(() => {
+    if (!start || !end) return;
+    try {
+      localStorage.setItem("car_search_context", JSON.stringify({ start, end, savedAt: Date.now() }));
+    } catch { /* ignore */ }
+  }, [start, end]);
 
   // Filter out cars > 50 km when an address is provided
   const filtered = hasAddress
@@ -220,9 +261,10 @@ function SearchPage() {
               const badge = hasAddress && car.distanceKm != null
                 ? getDistanceBadge(car.distanceKm)
                 : null;
+              const priceInfo = prices.get(car.id);
 
               return (
-                <Link key={car.id} href={`/${locale}/fleet/${car.id}`} className={styles.card}>
+                <Link key={car.id} href={`/${locale}/fleet/${car.id}?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`} className={styles.card}>
 
                   {/* Photo */}
                   <div className={styles.cardPhoto}>
@@ -257,10 +299,21 @@ function SearchPage() {
                   <div className={styles.cardBody}>
                     <div className={styles.cardTop}>
                       <h2 className={styles.cardName}>{car.name}</h2>
-                      {car.basePricePerDay != null && (
+                      {(car.basePricePerDay != null || priceInfo != null || (start && end && loadingPrices)) && (
                         <div className={styles.cardPrice}>
-                          <span className={styles.cardPriceNum}>{car.basePricePerDay} €</span>
-                          <span className={styles.cardPriceSub}>/{t.search.perDay}</span>
+                          {priceInfo ? (
+                            <>
+                              <span className={styles.cardPriceTotal}>€{priceInfo.total.toFixed(0)}</span>
+                              <span className={styles.cardPriceSub}>{t.search.totalLabel} · {priceInfo.days} {t.search.days}</span>
+                            </>
+                          ) : car.basePricePerDay != null ? (
+                            <>
+                              <span className={styles.cardPriceNum}>{car.basePricePerDay} €</span>
+                              <span className={styles.cardPriceSub}>/{t.search.perDay}</span>
+                            </>
+                          ) : (
+                            <span className={styles.cardPriceSkeleton} />
+                          )}
                         </div>
                       )}
                     </div>
