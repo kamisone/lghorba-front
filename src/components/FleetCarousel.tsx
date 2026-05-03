@@ -15,6 +15,7 @@ export interface CarouselCar {
   numberOfSeats?: number | null;
   modelYear?: number | null;
   isAvailable: boolean;
+  nextAvailableDate?: string | null; // YYYY-MM-DD; null/undefined when available today
 }
 
 interface Props {
@@ -23,8 +24,8 @@ interface Props {
   labels: {
     eyebrow: string;
     title: string;
-    available: string;
-    rented: string;
+    availableToday: string;
+    availableFrom: string;
     viewDetails: string;
   };
 }
@@ -32,10 +33,10 @@ interface Props {
 // ── In-card photo slider ──────────────────────────────────────────────────────
 
 function CardSlider({
-  carId, carName, photoIds, hasPhoto, available, availableLabel, rentedLabel,
+  carId, carName, photoIds, hasPhoto, badgeText, isAvailableToday,
 }: {
   carId: string; carName: string; photoIds: string[]; hasPhoto: boolean;
-  available: boolean; availableLabel: string; rentedLabel: string;
+  badgeText: string; isAvailableToday: boolean;
 }) {
   const [photoIdx, setPhotoIdx] = useState(0);
   const touchRef = useRef<number | null>(null);
@@ -87,8 +88,8 @@ function CardSlider({
           </div>
         </>
       )}
-      <span className={`${styles.badge} ${available ? styles.badgeAvail : styles.badgeBusy}`}>
-        {available ? availableLabel : rentedLabel}
+      <span className={`${styles.badge} ${isAvailableToday ? styles.badgeAvail : styles.badgeFrom}`}>
+        {badgeText}
       </span>
     </div>
   );
@@ -198,7 +199,14 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
           ].filter(Boolean).join(" ")}
           style={{ transform: `translateX(${trackX}px)` }}
         >
-          {cars.map((car) => (
+          {cars.map((car) => {
+            const badgeText = car.isAvailable
+              ? labels.availableToday
+              : car.nextAvailableDate
+                ? `${labels.availableFrom} ${new Date(car.nextAvailableDate + "T00:00:00Z").toLocaleDateString(locale, { day: "numeric", month: "short", timeZone: "UTC" })}`
+                : labels.availableFrom;
+
+            return (
             <div
               key={car.id}
               className={styles.slide}
@@ -210,9 +218,8 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
                   carName={car.name}
                   photoIds={car.photoIds}
                   hasPhoto={car.hasPhoto}
-                  available={car.isAvailable}
-                  availableLabel={labels.available}
-                  rentedLabel={labels.rented}
+                  badgeText={badgeText}
+                  isAvailableToday={car.isAvailable}
                 />
                 <div className={styles.info}>
                   <div className={styles.nameRow}>
@@ -231,7 +238,8 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
                 </div>
               </Link>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Arrows — shown only when there is content in that direction */}

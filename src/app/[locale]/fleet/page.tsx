@@ -9,6 +9,7 @@ interface PublicCar {
   description: string | null;
   hasPhoto: boolean;
   isAvailable: boolean;
+  nextAvailableDate?: string | null;
   vehicleType?: string | null;
   energy?: string | null;
   gearbox?: string | null;
@@ -18,14 +19,50 @@ interface PublicCar {
   modelYear?: number | null;
 }
 
+const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
+
+async function probeNextAvailableDate(carId: string): Promise<string | null> {
+  const base = new Date();
+  base.setUTCHours(10, 0, 0, 0);
+  base.setUTCDate(base.getUTCDate() + 1);
+
+  const results = await Promise.allSettled(
+    Array.from({ length: 14 }, (_, i) => {
+      const d     = new Date(base.getTime() + i * 86_400_000);
+      const start = d.toISOString().slice(0, 10) + "T10:00";
+      const end   = d.toISOString().slice(0, 10) + "T11:00";
+      return fetch(
+        `${API}/public/cars/${carId}/availability?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
+        { next: { revalidate: 300 } },
+      ).then(r => r.ok ? r.json() as Promise<{ available: boolean }> : null);
+    }),
+  );
+
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r.status === "fulfilled" && r.value?.available === true) {
+      return new Date(base.getTime() + i * 86_400_000).toISOString().slice(0, 10);
+    }
+  }
+  return null;
+}
+
 async function getCars(lang: string): Promise<PublicCar[]> {
   try {
     const res = await fetch(
-      `${process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000"}/public/cars?lang=${encodeURIComponent(lang)}`,
+      `${API}/public/cars?lang=${encodeURIComponent(lang)}`,
       { cache: "no-store" },
     );
     if (!res.ok) return [];
-    return res.json();
+    const cars: PublicCar[] = await res.json();
+
+    return Promise.all(
+      cars.map(async (car) => {
+        if (car.isAvailable) return car;
+        const nextAvailableDate = await probeNextAvailableDate(car.id).catch(() => null);
+        return { ...car, nextAvailableDate };
+      }),
+    );
   } catch {
     return [];
   }
@@ -72,9 +109,18 @@ export default async function FleetPage({ params }: { params: { locale: string }
                 ) : (
                   <div className={styles.photoPlaceholder}>🚗</div>
                 )}
-                <span className={`${styles.badge} ${car.isAvailable ? styles.badgeAvail : styles.badgeBusy}`}>
-                  {car.isAvailable ? t.fleet.available : t.fleet.rented}
-                </span>
+                {car.isAvailable ? (
+                  <span className={`${styles.badge} ${styles.badgeAvail}`}>
+                    {t.fleet.availableToday}
+                  </span>
+                ) : (
+                  <span className={`${styles.badge} ${styles.badgeFrom}`}>
+                    {car.nextAvailableDate
+                      ? `${t.fleet.availableFrom} ${new Date(car.nextAvailableDate + "T00:00:00Z").toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}`
+                      : t.fleet.availableFrom
+                    }
+                  </span>
+                )}
               </div>
               <div className={styles.info}>
                 <h2 className={styles.carName}>{car.name}</h2>

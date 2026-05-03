@@ -140,13 +140,23 @@
 }
 
 .badgeAvail {
-  background: rgba(var(--rgb-success-light),0.15);
-  color: var(--color-success);
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(22, 163, 74, 0.22);
 }
 
+/* "Available from [date]" */
+.badgeFrom {
+  background: rgba(2, 132, 199, 0.10);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.20);
+}
+
+/* keep for backward compat */
 .badgeBusy {
-  background: rgba(var(--rgb-brand-accent),0.15);
-  color: var(--color-brand-primary);
+  background: rgba(2, 132, 199, 0.10);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.20);
 }
 
 .info {

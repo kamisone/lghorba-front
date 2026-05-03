@@ -5,6 +5,34 @@ import styles from "../page.module.css";
 
 const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
+// For each unavailable car, probe the next 14 days in parallel to find
+// the first date a 1-hour slot is bookable.
+async function probeNextAvailableDate(carId: string): Promise<string | null> {
+  const base = new Date();
+  base.setUTCHours(10, 0, 0, 0);
+  base.setUTCDate(base.getUTCDate() + 1); // start probing from tomorrow
+
+  const results = await Promise.allSettled(
+    Array.from({ length: 14 }, (_, i) => {
+      const d     = new Date(base.getTime() + i * 86_400_000);
+      const start = d.toISOString().slice(0, 10) + "T10:00";
+      const end   = d.toISOString().slice(0, 10) + "T11:00";
+      return fetch(
+        `${API_SERVER}/public/cars/${carId}/availability?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
+        { next: { revalidate: 300 } },
+      ).then(r => r.ok ? r.json() as Promise<{ available: boolean }> : null);
+    }),
+  );
+
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r.status === "fulfilled" && r.value?.available === true) {
+      return new Date(base.getTime() + i * 86_400_000).toISOString().slice(0, 10);
+    }
+  }
+  return null;
+}
+
 async function getPublicCars(locale: string): Promise<CarouselCar[]> {
   try {
     const res = await fetch(
@@ -14,15 +42,18 @@ async function getPublicCars(locale: string): Promise<CarouselCar[]> {
     if (!res.ok) return [];
     const cars: CarouselCar[] = await res.json();
 
-    // Fetch photo IDs for each car in parallel so the in-card slider has content
     return Promise.all(
       cars.map(async (car) => {
         try {
-          const r = await fetch(`${API_SERVER}/public/cars/${car.id}/photos`, { cache: "no-store" });
-          const photos: { id: string }[] = r.ok ? await r.json() : [];
-          return { ...car, photoIds: photos.map((p) => p.id) };
+          const [photos, nextAvailableDate] = await Promise.all([
+            fetch(`${API_SERVER}/public/cars/${car.id}/photos`, { cache: "no-store" })
+              .then(r => r.ok ? r.json() as Promise<{ id: string }[]> : [])
+              .catch(() => [] as { id: string }[]),
+            car.isAvailable ? Promise.resolve(null) : probeNextAvailableDate(car.id),
+          ]);
+          return { ...car, photoIds: (photos as { id: string }[]).map(p => p.id), nextAvailableDate };
         } catch {
-          return { ...car, photoIds: [] };
+          return { ...car, photoIds: [], nextAvailableDate: null };
         }
       }),
     );
@@ -122,11 +153,11 @@ export default async function LandingPage({ params }: { params: { locale: string
           cars={cars}
           locale={locale}
           labels={{
-            eyebrow:     t.featuredFleet.eyebrow,
-            title:       t.featuredFleet.title,
-            available:   t.fleet.available,
-            rented:      t.fleet.rented,
-            viewDetails: t.carDetail.viewDetails,
+            eyebrow:        t.featuredFleet.eyebrow,
+            title:          t.featuredFleet.title,
+            availableToday: t.fleet.availableToday,
+            availableFrom:  t.fleet.availableFrom,
+            viewDetails:    t.carDetail.viewDetails,
           }}
         />
       )}
