@@ -134,7 +134,6 @@
   flex: 1;
   overflow: auto;
   min-height: 0;
-  /* hide scrollbar in Firefox */
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
@@ -165,7 +164,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 0 0.75rem;
-  height: 32px;
+  height: 34px;
   display: flex;
   align-items: center;
   border-right: 1px solid rgba(255,255,255,0.1);
@@ -174,13 +173,13 @@
 
 .cornerB {
   position: sticky;
-  top: 32px;
+  top: 34px;
   left: 0;
   z-index: 35;
   background: var(--color-surface-raised);
   border-right: 1px solid var(--color-border);
   border-bottom: 2px solid var(--color-border);
-  height: 48px;
+  height: 56px;
 }
 
 /* ── Month headers ── */
@@ -193,7 +192,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   padding: 0 0.6rem;
-  height: 32px;
+  height: 34px;
   display: flex;
   align-items: center;
   border-right: 1px solid rgba(255,255,255,0.1);
@@ -205,10 +204,10 @@
 /* ── Day headers ── */
 .dayHeader {
   position: sticky;
-  top: 32px;
+  top: 34px;
   z-index: 25;
-  width: 28px;
-  height: 48px;
+  width: 44px;
+  height: 56px;
   background: var(--color-surface-raised);
   border-right: 1px solid var(--color-border);
   border-bottom: 2px solid var(--color-border);
@@ -216,28 +215,28 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
 }
 
 .dayWkd {
-  font-size: 0.52rem;
-  font-weight: 600;
+  font-size: 0.55rem;
+  font-weight: 700;
   color: var(--color-text-placeholder);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   line-height: 1;
 }
 
 .dayNum {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text-muted);
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
 }
 
@@ -276,18 +275,18 @@
   background: var(--color-white);
   border-right: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
-  height: 46px;
-  padding: 0 0.6rem;
+  height: 64px;
+  padding: 0 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   min-width: 0;
 }
 
 .carThumb {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
   background: var(--color-surface-raised);
@@ -305,7 +304,7 @@
 }
 
 .carThumbPlaceholder {
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -313,11 +312,11 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 2px;
+  gap: 3px;
 }
 
 .carInfoName {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -327,7 +326,7 @@
 }
 
 .carInfoImmat {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 500;
   color: var(--color-text-muted);
   white-space: nowrap;
@@ -338,8 +337,8 @@
 
 /* ── Cells ── */
 .cell {
-  width: 28px;
-  height: 46px;
+  width: 44px;
+  height: 64px;
   border-right: 1px solid transparent;
   border-bottom: 1px solid var(--color-border);
   cursor: crosshair;
@@ -349,7 +348,7 @@
 }
 
 .cell:hover:not(.cellSel):not(.cellPriced) {
-  background: rgba(var(--rgb-brand-accent), 0.08);
+  background: rgba(var(--rgb-brand-accent), 0.07);
 }
 
 .cell:hover.cellPriced {
@@ -361,18 +360,17 @@
 }
 
 .cellToday {
-  outline: 1px solid rgba(var(--rgb-brand-primary), 0.35);
+  outline: 1.5px solid rgba(var(--rgb-brand-primary), 0.35);
   outline-offset: -1px;
 }
 
 .cellPriced {
-  /* background set inline */
   border-right: 1px solid transparent;
 }
 
 .cellSel {
   background: rgba(141, 194, 32, 0.28) !important;
-  outline: 1px solid var(--color-brand-accent);
+  outline: 1.5px solid var(--color-brand-accent);
   outline-offset: -1px;
   z-index: 5;
 }
@@ -380,10 +378,9 @@
 /* ── Cell badge (price label on first day of range) ── */
 .cellBadge {
   position: absolute;
-  left: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.58rem;
+  left: 4px;
+  top: 8px;
+  font-size: 0.62rem;
   font-weight: 800;
   white-space: nowrap;
   pointer-events: none;
@@ -404,38 +401,163 @@
   text-align: center;
 }
 
-/* ── Booking bars ── */
-.bookingBar {
+/* ── Booking bar ── */
+.bookingBarWrap {
   position: absolute;
   left: 1px;
-  height: 4px;
-  border-radius: 2px;
-  pointer-events: auto;
+  height: 8px;
+  cursor: pointer;
   z-index: 8;
-  cursor: default;
 }
 
-.bookingBar::before {
-  content: attr(data-tooltip);
+.bookingBar {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  transition: filter 0.12s, transform 0.12s;
+}
+
+.bookingBarWrap:hover .bookingBar {
+  filter: brightness(1.18);
+  transform: scaleY(1.35);
+}
+
+/* Start & end boundary dots */
+.bookingDotStart,
+.bookingDotEnd {
   position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
-  background: rgba(15, 23, 42, 0.92);
-  color: #f1f5f9;
-  font-size: 0.68rem;
-  font-weight: 500;
-  white-space: nowrap;
-  padding: 0.3rem 0.5rem;
-  border-radius: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.12s;
-  z-index: 100;
-  line-height: 1.4;
+  z-index: 2;
+  transition: transform 0.12s;
 }
 
-.bookingBar:hover::before {
-  opacity: 1;
+.bookingDotStart { left:  -5px; }
+.bookingDotEnd   { right: -5px; }
+
+.bookingBarWrap:hover .bookingDotStart,
+.bookingBarWrap:hover .bookingDotEnd {
+  transform: translateY(-50%) scale(1.2);
+}
+
+/* ── Booking popover ── */
+.bookingPopover {
+  position: fixed;
+  z-index: 9999;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 10px 30px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  padding: 0.85rem 1rem;
+  min-width: 220px;
+  max-width: 260px;
+  transform: translateY(calc(-100% - 10px));
+  animation: popoverIn 0.14s cubic-bezier(0.2, 0, 0.2, 1);
+  pointer-events: auto;
+}
+
+@keyframes popoverIn {
+  from { opacity: 0; transform: translateY(calc(-100% - 4px)) scale(0.96); }
+  to   { opacity: 1; transform: translateY(calc(-100% - 10px)) scale(1); }
+}
+
+.popoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+  gap: 0.5rem;
+}
+
+.popoverStatus {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+
+.popoverClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+}
+.popoverClose:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+}
+
+.popoverCustomer {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 0.55rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popoverDates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--color-surface-raised);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.popoverDateRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.popoverDateLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  min-width: 28px;
+  flex-shrink: 0;
+}
+
+.popoverDateVal {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.popoverSource {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  text-align: right;
+  text-transform: capitalize;
 }
 
 /* ── Legend ── */
@@ -443,7 +565,7 @@
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  padding: 0.6rem 1.25rem;
+  padding: 0.65rem 1.25rem;
   background: var(--color-white);
   border-top: 1px solid var(--color-border);
   flex-shrink: 0;
@@ -460,16 +582,16 @@
 
 .legendSwatch {
   display: inline-block;
-  width: 20px;
-  height: 12px;
-  border-radius: 3px;
+  width: 22px;
+  height: 14px;
+  border-radius: 4px;
 }
 
 .legendBar {
   display: inline-block;
-  width: 24px;
-  height: 4px;
-  border-radius: 2px;
+  width: 26px;
+  height: 8px;
+  border-radius: 4px;
 }
 
 .legendDivider {

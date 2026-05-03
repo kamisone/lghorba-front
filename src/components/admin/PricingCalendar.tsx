@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PricingModal, { type CarPricing } from "./PricingModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import styles from "./PricingCalendar.module.css";
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const CELL_W  = 44;   // px — day column width
+const CAR_COL = 240;  // px — sticky car-name column width
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,7 +32,7 @@ interface DayInfo {
 interface MonthGroup {
   key: string;   // YYYY-MM
   label: string; // "May 2026"
-  days: number;  // day count in this month within the view
+  days: number;
 }
 
 type ModalState =
@@ -37,8 +42,10 @@ type ModalState =
 interface CalendarBooking {
   id: string;
   carId: string;
-  startDate: string;   // YYYY-MM-DD
-  endDate: string;     // YYYY-MM-DD
+  startDate: string;      // YYYY-MM-DD  (calendar range logic)
+  endDate: string;        // YYYY-MM-DD
+  startDateTime: string;  // full ISO (popover display)
+  endDateTime: string;
   status: "pending_payment" | "pending" | "confirmed" | "cancelled";
   customerName: string | null;
   source: "private" | "turo" | "getaround";
@@ -46,8 +53,16 @@ interface CalendarBooking {
 
 interface BookingBarInfo {
   booking: CalendarBooking;
-  spanDays: number;  // how many days the bar spans within the visible window
+  spanDays: number;
   stackIndex: number;
+  isRealStart: boolean; // bar begins at the true booking start (not clamped)
+  isRealEnd: boolean;   // bar ends at the true booking end
+}
+
+interface BookingPopoverState {
+  booking: CalendarBooking;
+  anchorX: number;
+  anchorY: number;
 }
 
 // ── Colors ────────────────────────────────────────────────────────────────────
@@ -69,14 +84,21 @@ function colorForId(id: string) {
   return PALETTE[Math.abs(h) % PALETTE.length];
 }
 
-function bookingColor(status: CalendarBooking["status"]) {
-  if (status === "confirmed")        return "rgba(16, 185, 129, 0.80)";
-  if (status === "pending")          return "rgba(245, 158, 11, 0.80)";
-  if (status === "pending_payment")  return "rgba(249, 115, 22, 0.80)";
-  return "rgba(107, 114, 128, 0.65)";
+function bookingBgColor(status: CalendarBooking["status"]): string {
+  if (status === "confirmed")        return "rgba(16, 185, 129, 0.82)";
+  if (status === "pending")          return "rgba(245, 158, 11, 0.82)";
+  if (status === "pending_payment")  return "rgba(249, 115, 22, 0.82)";
+  return "rgba(107, 114, 128, 0.68)";
 }
 
-function bookingLabel(status: CalendarBooking["status"]) {
+function bookingSolidColor(status: CalendarBooking["status"]): string {
+  if (status === "confirmed")        return "#10b981";
+  if (status === "pending")          return "#f59e0b";
+  if (status === "pending_payment")  return "#f97316";
+  return "#6b7280";
+}
+
+function bookingLabel(status: CalendarBooking["status"]): string {
   if (status === "confirmed")        return "Confirmed";
   if (status === "pending")          return "Pending";
   if (status === "pending_payment")  return "Awaiting payment";
@@ -95,15 +117,26 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function formatDateTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  } catch {
+    return iso.slice(0, 16).replace("T", " ");
+  }
+}
+
 function buildCalendar(base: Date, numMonths: number): { days: DayInfo[]; months: MonthGroup[] } {
-  const today = todayStr();
-  const days: DayInfo[]     = [];
+  const today  = todayStr();
+  const days: DayInfo[]      = [];
   const months: MonthGroup[] = [];
 
   const start = new Date(Date.UTC(base.getFullYear(), base.getMonth(), 1));
   const end   = new Date(Date.UTC(base.getFullYear(), base.getMonth() + numMonths, 1));
 
-  let cur     = new Date(start);
+  let cur      = new Date(start);
   let curMonth: MonthGroup | null = null;
 
   while (cur < end) {
@@ -150,14 +183,15 @@ interface CellProps {
   bookingBars: BookingBarInfo[];
   onDown: (carId: string, date: string, pricing: CarPricing | null, e: React.MouseEvent) => void;
   onEnter: (carId: string, date: string) => void;
+  onBookingClick: (booking: CalendarBooking, e: React.MouseEvent) => void;
 }
 
 const Cell = React.memo(function Cell({
   date, carId, pricing, isFirst, isLast, isSelected,
-  isWeekend, isToday, bookingBars, onDown, onEnter,
+  isWeekend, isToday, bookingBars, onDown, onEnter, onBookingClick,
 }: CellProps) {
-  const color  = pricing ? colorForId(pricing.id) : null;
-  const title  = pricing
+  const color = pricing ? colorForId(pricing.id) : null;
+  const title = pricing
     ? `€${Number(pricing.pricePerDay).toFixed(2)}/day${pricing.label ? ` · ${pricing.label}` : ""}\n${pricing.startDate} → ${pricing.endDate}`
     : date;
 
@@ -165,10 +199,10 @@ const Cell = React.memo(function Cell({
     <div
       className={[
         styles.cell,
-        isSelected  ? styles.cellSel     : "",
-        isWeekend   ? styles.cellWeekend : "",
-        isToday     ? styles.cellToday   : "",
-        pricing     ? styles.cellPriced  : "",
+        isSelected ? styles.cellSel     : "",
+        isWeekend  ? styles.cellWeekend : "",
+        isToday    ? styles.cellToday   : "",
+        pricing    ? styles.cellPriced  : "",
       ].filter(Boolean).join(" ")}
       style={!isSelected && color ? {
         background:  color.bg,
@@ -185,19 +219,31 @@ const Cell = React.memo(function Cell({
           {pricing.label ? <span className={styles.cellBadgeLabel}> {pricing.label}</span> : null}
         </span>
       )}
-      {bookingBars.map(({ booking, spanDays, stackIndex }) => (
-        <div
-          key={booking.id}
-          className={styles.bookingBar}
-          style={{
-            background: bookingColor(booking.status),
-            width: `${spanDays * 28 - 2}px`,
-            bottom: `${4 + stackIndex * 7}px`,
-          }}
-          data-tooltip={`${bookingLabel(booking.status)}${booking.customerName ? ` · ${booking.customerName}` : ""} · ${booking.startDate} → ${booking.endDate}`}
-          onMouseDown={(e) => e.stopPropagation()}
-        />
-      ))}
+
+      {bookingBars.map(({ booking, spanDays, stackIndex, isRealStart, isRealEnd }) => {
+        const bg    = bookingBgColor(booking.status);
+        const solid = bookingSolidColor(booking.status);
+        return (
+          <div
+            key={booking.id}
+            className={styles.bookingBarWrap}
+            style={{
+              width:  `${spanDays * CELL_W - 2}px`,
+              bottom: `${6 + stackIndex * 12}px`,
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => onBookingClick(booking, e)}
+          >
+            <div className={styles.bookingBar} style={{ background: bg }} />
+            {isRealStart && (
+              <span className={styles.bookingDotStart} style={{ background: solid }} />
+            )}
+            {isRealEnd && (
+              <span className={styles.bookingDotEnd} style={{ background: solid }} />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 });
@@ -205,34 +251,34 @@ const Cell = React.memo(function Cell({
 // ── Car row (memoised) ────────────────────────────────────────────────────────
 
 interface CarRowProps {
-  car:          Car;
-  days:         DayInfo[];
-  dayMap:       Record<string, CarPricing>;  // date → pricing
-  selCarId:     string | null;
-  selStart:     string | null;
-  selEnd:       string | null;
-  carBookings:  CalendarBooking[];
-  onDown:       CellProps["onDown"];
-  onEnter:      CellProps["onEnter"];
+  car:            Car;
+  days:           DayInfo[];
+  dayMap:         Record<string, CarPricing>;
+  selCarId:       string | null;
+  selStart:       string | null;
+  selEnd:         string | null;
+  carBookings:    CalendarBooking[];
+  onDown:         CellProps["onDown"];
+  onEnter:        CellProps["onEnter"];
+  onBookingClick: CellProps["onBookingClick"];
 }
 
 const CarRow = React.memo(function CarRow({
-  car, days, dayMap, selCarId, selStart, selEnd, carBookings, onDown, onEnter,
+  car, days, dayMap, selCarId, selStart, selEnd,
+  carBookings, onDown, onEnter, onBookingClick,
 }: CarRowProps) {
   const label    = [car.brand, car.model].filter(Boolean).join(" ") || car.name;
   const firstDay = days[0]?.date ?? "";
   const lastDay  = days[days.length - 1]?.date ?? "";
 
-  // Compute which cells should render a booking bar start, with overlap stacking
   const bookingBarStarts = useMemo<Record<string, BookingBarInfo[]>>(() => {
     const map: Record<string, BookingBarInfo[]> = {};
-    const sorted = [...carBookings].sort((a, b) => a.startDate.localeCompare(b.startDate));
+    const sorted   = [...carBookings].sort((a, b) => a.startDate.localeCompare(b.startDate));
     const assigned: Array<{ start: string; end: string; level: number }> = [];
 
     for (const booking of sorted) {
       if (booking.endDate < firstDay || booking.startDate > lastDay) continue;
 
-      // assign lowest free stack level (no overlap with existing)
       const usedLevels = new Set(
         assigned
           .filter(a => a.start <= booking.endDate && a.end >= booking.startDate)
@@ -248,8 +294,13 @@ const CarRow = React.memo(function CarRow({
       let d = visibleStart;
       while (d <= visibleEnd) { spanDays++; d = addDay(d); }
 
-      if (!map[visibleStart]) map[visibleStart] = [];
-      map[visibleStart].push({ booking, spanDays, stackIndex: level });
+      (map[visibleStart] ??= []).push({
+        booking,
+        spanDays,
+        stackIndex: level,
+        isRealStart: booking.startDate >= firstDay,
+        isRealEnd:   booking.endDate   <= lastDay,
+      });
     }
     return map;
   }, [carBookings, firstDay, lastDay]);
@@ -278,10 +329,10 @@ const CarRow = React.memo(function CarRow({
         </div>
       </div>
       {days.map((d) => {
-        const pricing   = dayMap[d.date] ?? null;
-        const isFirst   = pricing?.startDate === d.date;
-        const isLast    = pricing?.endDate   === d.date;
-        const [lo, hi]  = selStart && selEnd && selStart <= selEnd
+        const pricing    = dayMap[d.date] ?? null;
+        const isFirst    = pricing?.startDate === d.date;
+        const isLast     = pricing?.endDate   === d.date;
+        const [lo, hi]   = selStart && selEnd && selStart <= selEnd
           ? [selStart, selEnd] : [selEnd ?? "", selStart ?? ""];
         const isSelected = selCarId === car.id && d.date >= lo && d.date <= hi;
 
@@ -299,6 +350,7 @@ const CarRow = React.memo(function CarRow({
             bookingBars={bookingBarStarts[d.date] ?? []}
             onDown={onDown}
             onEnter={onEnter}
+            onBookingClick={onBookingClick}
           />
         );
       })}
@@ -331,14 +383,17 @@ export default function PricingCalendar() {
   const [selStart,  setSelStart]  = useState<string | null>(null);
   const [selEnd,    setSelEnd]    = useState<string | null>(null);
 
-  // ─ Modal
+  // ─ Pricing modal
   const [modal, setModal] = useState<ModalState | null>(null);
   const { openModal, closeModal } = useModalUrl();
+
+  // ─ Booking popover
+  const [bookingPopover, setBookingPopover] = useState<BookingPopoverState | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   // ─ Derived
   const { days, months } = useMemo(() => buildCalendar(baseDate, NUM_MONTHS), [baseDate]);
 
-  // Precompute date→pricing maps per car for O(1) cell lookup
   const pricingMaps = useMemo(() => {
     const out: Record<string, Record<string, CarPricing>> = {};
     for (const carId of Object.keys(pricings)) {
@@ -389,13 +444,15 @@ export default function PricingCalendar() {
           status: string; customerName?: string | null; source: string;
         }>) {
           const cb: CalendarBooking = {
-            id: b.id,
-            carId: b.carId,
-            startDate: b.startDateTime.slice(0, 10),
-            endDate:   b.endDateTime.slice(0, 10),
-            status:    b.status as CalendarBooking["status"],
-            customerName: b.customerName ?? null,
-            source:    b.source as CalendarBooking["source"],
+            id:            b.id,
+            carId:         b.carId,
+            startDate:     b.startDateTime.slice(0, 10),
+            endDate:       b.endDateTime.slice(0, 10),
+            startDateTime: b.startDateTime,
+            endDateTime:   b.endDateTime,
+            status:        b.status as CalendarBooking["status"],
+            customerName:  b.customerName ?? null,
+            source:        b.source as CalendarBooking["source"],
           };
           (grouped[cb.carId] ??= []).push(cb);
         }
@@ -410,9 +467,8 @@ export default function PricingCalendar() {
     return () => { cancelled = true; };
   }, []);
 
-  const pendingPricingEditRef = React.useRef<{ carId: string; pricingId: string } | null>(null);
+  const pendingPricingEditRef = useRef<{ carId: string; pricingId: string } | null>(null);
 
-  // ─ URL modal restore (mount: read params; deferred: wait for data)
   useEffect(() => {
     const sp    = new URLSearchParams(window.location.search);
     const mName = sp.get("modal");
@@ -438,7 +494,24 @@ export default function PricingCalendar() {
     }
   }, [loading, pricings]);
 
-  // ─ Mouse up (global)
+  // ─ Close booking popover on outside click or Escape
+  useEffect(() => {
+    if (!bookingPopover) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setBookingPopover(null); };
+    const onDown = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setBookingPopover(null);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [bookingPopover]);
+
+  // ─ Mouse up (drag release → open pricing create modal)
   useEffect(() => {
     if (!dragging) return;
     const up = () => {
@@ -477,7 +550,13 @@ export default function PricingCalendar() {
     setSelEnd(date);
   }, [dragging, dragCarId]);
 
-  // ─ Overlap detection
+  const handleBookingClick = useCallback((booking: CalendarBooking, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setBookingPopover(prev =>
+      prev?.booking.id === booking.id ? null : { booking, anchorX: e.clientX, anchorY: e.clientY },
+    );
+  }, []);
+
   const getOverlaps = useCallback((
     carId: string, startDate: string, endDate: string, excludeId?: string,
   ) => {
@@ -506,11 +585,7 @@ export default function PricingCalendar() {
     } else {
       const res = await fetch(
         `/next-api/cars/${modal.carId}/pricings/${modal.pricing.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        },
+        { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) },
       );
       if (!res.ok) { const d = await res.json(); throw new Error(d?.message ?? "Save failed"); }
       const updated: CarPricing = await res.json();
@@ -539,17 +614,25 @@ export default function PricingCalendar() {
   }, [modal, closeModal]);
 
   // ─ Navigation
-  const shift = (n: number) =>
+  const shift     = (n: number) =>
     setBaseDate((d) => new Date(Date.UTC(d.getFullYear(), d.getMonth() + n, 1)));
-
   const jumpToday = () => {
     const d = new Date();
     setBaseDate(new Date(Date.UTC(d.getFullYear(), d.getMonth(), 1)));
   };
 
   // ─ Render
-  const numDays = days.length;
-  const gridCols = `210px repeat(${numDays}, 28px)`;
+  const numDays  = days.length;
+  const gridCols = `${CAR_COL}px repeat(${numDays}, ${CELL_W}px)`;
+
+  // Popover position: above cursor, clamped so it doesn't bleed off-screen
+  const popoverStyle = bookingPopover ? (() => {
+    const GAP     = 12;
+    const W       = 260;
+    const x       = Math.min(bookingPopover.anchorX + GAP, (typeof window !== "undefined" ? window.innerWidth : 800) - W - 8);
+    const y       = bookingPopover.anchorY;
+    return { left: x, top: y } as React.CSSProperties;
+  })() : undefined;
 
   return (
     <div className={styles.root}>
@@ -558,7 +641,7 @@ export default function PricingCalendar() {
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
           <h1 className={styles.pageTitle}>Pricing calendar</h1>
-          <span className={styles.hint}>Drag to select a date range · Click a range to edit</span>
+          <span className={styles.hint}>Drag to create a pricing rule · Click a range to edit · Click a booking to inspect</span>
         </div>
         <div className={styles.toolbarRight}>
           <button className={styles.navBtn} onClick={() => shift(-1)} title="Previous period">‹</button>
@@ -591,14 +674,14 @@ export default function PricingCalendar() {
           <div className={styles.grid} style={{ gridTemplateColumns: gridCols }}>
 
             {/* ── Row 0: Month headers ── */}
-            <div className={`${styles.cornerA}`}>Cars</div>
+            <div className={styles.cornerA}>Cars</div>
             {months.map((m) => (
               <div key={m.key} className={styles.monthHeader} style={{ gridColumn: `span ${m.days}` }}>
                 {m.label}
               </div>
             ))}
 
-            {/* ── Row 1: Day numbers ── */}
+            {/* ── Row 1: Day headers ── */}
             <div className={styles.cornerB} />
             {days.map((d) => (
               <div
@@ -633,6 +716,7 @@ export default function PricingCalendar() {
                 carBookings={bookings[car.id] ?? []}
                 onDown={handleCellDown}
                 onEnter={handleCellEnter}
+                onBookingClick={handleBookingClick}
               />
             ))}
           </div>
@@ -656,21 +740,69 @@ export default function PricingCalendar() {
           </span>
           <span className={styles.legendDivider} />
           <span className={styles.legendItem}>
-            <span className={styles.legendBar} style={{ background: "rgba(16,185,129,0.80)" }} />
+            <span className={styles.legendBar} style={{ background: "rgba(16,185,129,0.82)" }} />
             Confirmed
           </span>
           <span className={styles.legendItem}>
-            <span className={styles.legendBar} style={{ background: "rgba(245,158,11,0.80)" }} />
+            <span className={styles.legendBar} style={{ background: "rgba(245,158,11,0.82)" }} />
             Pending
           </span>
           <span className={styles.legendItem}>
-            <span className={styles.legendBar} style={{ background: "rgba(249,115,22,0.80)" }} />
+            <span className={styles.legendBar} style={{ background: "rgba(249,115,22,0.82)" }} />
             Awaiting payment
           </span>
         </div>
       )}
 
-      {/* Modal */}
+      {/* Booking popover */}
+      {bookingPopover && (
+        <div
+          ref={popoverRef}
+          className={styles.bookingPopover}
+          style={popoverStyle}
+        >
+          <div className={styles.popoverHeader}>
+            <span
+              className={styles.popoverStatus}
+              style={{
+                background: `${bookingSolidColor(bookingPopover.booking.status)}22`,
+                color:       bookingSolidColor(bookingPopover.booking.status),
+                borderColor: `${bookingSolidColor(bookingPopover.booking.status)}44`,
+              }}
+            >
+              {bookingLabel(bookingPopover.booking.status)}
+            </span>
+            <button
+              className={styles.popoverClose}
+              onClick={() => setBookingPopover(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+
+          {bookingPopover.booking.customerName && (
+            <p className={styles.popoverCustomer}>{bookingPopover.booking.customerName}</p>
+          )}
+
+          <div className={styles.popoverDates}>
+            <div className={styles.popoverDateRow}>
+              <span className={styles.popoverDateLabel}>Start</span>
+              <span className={styles.popoverDateVal}>{formatDateTime(bookingPopover.booking.startDateTime)}</span>
+            </div>
+            <div className={styles.popoverDateRow}>
+              <span className={styles.popoverDateLabel}>End</span>
+              <span className={styles.popoverDateVal}>{formatDateTime(bookingPopover.booking.endDateTime)}</span>
+            </div>
+          </div>
+
+          <div className={styles.popoverSource}>
+            via {bookingPopover.booking.source}
+          </div>
+        </div>
+      )}
+
+      {/* Pricing modal */}
       {modal && (
         <PricingModal
           mode={modal.mode}
