@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
-import { getTranslations, LOCALES } from "@/lib/i18n";
+import { getTranslations } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import styles from "./fleet.module.css";
 import FleetGrid, { type FleetCar } from "./FleetGrid";
 import CarCard from "./CarCard";
 
-// Fully static — invalidated via revalidateTag("cars") / revalidateTag(`car-photos-*`).
-export const dynamic = "force-static";
-
-export function generateStaticParams() {
-  return LOCALES.map(locale => ({ locale }));
-}
+// Data is cached indefinitely via force-cache + tags.
+// Invalidated explicitly via revalidateTag("cars") / revalidateTag(`car-photos-*`).
+// generateStaticParams for [locale] is already declared in [locale]/layout.tsx.
 
 type PublicCar = FleetCar & { vehicleCondition?: string | null; modelYear?: number | null };
 

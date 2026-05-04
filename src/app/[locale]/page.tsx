@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import { getTranslations, LOCALES } from "@/lib/i18n";
+import { getTranslations } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import CarSearchForm from "@/components/CarSearchForm";
 import styles from "../page.module.css";
 
-// Fully static — explicitly revalidated via revalidateTag("cars") / revalidateTag(`car-photos-*`)
-// when admin mutates cars or photos.
-export const dynamic = "force-static";
-
-export function generateStaticParams() {
-  return LOCALES.map(locale => ({ locale }));
-}
+// Data is cached indefinitely via force-cache + tags.
+// Invalidated explicitly via revalidateTag("cars") / revalidateTag(`car-photos-*`).
+// generateStaticParams for [locale] is already declared in [locale]/layout.tsx.
 
 const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
