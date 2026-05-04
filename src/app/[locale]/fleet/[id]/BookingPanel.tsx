@@ -131,6 +131,8 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
 
   const [startDateTime, setStartDateTimeRaw] = useState("");
   const [endDateTime,   setEndDateTimeRaw]   = useState("");
+  const [startISO,      setStartISOraw]      = useState("");
+  const [endISO,        setEndISOraw]        = useState("");
   const [prefillSource, setPrefillSource]    = useState<PrefillSource>(null);
   const [available,     setAvailable]        = useState<boolean | null>(null);
   const [priceResult,   setPriceResult]      = useState<PriceResult | null>(null);
@@ -153,14 +155,17 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
 
   function setStartDateTime(v: string) {
     setStartDateTimeRaw(v);
+    setStartISOraw(v ? new Date(v).toISOString() : "");
     setPrefillSource(null);
     if (endDateTime && v && new Date(endDateTime) <= new Date(v)) {
       setEndDateTimeRaw("");
+      setEndISOraw("");
     }
   }
 
   function setEndDateTime(v: string) {
     setEndDateTimeRaw(v);
+    setEndISOraw(v ? new Date(v).toISOString() : "");
     setPrefillSource(null);
   }
 
@@ -174,6 +179,8 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
     if (initialStart && initialEnd && new Date(initialStart) > now) {
       setStartDateTimeRaw(isoToLocalDT(initialStart));
       setEndDateTimeRaw(isoToLocalDT(initialEnd));
+      setStartISOraw(initialStart);
+      setEndISOraw(initialEnd);
       setPrefillSource("url");
       return;
     }
@@ -181,6 +188,8 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
     if (stored && new Date(stored.start) > now) {
       setStartDateTimeRaw(isoToLocalDT(stored.start));
       setEndDateTimeRaw(isoToLocalDT(stored.end));
+      setStartISOraw(stored.start);
+      setEndISOraw(stored.end);
       setPrefillSource("storage");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -193,6 +202,16 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
       endPickerRef.current?.openPicker();
     }, 160);
   }
+
+  // ── Sync valid dates back to search context ──────────────────────────────────
+
+  useEffect(() => {
+    if (!startISO || !endISO) return;
+    if (new Date(startISO) <= new Date() || new Date(endISO) <= new Date(startISO)) return;
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ start: startISO, end: endISO, savedAt: Date.now() }));
+    } catch { /* ignore */ }
+  }, [startISO, endISO]);
 
   // ── Fetch availability & price ───────────────────────────────────────────────
 
@@ -222,14 +241,14 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
   }, [carId]);
 
   useEffect(() => {
-    if (!startDateTime || !endDateTime) {
+    if (!startISO || !endISO) {
       setAvailable(null);
       setPriceResult(null);
       setDateError("");
       return;
     }
-    const start = new Date(startDateTime);
-    const end   = new Date(endDateTime);
+    const start = new Date(startISO);
+    const end   = new Date(endISO);
     if (start <= new Date()) {
       setDateError(t.booking.pickupFuture);
       setAvailable(null); setPriceResult(null);
@@ -241,13 +260,13 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
       return;
     }
     setDateError("");
-    fetchAvailabilityAndPrice(startDateTime, endDateTime);
-  }, [startDateTime, endDateTime, fetchAvailabilityAndPrice, labels.dateError]);
+    fetchAvailabilityAndPrice(startISO, endISO);
+  }, [startISO, endISO, fetchAvailabilityAndPrice, labels.dateError, t.booking.pickupFuture]);
 
   // ── Submit ────────────────────────────────────────────────────────────────────
 
   const handleBook = async () => {
-    if (!startDateTime || !endDateTime || !available || !priceResult) return;
+    if (!startISO || !endISO || !available || !priceResult) return;
 
     // Validate all contact fields before submitting
     const errors = {
@@ -267,8 +286,8 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           carId,
-          startDateTime,
-          endDateTime,
+          startDateTime: startISO,
+          endDateTime:   endISO,
           customerName:  name.trim(),
           customerEmail: email.trim(),
           customerPhone: phone.trim(),

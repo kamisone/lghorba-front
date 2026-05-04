@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AddressAutocomplete, { type SelectedAddress } from "./AddressAutocomplete";
 import styles from "./CarSearchForm.module.css";
+
+const LS_KEY = "car_search_context";
+const LS_TTL = 7 * 24 * 60 * 60 * 1000;
 
 function nowPlusHours(h: number): { date: string; time: string } {
   const d = new Date(Date.now() + h * 3_600_000);
@@ -11,6 +14,17 @@ function nowPlusHours(h: number): { date: string; time: string } {
     date: d.toISOString().slice(0, 10),
     time: `${String(d.getHours()).padStart(2, "0")}:00`,
   };
+}
+
+function isoToDate(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function isoToTime(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 export interface SearchFormLabels {
@@ -41,6 +55,22 @@ export default function CarSearchForm({ locale, labels }: Props) {
   const [endTime,   setEndTime]   = useState(defaultEnd.time);
   const [address,   setAddress]   = useState<SelectedAddress | null>(null);
   const [dateError, setDateError] = useState<string | undefined>();
+
+  // Pre-fill from last search context on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      const ctx = JSON.parse(raw) as { start?: string; end?: string; savedAt?: number };
+      if (!ctx.start || !ctx.end || !ctx.savedAt) return;
+      if (Date.now() - ctx.savedAt > LS_TTL) return;
+      if (new Date(ctx.start) <= new Date()) return;
+      setStartDate(isoToDate(ctx.start));
+      setStartTime(isoToTime(ctx.start));
+      setEndDate(isoToDate(ctx.end));
+      setEndTime(isoToTime(ctx.end));
+    } catch { /* ignore */ }
+  }, []);
 
   const validate = useCallback((): boolean => {
     const start = new Date(`${startDate}T${startTime}`);

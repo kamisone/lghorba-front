@@ -29,6 +29,38 @@
 }
 .backLink:hover { opacity: 0.7; text-decoration: underline; }
 
+/* ── Search context bar ── */
+.searchContextBar {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.searchContextBack {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-brand-primary);
+  text-decoration: none;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.searchContextBack:hover { opacity: 0.7; text-decoration: underline; }
+
+.searchContextDates {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 0.2rem 0.75rem;
+  white-space: nowrap;
+}
+
 /* ── Slider section ── */
 .sliderSection {
   position: relative;

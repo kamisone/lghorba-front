@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import CarSlider from "@/components/CarSlider";
 import BookingPanel from "./BookingPanel";
+import SearchContextBar from "./SearchContextBar";
 import styles from "./car-public.module.css";
 import ListingIcon from "@/icons/car/ListingIcon";
 import CarTypeIcon from "@/icons/car/CarTypeIcon";
@@ -127,12 +128,22 @@ export default async function CarDetailPage({
   return (
     <div className={styles.page}>
 
-      {/* ── Breadcrumb ── */}
-      <div className={styles.breadcrumb}>
-        <Link href={`/${locale}/fleet`} className={styles.backLink}>
-          ← {t.fleet.title}
-        </Link>
-      </div>
+      {/* ── Breadcrumb / search context ── */}
+      {searchParams.start && searchParams.end ? (
+        <SearchContextBar
+          start={searchParams.start}
+          end={searchParams.end}
+          locale={locale}
+          backLabel={t.search.backToSearch}
+          searchHref={`/${locale}/search?start=${encodeURIComponent(searchParams.start)}&end=${encodeURIComponent(searchParams.end)}`}
+        />
+      ) : (
+        <div className={styles.breadcrumb}>
+          <Link href={`/${locale}/fleet`} className={styles.backLink}>
+            ← {t.fleet.title}
+          </Link>
+        </div>
+      )}
 
       {/* ── Photo slider ── */}
       <div className={styles.sliderSection}>
