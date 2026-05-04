@@ -303,7 +303,7 @@ function SearchPage() {
                         <div className={styles.cardPrice}>
                           {priceInfo ? (
                             <>
-                              <span className={styles.cardPriceTotal}>€{priceInfo.total.toFixed(0)}</span>
+                              <span className={styles.cardPriceTotal}>€{priceInfo.total.toFixed(2)}</span>
                               <span className={styles.cardPriceSub}>{t.search.totalLabel} · {priceInfo.days} {t.search.days}</span>
                             </>
                           ) : car.basePricePerDay != null ? (

@@ -222,13 +222,13 @@ const Cell = React.memo(function Cell({
     >
       {isFirst && pricing && color && (
         <span className={styles.cellBadge} style={{ color: color.label }}>
-          €{Number(pricing.pricePerDay).toFixed(0)}
+          €{Number(pricing.pricePerDay).toFixed(2)}
           {pricing.label ? <span className={styles.cellBadgeLabel}> {pricing.label}</span> : null}
         </span>
       )}
       {!pricing && fallbackPrice !== null && (
         <span className={styles.cellBadgeFallback}>
-          €{fallbackPrice.toFixed(0)}
+          €{fallbackPrice.toFixed(2)}
         </span>
       )}
 

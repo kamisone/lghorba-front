@@ -152,7 +152,7 @@ export default function FleetGrid({ cars, locale, initialStart, initialEnd }: Pr
                   <div className={styles.priceTag}>
                     {priceInfo ? (
                       <>
-                        <span className={styles.priceTagAmount}>€{priceInfo.total.toFixed(0)}</span>
+                        <span className={styles.priceTagAmount}>€{priceInfo.total.toFixed(2)}</span>
                         <span className={styles.priceTagSub}>{t.search.totalLabel} · {priceInfo.days} {t.search.days}</span>
                       </>
                     ) : loadingPrices ? (
