@@ -10,7 +10,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     return new NextResponse(res.body, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
   } catch {

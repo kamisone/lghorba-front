@@ -1,11 +1,10 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { getTranslations } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
 import HamburgerMenu from "./HamburgerMenu";
+import ScrollAwareHeader from "./ScrollAwareHeader";
+import ActiveNavLink from "./ActiveNavLink";
 import styles from "./ClientHeader.module.css";
 
 interface Props {
@@ -13,32 +12,7 @@ interface Props {
 }
 
 export default function ClientHeader({ locale }: Props) {
-  const t        = getTranslations(locale);
-  const pathname = usePathname();
-
-  const [hidden,   setHidden]   = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const lastY = useRef(0);
-
-  useEffect(() => {
-    lastY.current = window.scrollY;
-
-    const onScroll = () => {
-      const y = window.scrollY;
-      setScrolled(y > 10);
-      if (y < 80) {
-        setHidden(false);
-      } else if (y > lastY.current) {
-        setHidden(true);
-      } else {
-        setHidden(false);
-      }
-      lastY.current = y;
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const t = getTranslations(locale);
 
   const navLinks = [
     { href: `/${locale}`,           label: t.nav.home },
@@ -47,55 +21,47 @@ export default function ClientHeader({ locale }: Props) {
     { href: `/${locale}#how`,       label: t.nav.howItWorks },
     { href: `/${locale}/contact`,   label: t.nav.contact },
   ];
-
   const ctaHref = `/${locale}/contact`;
-
-  const isActive = (href: string) => {
-    if (href.includes("#")) return false;
-    if (href === `/${locale}`) return pathname === `/${locale}`;
-    return pathname === href || pathname.startsWith(href + "/");
-  };
-
-  const headerClass = [
-    styles.header,
-    hidden   ? styles.headerHidden : "",
-    scrolled ? styles.scrolled     : "",
-  ].filter(Boolean).join(" ");
 
   return (
     <>
       <div className={styles.headerSpacer} aria-hidden="true" />
-      <header className={headerClass}>
+      <ScrollAwareHeader>
         <div className={styles.inner}>
 
           {/* ── Logo ── */}
           <Link href={`/${locale}`} className={styles.logo} aria-label="vitecamion — home">
-            <img
-              className={styles.logoIcon}
+            <Image
               src="/assets/logo_vitecamion_icon.png"
               alt=""
-              aria-hidden="true"
+              aria-hidden={true}
+              width={34}
+              height={34}
+              className={styles.logoIcon}
+              priority
             />
-            <img
-              className={styles.logoTextImg}
+            <Image
               src="/assets/logo_vitecamion_text.png"
               alt="vitecamion"
+              width={120}
+              height={20}
+              className={styles.logoTextImg}
+              priority
             />
           </Link>
 
           {/* ── Desktop nav ── */}
           <nav className={styles.navLinks} aria-label="Main navigation">
-            {navLinks.map((link) => (
-              <Link
+            {navLinks.map(link => (
+              <ActiveNavLink
                 key={link.href}
                 href={link.href}
-                className={[
-                  styles.navLink,
-                  isActive(link.href) ? styles.navLinkActive : "",
-                ].filter(Boolean).join(" ")}
+                locale={locale}
+                linkClassName={styles.navLink}
+                activeLinkClassName={styles.navLinkActive}
               >
                 {link.label}
-              </Link>
+              </ActiveNavLink>
             ))}
           </nav>
 
@@ -111,12 +77,11 @@ export default function ClientHeader({ locale }: Props) {
               ctaHref={ctaHref}
               ctaLabel={t.nav.bookNow}
               locale={locale}
-              activeHref={pathname}
             />
           </div>
 
         </div>
-      </header>
+      </ScrollAwareHeader>
     </>
   );
 }

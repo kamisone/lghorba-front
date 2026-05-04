@@ -3,30 +3,29 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import styles from "./ClientHeader.module.css";
 
 interface Props {
-  links:      { href: string; label: string }[];
-  ctaHref:    string;
-  ctaLabel:   string;
-  locale:     string;
-  activeHref: string;
+  links:    { href: string; label: string }[];
+  ctaHref:  string;
+  ctaLabel: string;
+  locale:   string;
 }
 
-export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale, activeHref }: Props) {
+export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale }: Props) {
+  const pathname = usePathname();
   const [open,    setOpen]    = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Only enable portal after hydration
   useEffect(() => { setMounted(true); }, []);
 
-  // Lock body scroll while drawer is open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  // Close on Escape key
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
@@ -36,19 +35,16 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale, active
 
   const isActive = (href: string) => {
     if (href.includes("#")) return false;
-    return activeHref === href || activeHref.startsWith(href + "/");
+    return pathname === href || pathname.startsWith(href + "/");
   };
 
   const drawer = open && (
     <>
-      {/* Backdrop — rendered at body level so fixed positioning is relative to viewport */}
       <div
         className={styles.drawerOverlay}
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
-
-      {/* Drawer panel */}
       <div
         id="mobile-drawer"
         className={styles.drawer}
@@ -56,15 +52,27 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale, active
         aria-modal="true"
         aria-label="Navigation menu"
       >
-        {/* Header row */}
         <div className={styles.drawerHead}>
           <Link
             href={`/${locale}`}
             className={styles.drawerLogo}
             onClick={() => setOpen(false)}
           >
-            <img className={styles.drawerLogoIcon} src="/assets/logo_vitecamion_icon.png" alt="" aria-hidden="true" />
-            <img className={styles.drawerLogoText} src="/assets/logo_vitecamion_text.png" alt="vitecamion" />
+            <Image
+              src="/assets/logo_vitecamion_icon.png"
+              alt=""
+              aria-hidden={true}
+              width={30}
+              height={30}
+              className={styles.drawerLogoIcon}
+            />
+            <Image
+              src="/assets/logo_vitecamion_text.png"
+              alt="vitecamion"
+              width={100}
+              height={17}
+              className={styles.drawerLogoText}
+            />
           </Link>
           <button
             className={styles.drawerClose}
@@ -75,9 +83,8 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale, active
           </button>
         </div>
 
-        {/* Nav links */}
         <nav className={styles.drawerNav} aria-label="Mobile navigation">
-          {links.map((l) => (
+          {links.map(l => (
             <a
               key={l.href}
               href={l.href}
@@ -96,7 +103,6 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale, active
           </a>
         </nav>
 
-        {/* Footer */}
         <div className={styles.drawerFooter}>
           <p className={styles.drawerFooterText}>© {new Date().getFullYear()} vitecamion</p>
         </div>
@@ -108,7 +114,7 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale, active
     <div className={styles.hamburgerWrapper}>
       <button
         className={`${styles.hamburger} ${open ? styles.hamburgerOpen : ""}`}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(o => !o)}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         aria-controls="mobile-drawer"
@@ -117,9 +123,6 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale, active
         <span />
         <span />
       </button>
-
-      {/* Portal renders overlay + drawer directly in <body>, escaping the
-          header's transform containing block */}
       {mounted && createPortal(drawer, document.body)}
     </div>
   );

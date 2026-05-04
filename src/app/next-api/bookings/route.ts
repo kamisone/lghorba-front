@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 
 const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 
@@ -16,6 +17,11 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(body),
     });
     const data = await res.json();
+    if (res.ok) {
+      // A new booking changes the car's availability display on public pages.
+      revalidateTag("cars");
+      if (body.carId) revalidateTag(`availability-${body.carId}`);
+    }
     return NextResponse.json(data, { status: res.status });
   } catch {
     return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });

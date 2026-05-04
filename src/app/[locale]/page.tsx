@@ -1,43 +1,25 @@
-import { getTranslations } from "@/lib/i18n";
+import type { Metadata } from "next";
+import { getTranslations, LOCALES } from "@/lib/i18n";
+import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import CarSearchForm from "@/components/CarSearchForm";
 import styles from "../page.module.css";
 
-const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
+// Fully static — explicitly revalidated via revalidateTag("cars") / revalidateTag(`car-photos-*`)
+// when admin mutates cars or photos.
+export const dynamic = "force-static";
 
-// For each unavailable car, probe the next 14 days in parallel to find
-// the first date a 1-hour slot is bookable.
-async function probeNextAvailableDate(carId: string): Promise<string | null> {
-  const base = new Date();
-  base.setUTCHours(10, 0, 0, 0);
-  base.setUTCDate(base.getUTCDate() + 1); // start probing from tomorrow
-
-  const results = await Promise.allSettled(
-    Array.from({ length: 14 }, (_, i) => {
-      const d     = new Date(base.getTime() + i * 86_400_000);
-      const start = d.toISOString().slice(0, 10) + "T10:00";
-      const end   = d.toISOString().slice(0, 10) + "T11:00";
-      return fetch(
-        `${API_SERVER}/public/cars/${carId}/availability?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
-        { next: { revalidate: 300 } },
-      ).then(r => r.ok ? r.json() as Promise<{ available: boolean }> : null);
-    }),
-  );
-
-  for (let i = 0; i < results.length; i++) {
-    const r = results[i];
-    if (r.status === "fulfilled" && r.value?.available === true) {
-      return new Date(base.getTime() + i * 86_400_000).toISOString().slice(0, 10);
-    }
-  }
-  return null;
+export function generateStaticParams() {
+  return LOCALES.map(locale => ({ locale }));
 }
+
+const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
 async function getPublicCars(locale: string): Promise<CarouselCar[]> {
   try {
     const res = await fetch(
       `${API_SERVER}/public/cars?lang=${encodeURIComponent(locale)}`,
-      { cache: "no-store" },
+      { cache: "force-cache", next: { tags: ["cars"] } },
     );
     if (!res.ok) return [];
     const cars: CarouselCar[] = await res.json();
@@ -46,7 +28,10 @@ async function getPublicCars(locale: string): Promise<CarouselCar[]> {
       cars.map(async (car) => {
         try {
           const [photos, nextAvailableDate] = await Promise.all([
-            fetch(`${API_SERVER}/public/cars/${car.id}/photos`, { cache: "no-store" })
+            fetch(`${API_SERVER}/public/cars/${car.id}/photos`, {
+              cache: "force-cache",
+              next: { tags: [`car-photos-${car.id}`] },
+            })
               .then(r => r.ok ? r.json() as Promise<{ id: string }[]> : [])
               .catch(() => [] as { id: string }[]),
             car.isAvailable ? Promise.resolve(null) : probeNextAvailableDate(car.id),
@@ -60,6 +45,22 @@ async function getPublicCars(locale: string): Promise<CarouselCar[]> {
   } catch {
     return [];
   }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}): Promise<Metadata> {
+  const t = getTranslations(params.locale);
+  return {
+    title: "Vitecamion — Car rental on Turo, Getaround & Private",
+    description: t.hero.sub,
+    openGraph: {
+      title: "Vitecamion — Car rental on Turo, Getaround & Private",
+      description: t.hero.sub,
+    },
+  };
 }
 
 export default async function LandingPage({ params }: { params: { locale: string } }) {
@@ -94,12 +95,8 @@ export default async function LandingPage({ params }: { params: { locale: string
           </h1>
           <p className={styles.heroSub}>{t.hero.sub}</p>
           <div className={styles.heroBtns}>
-            <a href="#platforms" className={styles.btnPrimary}>
-              {t.hero.cta1}
-            </a>
-            <a href={`/${locale}/fleet`} className={styles.btnOutline}>
-              {t.hero.cta2}
-            </a>
+            <a href="#platforms" className={styles.btnPrimary}>{t.hero.cta1}</a>
+            <a href={`/${locale}/fleet`} className={styles.btnOutline}>{t.hero.cta2}</a>
           </div>
         </div>
         <div className={styles.heroCard} aria-hidden="true">
@@ -122,7 +119,7 @@ export default async function LandingPage({ params }: { params: { locale: string
         </div>
       </section>
 
-      {/* ── Search section ── */}
+      {/* ── Search ── */}
       <section className={styles.searchSection}>
         <div className={styles.searchInner}>
           <div className={styles.searchHead}>
@@ -171,8 +168,6 @@ export default async function LandingPage({ params }: { params: { locale: string
             <p className={styles.sectionSub}>{t.platforms.sub}</p>
           </div>
           <div className={styles.platformGrid}>
-
-            {/* Turo */}
             <div className={`${styles.platformCard} ${styles.platformCardTuro}`}>
               <div className={styles.platformTop}>
                 <div className={styles.platformIconWrap}>🚘</div>
@@ -193,7 +188,6 @@ export default async function LandingPage({ params }: { params: { locale: string
               </div>
             </div>
 
-            {/* Getaround */}
             <div className={`${styles.platformCard} ${styles.platformCardGetaround}`}>
               <div className={styles.platformTop}>
                 <div className={styles.platformIconWrap}>🚙</div>
@@ -214,7 +208,6 @@ export default async function LandingPage({ params }: { params: { locale: string
               </div>
             </div>
 
-            {/* Private */}
             <div className={`${styles.platformCard} ${styles.platformCardPrivate}`}>
               <div className={styles.platformTop}>
                 <div className={styles.platformIconWrap}>🤝</div>
@@ -229,17 +222,14 @@ export default async function LandingPage({ params }: { params: { locale: string
                   ))}
                 </div>
                 <p className={styles.platformDesc}>{t.platforms.private.desc}</p>
-                <a href={`/${locale}/fleet`} className={styles.platformCta}>
-                  {t.platforms.private.link}
-                </a>
+                <a href={`/${locale}/fleet`} className={styles.platformCta}>{t.platforms.private.link}</a>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* ── Fleet ── */}
+      {/* ── Fleet types ── */}
       <section id="fleet" className={styles.fleet}>
         <div className={styles.sectionInner}>
           <div className={styles.sectionHead}>
@@ -256,9 +246,7 @@ export default async function LandingPage({ params }: { params: { locale: string
                   <h3 className={styles.fleetCardType}>{type}</h3>
                   <p className={styles.fleetCardDesc}>{desc}</p>
                   <div className={styles.fleetCardUses}>
-                    {uses.map((u: string) => (
-                      <span key={u} className={styles.fleetCardUse}>{u}</span>
-                    ))}
+                    {uses.map((u: string) => <span key={u} className={styles.fleetCardUse}>{u}</span>)}
                   </div>
                 </div>
               </div>

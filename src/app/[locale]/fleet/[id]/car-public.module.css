@@ -535,3 +535,33 @@
 
 /* ── fleet card update ── */
 .card { text-decoration: none; color: inherit; cursor: pointer; display: block; }
+
+/* ── Loading skeletons ── */
+@keyframes detailShimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+.sliderSkeleton {
+  height: 420px;
+  border-radius: 16px;
+  background: linear-gradient(90deg,
+    var(--color-surface-raised) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-raised) 75%
+  );
+  background-size: 200% 100%;
+  animation: detailShimmer 1.4s ease-in-out infinite;
+}
+
+.contentSkeleton {
+  height: 300px;
+  border-radius: 12px;
+  background: linear-gradient(90deg,
+    var(--color-surface-raised) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-raised) 75%
+  );
+  background-size: 200% 100%;
+  animation: detailShimmer 1.4s ease-in-out infinite;
+}

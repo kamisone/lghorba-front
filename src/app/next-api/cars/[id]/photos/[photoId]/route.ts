@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 
 const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 
@@ -29,6 +30,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       headers: bearer(req),
     });
     if (!res.ok) return NextResponse.json({ error: "delete_failed" }, { status: res.status });
+    revalidateTag(`car-photos-${params.id}`);
+    revalidateTag("cars");
     return new NextResponse(null, { status: 204 });
   } catch {
     return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });

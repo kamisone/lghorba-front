@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string;
     if (!res.ok) return new NextResponse(null, { status: res.status });
     const contentType = res.headers.get("content-type") ?? "image/jpeg";
     return new NextResponse(res.body, {
-      headers: { "Content-Type": contentType, "Cache-Control": "public, max-age=86400" },
+      headers: { "Content-Type": contentType, "Cache-Control": "public, max-age=31536000, immutable" },
     });
   } catch {
     return new NextResponse(null, { status: 502 });

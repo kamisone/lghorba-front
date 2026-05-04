@@ -1,12 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   async headers() {
     return [
       {
-        source: "/(.*)",
+        // Restrict CORS header to API proxy routes only, not to static assets
+        source: "/next-api/:path*",
         headers: [
           {
             key: "Access-Control-Allow-Origin",
@@ -19,6 +17,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-
-
-

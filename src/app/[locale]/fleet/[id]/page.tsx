@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import CarSlider from "@/components/CarSlider";
@@ -16,6 +17,8 @@ import DoorsCarIcon from "@/icons/car/DoorsCarIcon";
 import SeatsCarIcon from "@/icons/car/SeatsCarIcon";
 import PaintPaletteIcon from "@/icons/car/PaintPaletteIcon";
 import type { Translations } from "@/lib/i18n/translations";
+
+// Data fetches tagged below — revalidated on car/photo mutations, not on a timer.
 
 interface PublicCarDetail {
   id: string;
@@ -43,7 +46,7 @@ async function getCar(id: string, lang: string): Promise<PublicCarDetail | null>
   try {
     const res = await fetch(
       `${API}/public/cars/${id}?lang=${encodeURIComponent(lang)}`,
-      { cache: "no-store" },
+      { cache: "force-cache", next: { tags: ["cars", `car-${id}`] } },
     );
     return res.ok ? res.json() : null;
   } catch {
@@ -53,12 +56,51 @@ async function getCar(id: string, lang: string): Promise<PublicCarDetail | null>
 
 async function getPhotos(id: string): Promise<{ id: string }[]> {
   try {
-    const res = await fetch(`${API}/public/cars/${id}/photos`, { cache: "no-store" });
+    const res = await fetch(`${API}/public/cars/${id}/photos`, {
+      cache: "force-cache",
+      next: { tags: [`car-photos-${id}`] },
+    });
     return res.ok ? res.json() : [];
   } catch {
     return [];
   }
 }
+
+// ── Static params: pre-generate a page for each known car ID at build time ────
+
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`${API}/public/cars?lang=fr`, { cache: "force-cache" });
+    if (!res.ok) return [];
+    const cars: { id: string }[] = await res.json();
+    return cars.map(car => ({ id: car.id }));
+  } catch {
+    return [];
+  }
+}
+
+// ── Metadata ──────────────────────────────────────────────────────────────────
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string; id: string };
+}): Promise<Metadata> {
+  const car = await getCar(params.id, params.locale);
+  if (!car) return { title: "Vehicle — Vitecamion" };
+  const title = [car.brand, car.model, car.finishing].filter(Boolean).join(" ") || car.name;
+  return {
+    title: `${title} — Vitecamion`,
+    description: car.description ?? `Rent the ${title} on Vitecamion.`,
+    openGraph: {
+      title: `${title} — Vitecamion`,
+      description: car.description ?? undefined,
+      images: [`/next-api/public/cars/${params.id}/photo`],
+    },
+  };
+}
+
+// ── Spec table ────────────────────────────────────────────────────────────────
 
 const SPEC_ICONS: Record<string, JSX.Element> = {
   type:      <CarTypeIcon />,
@@ -98,6 +140,8 @@ function buildSpecs(car: PublicCarDetail): SpecItem[] {
   return items.filter(Boolean) as SpecItem[];
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default async function CarDetailPage({
   params,
   searchParams,
@@ -122,7 +166,7 @@ export default async function CarDetailPage({
   }
 
   const specs = buildSpecs(car);
-  const photoIds = photos.map((p) => p.id);
+  const photoIds = photos.map(p => p.id);
   const title = [car.brand, car.model, car.finishing].filter(Boolean).join(" ") || car.name;
 
   return (
@@ -170,7 +214,7 @@ export default async function CarDetailPage({
           <div className={styles.specsSection}>
             <h2 className={styles.specsTitle}>{t.carDetail.specifications}</h2>
             <div className={styles.specsList}>
-              {specs.map((s) => (
+              {specs.map(s => (
                 <div key={s.key} className={styles.specRow}>
                   <span className={styles.specLeft}>
                     <span className={styles.specIcon}>{SPEC_ICONS[s.key]}</span>

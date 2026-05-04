@@ -268,6 +268,23 @@
   transform: translateY(-1px);
 }
 
+@keyframes cardShimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+.cardSkeleton {
+  height: 340px;
+  border-radius: 14px;
+  background: linear-gradient(90deg,
+    var(--color-surface-raised) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-raised) 75%
+  );
+  background-size: 200% 100%;
+  animation: cardShimmer 1.4s ease-in-out infinite;
+}
+
 @media (max-width: 640px) {
   .heroTitle { font-size: 1.6rem; }
   .grid { grid-template-columns: 1fr; }

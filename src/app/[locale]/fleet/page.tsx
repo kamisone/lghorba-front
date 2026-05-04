@@ -1,42 +1,26 @@
-import { getTranslations } from "@/lib/i18n";
+import type { Metadata } from "next";
+import { getTranslations, LOCALES } from "@/lib/i18n";
+import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import styles from "./fleet.module.css";
 import FleetGrid, { type FleetCar } from "./FleetGrid";
+import CarCard from "./CarCard";
+
+// Fully static — invalidated via revalidateTag("cars") / revalidateTag(`car-photos-*`).
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return LOCALES.map(locale => ({ locale }));
+}
 
 type PublicCar = FleetCar & { vehicleCondition?: string | null; modelYear?: number | null };
 
 const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
-async function probeNextAvailableDate(carId: string): Promise<string | null> {
-  const base = new Date();
-  base.setUTCHours(10, 0, 0, 0);
-  base.setUTCDate(base.getUTCDate() + 1);
-
-  const results = await Promise.allSettled(
-    Array.from({ length: 14 }, (_, i) => {
-      const d     = new Date(base.getTime() + i * 86_400_000);
-      const start = d.toISOString().slice(0, 10) + "T10:00";
-      const end   = d.toISOString().slice(0, 10) + "T11:00";
-      return fetch(
-        `${API}/public/cars/${carId}/availability?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
-        { next: { revalidate: 300 } },
-      ).then(r => r.ok ? r.json() as Promise<{ available: boolean }> : null);
-    }),
-  );
-
-  for (let i = 0; i < results.length; i++) {
-    const r = results[i];
-    if (r.status === "fulfilled" && r.value?.available === true) {
-      return new Date(base.getTime() + i * 86_400_000).toISOString().slice(0, 10);
-    }
-  }
-  return null;
-}
-
 async function getCars(lang: string): Promise<PublicCar[]> {
   try {
     const res = await fetch(
       `${API}/public/cars?lang=${encodeURIComponent(lang)}`,
-      { cache: "no-store" },
+      { cache: "force-cache", next: { tags: ["cars"] } },
     );
     if (!res.ok) return [];
     const cars: PublicCar[] = await res.json();
@@ -53,20 +37,29 @@ async function getCars(lang: string): Promise<PublicCar[]> {
   }
 }
 
-export default async function FleetPage({
+export async function generateMetadata({
   params,
-  searchParams,
 }: {
   params: { locale: string };
-  searchParams: { start?: string; end?: string };
-}) {
+}): Promise<Metadata> {
+  const t = getTranslations(params.locale);
+  return {
+    title: `${t.fleet.title} — Vitecamion`,
+    description: t.fleet.sub,
+    openGraph: {
+      title: `${t.fleet.title} — Vitecamion`,
+      description: t.fleet.sub,
+    },
+  };
+}
+
+export default async function FleetPage({ params }: { params: { locale: string } }) {
   const t = getTranslations(params.locale);
   const locale = params.locale;
   const cars = await getCars(locale);
 
   return (
     <div className={styles.page}>
-
 
       {/* ── Hero ── */}
       <div className={styles.hero}>
@@ -85,12 +78,11 @@ export default async function FleetPage({
       {cars.length === 0 ? (
         <p className={styles.empty}>No vehicles available right now. Check back soon.</p>
       ) : (
-        <FleetGrid
-          cars={cars}
-          locale={locale}
-          initialStart={searchParams.start}
-          initialEnd={searchParams.end}
-        />
+        <FleetGrid carIds={cars.map(c => c.id)}>
+          {cars.map(car => (
+            <CarCard key={car.id} car={car} locale={locale} />
+          ))}
+        </FleetGrid>
       )}
 
     </div>

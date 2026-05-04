@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 
 const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 
@@ -29,6 +30,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       body: formData,
     });
     const data = await res.json();
+    if (res.ok) {
+      revalidateTag(`car-photos-${params.id}`);
+      revalidateTag("cars"); // landing carousel reads photo IDs via the cars tag
+    }
     return NextResponse.json(data, { status: res.status });
   } catch {
     return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });

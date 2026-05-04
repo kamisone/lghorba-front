@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 
 const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 
@@ -29,6 +30,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       body: JSON.stringify(body),
     });
     const data = await res.json();
+    if (res.ok) {
+      revalidateTag("cars");
+      if (body.carId) revalidateTag(`availability-${body.carId}`);
+    }
     return NextResponse.json(data, { status: res.status });
   } catch {
     return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
@@ -44,6 +49,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       body: JSON.stringify(body),
     });
     const data = await res.json();
+    if (res.ok) {
+      // Status change (e.g. confirmed → cancelled) affects availability display.
+      revalidateTag("cars");
+      if (body.carId) revalidateTag(`availability-${body.carId}`);
+    }
     return NextResponse.json(data, { status: res.status });
   } catch {
     return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
@@ -56,6 +66,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       method: "DELETE",
       headers: bearer(req),
     });
+    if (res.ok) {
+      // carId isn't in a DELETE body; use coarse invalidation across all public pages.
+      revalidateTag("cars");
+    }
     return new NextResponse(null, { status: res.status });
   } catch {
     return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
