@@ -20,6 +20,7 @@ jobs:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
           APP_MODE: ${{ secrets.APP_MODE }}
           NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          API_BASE_URL_SERVER: https://vitecamion.com/api
 
 
       - name: Log in to docker hub registry
