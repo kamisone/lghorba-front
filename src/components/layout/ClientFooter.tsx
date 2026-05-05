@@ -12,34 +12,48 @@ export default function ClientFooter({ locale }: Props) {
   return (
     <footer className={styles.footer}>
       <div className={styles.footerInner}>
-        <div className={styles.footerLogo}>
-          <img src="/assets/logo_vitecamion_icon.png" alt="vitecamion" className={styles.logoIcon} />
-          <span className={styles.logoText}>vitecamion</span>
+
+        {/* ── Top row: logo + nav links ── */}
+        <div className={styles.footerTop}>
+          <div className={styles.footerLogo}>
+            <img
+              src="/assets/logo_vitecamion_icon.png"
+              alt="vitecamion"
+              className={styles.logoIcon}
+            />
+            <span className={styles.logoText}>vitecamion</span>
+          </div>
+
+          <nav className={styles.footerLinks}>
+            <Link href={`/${locale}/about`} className={styles.footerLink}>
+              {t.footer.about}
+            </Link>
+            <Link href={`/${locale}/privacy-policy`} className={styles.footerLink}>
+              {t.footer.privacy}
+            </Link>
+            <Link href={`/${locale}/legal`} className={styles.footerLink}>
+              {t.footer.legal}
+            </Link>
+            <Link href={`/${locale}/cookies`} className={styles.footerLink}>
+              {t.footer.cookies}
+            </Link>
+            <Link href="/admin" className={styles.footerLink}>
+              {t.footer.admin}
+            </Link>
+            <CookieSettingsButton
+              label={t.consent.settingsBtn}
+              className={styles.footerLink}
+            />
+          </nav>
         </div>
-        <p className={styles.footerCopy}>
-          © {new Date().getFullYear()} vitecamion · {t.footer.rights}
-        </p>
-        <div className={styles.footerLinks}>
-          <Link href={`/${locale}/about`} className={styles.footerLink}>
-            {t.footer.about}
-          </Link>
-          <Link href={`/${locale}/privacy-policy`} className={styles.footerLink}>
-            {t.footer.privacy}
-          </Link>
-          <Link href={`/${locale}/legal`} className={styles.footerLink}>
-            {t.footer.legal}
-          </Link>
-          <Link href={`/${locale}/cookies`} className={styles.footerLink}>
-            {t.footer.cookies}
-          </Link>
-          <Link href="/admin" className={styles.footerLink}>
-            {t.footer.admin}
-          </Link>
-          <CookieSettingsButton
-            label={t.consent.settingsBtn}
-            className={styles.footerLink}
-          />
+
+        {/* ── Bottom row: copyright ── */}
+        <div className={styles.footerBottom}>
+          <p className={styles.footerCopy}>
+            © {new Date().getFullYear()} vitecamion · {t.footer.rights}
+          </p>
         </div>
+
       </div>
     </footer>
   );
