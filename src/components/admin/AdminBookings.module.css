@@ -888,6 +888,24 @@
   border-top: 1px solid var(--color-border);
 }
 
+.actionEdit {
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-admin-primary);
+  background: var(--color-white);
+  color: var(--color-admin-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.actionEdit:hover:not(:disabled) {
+  background: var(--color-admin-primary);
+  color: var(--color-white);
+}
+.actionEdit:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .actionConfirm {
   flex: 1;
   padding: 0.65rem 1rem;

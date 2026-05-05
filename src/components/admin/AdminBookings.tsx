@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import type { Car } from "./data";
+import type { Car, CalendarBooking } from "./data";
 import BookingAdminModal from "./BookingAdminModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import styles from "./AdminBookings.module.css";
@@ -113,6 +113,44 @@ function matchesSearch(b: AdminBooking, q: string): boolean {
   );
 }
 
+// ── Edit guards + adapters ────────────────────────────────────────────────────
+
+function isModifiableBooking(b: AdminBooking): boolean {
+  if (b.status === "cancelled" || b.status === "pending_payment") return false;
+  return new Date(b.endDateTime) > new Date();
+}
+
+function toCalendarBooking(b: AdminBooking): CalendarBooking {
+  return {
+    id: b.id,
+    carId: b.carId,
+    startDateTime: b.startDateTime,
+    endDateTime: b.endDateTime,
+    source: b.source,
+    status: b.status === "pending_payment" ? "pending" : (b.status as "pending" | "confirmed" | "cancelled"),
+    reservationNumber: b.reservationNumber,
+    totalEarning: b.totalEarning != null ? Number(b.totalEarning) : null,
+    autoStartTracking: false,
+    color: null,
+    user: b.user
+      ? { id: b.user.id, name: b.user.name, phone: b.user.phone, email: b.user.email }
+      : null,
+    customerName: b.customerName,
+    customerPhone: b.customerPhone,
+    customerEmail: b.customerEmail,
+  };
+}
+
+function toAdminCar(b: AdminBooking): Car {
+  return {
+    id: b.carId,
+    name: b.car?.name ?? "Unknown",
+    immatriculation: b.car?.immatriculation ?? "",
+    phoneNumber: "",
+    photo: b.car?.photo,
+  };
+}
+
 // ── Badges ────────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: AdminBooking["status"] }) {
@@ -144,9 +182,10 @@ interface ModalProps {
   onConfirm: (id: string) => void;
   onCancel:  (id: string) => void;
   onDelete:  (id: string) => void;
+  onEdit:    (b: AdminBooking) => void;
 }
 
-function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, onDelete }: ModalProps) {
+function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, onDelete, onEdit }: ModalProps) {
   const duration    = daysDiff(booking.startDateTime, booking.endDateTime);
   const pricePerDay = Number(booking.totalPrice) / duration;
 
@@ -281,6 +320,15 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
         </div>
 
         <div className={styles.modalActions}>
+          {isModifiableBooking(booking) && (
+            <button
+              className={styles.actionEdit}
+              onClick={() => { onClose(); onEdit(booking); }}
+              disabled={actionLoading}
+            >
+              ✏️ Edit
+            </button>
+          )}
           {booking.status === "pending" && (
             <button className={styles.actionConfirm} onClick={() => onConfirm(booking.id)} disabled={actionLoading}>
               Confirm booking
@@ -365,6 +413,7 @@ export default function AdminBookings() {
   const [dateFrom,      setDateFrom]      = useState("");
   const [dateTo,        setDateTo]        = useState("");
   const [selected,      setSelected]      = useState<AdminBooking | null>(null);
+  const [editBooking,   setEditBooking]   = useState<AdminBooking | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [showCarPicker, setShowCarPicker] = useState(false);
   const [pickerCars,    setPickerCars]    = useState<Car[]>([]);
@@ -375,14 +424,16 @@ export default function AdminBookings() {
 
   // ── URL modal restore ─────────────────────────────────────────────────────
 
-  const [restoreBookingId,  setRestoreBookingId]  = useState<string | null>(null);
+  const [restoreBookingId,   setRestoreBookingId]   = useState<string | null>(null);
   const [restoreCreateCarId, setRestoreCreateCarId] = useState<string | null>(null);
+  const [restoreEditId,      setRestoreEditId]      = useState<string | null>(null);
 
   useEffect(() => {
     const sp    = new URLSearchParams(window.location.search);
     const modal = sp.get("modal");
-    if (modal === "booking")        setRestoreBookingId(sp.get("id"));
+    if (modal === "booking")             setRestoreBookingId(sp.get("id"));
     else if (modal === "booking-create") setRestoreCreateCarId(sp.get("carId"));
+    else if (modal === "booking-edit")   setRestoreEditId(sp.get("id"));
   }, []);
 
   // Restore booking detail modal once bookings are loaded
@@ -392,6 +443,14 @@ export default function AdminBookings() {
     if (b) setSelected(b);
     setRestoreBookingId(null);
   }, [loading, restoreBookingId, bookings]);
+
+  // Restore edit booking modal once bookings are loaded
+  useEffect(() => {
+    if (loading || !restoreEditId) return;
+    const b = bookings.find(b => b.id === restoreEditId);
+    if (b && isModifiableBooking(b)) setEditBooking(b);
+    setRestoreEditId(null);
+  }, [loading, restoreEditId, bookings]);
 
   // Restore create booking modal by fetching cars
   useEffect(() => {
@@ -429,6 +488,16 @@ export default function AdminBookings() {
 
   const closeBookingCreate = useCallback(() => {
     setCreateCar(null);
+    closeModal();
+  }, [closeModal]);
+
+  const openBookingEdit = useCallback((b: AdminBooking) => {
+    setEditBooking(b);
+    openModal("booking-edit", { id: b.id });
+  }, [openModal]);
+
+  const closeBookingEdit = useCallback(() => {
+    setEditBooking(null);
     closeModal();
   }, [closeModal]);
 
@@ -815,6 +884,7 @@ export default function AdminBookings() {
           onConfirm={id => updateStatus(id, "confirmed")}
           onCancel={id  => updateStatus(id, "cancelled")}
           onDelete={deleteBooking}
+          onEdit={openBookingEdit}
         />
       )}
 
@@ -862,6 +932,39 @@ export default function AdminBookings() {
           car={createCar}
           onClose={closeBookingCreate}
           onSaved={() => { closeBookingCreate(); fetchBookings(); }}
+        />
+      )}
+
+      {/* ── Edit booking modal ── */}
+      {editBooking && (
+        <BookingAdminModal
+          car={toAdminCar(editBooking)}
+          booking={toCalendarBooking(editBooking)}
+          existingBookings={bookings
+            .filter(b => b.carId === editBooking.carId && b.id !== editBooking.id)
+            .map(toCalendarBooking)}
+          onClose={closeBookingEdit}
+          onSaved={(updated) => {
+            setBookings(prev => prev.map(b =>
+              b.id === editBooking.id
+                ? {
+                    ...b,
+                    startDateTime:   updated.startDateTime,
+                    endDateTime:     updated.endDateTime,
+                    source:          updated.source,
+                    reservationNumber: updated.reservationNumber ?? null,
+                    totalEarning:    updated.totalEarning ?? null,
+                    customerName:    updated.customerName ?? null,
+                    customerPhone:   updated.customerPhone ?? null,
+                    customerEmail:   updated.customerEmail ?? null,
+                    user: updated.user
+                      ? { id: updated.user.id, name: updated.user.name, phone: updated.user.phone, email: updated.user.email ?? null }
+                      : b.user,
+                  }
+                : b
+            ));
+            closeBookingEdit();
+          }}
         />
       )}
     </div>
