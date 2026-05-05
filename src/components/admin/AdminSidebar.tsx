@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/admins",            icon: "admin_panel_settings", label: "Admins"   },
   { href: "/admin/contacts",          icon: "mail",                label: "Contacts"  },
   { href: "/admin/guest-access",      icon: "key",                 label: "Guest Access" },
+  { href: "/admin/content",           icon: "article",             label: "Content"      },
 ];
 
 interface Props {

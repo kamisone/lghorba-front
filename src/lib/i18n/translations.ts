@@ -193,7 +193,10 @@ export const en = {
   },
   footer: {
     rights: "All rights reserved",
-    privacy: "Privacy",
+    privacy: "Privacy Policy",
+    legal: "Legal Notice",
+    cookies: "Cookie Policy",
+    about: "About",
     admin: "Admin",
   },
   login: {
@@ -253,21 +256,138 @@ export const en = {
   },
   privacy: {
     title: "Privacy Policy",
-    intro: "This Privacy Policy describes how vitecamion collects, uses, and discloses your personal information when you visit our website.",
-    s1title: "Information We Collect",
-    s1: "We collect information you provide directly to us, including personal information such as your name, email address, and usage data collected automatically when you interact with our site.",
-    s2title: "Use of Information",
-    s2: "We use collected information to provide and maintain our site, respond to your inquiries, send updates where consented, monitor trends, and detect fraudulent activities.",
-    s3title: "Sharing of Information",
-    s3: "We may share your information with third-party service providers. We may also disclose it in response to legal obligations, to protect our rights, or in connection with a business transaction.",
-    s4title: "Security",
-    s4: "We take reasonable measures to protect your information, but no method of transmission over the Internet is 100% secure.",
-    s5title: "Your Choices",
-    s5: "You may opt out of promotional communications at any time. Non-promotional communications about your account may still be sent.",
-    s6title: "Changes to This Policy",
-    s6: "We may update this Privacy Policy from time to time and will notify you by posting the new policy on this page.",
-    s7title: "Contact Us",
-    s7: "If you have any questions about this Privacy Policy, please contact us at info@vitecamion.com.",
+    updated: "Last updated: May 2025",
+    intro: "vitecamion attaches great importance to the protection of your personal data. This policy describes what data we collect, why we collect it, how long we keep it, and what rights you have under the General Data Protection Regulation (GDPR – EU 2016/679).",
+    sections: [
+      {
+        title: "1. Data Controller",
+        body: "The data controller is vitecamion, [RAISON_SOCIALE], [FORME_JURIDIQUE], registered at [ADRESSE_SIEGE_SOCIAL], [CODE_POSTAL] [VILLE], France. Contact: info@vitecamion.com.",
+      },
+      {
+        title: "2. Data Collected and Purposes",
+        body: "We collect the following personal data: (a) Booking data – name, email address, phone number – collected when you submit a booking request, necessary for the performance of the rental contract. (b) Payment data – processed exclusively by our payment partner Stripe; vitecamion does not store your card details. (c) GPS / location data – recorded during active rental sessions to ensure vehicle security and verify the rental period, on the basis of legitimate interest. (d) Invoice data – name, email, and transaction details retained for accounting and legal compliance. (e) Technical data – session cookie necessary for site authentication.",
+      },
+      {
+        title: "3. Legal Basis for Processing",
+        body: "Depending on the processing activity: contractual necessity (booking fulfilment); legal obligation (invoice retention for 10 years under French accounting law); legitimate interest (vehicle tracking, fraud prevention); consent (any optional communications you have opted into).",
+      },
+      {
+        title: "4. Retention Periods",
+        body: "Booking and invoicing data: 5 years after the last interaction, or 10 years when required by accounting rules. GPS tracking data: deleted within 24 hours of the rental period ending. Session cookies: expire after a maximum of 5 days. Data related to cancelled or unconfirmed bookings: deleted after 90 days.",
+      },
+      {
+        title: "5. Recipients of Your Data",
+        body: "Your data may be shared with the following sub-processors, each bound by GDPR-compliant data processing agreements: Stripe Inc. (payment processing, US – covered by Standard Contractual Clauses); Google Cloud (invoice PDF storage, EU region); email delivery provider (transactional email). We never sell your personal data.",
+      },
+      {
+        title: "6. International Transfers",
+        body: "Stripe Inc. is established in the United States. Transfers are covered by Standard Contractual Clauses approved by the European Commission. Google Cloud storage is configured to remain within the EU. No other international transfers are performed.",
+      },
+      {
+        title: "7. Your Rights",
+        body: "Under GDPR you have the right to: access your data, request rectification or erasure, object to processing, request restriction of processing, and receive your data in a portable format. To exercise any right, email info@vitecamion.com. You also have the right to lodge a complaint with the CNIL (www.cnil.fr).",
+      },
+      {
+        title: "8. Data Security",
+        body: "We implement appropriate technical and organisational measures to protect your data: HTTPS/TLS encryption in transit, access controls on all systems, HTTPONLY session cookies. No method of transmission over the Internet is 100% secure; we will notify you promptly in the event of a breach affecting your rights.",
+      },
+      {
+        title: "9. Cookies",
+        body: "We use one essential session cookie (vitecamion_auth) that is strictly necessary for authentication. No advertising or profiling cookies are used. Our payment partner Stripe may set its own cookies during checkout; please refer to Stripe's privacy policy for details.",
+      },
+      {
+        title: "10. Changes to This Policy",
+        body: "We may update this policy when our practices change. We will indicate the revision date at the top of the page. For significant changes we will notify you by email if we hold your address.",
+      },
+      {
+        title: "11. Contact",
+        body: "For any privacy-related question or to exercise your rights, contact us at: info@vitecamion.com — or by post at: vitecamion, [ADRESSE_SIEGE_SOCIAL], [CODE_POSTAL] [VILLE], France.",
+      },
+    ],
+  },
+  legal: {
+    title: "Legal Notice",
+    updated: "Last updated: May 2025",
+    intro: "In accordance with Law No. 2004-575 of 21 June 2004 on Confidence in the Digital Economy (LCEN), users of the vitecamion website are hereby informed of the following.",
+    sections: [
+      {
+        title: "1. Publisher",
+        body: "Company name: [RAISON_SOCIALE] — trading as vitecamion. Legal form: [FORME_JURIDIQUE]. Share capital: [CAPITAL_SOCIAL]. Registered address: [ADRESSE_SIEGE_SOCIAL], [CODE_POSTAL] [VILLE], France. SIRET: [NUMERO_SIRET]. RCS: [VILLE_RCS] [NUMERO_RCS]. Intra-community VAT: [NUMERO_TVA]. Publication director: [DIRECTEUR_PUBLICATION]. Contact: info@vitecamion.com.",
+      },
+      {
+        title: "2. Hosting",
+        body: "This website is hosted by: [HEBERGEUR_NOM], [HEBERGEUR_ADRESSE], [HEBERGEUR_PAYS]. Phone: [HEBERGEUR_TELEPHONE].",
+      },
+      {
+        title: "3. Intellectual Property",
+        body: "All content on this website – including but not limited to text, images, logos, and graphical elements – is the exclusive property of vitecamion or its partners and is protected by French and international intellectual property law. Any reproduction, distribution, or use without prior written authorisation is strictly prohibited.",
+      },
+      {
+        title: "4. Limitation of Liability",
+        body: "vitecamion makes every effort to ensure the accuracy of the information published on this site but cannot be held liable for errors, omissions, or results obtained from the use of this information. Links to third-party sites (Turo, Getaround) are provided for convenience; vitecamion accepts no responsibility for the content or practices of those sites.",
+      },
+      {
+        title: "5. Personal Data",
+        body: "The collection and processing of personal data by vitecamion is governed by our Privacy Policy, available at /privacy-policy.",
+      },
+      {
+        title: "6. Applicable Law",
+        body: "This notice is governed by French law. Any dispute relating to the use of this website shall be subject to the exclusive jurisdiction of the courts of [VILLE_JURIDICTION], France.",
+      },
+    ],
+  },
+  cookies: {
+    title: "Cookie Policy",
+    updated: "Last updated: May 2025",
+    intro: "This policy explains what cookies are, which cookies vitecamion uses, and how you can manage them.",
+    sections: [
+      {
+        title: "1. What is a Cookie?",
+        body: "A cookie is a small text file placed on your device by a website you visit. Cookies allow the site to remember your preferences or session state between pages.",
+      },
+      {
+        title: "2. Essential Cookies (vitecamion)",
+        body: "vitecamion_auth — Purpose: authentication session. This cookie is set when you (or an administrator) log in and keeps the session active. It is strictly necessary for the site to function and cannot be disabled without breaking authentication. Duration: 5 days maximum (deleted on logout). This cookie is HttpOnly and Secure; it cannot be read by client-side scripts.",
+      },
+      {
+        title: "3. Third-Party Cookies (Stripe)",
+        body: "When you proceed to payment, Stripe — our payment processor — may set cookies to detect fraud, prevent abuse, and enable secure checkout. These cookies are governed by Stripe's own Privacy Policy (stripe.com/privacy). vitecamion has no access to or control over these cookies.",
+      },
+      {
+        title: "4. Cookies We Do Not Use",
+        body: "vitecamion does not use advertising, targeting, profiling, or third-party analytics cookies. We do not use Google Analytics, Facebook Pixel, or similar tracking technologies.",
+      },
+      {
+        title: "5. Managing Your Preferences",
+        body: "Because the only vitecamion cookie is strictly necessary for authentication, it cannot be disabled via a consent banner without preventing you from using the site. You may delete cookies at any time through your browser settings. Doing so will log you out of any active session.",
+      },
+      {
+        title: "6. Contact",
+        body: "For any question about our use of cookies, contact us at info@vitecamion.com.",
+      },
+    ],
+  },
+  about: {
+    title: "About vitecamion",
+    missionLabel: "Our mission",
+    mission: "Make car rental simple, transparent, and accessible — through every channel.",
+    storyLabel: "Our story",
+    story: "Founded in 2023 in Chatelet-en-brie, vitecamion was born from the idea that renting a car should be as straightforward as possible. We started with a single vehicle and a commitment to honest pricing. Today we operate a carefully maintained fleet available across multiple platforms.']",
+    fleetLabel: "Our fleet",
+    fleet: "We maintain a diverse fleet of city cars, SUVs, and vans — all recent models, regularly serviced, and fully insured. Every vehicle is photographed, inspected, and prepared before each rental.",
+    platformsLabel: "Where to find us",
+    platforms: "Our vehicles are listed on Turo and Getaround for maximum convenience, and also available for direct private rental through this website — with no platform fees and the most flexible terms.",
+    valuesLabel: "Our values",
+    values: [
+      { icon: "🔍", title: "Transparency", body: "All-inclusive pricing with no hidden fees. What you see is what you pay." },
+      { icon: "✅", title: "Quality", body: "Recent, well-maintained vehicles. We refuse to put an unreliable car in your hands." },
+      { icon: "📞", title: "Responsiveness", body: "7-day support. We are reachable and we answer." },
+      { icon: "🚚", title: "Flexibility", body: "Delivery available on request. We adapt to your schedule, not the other way around." },
+    ],
+    statsLabel: "By the numbers",
+    contactLabel: "Get in touch",
+    contactBody: "A question, a specific request, or just want to know which vehicle fits your trip? Write to us.",
+    contactCta: "Contact us →",
   },
 };
 
@@ -464,7 +584,10 @@ export const fr: Translations = {
   },
   footer: {
     rights: "Tous droits réservés",
-    privacy: "Confidentialité",
+    privacy: "Politique de confidentialité",
+    legal: "Mentions légales",
+    cookies: "Politique de cookies",
+    about: "À propos",
     admin: "Admin",
   },
   login: {
@@ -524,21 +647,138 @@ export const fr: Translations = {
   },
   privacy: {
     title: "Politique de confidentialité",
-    intro: "Cette politique décrit comment vitecamion collecte, utilise et divulgue vos informations personnelles lorsque vous visitez notre site.",
-    s1title: "Informations collectées",
-    s1: "Nous collectons les informations que vous nous fournissez directement, ainsi que les données d'utilisation collectées automatiquement lors de votre navigation.",
-    s2title: "Utilisation des informations",
-    s2: "Nous utilisons les informations pour fournir notre service, répondre à vos demandes, envoyer des communications consenties et détecter les activités frauduleuses.",
-    s3title: "Partage des informations",
-    s3: "Nous pouvons partager vos informations avec des prestataires tiers. Nous pouvons également les divulguer en réponse à des obligations légales.",
-    s4title: "Sécurité",
-    s4: "Nous prenons des mesures raisonnables pour protéger vos informations, mais aucune transmission sur Internet n'est sécurisée à 100%.",
-    s5title: "Vos choix",
-    s5: "Vous pouvez vous désabonner des communications promotionnelles à tout moment.",
-    s6title: "Modifications",
-    s6: "Nous pouvons mettre à jour cette politique et vous en informerons en publiant la nouvelle version sur cette page.",
-    s7title: "Nous contacter",
-    s7: "Pour toute question, contactez-nous à info@vitecamion.com.",
+    updated: "Dernière mise à jour : mai 2025",
+    intro: "vitecamion accorde une grande importance à la protection de vos données personnelles. Cette politique décrit les données collectées, les finalités du traitement, leur durée de conservation et vos droits au titre du Règlement Général sur la Protection des Données (RGPD – UE 2016/679).",
+    sections: [
+      {
+        title: "1. Responsable du traitement",
+        body: "Le responsable du traitement est vitecamion, [RAISON_SOCIALE], [FORME_JURIDIQUE], dont le siège est situé [ADRESSE_SIEGE_SOCIAL], [CODE_POSTAL] [VILLE], France. Contact : info@vitecamion.com.",
+      },
+      {
+        title: "2. Données collectées et finalités",
+        body: "Nous collectons les données suivantes : (a) Données de réservation – nom, adresse e-mail, numéro de téléphone – lors de la soumission d'une demande de réservation, nécessaires à l'exécution du contrat de location. (b) Données de paiement – traitées exclusivement par notre prestataire Stripe ; vitecamion ne stocke pas vos coordonnées bancaires. (c) Données de géolocalisation – enregistrées durant les sessions de location actives pour assurer la sécurité du véhicule et vérifier la période de location, sur la base de l'intérêt légitime. (d) Données de facturation – nom, e-mail et informations de transaction, conservées pour la conformité comptable et légale. (e) Données techniques – cookie de session nécessaire à l'authentification.",
+      },
+      {
+        title: "3. Base légale du traitement",
+        body: "Selon les opérations : exécution du contrat (traitement de la réservation) ; obligation légale (conservation des factures pendant 10 ans en vertu du Code de commerce) ; intérêt légitime (suivi du véhicule, prévention de la fraude) ; consentement (communications optionnelles auxquelles vous avez souscrit).",
+      },
+      {
+        title: "4. Durées de conservation",
+        body: "Données de réservation et de facturation : 5 ans après la dernière interaction, ou 10 ans si requis par les règles comptables. Données de géolocalisation : supprimées dans les 24 heures suivant la fin de la période de location. Cookies de session : expiration au bout de 5 jours au maximum. Données relatives aux réservations annulées ou non confirmées : supprimées après 90 jours.",
+      },
+      {
+        title: "5. Destinataires de vos données",
+        body: "Vos données peuvent être transmises aux sous-traitants suivants, liés par des accords conformes au RGPD : Stripe Inc. (paiement, États-Unis – couvert par des Clauses Contractuelles Types) ; Google Cloud (stockage des PDF de factures, région UE) ; prestataire d'envoi d'e-mails transactionnels. Nous ne vendons jamais vos données personnelles.",
+      },
+      {
+        title: "6. Transferts hors Union européenne",
+        body: "Stripe Inc. est établie aux États-Unis. Les transferts sont encadrés par des Clauses Contractuelles Types approuvées par la Commission européenne. Le stockage Google Cloud est configuré pour rester dans l'Union européenne. Aucun autre transfert international n'est effectué.",
+      },
+      {
+        title: "7. Vos droits",
+        body: "Conformément au RGPD, vous disposez des droits suivants : accès à vos données, rectification, effacement, opposition au traitement, limitation du traitement, portabilité de vos données. Pour exercer un droit, écrivez à info@vitecamion.com. Vous avez également le droit d'introduire une réclamation auprès de la CNIL (www.cnil.fr).",
+      },
+      {
+        title: "8. Sécurité des données",
+        body: "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées : chiffrement HTTPS/TLS en transit, contrôle des accès sur tous les systèmes, cookies de session HttpOnly. Aucun mode de transmission sur Internet n'est sécurisé à 100 % ; nous vous informerons rapidement en cas de violation affectant vos droits.",
+      },
+      {
+        title: "9. Cookies",
+        body: "Nous utilisons un seul cookie de session essentiel (vitecamion_auth), strictement nécessaire à l'authentification. Aucun cookie publicitaire ou de profilage n'est utilisé. Notre partenaire de paiement Stripe peut déposer ses propres cookies lors du paiement ; veuillez consulter la politique de confidentialité de Stripe pour plus d'informations.",
+      },
+      {
+        title: "10. Modifications de la présente politique",
+        body: "Nous pouvons mettre à jour cette politique lorsque nos pratiques évoluent. La date de révision sera indiquée en haut de la page. Pour toute modification significative, nous vous informerons par e-mail si nous disposons de votre adresse.",
+      },
+      {
+        title: "11. Contact",
+        body: "Pour toute question relative à la protection de vos données ou pour exercer vos droits : info@vitecamion.com — ou par courrier : vitecamion, [ADRESSE_SIEGE_SOCIAL], [CODE_POSTAL] [VILLE], France.",
+      },
+    ],
+  },
+  legal: {
+    title: "Mentions légales",
+    updated: "Dernière mise à jour : mai 2025",
+    intro: "Conformément à la loi n° 2004-575 du 21 juin 2004 pour la Confiance dans l'Économie Numérique (LCEN), les utilisateurs du site vitecamion sont informés des éléments suivants.",
+    sections: [
+      {
+        title: "1. Éditeur du site",
+        body: "Dénomination sociale : [RAISON_SOCIALE], exploitant le nom commercial vitecamion. Forme juridique : [FORME_JURIDIQUE]. Capital social : [CAPITAL_SOCIAL]. Siège social : [ADRESSE_SIEGE_SOCIAL], [CODE_POSTAL] [VILLE], France. SIRET : [NUMERO_SIRET]. RCS : [VILLE_RCS] [NUMERO_RCS]. Numéro de TVA intracommunautaire : [NUMERO_TVA]. Directeur de la publication : [DIRECTEUR_PUBLICATION]. Contact : info@vitecamion.com.",
+      },
+      {
+        title: "2. Hébergement",
+        body: "Ce site est hébergé par : [HEBERGEUR_NOM], [HEBERGEUR_ADRESSE], [HEBERGEUR_PAYS]. Téléphone : [HEBERGEUR_TELEPHONE].",
+      },
+      {
+        title: "3. Propriété intellectuelle",
+        body: "L'ensemble des contenus figurant sur ce site – textes, images, logos, éléments graphiques – est la propriété exclusive de vitecamion ou de ses partenaires et est protégé par les droits de propriété intellectuelle français et internationaux. Toute reproduction, diffusion ou utilisation sans autorisation préalable écrite est strictement interdite.",
+      },
+      {
+        title: "4. Limitation de responsabilité",
+        body: "vitecamion s'efforce d'assurer l'exactitude des informations publiées sur ce site mais ne saurait être tenu responsable des erreurs, omissions ou résultats obtenus. Les liens vers des sites tiers (Turo, Getaround) sont fournis à titre informatif ; vitecamion n'est pas responsable du contenu ni des pratiques de ces sites.",
+      },
+      {
+        title: "5. Données personnelles",
+        body: "La collecte et le traitement des données personnelles par vitecamion sont régis par notre Politique de confidentialité, disponible à l'adresse /privacy-policy.",
+      },
+      {
+        title: "6. Droit applicable",
+        body: "Les présentes mentions légales sont régies par le droit français. Tout litige relatif à l'utilisation de ce site sera soumis à la compétence exclusive des tribunaux de [VILLE_JURIDICTION], France.",
+      },
+    ],
+  },
+  cookies: {
+    title: "Politique de cookies",
+    updated: "Dernière mise à jour : mai 2025",
+    intro: "Cette politique explique ce qu'est un cookie, quels cookies vitecamion utilise et comment vous pouvez les gérer.",
+    sections: [
+      {
+        title: "1. Qu'est-ce qu'un cookie ?",
+        body: "Un cookie est un petit fichier texte déposé sur votre appareil par un site web. Les cookies permettent au site de mémoriser vos préférences ou l'état de votre session d'une page à l'autre.",
+      },
+      {
+        title: "2. Cookies essentiels (vitecamion)",
+        body: "vitecamion_auth — Finalité : session d'authentification. Ce cookie est déposé lorsque vous (ou un administrateur) vous connectez et maintient la session active. Il est strictement nécessaire au fonctionnement du site et ne peut pas être désactivé sans interrompre l'authentification. Durée : 5 jours maximum (supprimé à la déconnexion). Ce cookie est HttpOnly et Secure ; il ne peut pas être lu par des scripts côté client.",
+      },
+      {
+        title: "3. Cookies tiers (Stripe)",
+        body: "Lors du passage au paiement, Stripe – notre prestataire de paiement – peut déposer des cookies pour détecter la fraude, prévenir les abus et sécuriser le paiement. Ces cookies sont régis par la propre politique de confidentialité de Stripe (stripe.com/privacy). vitecamion n'a pas accès à ces cookies et ne les contrôle pas.",
+      },
+      {
+        title: "4. Cookies que nous n'utilisons pas",
+        body: "vitecamion n'utilise pas de cookies publicitaires, de ciblage, de profilage ni d'analytics tiers. Nous n'utilisons pas Google Analytics, Facebook Pixel ni aucune technologie de suivi similaire.",
+      },
+      {
+        title: "5. Gestion de vos préférences",
+        body: "Le seul cookie déposé par vitecamion étant strictement nécessaire à l'authentification, il ne peut pas être désactivé via un bandeau de consentement sans empêcher l'accès au site. Vous pouvez supprimer les cookies à tout moment depuis les paramètres de votre navigateur. Cela entraînera votre déconnexion de toute session en cours.",
+      },
+      {
+        title: "6. Contact",
+        body: "Pour toute question relative à notre utilisation des cookies, contactez-nous à info@vitecamion.com.",
+      },
+    ],
+  },
+  about: {
+    title: "À propos de vitecamion",
+    missionLabel: "Notre mission",
+    mission: "Rendre la location de voiture simple, transparente et accessible — sur toutes les plateformes.",
+    storyLabel: "Notre histoire",
+    story: "Fondée en 2023 à chatelet-en-brie, vitecamion est née de l'idée que louer une voiture devrait être aussi simple que possible. Nous avons commencé avec un seul véhicule et un engagement envers la tarification honnête. Aujourd'hui, nous exploitons une flotte soigneusement entretenue disponible sur plusieurs plateformes. »]",
+    fleetLabel: "Notre flotte",
+    fleet: "Nous entretenons une flotte diversifiée de citadines, SUV et utilitaires – tous des modèles récents, régulièrement révisés et entièrement assurés. Chaque véhicule est photographié, inspecté et préparé avant chaque location.",
+    platformsLabel: "Où nous trouver",
+    platforms: "Nos véhicules sont référencés sur Turo et Getaround pour un maximum de praticité, et disponibles également en location privée directe via ce site – sans frais de plateforme et avec les conditions les plus flexibles.",
+    valuesLabel: "Nos valeurs",
+    values: [
+      { icon: "🔍", title: "Transparence", body: "Tarification tout compris, sans frais cachés. Le prix affiché est le prix final." },
+      { icon: "✅", title: "Qualité", body: "Des véhicules récents et bien entretenus. Nous refusons de vous confier un véhicule peu fiable." },
+      { icon: "📞", title: "Réactivité", body: "Assistance 7 jours sur 7. Nous sommes joignables et nous répondons." },
+      { icon: "🚚", title: "Flexibilité", body: "Livraison disponible sur demande. Nous nous adaptons à votre emploi du temps, pas l'inverse." },
+    ],
+    statsLabel: "En chiffres",
+    contactLabel: "Nous contacter",
+    contactBody: "Une question, une demande spécifique, ou vous souhaitez savoir quel véhicule convient à votre trajet ? Écrivez-nous.",
+    contactCta: "Nous contacter →",
   },
 };
 

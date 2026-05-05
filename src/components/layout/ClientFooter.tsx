@@ -19,8 +19,17 @@ export default function ClientFooter({ locale }: Props) {
           © {new Date().getFullYear()} vitecamion · {t.footer.rights}
         </p>
         <div className={styles.footerLinks}>
+          <Link href={`/${locale}/about`} className={styles.footerLink}>
+            {t.footer.about}
+          </Link>
           <Link href={`/${locale}/privacy-policy`} className={styles.footerLink}>
             {t.footer.privacy}
+          </Link>
+          <Link href={`/${locale}/legal`} className={styles.footerLink}>
+            {t.footer.legal}
+          </Link>
+          <Link href={`/${locale}/cookies`} className={styles.footerLink}>
+            {t.footer.cookies}
           </Link>
           <Link href="/admin" className={styles.footerLink}>
             {t.footer.admin}
