@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { isValidLocale, DEFAULT_LOCALE, LOCALES } from "@/lib/i18n";
 import ClientHeader from "@/components/layout/ClientHeader";
 import ClientFooter from "@/components/layout/ClientFooter";
+import CookieConsentProvider from "@/components/consent/CookieConsentProvider";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -19,10 +20,10 @@ export default function LocaleLayout({
   }
 
   return (
-    <>
+    <CookieConsentProvider locale={params.locale}>
       <ClientHeader locale={params.locale} />
       <main>{children}</main>
       <ClientFooter locale={params.locale} />
-    </>
+    </CookieConsentProvider>
   );
 }

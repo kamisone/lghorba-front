@@ -46,6 +46,11 @@
   color: var(--color-text-secondary);
   text-decoration: none;
   transition: color 0.15s;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 .footerLink:hover { color: var(--color-text-placeholder); }
 

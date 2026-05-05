@@ -1,0 +1,107 @@
+.banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--color-brand-darkest);
+  border-top: 1px solid rgba(var(--rgb-white), 0.08);
+  padding: 1rem 1.5rem;
+}
+
+.inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.text {
+  color: rgba(var(--rgb-white), 0.85);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  margin: 0;
+  flex: 1 1 300px;
+}
+
+.learnMore {
+  color: var(--color-brand-accent);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.learnMore:hover {
+  color: var(--color-brand-light);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.btn {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Ghost — transparent, white text */
+.btnGhost {
+  background: transparent;
+  color: rgba(var(--rgb-white), 0.7);
+  border-color: rgba(var(--rgb-white), 0.25);
+}
+.btnGhost:hover {
+  background: rgba(var(--rgb-white), 0.06);
+  color: rgba(var(--rgb-white), 0.9);
+  border-color: rgba(var(--rgb-white), 0.45);
+}
+
+/* Outline — accent border */
+.btnOutline {
+  background: transparent;
+  color: var(--color-brand-accent);
+  border-color: var(--color-brand-accent);
+}
+.btnOutline:hover {
+  background: rgba(var(--rgb-brand-accent), 0.12);
+}
+
+/* Filled — brand accent */
+.btnFilled {
+  background: var(--color-brand-accent);
+  color: var(--color-brand-darkest);
+  border-color: var(--color-brand-accent);
+}
+.btnFilled:hover {
+  background: var(--color-brand-light);
+  border-color: var(--color-brand-light);
+}
+
+/* Mobile: stack actions below text, full-width buttons */
+@media (max-width: 480px) {
+  .inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .actions {
+    flex-direction: column;
+  }
+  .btn {
+    width: 100%;
+    text-align: center;
+    padding: 0.625rem 1rem;
+  }
+}

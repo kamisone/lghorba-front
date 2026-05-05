@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./ClientFooter.module.css";
+import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
 
 interface Props {
   locale: string;
@@ -34,6 +35,10 @@ export default function ClientFooter({ locale }: Props) {
           <Link href="/admin" className={styles.footerLink}>
             {t.footer.admin}
           </Link>
+          <CookieSettingsButton
+            label={t.consent.settingsBtn}
+            className={styles.footerLink}
+          />
         </div>
       </div>
     </footer>

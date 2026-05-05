@@ -367,6 +367,32 @@ export const en = {
       },
     ],
   },
+  consent: {
+    bannerText:
+      "We use cookies to improve your experience. Some are essential for the site to work; others help us understand how it is used.",
+    learnMore: "Learn more",
+    rejectAll: "Reject all",
+    customize: "Customize",
+    acceptAll: "Accept all",
+    modalTitle: "Cookie preferences",
+    modalDesc:
+      "Choose which cookies you allow. You can change your preferences at any time.",
+    essential: {
+      label: "Essential",
+      desc: "Required for authentication and site functionality. Cannot be disabled.",
+    },
+    analytics: {
+      label: "Analytics",
+      desc: "Help us understand how visitors interact with the site (anonymised).",
+    },
+    marketing: {
+      label: "Marketing",
+      desc: "Used for personalised advertising and remarketing campaigns.",
+    },
+    alwaysOn: "Always on",
+    savePrefs: "Save preferences",
+    settingsBtn: "Cookie settings",
+  },
   about: {
     title: "About vitecamion",
     missionLabel: "Our mission",
@@ -757,6 +783,32 @@ export const fr: Translations = {
         body: "Pour toute question relative à notre utilisation des cookies, contactez-nous à info@vitecamion.com.",
       },
     ],
+  },
+  consent: {
+    bannerText:
+      "Nous utilisons des cookies pour améliorer votre expérience. Certains sont indispensables au fonctionnement du site ; d'autres nous aident à comprendre comment il est utilisé.",
+    learnMore: "En savoir plus",
+    rejectAll: "Tout refuser",
+    customize: "Personnaliser",
+    acceptAll: "Tout accepter",
+    modalTitle: "Préférences cookies",
+    modalDesc:
+      "Choisissez les cookies que vous autorisez. Vous pouvez modifier vos préférences à tout moment.",
+    essential: {
+      label: "Essentiels",
+      desc: "Nécessaires à l'authentification et au fonctionnement du site. Ne peuvent pas être désactivés.",
+    },
+    analytics: {
+      label: "Analytiques",
+      desc: "Nous aident à comprendre comment les visiteurs interagissent avec le site (anonymisés).",
+    },
+    marketing: {
+      label: "Marketing",
+      desc: "Utilisés pour la publicité personnalisée et les campagnes de remarketing.",
+    },
+    alwaysOn: "Toujours actif",
+    savePrefs: "Enregistrer",
+    settingsBtn: "Paramètres cookies",
   },
   about: {
     title: "À propos de vitecamion",
