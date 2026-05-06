@@ -35,9 +35,6 @@ export interface CalendarBooking {
   gpsStopMode: GpsStopMode;
   color?: string | null;
   user?: BookingUser | null;
-  customerName?: string | null;
-  customerPhone?: string | null;
-  customerEmail?: string | null;
 }
 
 export interface Car {

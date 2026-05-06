@@ -491,9 +491,6 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                 👤 {activeBooking.user.name}
               </Link>
             )}
-            {activeBooking.customerName && (
-              <span className={styles.scheduleCardPill}>👤 {activeBooking.customerName}</span>
-            )}
             {activeBooking.reservationNumber && <span className={styles.scheduleCardPill}>📋 {activeBooking.reservationNumber}</span>}
             <span className={styles.scheduleCardPill}>📏 {computeForfaitKm(activeBooking.startDateTime, activeBooking.endDateTime).toLocaleString()} km</span>
             {activeBooking.totalEarning != null && <span className={`${styles.scheduleCardPill} ${styles.scheduleCardPillEarning}`}>💶 {activeBooking.totalEarning.toLocaleString()} €</span>}
@@ -565,9 +562,6 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                         >
                           👤 {linked.user.name}
                         </Link>
-                      )}
-                      {linked?.customerName && (
-                        <span className={styles.sessionGuest}>👤 {linked.customerName}</span>
                       )}
                       {linked?.reservationNumber && <span className={styles.sessionRes}>#{linked.reservationNumber}</span>}
                     </div>

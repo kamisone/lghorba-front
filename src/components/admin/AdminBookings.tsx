@@ -32,9 +32,6 @@ export interface AdminBooking {
   totalPrice: number | string;
   status: "pending_payment" | "pending" | "confirmed" | "cancelled";
   source: "private" | "turo" | "getaround";
-  customerName: string | null;
-  customerEmail: string | null;
-  customerPhone: string | null;
   reservationNumber: string | null;
   totalEarning: number | string | null;
   gpsStopMode: "auto" | "manual";
@@ -106,10 +103,9 @@ function matchesSearch(b: AdminBooking, q: string): boolean {
   return (
     (b.car?.name?.toLowerCase().includes(s)           ?? false) ||
     (b.car?.immatriculation?.toLowerCase().includes(s) ?? false) ||
-    (b.customerName?.toLowerCase().includes(s)         ?? false) ||
-    (b.customerEmail?.toLowerCase().includes(s)        ?? false) ||
     (b.user?.name?.toLowerCase().includes(s)           ?? false) ||
     (b.user?.email?.toLowerCase().includes(s)          ?? false) ||
+    (b.user?.phone?.toLowerCase().includes(s)          ?? false) ||
     (b.reservationNumber?.toLowerCase().includes(s)    ?? false)
   );
 }
@@ -137,9 +133,6 @@ function toCalendarBooking(b: AdminBooking): CalendarBooking {
     user: b.user
       ? { id: b.user.id, name: b.user.name, phone: b.user.phone, email: b.user.email }
       : null,
-    customerName: b.customerName,
-    customerPhone: b.customerPhone,
-    customerEmail: b.customerEmail,
   };
 }
 
@@ -257,13 +250,12 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
             </div>
           </div>
 
-          {/* For platform bookings, guest info lives on booking.user.
-              For private bookings, it's on customerName/Email/Phone. */}
+          {/* Customer / guest info lives on booking.user for all booking sources. */}
           {(() => {
             const isPrivate = booking.source === "private";
-            const name  = isPrivate ? booking.customerName  : (booking.user?.name  ?? booking.customerName);
-            const email = isPrivate ? booking.customerEmail : (booking.user?.email ?? booking.customerEmail);
-            const phone = isPrivate ? booking.customerPhone : (booking.user?.phone ?? booking.customerPhone);
+            const name  = booking.user?.name  ?? null;
+            const email = booking.user?.email ?? null;
+            const phone = booking.user?.phone ?? null;
             if (!name && !email && !phone && !booking.reservationNumber && booking.totalEarning == null) return null;
             return (
               <div className={styles.customerSection}>
@@ -388,9 +380,9 @@ function EventCard({ event, onOpen }: { event: TimelineEvent; onOpen: (b: AdminB
           {booking.car?.immatriculation && (
             <span className={styles.eventPlate}>{booking.car.immatriculation}</span>
           )}
-          {(booking.customerName ?? booking.user?.name) && (
+          {booking.user?.name && (
             <span className={styles.eventCustomer}>
-              · {booking.customerName ?? booking.user?.name}
+              · {booking.user.name}
             </span>
           )}
         </div>
@@ -956,9 +948,6 @@ export default function AdminBookings() {
                     source:          updated.source,
                     reservationNumber: updated.reservationNumber ?? null,
                     totalEarning:    updated.totalEarning ?? null,
-                    customerName:    updated.customerName ?? null,
-                    customerPhone:   updated.customerPhone ?? null,
-                    customerEmail:   updated.customerEmail ?? null,
                     user: updated.user
                       ? { id: updated.user.id, name: updated.user.name, phone: updated.user.phone, email: updated.user.email ?? null }
                       : b.user,

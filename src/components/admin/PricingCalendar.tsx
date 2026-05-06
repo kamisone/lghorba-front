@@ -50,7 +50,7 @@ interface CalendarBooking {
   startDateTime: string;  // full ISO (popover display)
   endDateTime: string;
   status: "pending_payment" | "pending" | "confirmed" | "cancelled";
-  customerName: string | null;
+  user?: { id: string; name: string } | null;
   source: "private" | "turo" | "getaround";
 }
 
@@ -472,16 +472,8 @@ export default function PricingCalendar() {
         for (const b of rawBookings as Array<{
           id: string; carId: string; startDateTime: string; endDateTime: string;
           status: string; source: string;
-          customerName?: string | null;
-          user?: { name: string } | null;
+          user?: { id: string; name: string } | null;
         }>) {
-          // Platform bookings (turo/getaround) store the renter on user.name;
-          // private bookings store it on customerName directly.
-          const isPrivate  = b.source === "private";
-          const guestName  = isPrivate
-            ? (b.customerName ?? null)
-            : (b.user?.name ?? b.customerName ?? null);
-
           const cb: CalendarBooking = {
             id:            b.id,
             carId:         b.carId,
@@ -490,7 +482,7 @@ export default function PricingCalendar() {
             startDateTime: b.startDateTime,
             endDateTime:   b.endDateTime,
             status:        b.status as CalendarBooking["status"],
-            customerName:  guestName,
+            user:          b.user ?? null,
             source:        b.source as CalendarBooking["source"],
           };
           (grouped[cb.carId] ??= []).push(cb);
@@ -855,7 +847,7 @@ export default function PricingCalendar() {
           </div>
 
           <p className={styles.popoverCustomer}>
-            {bookingPopover.booking.customerName ?? "Unknown guest"}
+            {bookingPopover.booking.user?.name ?? "Unknown guest"}
           </p>
 
           <div className={styles.popoverDates}>
