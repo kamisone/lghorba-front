@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import Link from "next/link";
 import type { Car, CalendarBooking } from "./data";
 import BookingAdminModal from "./BookingAdminModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
@@ -316,6 +317,13 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
         </div>
 
         <div className={styles.modalActions}>
+          <Link
+            href={`/admin/fleet/${booking.carId}/rent`}
+            className={styles.actionRent}
+            onClick={onClose}
+          >
+            Rent sessions
+          </Link>
           {isModifiableBooking(booking) && (
             <button
               className={styles.actionEdit}

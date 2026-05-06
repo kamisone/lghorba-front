@@ -471,6 +471,11 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
               <span>{fmtDT(activeBooking.endDateTime)}</span>
             </div>
             <div className={styles.scheduleCardActions}>
+              <Link
+                href={`/admin/bookings?modal=booking&id=${activeBooking.id}`}
+                className={styles.sessionLinkBtn}
+                title="View booking details"
+              >↗</Link>
               <button className={styles.sessionEditBtn} onClick={() => openEditBooking(activeBooking)} aria-label="Edit">✏</button>
               <button
                 className={styles.sessionDeleteBtn}
@@ -568,6 +573,13 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                     <span className={styles.sessionChevron}>{isOpen ? "▲" : "▼"}</span>
                   </div>
                   <div className={styles.sessionRowActions}>
+                    {linked && (
+                      <Link
+                        href={`/admin/bookings?modal=booking&id=${linked.id}`}
+                        className={styles.sessionLinkBtn}
+                        title="View booking details"
+                      >↗</Link>
+                    )}
                     <button
                       className={styles.sessionDeleteBtn}
                       onClick={() => handleSessionDelete(session)}

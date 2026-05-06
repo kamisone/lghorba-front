@@ -1033,3 +1033,23 @@
   padding: 2rem 0;
   margin: 0;
 }
+
+.actionRent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.actionRent:hover {
+  border-color: var(--color-admin-secondary);
+  color: var(--color-admin-secondary);
+  background: rgba(var(--rgb-admin-secondary, 0, 92, 143), 0.05);
+}
