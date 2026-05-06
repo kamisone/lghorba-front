@@ -954,11 +954,12 @@ export default function AdminBookings() {
               b.id === editBooking.id
                 ? {
                     ...b,
-                    startDateTime:   updated.startDateTime,
-                    endDateTime:     updated.endDateTime,
-                    source:          updated.source,
+                    startDateTime:     updated.startDateTime,
+                    endDateTime:       updated.endDateTime,
+                    source:            updated.source,
                     reservationNumber: updated.reservationNumber ?? null,
-                    totalEarning:    updated.totalEarning ?? null,
+                    totalEarning:      updated.totalEarning ?? null,
+                    gpsStopMode:       updated.gpsStopMode ?? b.gpsStopMode,
                     user: updated.user
                       ? { id: updated.user.id, name: updated.user.name, phone: updated.user.phone, email: updated.user.email ?? null }
                       : b.user,
