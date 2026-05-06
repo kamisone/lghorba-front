@@ -37,6 +37,7 @@ export interface AdminBooking {
   customerPhone: string | null;
   reservationNumber: string | null;
   totalEarning: number | string | null;
+  gpsStopMode: "auto" | "manual";
   createdAt: string;
   updatedAt: string;
 }
@@ -131,6 +132,7 @@ function toCalendarBooking(b: AdminBooking): CalendarBooking {
     reservationNumber: b.reservationNumber,
     totalEarning: b.totalEarning != null ? Number(b.totalEarning) : null,
     autoStartTracking: false,
+    gpsStopMode: b.gpsStopMode ?? "auto",
     color: null,
     user: b.user
       ? { id: b.user.id, name: b.user.name, phone: b.user.phone, email: b.user.email }

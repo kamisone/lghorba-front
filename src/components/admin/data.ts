@@ -20,6 +20,8 @@ export interface BookingUser {
   getaroundJoinDate?: string | null;
 }
 
+export type GpsStopMode = "auto" | "manual";
+
 export interface CalendarBooking {
   id: string;
   carId: string;
@@ -30,6 +32,7 @@ export interface CalendarBooking {
   reservationNumber?: string | null;
   totalEarning?: number | null;
   autoStartTracking: boolean;
+  gpsStopMode: GpsStopMode;
   color?: string | null;
   user?: BookingUser | null;
   customerName?: string | null;

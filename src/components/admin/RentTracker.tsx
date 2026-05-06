@@ -58,7 +58,8 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
   const [showEditModal,     setShowEditModal]     = useState(false);
   const [editingBooking,    setEditingBooking]    = useState<CalendarBooking | null>(null);
   const [deletingBookingId, setDeletingBookingId] = useState<string | null>(null);
-  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+  const [deletingSessionId,  setDeletingSessionId]  = useState<string | null>(null);
+  const [stoppingTrackingIds, setStoppingTrackingIds] = useState<Set<string>>(new Set());
 
   const countdownRef             = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef             = useRef<string | null>(null);
@@ -347,6 +348,26 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
     }
   };
 
+  // ── Stop manual GPS tracking on an ended session ──────────────────────────
+
+  const stopManualTracking = async (sId: string) => {
+    setStoppingTrackingIds(prev => new Set(prev).add(sId));
+    try {
+      const res = await fetch(`/next-api/rent-sessions/${sId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackingPaused: true }),
+      });
+      if (res.ok) {
+        setSessions(prev =>
+          prev.map(s => s.id === sId ? { ...s, trackingPaused: true, nextLocationAt: null } : s),
+        );
+      }
+    } finally {
+      setStoppingTrackingIds(prev => { const n = new Set(prev); n.delete(sId); return n; });
+    }
+  };
+
   // ── Expand / collapse session history row ────────────────────────────────
 
   const toggleSessionExpand = async (session: RentSession) => {
@@ -563,6 +584,21 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                     </button>
                   </div>
                 </div>
+                {!session.trackingPaused && session.booking?.gpsStopMode === "manual" && (
+                  <div className={styles.manualTrackingBanner}>
+                    <span className={styles.manualTrackingLabel}>
+                      📡 GPS tracking still active
+                    </span>
+                    <button
+                      className={styles.stopTrackingBtn}
+                      onClick={() => stopManualTracking(session.id)}
+                      disabled={stoppingTrackingIds.has(session.id)}
+                    >
+                      {stoppingTrackingIds.has(session.id) ? "Stopping…" : "Stop tracking"}
+                    </button>
+                  </div>
+                )}
+
                 {isOpen && (
                   <div className={styles.sessionDetail}>
                     <div className={styles.sessionDetailPills}>

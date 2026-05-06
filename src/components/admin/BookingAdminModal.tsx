@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { BookingSource, CalendarBooking, Car } from "./data";
+import type { BookingSource, CalendarBooking, Car, GpsStopMode } from "./data";
 import GuestAutocomplete, { type GuestUser } from "./GuestAutocomplete";
 import styles from "./RentScheduleModal.module.css";
 
@@ -33,6 +33,7 @@ interface FormValues {
   reservationNumber: string;
   totalEarning: string;
   autoStartTracking: boolean;
+  gpsStopMode: GpsStopMode;
   color: string;
 }
 
@@ -72,7 +73,7 @@ const EMPTY: FormValues = {
   guestName: "", guestNumber: "", guestEmail: "",
   turoJoinDate: "", getaroundJoinDate: "",
   customerName: "", customerPhone: "", customerEmail: "",
-  reservationNumber: "", totalEarning: "", autoStartTracking: false, color: "",
+  reservationNumber: "", totalEarning: "", autoStartTracking: false, gpsStopMode: "auto", color: "",
 };
 
 export default function BookingAdminModal({ car, booking, existingBookings, sessionStarted, onClose, onSaved, onDelete }: Props) {
@@ -109,6 +110,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
         reservationNumber: booking.reservationNumber ?? "",
         totalEarning: booking.totalEarning != null ? String(booking.totalEarning) : "",
         autoStartTracking: booking.autoStartTracking ?? false,
+        gpsStopMode: booking.gpsStopMode ?? "auto",
         color: booking.color ?? "",
       });
     }
@@ -142,6 +144,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
         reservationNumber: form.reservationNumber.trim() || null,
         totalEarning: form.totalEarning !== "" ? Number(form.totalEarning) : null,
         autoStartTracking: form.autoStartTracking,
+        gpsStopMode: form.gpsStopMode,
         color: form.color || null,
       };
 
@@ -377,6 +380,25 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
               onClick={() => !sessionStarted && setForm(prev => ({ ...prev, autoStartTracking: !prev.autoStartTracking }))}
               disabled={sessionStarted}
               aria-label="Toggle auto-start tracking"
+            >
+              <span className={styles.toggleThumb} />
+            </button>
+          </div>
+
+          <div className={styles.toggleRow}>
+            <div className={styles.toggleLabelWrap}>
+              <span className={styles.toggleLabel}>GPS stop at rental end</span>
+              <span className={styles.toggleHint}>
+                {form.gpsStopMode === "auto"
+                  ? "Automatic — tracking stops when rental ends"
+                  : "Manual — tracking stays active until explicitly disabled"}
+              </span>
+            </div>
+            <button
+              type="button"
+              className={`${styles.toggle} ${form.gpsStopMode === "manual" ? styles.toggleOn : ""}`}
+              onClick={() => setForm(prev => ({ ...prev, gpsStopMode: prev.gpsStopMode === "auto" ? "manual" : "auto" }))}
+              aria-label="Toggle GPS stop mode"
             >
               <span className={styles.toggleThumb} />
             </button>
