@@ -78,6 +78,11 @@ const EMPTY: FormValues = {
 
 export default function BookingAdminModal({ car, booking, existingBookings, sessionStarted, onClose, onSaved, onDelete }: Props) {
   const isEdit = !!booking;
+  // Lock the auto-start tracking toggle when a rent session already exists for
+  // this booking (active or ended). Callers are responsible for passing
+  // sessionStarted={true} when they have that information.
+  const trackingLocked = !!sessionStarted;
+
   const [form, setForm] = useState<FormValues>(EMPTY);
   const [selectedUser, setSelectedUser] = useState<GuestUser | null>(null);
   const [saving, setSaving] = useState(false);
@@ -127,7 +132,15 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
 
   const isNewGuest = isPlatform && !selectedUser && form.guestName.trim() !== "";
   const phoneMissing = isNewGuest && form.guestNumber.trim() === "";
-  const overlapDetected = existingBookings
+
+  // When editing, only flag overlap if the admin actually changed the dates.
+  // If dates are unchanged there cannot be a NEW overlap introduced, and pre-existing
+  // overlaps in the data should not block saving unrelated metadata changes.
+  const datesChanged = !isEdit || !booking || (
+    form.from !== toDateTimeInput(booking.startDateTime) ||
+    form.to   !== toDateTimeInput(booking.endDateTime)
+  );
+  const overlapDetected = datesChanged && existingBookings
     ? hasOverlap(form.from, form.to, existingBookings, booking?.id)
     : false;
 
@@ -372,13 +385,13 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
           <div className={styles.toggleRow}>
             <div className={styles.toggleLabelWrap}>
               <span className={styles.toggleLabel}>Auto-start tracking when rent begins</span>
-              {sessionStarted && <span className={styles.toggleHint}>Session already started</span>}
+              {trackingLocked && <span className={styles.toggleHint}>Session already started</span>}
             </div>
             <button
               type="button"
-              className={`${styles.toggle} ${form.autoStartTracking ? styles.toggleOn : ""} ${sessionStarted ? styles.toggleDisabled : ""}`}
-              onClick={() => !sessionStarted && setForm(prev => ({ ...prev, autoStartTracking: !prev.autoStartTracking }))}
-              disabled={sessionStarted}
+              className={`${styles.toggle} ${form.autoStartTracking ? styles.toggleOn : ""} ${trackingLocked ? styles.toggleDisabled : ""}`}
+              onClick={() => !trackingLocked && setForm(prev => ({ ...prev, autoStartTracking: !prev.autoStartTracking }))}
+              disabled={trackingLocked}
               aria-label="Toggle auto-start tracking"
             >
               <span className={styles.toggleThumb} />

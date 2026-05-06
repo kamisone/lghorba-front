@@ -35,6 +35,7 @@ export interface AdminBooking {
   reservationNumber: string | null;
   totalEarning: number | string | null;
   gpsStopMode: "auto" | "manual";
+  hasSession: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -130,6 +131,7 @@ function toCalendarBooking(b: AdminBooking): CalendarBooking {
     autoStartTracking: false,
     gpsStopMode: b.gpsStopMode ?? "auto",
     color: null,
+    hasSession: b.hasSession,
     user: b.user
       ? { id: b.user.id, name: b.user.name, phone: b.user.phone, email: b.user.email }
       : null,
@@ -937,6 +939,7 @@ export default function AdminBookings() {
           existingBookings={bookings
             .filter(b => b.carId === editBooking.carId && b.id !== editBooking.id)
             .map(toCalendarBooking)}
+          sessionStarted={editBooking.hasSession}
           onClose={closeBookingEdit}
           onSaved={(updated) => {
             setBookings(prev => prev.map(b =>

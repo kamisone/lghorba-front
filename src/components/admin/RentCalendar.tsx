@@ -188,6 +188,7 @@ export default function RentCalendar({ car, bookings, excludeBookingIds, endedBo
           car={car}
           booking={selectedBooking}
           existingBookings={endedBookingIds?.length ? bookings.filter(b => !endedBookingIds.includes(b.id)) : bookings}
+          sessionStarted={selectedBooking.hasSession ?? false}
           onClose={() => { setShowEditModal(false); setSelectedBooking(null); closeModal(); }}
           onSaved={handleEditSaved}
           onDelete={deletingId === selectedBooking.id ? undefined : handleDelete}
