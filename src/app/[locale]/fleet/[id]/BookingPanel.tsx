@@ -50,6 +50,10 @@ interface Labels {
   noPriceConfigured: string;
   prefillFromSearch: string;
   prefillLastSearch: string;
+  pickupPlaceholder: string;
+  returnPlaceholder: string;
+  checking: string;
+  requiredNote: string;
 }
 
 interface Props {
@@ -348,8 +352,11 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
             value={startDateTime}
             onChange={setStartDateTime}
             minValue={minStart}
-            placeholder="Pick-up date & time"
+            placeholder={labels.pickupPlaceholder}
             onComplete={handleStartComplete}
+            locale={locale}
+            clearLabel={t.dateTimePicker.clear}
+            noSlotsLabel={t.dateTimePicker.noSlots}
           />
         </div>
 
@@ -383,7 +390,10 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
             value={endDateTime}
             onChange={setEndDateTime}
             minValue={startDateTime || minStart}
-            placeholder="Return date & time"
+            placeholder={labels.returnPlaceholder}
+            locale={locale}
+            clearLabel={t.dateTimePicker.clear}
+            noSlotsLabel={t.dateTimePicker.noSlots}
           />
         </div>
 
@@ -414,7 +424,7 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
       {checking && (
         <div className={styles.statusRow}>
           <span className={styles.spinner} aria-hidden="true" />
-          <span className={styles.statusText}>Checking…</span>
+          <span className={styles.statusText}>{labels.checking}</span>
         </div>
       )}
       {!checking && available === true && (
@@ -546,7 +556,10 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
               id="bp-phone"
               value={phone}
               error={!!(touched.phone && fieldErrors.phone)}
-              placeholder="6 12 34 56 78"
+              placeholder={labels.phonePlaceholder}
+              locale={locale}
+              searchPlaceholder={t.phone.searchPlaceholder}
+              noCountriesLabel={t.phone.noCountriesFound}
               onChange={v => {
                 setPhone(v);
                 if (touched.phone) setFieldErrors(prev => ({ ...prev, phone: validateField("phone", v, t.booking.validation) }));
@@ -561,7 +574,7 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
             )}
           </div>
 
-          <p className={styles.requiredNote}>* Required fields</p>
+          <p className={styles.requiredNote}>{labels.requiredNote}</p>
         </div>
       )}
 

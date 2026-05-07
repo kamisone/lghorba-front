@@ -62,6 +62,7 @@ export default function LoginForm({ t }: { t: T }) {
     return (
       <MfaForm
         {...mfa}
+        t={t.mfa}
         onSuccess={() => router.replace(searchParams.get("from") || "/admin")}
         onBack={() => { setMfa(null); setPassword(""); setError(""); }}
       />

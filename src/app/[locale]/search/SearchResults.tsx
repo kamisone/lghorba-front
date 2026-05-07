@@ -127,15 +127,13 @@ export default function SearchResults({ results, start, end, locale, hasAddress 
           <p className={styles.count}>
             {sorted.length === 0
               ? t.search.noResults
-              : locale === "fr"
-              ? `${sorted.length} véhicule${sorted.length > 1 ? "s" : ""} disponible${sorted.length > 1 ? "s" : ""}`
-              : `${sorted.length} vehicle${sorted.length > 1 ? "s" : ""} available`}
+              : `${sorted.length} ${sorted.length > 1 ? t.search.vehiclesPlural : t.search.vehiclesSingular}`}
           </p>
           {hasAddress && (
             <span className={styles.radiusChip}>
               📍 {t.search.distRadius}
               {excludedCount > 0 && (
-                <span className={styles.radiusChipCount}>{` · ${excludedCount} hidden`}</span>
+                <span className={styles.radiusChipCount}>{` · ${excludedCount} ${t.search.hidden}`}</span>
               )}
             </span>
           )}

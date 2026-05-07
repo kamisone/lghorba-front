@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect, FormEvent, KeyboardEvent, ClipboardEvent } from "react";
 import styles from "@/app/login/login.module.css";
 import mfaStyles from "./MfaForm.module.css";
+import type { Translations } from "@/lib/i18n/translations";
+
+type MfaT = Translations["login"]["mfa"];
 
 interface Props {
   challengeToken: string;
@@ -11,6 +14,7 @@ interface Props {
   maskedDestination: string;
   onSuccess: () => void;
   onBack: () => void;
+  t: MfaT;
 }
 
 export default function MfaForm({
@@ -20,6 +24,7 @@ export default function MfaForm({
   maskedDestination: initialMasked,
   onSuccess,
   onBack,
+  t,
 }: Props) {
   const [digits,    setDigits]    = useState(["", "", "", "", "", ""]);
   const [method,    setMethod]    = useState<"email" | "sms">(preferredMethod);
@@ -103,10 +108,10 @@ export default function MfaForm({
         const data = await res.json().catch(() => ({}));
         // Mark inputs as invalid for wrong/expired code; not for challenge errors
         const markInputs = res.status !== 401;
-        showError(data.error ?? "Authentication failed. Please try again.", markInputs);
+        showError(data.error ?? t.errorFailed, markInputs);
       }
     } catch {
-      showError("A network error occurred. Please try again.");
+      showError(t.errorNetwork);
     } finally {
       setLoading(false);
     }
@@ -130,11 +135,11 @@ export default function MfaForm({
         inputRefs.current[0]?.focus();
         setCooldown(60);
       } else {
-        showError(data.error ?? "Failed to send code. Please try again.");
+        showError(data.error ?? t.errorSend);
         if (res.status === 429) setCooldown(60);
       }
     } catch {
-      showError("A network error occurred. Please try again.");
+      showError(t.errorNetwork);
     } finally {
       setResending(false);
     }
@@ -146,9 +151,9 @@ export default function MfaForm({
     <div className={styles.card}>
       <div className={styles.brand}>
         <div className={mfaStyles.mfaIcon}>🔐</div>
-        <h1 className={styles.title}>Verification</h1>
+        <h1 className={styles.title}>{t.title}</h1>
         <p className={styles.subtitle}>
-          Code sent to <strong>{masked}</strong>
+          {t.subtitle} <strong>{masked}</strong>
         </p>
       </div>
 
@@ -183,7 +188,7 @@ export default function MfaForm({
           disabled={loading || otp.length < 6}
           style={{ marginBottom: "0.75rem" }}
         >
-          {loading ? "Verifying…" : "Verify"}
+          {loading ? t.verifying : t.verify}
         </button>
       </form>
 
@@ -194,7 +199,7 @@ export default function MfaForm({
           onClick={() => handleResend()}
           disabled={resending || cooldown > 0}
         >
-          {resending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
+          {resending ? t.sending : cooldown > 0 ? `${t.resendIn} ${cooldown}${t.seconds}` : t.resend}
         </button>
 
         {otherMethod && (
@@ -204,12 +209,12 @@ export default function MfaForm({
             onClick={() => handleResend(otherMethod)}
             disabled={resending || cooldown > 0}
           >
-            Send via {otherMethod === "sms" ? "SMS" : "email"} instead
+            {otherMethod === "sms" ? t.sendViaSms : t.sendViaEmail}
           </button>
         )}
 
         <button className={mfaStyles.linkBtn} type="button" onClick={onBack}>
-          ← Back to login
+          {t.backToLogin}
         </button>
       </div>
     </div>

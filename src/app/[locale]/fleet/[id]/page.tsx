@@ -157,7 +157,7 @@ export default async function CarDetailPage({
   if (!car) {
     return (
       <div className={styles.notFound}>
-        <p>Vehicle not found.</p>
+        <p>{t.carDetail.notFound}</p>
         <Link href={`/${locale}/fleet`} className={styles.backLink}>
           ← {t.fleet.title}
         </Link>
@@ -191,7 +191,13 @@ export default async function CarDetailPage({
 
       {/* ── Photo slider ── */}
       <div className={styles.sliderSection}>
-        <CarSlider carId={car.id} photoIds={photoIds} carName={car.name} />
+        <CarSlider
+          carId={car.id}
+          photoIds={photoIds}
+          carName={car.name}
+          viewPhotoLabel={t.fleet.viewPhoto}
+          photosLabel={t.fleet.photos}
+        />
         <div className={styles.sliderBadge}>
           <span className={car.isAvailable ? styles.badgeAvail : styles.badgeBusy}>
             {car.isAvailable ? t.fleet.available : t.fleet.rented}

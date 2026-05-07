@@ -12,7 +12,11 @@ interface Props {
 
 export default function ErrorPage({ error, reset }: Props) {
   const pathname = usePathname();
-  const segment  = pathname?.split("/")[1] ?? "";
+  // `html[lang]` is set by RootLayout and is the most reliable client-side source;
+  // fall back to pathname segment for cases where the layout hasn't rendered yet.
+  const htmlLang = typeof document !== "undefined" ? document.documentElement.lang : "";
+  const segment  = (LOCALES.includes(htmlLang as (typeof LOCALES)[number]) ? htmlLang : null)
+                ?? pathname?.split("/")[1] ?? "";
   const locale   = LOCALES.includes(segment as (typeof LOCALES)[number]) ? segment : "en";
   const t        = getTranslations(locale);
 

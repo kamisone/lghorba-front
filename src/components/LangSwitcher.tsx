@@ -8,7 +8,6 @@ import styles from "./LangSwitcher.module.css";
 const META: Record<string, { label: string; flag: string }> = {
   en: { label: "English", flag: "🇬🇧" },
   fr: { label: "Français", flag: "🇫🇷" },
-  ar: { label: "العربية", flag: "🇲🇦" },
 };
 
 export default function LangSwitcher({ locale }: { locale: string }) {

@@ -8,9 +8,11 @@ interface Props {
   carId: string;
   photoIds: string[];
   carName: string;
+  viewPhotoLabel?: string;
+  photosLabel?: string;
 }
 
-export default function CarSlider({ carId, photoIds, carName }: Props) {
+export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "View photo", photosLabel = "photos" }: Props) {
   const [current,     setCurrent]     = useState(0);
   const [loaded,      setLoaded]      = useState<Record<number, boolean>>({});
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -76,7 +78,7 @@ export default function CarSlider({ carId, photoIds, carName }: Props) {
           tabIndex={-1} // track handles keyboard; this is a visual affordance
         >
           <span className="material-symbols-outlined">photo_library</span>
-          {total === 1 ? "View photo" : `${total} photos`}
+          {total === 1 ? viewPhotoLabel : `${total} ${photosLabel}`}
         </button>
       </div>
 

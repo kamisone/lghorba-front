@@ -73,7 +73,7 @@ export default async function FleetPage({ params }: { params: { locale: string }
 
       {/* ── Cars grid ── */}
       {cars.length === 0 ? (
-        <p className={styles.empty}>No vehicles available right now. Check back soon.</p>
+        <p className={styles.empty}>{t.fleet.empty}</p>
       ) : (
         <FleetGrid carIds={cars.map(c => c.id)}>
           {cars.map(car => (

@@ -2,86 +2,11 @@
 
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { getTranslations, type Locale, LOCALES } from "@/lib/i18n";
+import type { Translations } from "@/lib/i18n/translations";
 import styles from "./page.module.css";
 
-// ─── i18n ────────────────────────────────────────────────────────────────────
-
-const T = {
-  fr: {
-    appName:         "Accès invité",
-    carAccess:       "Accès véhicule",
-    open:            "Ouvrir",
-    openSub:         "Déverrouiller le véhicule",
-    close:           "Fermer",
-    closeSub:        "Verrouiller le véhicule",
-    parking:         "Parking",
-    parkingSub:      "Activer le mode parking",
-    openIcon:        "🔓",
-    closeIcon:       "🔒",
-    parkingIcon:     "🅿️",
-    waiting:         "En attente de réponse…",
-    success:         "Commande reçue !",
-    successSub:      "Opération effectuée",
-    timeout:         "Commande envoyée",
-    timeoutSub:      "En attente de confirmation",
-    error:           "Échec",
-    errorSub:        "Réessayez dans un instant",
-    usageLabel:      "Utilisations",
-    expiresLabel:    "Expire dans",
-    expiringSoon:    "Expire bientôt",
-    hours:           "h",
-    minutes:         "min",
-    expiredTitle:    "Lien expiré",
-    expiredSub:      "Ce lien d'accès a expiré. Contactez l'administrateur pour obtenir un nouveau lien.",
-    revokedTitle:    "Lien révoqué",
-    revokedSub:      "Ce lien d'accès a été révoqué. Contactez l'administrateur pour obtenir un nouveau lien.",
-    invalidTitle:    "Lien invalide",
-    invalidSub:      "Ce lien n'est pas valide. Vérifiez que vous utilisez le bon lien.",
-    unavailableTitle:"Service indisponible",
-    unavailableSub:  "Impossible de charger les informations d'accès. Veuillez réessayer.",
-    redirecting:     "Redirection dans",
-    seconds:         "secondes",
-    retry:           "Réessayer",
-  },
-  en: {
-    appName:         "Guest Access",
-    carAccess:       "Car Access",
-    open:            "Unlock",
-    openSub:         "Unlock the vehicle",
-    close:           "Lock",
-    closeSub:        "Lock the vehicle",
-    parking:         "Parking",
-    parkingSub:      "Activate parking mode",
-    openIcon:        "🔓",
-    closeIcon:       "🔒",
-    parkingIcon:     "🅿️",
-    waiting:         "Waiting for response…",
-    success:         "Command received!",
-    successSub:      "Operation completed",
-    timeout:         "Command sent",
-    timeoutSub:      "Waiting for confirmation",
-    error:           "Failed",
-    errorSub:        "Try again in a moment",
-    usageLabel:      "Uses",
-    expiresLabel:    "Expires in",
-    expiringSoon:    "Expiring soon",
-    hours:           "h",
-    minutes:         "min",
-    expiredTitle:    "Link Expired",
-    expiredSub:      "This access link has expired. Contact the administrator to get a new link.",
-    revokedTitle:    "Link Revoked",
-    revokedSub:      "This access link has been revoked. Contact the administrator to get a new link.",
-    invalidTitle:    "Invalid Link",
-    invalidSub:      "This link is not valid. Please check that you are using the correct link.",
-    unavailableTitle:"Service Unavailable",
-    unavailableSub:  "Could not load access information. Please try again.",
-    redirecting:     "Redirecting in",
-    seconds:         "seconds",
-    retry:           "Retry",
-  },
-} as const;
-
-type Lang = keyof typeof T;
+type GuestT = Translations["guestAccess"];
 type GuestAction = "open" | "close" | "parking";
 type Phase = "idle" | "loading" | "success" | "timeout" | "error";
 type ErrorType = "expired" | "revoked" | "invalid" | "unavailable";
@@ -124,15 +49,13 @@ const ERROR_CONFIG = {
   invalid:  { icon: "❓", bg: "rgba(99,102,241,0.18)",  stroke: "#818cf8" },
 };
 
-type Translations = typeof T[Lang];
-
 function CountdownError({
   errorType,
   t,
   onRedirect,
 }: {
   errorType: "expired" | "revoked" | "invalid";
-  t: Translations;
+  t: GuestT;
   onRedirect: () => void;
 }) {
   const [secs, setSecs] = useState(REDIRECT_SECS);
@@ -187,7 +110,7 @@ function CountdownError({
 
 // ─── Unavailable error ───────────────────────────────────────────────────────
 
-function UnavailableError({ t, onRetry }: { t: Translations; onRetry: () => void }) {
+function UnavailableError({ t, onRetry }: { t: GuestT; onRetry: () => void }) {
   return (
     <div className={styles.errorWrap}>
       <div className={styles.errorIconCircle} style={{ background: "rgba(100,116,139,0.18)" }}>⚠️</div>
@@ -204,8 +127,9 @@ function GuestPage() {
   const { token }    = useParams<{ token: string }>();
   const searchParams = useSearchParams();
   const router       = useRouter();
-  const lang: Lang   = searchParams.get("lang") === "en" ? "en" : "fr";
-  const t            = T[lang];
+  const rawLang = searchParams.get("lang") ?? "fr";
+  const lang: Locale = LOCALES.includes(rawLang as Locale) ? (rawLang as Locale) : "fr";
+  const t            = getTranslations(lang).guestAccess;
 
   const [info, setInfo]           = useState<TokenInfo | null>(null);
   const [errorType, setErrorType] = useState<ErrorType | null>(null);

@@ -8,35 +8,42 @@ import styles from "./PhoneInput.module.css";
 interface Country {
   code: string;
   dial: string;
-  name: string;
   flag: string;
 }
 
 // France first, then alphabetical — curated for a French rental platform.
 const COUNTRIES: Country[] = [
-  { code: "FR", dial: "+33",  flag: "🇫🇷", name: "France"           },
-  { code: "DZ", dial: "+213", flag: "🇩🇿", name: "Algeria"          },
-  { code: "AU", dial: "+61",  flag: "🇦🇺", name: "Australia"        },
-  { code: "BE", dial: "+32",  flag: "🇧🇪", name: "Belgium"          },
-  { code: "CA", dial: "+1",   flag: "🇨🇦", name: "Canada"           },
-  { code: "CM", dial: "+237", flag: "🇨🇲", name: "Cameroon"         },
-  { code: "CI", dial: "+225", flag: "🇨🇮", name: "Côte d'Ivoire"    },
-  { code: "DE", dial: "+49",  flag: "🇩🇪", name: "Germany"          },
-  { code: "ES", dial: "+34",  flag: "🇪🇸", name: "Spain"            },
-  { code: "GB", dial: "+44",  flag: "🇬🇧", name: "United Kingdom"   },
-  { code: "IT", dial: "+39",  flag: "🇮🇹", name: "Italy"            },
-  { code: "LU", dial: "+352", flag: "🇱🇺", name: "Luxembourg"       },
-  { code: "MA", dial: "+212", flag: "🇲🇦", name: "Morocco"          },
-  { code: "MC", dial: "+377", flag: "🇲🇨", name: "Monaco"           },
-  { code: "NL", dial: "+31",  flag: "🇳🇱", name: "Netherlands"      },
-  { code: "PT", dial: "+351", flag: "🇵🇹", name: "Portugal"         },
-  { code: "SN", dial: "+221", flag: "🇸🇳", name: "Senegal"          },
-  { code: "CH", dial: "+41",  flag: "🇨🇭", name: "Switzerland"      },
-  { code: "TN", dial: "+216", flag: "🇹🇳", name: "Tunisia"          },
-  { code: "US", dial: "+1",   flag: "🇺🇸", name: "United States"    },
+  { code: "FR", dial: "+33",  flag: "🇫🇷" },
+  { code: "DZ", dial: "+213", flag: "🇩🇿" },
+  { code: "AU", dial: "+61",  flag: "🇦🇺" },
+  { code: "BE", dial: "+32",  flag: "🇧🇪" },
+  { code: "CA", dial: "+1",   flag: "🇨🇦" },
+  { code: "CM", dial: "+237", flag: "🇨🇲" },
+  { code: "CI", dial: "+225", flag: "🇨🇮" },
+  { code: "DE", dial: "+49",  flag: "🇩🇪" },
+  { code: "ES", dial: "+34",  flag: "🇪🇸" },
+  { code: "GB", dial: "+44",  flag: "🇬🇧" },
+  { code: "IT", dial: "+39",  flag: "🇮🇹" },
+  { code: "LU", dial: "+352", flag: "🇱🇺" },
+  { code: "MA", dial: "+212", flag: "🇲🇦" },
+  { code: "MC", dial: "+377", flag: "🇲🇨" },
+  { code: "NL", dial: "+31",  flag: "🇳🇱" },
+  { code: "PT", dial: "+351", flag: "🇵🇹" },
+  { code: "SN", dial: "+221", flag: "🇸🇳" },
+  { code: "CH", dial: "+41",  flag: "🇨🇭" },
+  { code: "TN", dial: "+216", flag: "🇹🇳" },
+  { code: "US", dial: "+1",   flag: "🇺🇸" },
 ];
 
 const DEFAULT: Country = COUNTRIES[0]; // France
+
+function getCountryName(code: string, locale: string): string {
+  try {
+    return new Intl.DisplayNames([locale], { type: "region" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -47,6 +54,9 @@ interface Props {
   error?: boolean;
   placeholder?: string;
   id?: string;
+  locale?: string;
+  searchPlaceholder?: string;
+  noCountriesLabel?: string;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -58,6 +68,9 @@ export default function PhoneInput({
   error,
   placeholder = "6 12 34 56 78",
   id,
+  locale = "en",
+  searchPlaceholder = "Search…",
+  noCountriesLabel = "No countries found",
 }: Props) {
   const [country, setCountry] = useState<Country>(DEFAULT);
   const [number,  setNumber]  = useState("");
@@ -124,11 +137,10 @@ export default function PhoneInput({
 
   const q = search.toLowerCase().trim();
   const filtered = q
-    ? COUNTRIES.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.dial.includes(q) ||
-        c.code.toLowerCase().includes(q),
-      )
+    ? COUNTRIES.filter(c => {
+        const name = getCountryName(c.code, locale).toLowerCase();
+        return name.includes(q) || c.dial.includes(q) || c.code.toLowerCase().includes(q);
+      })
     : COUNTRIES;
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -153,7 +165,7 @@ export default function PhoneInput({
           onClick={() => setOpen(v => !v)}
           aria-haspopup="listbox"
           aria-expanded={open}
-          aria-label={`Country code: ${country.name} ${country.dial}`}
+          aria-label={`Country code: ${getCountryName(country.code, locale)} ${country.dial}`}
           tabIndex={0}
         >
           <span className={styles.flag}    aria-hidden="true">{country.flag}</span>
@@ -197,7 +209,7 @@ export default function PhoneInput({
               ref={searchRef}
               type="text"
               className={styles.searchInput}
-              placeholder="Search…"
+              placeholder={searchPlaceholder}
               value={search}
               onChange={e => setSearch(e.target.value)}
               aria-label="Search countries"
@@ -207,7 +219,7 @@ export default function PhoneInput({
           {/* Country list */}
           <div className={styles.list}>
             {filtered.length === 0 ? (
-              <p className={styles.noResults}>No countries found</p>
+              <p className={styles.noResults}>{noCountriesLabel}</p>
             ) : (
               filtered.map(c => (
                 <button
@@ -219,7 +231,7 @@ export default function PhoneInput({
                   onClick={() => selectCountry(c)}
                 >
                   <span className={styles.optionFlag} aria-hidden="true">{c.flag}</span>
-                  <span className={styles.optionName}>{c.name}</span>
+                  <span className={styles.optionName}>{getCountryName(c.code, locale)}</span>
                   <span className={styles.optionDial}>{c.dial}</span>
                 </button>
               ))

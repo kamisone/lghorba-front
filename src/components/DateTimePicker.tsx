@@ -14,11 +14,22 @@ const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
   return `${h}:${m}`;
 });
 
-const DAY_LABELS  = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+function buildDayLabels(locale: string): string[] {
+  const fmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
+  // Monday=1 … Sunday=7 (ISO week order)
+  return [1, 2, 3, 4, 5, 6, 7].map(dow => {
+    // 2024-01-01 was a Monday; add (dow-1) days
+    const d = new Date(Date.UTC(2024, 0, dow));
+    return fmt.format(d).replace(/\.$/, ""); // strip trailing period (some locales)
+  });
+}
+
+function buildMonthNames(locale: string): string[] {
+  const fmt = new Intl.DateTimeFormat(locale, { month: "long" });
+  return Array.from({ length: 12 }, (_, i) =>
+    fmt.format(new Date(Date.UTC(2024, i, 1))),
+  );
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -26,10 +37,10 @@ function toYMD(y: number, m: number, d: number) {
   return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
 
-function triggerDateStr(value: string): string {
+function triggerDateStr(value: string, locale: string): string {
   if (!value || value.length < 10) return "";
   const [y, mo, d] = value.slice(0, 10).split("-").map(Number);
-  return new Date(Date.UTC(y, mo - 1, d)).toLocaleDateString("en-GB", {
+  return new Date(Date.UTC(y, mo - 1, d)).toLocaleDateString(locale, {
     weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
   });
 }
@@ -54,14 +65,20 @@ interface Props {
   error?: string;
   placeholder?: string;
   onComplete?: () => void;
+  locale?: string;
+  clearLabel?: string;
+  noSlotsLabel?: string;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTimePicker(
-  { value, onChange, minValue, label, error, placeholder = "Select date & time", onComplete },
+  { value, onChange, minValue, label, error, placeholder = "Select date & time", onComplete,
+    locale = "en", clearLabel = "Clear", noSlotsLabel = "No available time slots for this date." },
   ref,
 ) {
+  const DAY_LABELS  = buildDayLabels(locale);
+  const MONTH_NAMES = buildMonthNames(locale);
   const [open,        setOpen]        = useState(false);
   const [step,        setStep]        = useState<"date" | "time">("date");
   const [viewYear,    setViewYear]    = useState(() => new Date().getFullYear());
@@ -156,7 +173,7 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
   });
 
   const pendingLabel = pendingDate
-    ? new Date(pendingDate + "T00:00:00Z").toLocaleDateString("en-GB", {
+    ? new Date(pendingDate + "T00:00:00Z").toLocaleDateString(locale, {
         weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
       })
     : "";
@@ -185,7 +202,7 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
 
           {value ? (
             <span className={styles.triggerValue}>
-              <span className={styles.triggerDate}>{triggerDateStr(value)}</span>
+              <span className={styles.triggerDate}>{triggerDateStr(value, locale)}</span>
               <span className={styles.triggerSep} aria-hidden="true" />
               <span className={styles.triggerTime}>{triggerTimeStr(value)}</span>
             </span>
@@ -255,7 +272,7 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
                       className={styles.clearBtn}
                       onClick={() => { onChange(""); setOpen(false); }}
                     >
-                      Clear
+                      {clearLabel}
                     </button>
                   </div>
                 )}
@@ -277,7 +294,7 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
                 </div>
 
                 {filteredSlots.length === 0 ? (
-                  <p className={styles.noSlots}>No available time slots for this date.</p>
+                  <p className={styles.noSlots}>{noSlotsLabel}</p>
                 ) : (
                   <div className={styles.timeGrid}>
                     {filteredSlots.map(t => (
