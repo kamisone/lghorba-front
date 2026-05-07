@@ -169,3 +169,52 @@
 }
 .submitBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 .submitBtn:disabled, .cancelBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Delivery locations ── */
+.locationRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  margin-top: 0.4rem;
+}
+.locationPin { flex-shrink: 0; font-size: 1rem; margin-top: 2px; }
+.locationInfo { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.locationLabel { font-size: 0.83rem; font-weight: 600; color: var(--color-text-primary); }
+.locationAddress { font-size: 0.75rem; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.locationRadius { font-size: 0.72rem; color: var(--color-text-placeholder); }
+.locationRemove {
+  background: none; border: none; padding: 2px 4px; cursor: pointer;
+  color: var(--color-text-muted); font-size: 0.85rem; line-height: 1; border-radius: 4px;
+  transition: background 0.12s; flex-shrink: 0;
+}
+.locationRemove:hover { background: var(--color-error-bg); color: var(--color-error); }
+
+.locationAdd {
+  margin-top: 0.6rem;
+  padding: 0.85rem;
+  background: rgba(var(--rgb-brand-primary), 0.04);
+  border: 1.5px dashed var(--color-border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.addLocationBtn {
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-brand-primary);
+  background: none;
+  color: var(--color-brand-primary);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.addLocationBtn:hover:not(:disabled) { background: rgba(var(--rgb-brand-primary), 0.08); }
+.addLocationBtn:disabled { opacity: 0.45; cursor: not-allowed; }

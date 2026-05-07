@@ -21,11 +21,12 @@ interface SearchResult {
   numberOfSeats:    number | null;
   basePricePerDay:  number | null;
   parkingAddress:   string | null;
-  deliveryType:     string;
-  deliveryRadiusKm: number | null;
-  distanceKm:       number | null;
-  deliveryAvailable: boolean;
-  deliveryNote:     string | null;
+  deliveryEnabled:      boolean;
+  deliveryType:         string | null;
+  deliveryRadiusKm:     number | null;
+  deliveryRadiusPrice:  number | null;
+  distanceKm:           number | null;
+  deliveryAvailable:    boolean;
 }
 
 type SortKey = "relevance" | "price_asc" | "price_desc" | "distance";
@@ -192,7 +193,7 @@ export default function SearchResults({ results, start, end, locale, hasAddress 
                       {fmtDist(car.distanceKm!)} · {badge.label}
                     </span>
                   )}
-                  {car.deliveryType !== "none" && (
+                  {car.deliveryEnabled && (
                     <span className={`${styles.deliveryBadge} ${car.deliveryAvailable ? styles.deliveryYes : styles.deliveryNo}`}>
                       {car.deliveryAvailable ? "🚚 " + t.search.deliveryAvail : "📍 " + t.search.pickupOnly}
                     </span>
@@ -240,11 +241,24 @@ export default function SearchResults({ results, start, end, locale, hasAddress 
                     {!hasAddress && car.parkingAddress && car.distanceKm == null && (
                       <span className={styles.cardMetaItem}>📍 {car.parkingAddress}</span>
                     )}
-                    {car.deliveryNote && (
-                      <span className={`${styles.cardMetaItem} ${car.deliveryAvailable ? styles.cardMetaGreen : styles.cardMetaOrange}`}>
-                        {car.deliveryAvailable ? "✓" : "ℹ"} {car.deliveryNote}
-                      </span>
-                    )}
+                    {car.deliveryEnabled && hasAddress && (() => {
+                      let note: string;
+                      if (car.deliveryAvailable) {
+                        const feeStr = car.deliveryType === "radius" && car.deliveryRadiusPrice != null
+                          ? ` · €${car.deliveryRadiusPrice.toFixed(2)}`
+                          : "";
+                        note = t.search.deliveryAvail + feeStr;
+                      } else {
+                        note = car.deliveryType === "radius" && car.deliveryRadiusKm != null
+                          ? `${t.search.pickupOnly} — ${t.search.distRadius.replace("50", String(car.deliveryRadiusKm))}`
+                          : t.search.pickupOnly;
+                      }
+                      return (
+                        <span className={`${styles.cardMetaItem} ${car.deliveryAvailable ? styles.cardMetaGreen : styles.cardMetaOrange}`}>
+                          {car.deliveryAvailable ? "✓" : "ℹ"} {note}
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   <span className={styles.cardCta}>{t.carDetail.viewDetails}</span>

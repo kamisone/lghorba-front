@@ -40,6 +40,18 @@ type EnTranslations = Record<TranslatableField, string>;
 type EnTranslationIds = Partial<Record<TranslatableField, string>>;
 const EMPTY_EN: EnTranslations = { description: "", vehicleCondition: "", color: "" };
 
+export interface DeliveryLocation {
+  id?: string;
+  label: string;
+  address: string;
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  price: number | null;
+}
+
+const MAX_LOCATIONS = 10;
+
 export default function CarFormModal({ car, onClose, onSaved }: Props) {
   const isEdit = !!car;
 
@@ -50,9 +62,16 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
   const [error, setError]                         = useState("");
 
   // Location & delivery state
-  const [parkingAddress, setParkingAddress] = useState<SelectedAddress | null>(null);
-  const [deliveryType, setDeliveryType]     = useState<"none" | "radius" | "whitelist">("none");
-  const [deliveryRadius, setDeliveryRadius] = useState("");
+  const [parkingAddress, setParkingAddress]         = useState<SelectedAddress | null>(null);
+  const [deliveryEnabled, setDeliveryEnabled]       = useState(false);
+  const [deliveryType, setDeliveryType]             = useState<"radius" | "location">("radius");
+  const [deliveryRadius, setDeliveryRadius]         = useState("");
+  const [deliveryRadiusPrice, setDeliveryRadiusPrice] = useState("");
+  const [deliveryLocations, setDeliveryLocations]   = useState<DeliveryLocation[]>([]);
+  const [newLocation, setNewLocation]               = useState<SelectedAddress | null>(null);
+  const [newLocationLabel, setNewLocationLabel]     = useState("");
+  const [newLocationRadius, setNewLocationRadius]   = useState("0.5");
+  const [newLocationPrice, setNewLocationPrice]     = useState("");
 
   // Populate location/delivery from car
   useEffect(() => {
@@ -60,12 +79,23 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
       if (car.parkingLat != null && car.parkingLng != null && car.parkingAddress) {
         setParkingAddress({ label: car.parkingAddress, lat: car.parkingLat, lng: car.parkingLng });
       }
-      setDeliveryType((car.deliveryType as "none" | "radius" | "whitelist") ?? "none");
+      setDeliveryEnabled(car.deliveryEnabled ?? false);
+      setDeliveryType((car.deliveryType as "radius" | "location") ?? "radius");
       setDeliveryRadius(car.deliveryRadiusKm != null ? String(car.deliveryRadiusKm) : "");
+      setDeliveryRadiusPrice(car.deliveryRadiusPrice != null ? String(car.deliveryRadiusPrice) : "");
     }
   }, [car]);
 
-  // Populate FR fields from the car entity
+  // Load existing delivery locations when editing
+  useEffect(() => {
+    if (!car?.id) return;
+    fetch(`/next-api/cars/${car.id}/delivery-locations`)
+      .then(r => r.ok ? r.json() : [])
+      .then((locs: DeliveryLocation[]) => setDeliveryLocations(locs))
+      .catch(() => {});
+  }, [car?.id]);
+
+  // Populate FR fields
   useEffect(() => {
     if (car) {
       setForm({
@@ -92,7 +122,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
     }
   }, [car]);
 
-  // Load existing EN translations when editing
+  // Load EN translations
   useEffect(() => {
     if (!car?.id) return;
     fetch(`/next-api/translations/car/${car.id}?lang=en`)
@@ -119,12 +149,31 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
   const setEn = (field: TranslatableField) => (val: string) =>
     setEnTranslations((prev) => ({ ...prev, [field]: val }));
 
+  const addLocation = () => {
+    if (!newLocation || deliveryLocations.length >= MAX_LOCATIONS) return;
+    setDeliveryLocations(prev => [...prev, {
+      label:    newLocationLabel.trim() || newLocation.label,
+      address:  newLocation.label,
+      lat:      newLocation.lat,
+      lng:      newLocation.lng,
+      radiusKm: Number(newLocationRadius) || 0.5,
+      price:    newLocationPrice !== "" ? Number(newLocationPrice) : null,
+    }]);
+    setNewLocation(null);
+    setNewLocationLabel("");
+    setNewLocationRadius("0.5");
+    setNewLocationPrice("");
+  };
+
+  const removeLocation = (index: number) => {
+    setDeliveryLocations(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      // 1. Save car entity (FR values become the canonical fields)
       const body = {
         name:             form.name,
         immatriculation:  form.immatriculation,
@@ -148,9 +197,15 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
         parkingAddress:   parkingAddress?.label ?? null,
         parkingLat:       parkingAddress?.lat   ?? null,
         parkingLng:       parkingAddress?.lng   ?? null,
-        deliveryType:     deliveryType,
-        deliveryRadiusKm: deliveryType === "radius" && deliveryRadius ? Number(deliveryRadius) : null,
+        deliveryEnabled,
+        deliveryType:        deliveryEnabled ? deliveryType : null,
+        deliveryRadiusKm:    deliveryEnabled && deliveryType === "radius" && deliveryRadius ? Number(deliveryRadius) : null,
+        deliveryRadiusPrice: deliveryEnabled && deliveryType === "radius" && deliveryRadiusPrice !== "" ? Number(deliveryRadiusPrice) : null,
+        deliveryLocations: deliveryEnabled && deliveryType === "location"
+          ? deliveryLocations.map(({ id: _id, ...l }) => l)
+          : [],
       };
+
       const url = isEdit ? `/next-api/cars/${car.id}` : "/next-api/cars";
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
@@ -160,10 +215,9 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
       if (!res.ok) throw new Error();
       const savedCar: Car = await res.json();
 
-      // 2. Handle EN translations: upsert non-empty, delete cleared ones
+      // Handle EN translations
       const toUpsert: { entityType: string; entityId: string; field: string; value: string; lang: string }[] = [];
       const toDelete: string[] = [];
-
       for (const field of TRANSLATABLE_FIELDS) {
         const val = enTranslations[field].trim();
         if (val) {
@@ -172,7 +226,6 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
           toDelete.push(enTranslationIds[field]!);
         }
       }
-
       await Promise.all([
         toUpsert.length
           ? fetch("/next-api/translations/bulk", {
@@ -181,9 +234,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
               body: JSON.stringify({ items: toUpsert }),
             })
           : null,
-        ...toDelete.map((id) =>
-          fetch(`/next-api/translations/entry/${id}`, { method: "DELETE" })
-        ),
+        ...toDelete.map((id) => fetch(`/next-api/translations/entry/${id}`, { method: "DELETE" })),
       ].filter(Boolean));
 
       onSaved(savedCar);
@@ -206,12 +257,10 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
 
           {/* ── Identity ── */}
           <p className={styles.section}>Identity</p>
-
           <div className={styles.field}>
             <label className={styles.label}>Name</label>
             <input className={styles.input} value={form.name} onChange={set("name")} placeholder="Peugeot 208" required />
           </div>
-
           <div className={styles.field}>
             <label className={styles.label}>Plate</label>
             <input className={styles.input} value={form.immatriculation} onChange={set("immatriculation")} placeholder="AB-123-CD" required />
@@ -220,7 +269,6 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
             <label className={styles.label}>Phone number</label>
             <input className={styles.input} type="tel" value={form.phoneNumber} onChange={set("phoneNumber")} placeholder="+33600000000" required />
           </div>
-
           <BilingualField
             label="Description"
             frValue={form.description}
@@ -229,8 +277,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
             enValue={enTranslations.description}
             enOnChange={setEn("description")}
             enPlaceholder="Notes about the vehicle…"
-            multiline
-            rows={2}
+            multiline rows={2}
           />
 
           {/* ── Vehicle ── */}
@@ -308,28 +355,11 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
           <div className={styles.row}>
             <div className={styles.field}>
               <label className={styles.label}>Base price / day (€) <span className={styles.required}>*</span></label>
-              <input
-                className={styles.input}
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={form.basePricePerDay}
-                onChange={set("basePricePerDay")}
-                placeholder="49.00"
-                required
-              />
+              <input className={styles.input} type="number" min="0.01" step="0.01" value={form.basePricePerDay} onChange={set("basePricePerDay")} placeholder="49.00" required />
             </div>
             <div className={styles.field}>
               <label className={styles.label}>Weekend price / day (€)</label>
-              <input
-                className={styles.input}
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={form.basePricePerWeekendDay}
-                onChange={set("basePricePerWeekendDay")}
-                placeholder="59.00"
-              />
+              <input className={styles.input} type="number" min="0.01" step="0.01" value={form.basePricePerWeekendDay} onChange={set("basePricePerWeekendDay")} placeholder="59.00" />
             </div>
           </div>
 
@@ -350,33 +380,153 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
             )}
           </div>
 
+          {/* Delivery toggle */}
           <div className={styles.field}>
-            <label className={styles.label}>Delivery option</label>
-            <select
-              className={styles.select}
-              value={deliveryType}
-              onChange={(e) => setDeliveryType(e.target.value as "none" | "radius" | "whitelist")}
-            >
-              <option value="none">No delivery (pickup only)</option>
-              <option value="radius">Delivery within radius (km)</option>
-              <option value="whitelist">Delivery to specific addresses</option>
-            </select>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={deliveryEnabled}
+                onChange={e => setDeliveryEnabled(e.target.checked)}
+                style={{ width: 16, height: 16, cursor: "pointer" }}
+              />
+              <span className={styles.label} style={{ textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", margin: 0 }}>
+                Enable delivery
+              </span>
+            </label>
           </div>
 
-          {deliveryType === "radius" && (
-            <div className={styles.field}>
-              <label className={styles.label}>Delivery radius (km)</label>
-              <input
-                className={styles.input}
-                type="number"
-                min="1"
-                max="200"
-                step="0.5"
-                value={deliveryRadius}
-                onChange={(e) => setDeliveryRadius(e.target.value)}
-                placeholder="e.g. 20"
-              />
-            </div>
+          {deliveryEnabled && (
+            <>
+              {/* Delivery type */}
+              <div className={styles.field}>
+                <label className={styles.label}>Delivery mode</label>
+                <select
+                  className={styles.select}
+                  value={deliveryType}
+                  onChange={e => setDeliveryType(e.target.value as "radius" | "location")}
+                >
+                  <option value="radius">Radius — deliver within X km of parking</option>
+                  <option value="location">Locations — deliver to specific addresses</option>
+                </select>
+              </div>
+
+              {/* Radius mode */}
+              {deliveryType === "radius" && (
+                <>
+                  <div className={styles.row} style={{ gap: "1rem" }}>
+                    <div className={styles.field} style={{ flex: 1 }}>
+                      <label className={styles.label}>Delivery radius (km)</label>
+                      <input
+                        className={styles.input}
+                        type="number" min="1" max="200" step="0.5"
+                        value={deliveryRadius}
+                        onChange={e => setDeliveryRadius(e.target.value)}
+                        placeholder="e.g. 20"
+                      />
+                    </div>
+                    <div className={styles.field} style={{ flex: 1 }}>
+                      <label className={styles.label}>Delivery fee (€, optional)</label>
+                      <input
+                        className={styles.input}
+                        type="number" min="0" step="0.01"
+                        value={deliveryRadiusPrice}
+                        onChange={e => setDeliveryRadiusPrice(e.target.value)}
+                        placeholder="e.g. 15"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Location mode */}
+              {deliveryType === "location" && (
+                <div className={styles.field}>
+                  <label className={styles.label}>
+                    Delivery locations
+                    <span style={{ fontWeight: 400, marginLeft: 6, color: "var(--color-text-muted)" }}>
+                      ({deliveryLocations.length}/{MAX_LOCATIONS})
+                    </span>
+                  </label>
+
+                  {/* Existing locations */}
+                  {deliveryLocations.map((loc, i) => (
+                    <div key={i} className={styles.locationRow}>
+                      <span className={styles.locationPin}>📍</span>
+                      <div className={styles.locationInfo}>
+                        <span className={styles.locationLabel}>{loc.label}</span>
+                        <span className={styles.locationAddress}>{loc.address}</span>
+                        <span className={styles.locationRadius}>
+                          ± {loc.radiusKm} km
+                          {loc.price != null ? ` · ${loc.price} €` : " · Free"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.locationRemove}
+                        onClick={() => removeLocation(i)}
+                        aria-label="Remove location"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Add new location */}
+                  {deliveryLocations.length < MAX_LOCATIONS && (
+                    <div className={styles.locationAdd}>
+                      <div className={styles.field} style={{ margin: 0 }}>
+                        <label className={styles.label}>Label</label>
+                        <input
+                          className={styles.input}
+                          value={newLocationLabel}
+                          onChange={e => setNewLocationLabel(e.target.value)}
+                          placeholder="e.g. Paris centre"
+                        />
+                      </div>
+                      <div className={styles.field} style={{ margin: 0 }}>
+                        <label className={styles.label}>Address</label>
+                        <AddressAutocomplete
+                          value={newLocation}
+                          onChange={setNewLocation}
+                          placeholder="Search address…"
+                        />
+                      </div>
+                      <div className={styles.row} style={{ margin: 0, gap: "0.75rem" }}>
+                        <div className={styles.field} style={{ flex: 1 }}>
+                          <label className={styles.label}>Match radius (km)</label>
+                          <input
+                            className={styles.input}
+                            type="number" min="0.1" max="50" step="0.1"
+                            value={newLocationRadius}
+                            onChange={e => setNewLocationRadius(e.target.value)}
+                          />
+                        </div>
+                        <div className={styles.field} style={{ flex: 1 }}>
+                          <label className={styles.label}>Fee (€, optional)</label>
+                          <input
+                            className={styles.input}
+                            type="number" min="0" step="0.01"
+                            value={newLocationPrice}
+                            onChange={e => setNewLocationPrice(e.target.value)}
+                            placeholder="Free"
+                          />
+                        </div>
+                        <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: "2px" }}>
+                          <button
+                            type="button"
+                            className={styles.addLocationBtn}
+                            onClick={addLocation}
+                            disabled={!newLocation}
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {/* ── Details ── */}
@@ -391,7 +541,6 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
               <input className={styles.input} type="number" min="1" max="9" value={form.numberOfSeats} onChange={set("numberOfSeats")} placeholder="5" required />
             </div>
           </div>
-
           <BilingualField
             label="Vehicle condition"
             frValue={form.vehicleCondition}

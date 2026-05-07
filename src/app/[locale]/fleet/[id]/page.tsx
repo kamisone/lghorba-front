@@ -21,6 +21,16 @@ import type { Translations } from "@/lib/i18n/translations";
 
 // Data fetches tagged below — revalidated on car/photo mutations, not on a timer.
 
+interface DeliveryLocation {
+  id: string;
+  label: string;
+  address: string;
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  price: number | null;
+}
+
 interface PublicCarDetail {
   id: string;
   name: string;
@@ -39,6 +49,12 @@ interface PublicCarDetail {
   color?: string | null;
   mileage?: string | null;
   vehicleCondition?: string | null;
+  parkingAddress?: string | null;
+  deliveryEnabled?: boolean;
+  deliveryType?: "radius" | "location" | null;
+  deliveryRadiusKm?: number | null;
+  deliveryRadiusPrice?: number | null;
+  deliveryLocations?: DeliveryLocation[];
 }
 
 const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
@@ -248,6 +264,54 @@ export default async function CarDetailPage({
             </div>
           </div>
         )}
+
+        {/* ── Location / delivery info ── */}
+        {car.deliveryEnabled ? (
+          <div className={styles.specsSection}>
+            <h2 className={styles.specsTitle}>{t.carDetail.delivery.title}</h2>
+            {car.parkingAddress && (
+              <div className={styles.deliveryInfo}>
+                <span className={styles.deliveryIcon}>📍</span>
+                <span>{car.parkingAddress}</span>
+              </div>
+            )}
+            {car.deliveryType === "radius" && car.deliveryRadiusKm != null && (
+              <div className={styles.deliveryInfo}>
+                <span className={styles.deliveryIcon}>🚚</span>
+                <span>
+                  {t.carDetail.delivery.radius} {car.deliveryRadiusKm} {t.carDetail.delivery.km}
+                  {car.deliveryRadiusPrice != null
+                    ? ` · ${car.deliveryRadiusPrice.toFixed(2)} €${t.carDetail.delivery.priceSuffix}`
+                    : ` · ${t.carDetail.delivery.free}`}
+                </span>
+              </div>
+            )}
+            {car.deliveryType === "location" && car.deliveryLocations?.length ? (
+              <ul className={styles.deliveryLocList}>
+                {car.deliveryLocations.map(loc => (
+                  <li key={loc.id} className={styles.deliveryLocItem}>
+                    <span className={styles.deliveryIcon}>🚚</span>
+                    <span>
+                      <strong>{loc.label}</strong>
+                      {` · ${t.carDetail.delivery.locationRadius} ${loc.radiusKm} km`}
+                      {loc.price != null
+                        ? ` · ${loc.price.toFixed(2)} €`
+                        : ` · ${t.carDetail.delivery.free}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : car.parkingAddress ? (
+          <div className={styles.specsSection}>
+            <h2 className={styles.specsTitle}>{t.carDetail.delivery.notAvailable}</h2>
+            <div className={styles.deliveryInfo}>
+              <span className={styles.deliveryIcon}>📍</span>
+              <span>{car.parkingAddress}</span>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* ── Booking section – full-bleed highlighted row ── */}
@@ -263,6 +327,9 @@ export default async function CarDetailPage({
             labels={t.booking}
             initialStart={searchParams.start}
             initialEnd={searchParams.end}
+            deliveryEnabled={car.deliveryEnabled ?? false}
+            deliveryType={car.deliveryType ?? null}
+            deliveryLocations={car.deliveryLocations ?? []}
           />
         </div>
       </section>

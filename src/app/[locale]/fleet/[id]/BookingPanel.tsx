@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DateTimePicker, { type DateTimePickerHandle } from "@/components/DateTimePicker";
 import PhoneInput from "@/components/PhoneInput";
+import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./BookingPanel.module.css";
 
@@ -56,12 +57,30 @@ interface Labels {
   requiredNote: string;
 }
 
+interface DeliveryValidation {
+  available: boolean;
+  fee: number | null;
+}
+
+export interface DeliveryLocationOption {
+  id: string;
+  label: string;
+  address: string;
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  price: number | null;
+}
+
 interface Props {
   carId: string;
   locale: string;
   labels: Labels;
   initialStart?: string;
   initialEnd?: string;
+  deliveryEnabled?: boolean;
+  deliveryType?: "radius" | "location" | null;
+  deliveryLocations?: DeliveryLocationOption[];
 }
 
 type PrefillSource = "url" | "storage" | null;
@@ -129,7 +148,7 @@ function validateField(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function BookingPanel({ carId, locale, labels, initialStart, initialEnd }: Props) {
+export default function BookingPanel({ carId, locale, labels, initialStart, initialEnd, deliveryEnabled = false, deliveryType = null, deliveryLocations = [] }: Props) {
   const router = useRouter();
   const t = getTranslations(locale);
 
@@ -152,6 +171,13 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
 
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  // ── Delivery state ────────────────────────────────────────────────────────────
+  const [deliveryMode,       setDeliveryMode]       = useState<"pickup" | "delivery">("pickup");
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [deliveryAddress,    setDeliveryAddress]    = useState<SelectedAddress | null>(null);
+  const [deliveryValidation, setDeliveryValidation] = useState<DeliveryValidation | null>(null);
+  const [checkingDelivery,   setCheckingDelivery]   = useState(false);
 
   const endPickerRef = useRef<DateTimePickerHandle>(null);
 
@@ -267,6 +293,33 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
     fetchAvailabilityAndPrice(startISO, endISO);
   }, [startISO, endISO, fetchAvailabilityAndPrice, labels.dateError, t.booking.pickupFuture]);
 
+  // ── Validate delivery address (radius mode only) ──────────────────────────────
+
+  useEffect(() => {
+    if (!deliveryEnabled || deliveryType !== "radius" || deliveryMode !== "delivery" || !deliveryAddress) {
+      setDeliveryValidation(null);
+      return;
+    }
+    const controller = new AbortController();
+    setCheckingDelivery(true);
+    setDeliveryValidation(null);
+    fetch(`/next-api/public/cars/${carId}/delivery/validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        addressLat:   deliveryAddress.lat,
+        addressLng:   deliveryAddress.lng,
+        addressLabel: deliveryAddress.label,
+      }),
+      signal: controller.signal,
+    })
+      .then(r => r.ok ? r.json() as Promise<DeliveryValidation> : null)
+      .then(data => { if (data) setDeliveryValidation(data); })
+      .catch(() => {/* ignore abort */})
+      .finally(() => setCheckingDelivery(false));
+    return () => controller.abort();
+  }, [carId, deliveryEnabled, deliveryType, deliveryMode, deliveryAddress]);
+
   // ── Submit ────────────────────────────────────────────────────────────────────
 
   const handleBook = async () => {
@@ -285,6 +338,25 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
     setSubmitting(true);
     setSubmitError("");
     try {
+      const selectedLoc = deliveryLocations.find(l => l.id === selectedLocationId);
+      let deliveryPayload: Record<string, unknown> = {};
+      if (deliveryEnabled && deliveryMode === "delivery") {
+        if (deliveryType === "location" && selectedLoc) {
+          deliveryPayload = {
+            deliveryRequested:  true,
+            deliveryAddress:    selectedLoc.address,
+            deliveryAddressLat: selectedLoc.lat,
+            deliveryAddressLng: selectedLoc.lng,
+          };
+        } else if (deliveryType === "radius" && deliveryAddress && deliveryValidation?.available) {
+          deliveryPayload = {
+            deliveryRequested:  true,
+            deliveryAddress:    deliveryAddress.label,
+            deliveryAddressLat: deliveryAddress.lat,
+            deliveryAddressLng: deliveryAddress.lng,
+          };
+        }
+      }
       const res = await fetch("/next-api/public/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -295,6 +367,7 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
           customerName:  name.trim(),
           customerEmail: email.trim(),
           customerPhone: phone.trim(),
+          ...deliveryPayload,
         }),
       });
       const data = await res.json();
@@ -311,7 +384,19 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
 
   // ── Derived state ────────────────────────────────────────────────────────────
 
-  const canBook      = available === true && priceResult !== null && !checking && !submitting;
+  const selectedLoc = deliveryLocations.find(l => l.id === selectedLocationId) ?? null;
+
+  const deliveryReady = !deliveryEnabled || deliveryMode === "pickup"
+    || (deliveryType === "location" && selectedLocationId !== null)
+    || (deliveryType === "radius" && deliveryValidation?.available === true && !checkingDelivery);
+
+  const activeDeliveryFee: number = deliveryEnabled && deliveryMode === "delivery"
+    ? deliveryType === "location"
+      ? (selectedLoc?.price ?? 0)
+      : (deliveryValidation?.available ? (deliveryValidation.fee ?? 0) : 0)
+    : 0;
+
+  const canBook      = available === true && priceResult !== null && !checking && !submitting && deliveryReady;
   const hasNoPricing = priceResult !== null && priceResult.basePricePerDay === null && priceResult.breakdown.length === 0;
   const minStart     = nowNextSlot();
 
@@ -447,9 +532,16 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
       {!checking && priceResult && !hasNoPricing && (
         <div className={styles.priceBox}>
           <div className={styles.priceSummary}>
-            <span className={styles.priceTotal}>€{priceResult.totalPrice.toFixed(2)}</span>
+            <span className={styles.priceTotal}>
+              €{(priceResult.totalPrice + activeDeliveryFee).toFixed(2)}
+            </span>
             <span className={styles.priceDays}>{priceResult.numberOfDays} {labels.days}</span>
           </div>
+          {activeDeliveryFee > 0 && (
+            <p className={styles.deliveryFeeNote}>
+              + €{activeDeliveryFee.toFixed(2)} {t.booking.delivery.fee}
+            </p>
+          )}
 
           {priceResult.breakdown.length > 1 && (
             <div className={styles.breakdown}>
@@ -483,6 +575,90 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
 
       {!checking && hasNoPricing && (
         <p className={styles.hint}>{labels.noPriceConfigured}</p>
+      )}
+
+      {/* ── Delivery option ── */}
+      {deliveryEnabled && available === true && (
+        <div className={styles.deliverySection}>
+          <p className={styles.deliveryTitle}>{t.booking.delivery.title}</p>
+
+          {/* Location mode: radio list of locations + pickup */}
+          {deliveryType === "location" && (
+            <div className={styles.deliveryOptions}>
+              <label className={`${styles.deliveryOption} ${deliveryMode === "pickup" ? styles.deliveryOptionSelected : ""}`}>
+                <input
+                  type="radio" name="delivery-option" value="pickup"
+                  checked={deliveryMode === "pickup"}
+                  onChange={() => { setDeliveryMode("pickup"); setSelectedLocationId(null); }}
+                  className={styles.deliveryOptionRadio}
+                />
+                <span className={styles.deliveryOptionIcon}>📍</span>
+                <span className={styles.deliveryOptionInfo}>
+                  <span className={styles.deliveryOptionLabel}>{t.booking.delivery.pickup}</span>
+                </span>
+              </label>
+              {deliveryLocations.map(loc => (
+                <label key={loc.id} className={`${styles.deliveryOption} ${selectedLocationId === loc.id ? styles.deliveryOptionSelected : ""}`}>
+                  <input
+                    type="radio" name="delivery-option" value={loc.id}
+                    checked={selectedLocationId === loc.id}
+                    onChange={() => { setDeliveryMode("delivery"); setSelectedLocationId(loc.id); }}
+                    className={styles.deliveryOptionRadio}
+                  />
+                  <span className={styles.deliveryOptionIcon}>🚚</span>
+                  <span className={styles.deliveryOptionInfo}>
+                    <span className={styles.deliveryOptionLabel}>{loc.label}</span>
+                    <span className={styles.deliveryOptionAddr}>{loc.address}</span>
+                  </span>
+                  <span className={styles.deliveryOptionPrice}>
+                    {loc.price != null ? `€${loc.price.toFixed(2)}` : t.booking.delivery.free}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Radius mode: toggle + address input */}
+          {deliveryType === "radius" && (
+            <>
+              <div className={styles.deliveryToggle}>
+                <button
+                  type="button"
+                  className={`${styles.deliveryToggleBtn} ${deliveryMode === "pickup" ? styles.deliveryToggleBtnActive : ""}`}
+                  onClick={() => { setDeliveryMode("pickup"); setDeliveryAddress(null); setDeliveryValidation(null); }}
+                >
+                  📍 {t.booking.delivery.pickup}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.deliveryToggleBtn} ${deliveryMode === "delivery" ? styles.deliveryToggleBtnActive : ""}`}
+                  onClick={() => setDeliveryMode("delivery")}
+                >
+                  🚚 {t.booking.delivery.deliver}
+                </button>
+              </div>
+              {deliveryMode === "delivery" && (
+                <div className={styles.deliveryAddressWrap}>
+                  <AddressAutocomplete
+                    value={deliveryAddress}
+                    onChange={setDeliveryAddress}
+                    placeholder={t.booking.delivery.addressPlaceholder}
+                  />
+                  {checkingDelivery && (
+                    <p className={styles.deliveryStatus}>{t.booking.delivery.checking}</p>
+                  )}
+                  {!checkingDelivery && deliveryValidation && (
+                    <p className={`${styles.deliveryStatus} ${deliveryValidation.available ? styles.deliveryStatusOk : styles.deliveryStatusErr}`}>
+                      {deliveryValidation.available
+                        ? `✓ ${t.booking.delivery.available}${deliveryValidation.fee != null ? ` · €${deliveryValidation.fee.toFixed(2)}` : ` · ${t.booking.delivery.free}`}`
+                        : `✗ ${t.booking.delivery.unavailable}`}
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
 
       {/* ── Contact fields ── */}

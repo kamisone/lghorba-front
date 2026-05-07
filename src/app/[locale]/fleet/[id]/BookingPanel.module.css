@@ -302,6 +302,141 @@
 .breakdownAmt    { font-size: 0.8rem; color: var(--color-text-muted); }
 .breakdownAmt strong { color: var(--color-text-primary); font-weight: 700; }
 
+/* ── Delivery fee note ───────────────────────────────────────────────────────*/
+.deliveryFeeNote {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: 0.3rem 0 0;
+}
+
+/* ── Delivery section ────────────────────────────────────────────────────────*/
+.deliverySection {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.deliveryTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.deliveryToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.deliveryToggleBtn {
+  padding: 0.55rem 0.5rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  text-align: center;
+}
+
+.deliveryToggleBtnActive {
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  background: rgba(var(--rgb-brand-primary), 0.06);
+  font-weight: 600;
+}
+
+/* ── Delivery options list (location mode) ───────────────────────────────────*/
+.deliveryOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.deliveryOption {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: var(--color-surface);
+}
+
+.deliveryOption:hover {
+  border-color: rgba(var(--rgb-brand-primary), 0.4);
+  background: var(--color-white);
+}
+
+.deliveryOptionSelected {
+  border-color: var(--color-brand-primary);
+  background: rgba(var(--rgb-brand-primary), 0.05);
+}
+
+.deliveryOptionRadio {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: var(--color-brand-primary);
+}
+
+.deliveryOptionIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.deliveryOptionInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.deliveryOptionLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-brand-darkest);
+}
+
+.deliveryOptionAddr {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deliveryOptionPrice {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+  flex-shrink: 0;
+}
+
+.deliveryAddressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.deliveryStatus {
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.deliveryStatusOk  { color: #059669; }
+.deliveryStatusErr { color: #dc2626; }
+
 /* ── Contact fields ──────────────────────────────────────────────────────────*/
 .contactFields {
   display: flex;

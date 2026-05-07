@@ -21,11 +21,12 @@ interface SearchResult {
   numberOfSeats:    number | null;
   basePricePerDay:  number | null;
   parkingAddress:   string | null;
-  deliveryType:     string;
-  deliveryRadiusKm: number | null;
-  distanceKm:       number | null;
-  deliveryAvailable: boolean;
-  deliveryNote:     string | null;
+  deliveryEnabled:      boolean;
+  deliveryType:         string | null;
+  deliveryRadiusKm:     number | null;
+  deliveryRadiusPrice:  number | null;
+  distanceKm:           number | null;
+  deliveryAvailable:    boolean;
 }
 
 async function searchCars(params: {

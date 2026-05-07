@@ -67,7 +67,8 @@ export interface Car {
   parkingAddress?: string | null;
   parkingLat?: number | null;
   parkingLng?: number | null;
-  deliveryType?: "none" | "radius" | "whitelist" | null;
+  deliveryEnabled?: boolean;
+  deliveryType?: "radius" | "location" | null;
   deliveryRadiusKm?: number | null;
-  deliveryAddresses?: { label: string; lat: number; lng: number }[] | null;
+  deliveryRadiusPrice?: number | null;
 }
