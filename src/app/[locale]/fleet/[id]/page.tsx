@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations, type Locale } from "@/lib/i18n";
+import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import CarSlider from "@/components/CarSlider";
 import BookingPanel from "./BookingPanel";
 import SearchContextBar from "./SearchContextBar";
@@ -165,6 +166,17 @@ export default async function CarDetailPage({
     );
   }
 
+  const nextAvailableDate = car.isAvailable
+    ? null
+    : await probeNextAvailableDate(car.id).catch(() => null);
+
+  const availableFromLabel = nextAvailableDate
+    ? `${t.fleet.availableFrom} ${new Date(nextAvailableDate + "T00:00:00Z").toLocaleDateString(
+        locale === "fr" ? "fr-FR" : "en-GB",
+        { day: "numeric", month: "short", timeZone: "UTC" },
+      )}`
+    : null;
+
   const specs = buildSpecs(car);
   const photoIds = photos.map(p => p.id);
   const title = [car.brand, car.model, car.finishing].filter(Boolean).join(" ") || car.name;
@@ -198,11 +210,15 @@ export default async function CarDetailPage({
           viewPhotoLabel={t.fleet.viewPhoto}
           photosLabel={t.fleet.photos}
         />
-        <div className={styles.sliderBadge}>
-          <span className={car.isAvailable ? styles.badgeAvail : styles.badgeBusy}>
-            {car.isAvailable ? t.fleet.available : t.fleet.rented}
-          </span>
-        </div>
+        {car.isAvailable ? (
+          <div className={styles.sliderBadge}>
+            <span className={styles.badgeAvail}>{t.fleet.availableToday}</span>
+          </div>
+        ) : availableFromLabel ? (
+          <div className={styles.sliderBadge}>
+            <span className={styles.badgeFrom}>{availableFromLabel}</span>
+          </div>
+        ) : null}
       </div>
 
       {/* ── Content: title + specs ── */}

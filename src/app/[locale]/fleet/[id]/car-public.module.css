@@ -76,28 +76,26 @@
   z-index: 5;
 }
 
-.badgeAvail {
+.badgeAvail,
+.badgeFrom {
   display: inline-block;
-  padding: 0.3rem 0.9rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 20px;
-  background: rgba(var(--rgb-success-light), 0.9);
-  color: var(--color-white);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(var(--rgb-black),0.15);
+  letter-spacing: 0.04em;
 }
 
-.badgeBusy {
-  display: inline-block;
-  padding: 0.3rem 0.9rem;
-  border-radius: 20px;
-  background: rgba(var(--rgb-error-light), 0.85);
-  color: var(--color-white);
-  font-size: 0.78rem;
-  font-weight: 700;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(var(--rgb-black),0.15);
+.badgeAvail {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(22, 163, 74, 0.22);
+}
+
+.badgeFrom {
+  background: rgba(2, 132, 199, 0.10);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.20);
 }
 
 /* ── "View all photos" affordance inside the track ── */
