@@ -207,7 +207,8 @@ export const en = {
     placeholderPassword: "••••••••",
     submit: "Sign in",
     submitting: "Signing in…",
-    errorInvalid: "Invalid email or password.",
+    errorInvalid: "Invalid credentials.",
+    errorRateLimit: "Too many attempts. Please wait a few minutes.",
     errorNetwork: "Network error, try again.",
   },
   carDetail: {
@@ -624,7 +625,8 @@ export const fr: Translations = {
     placeholderPassword: "••••••••",
     submit: "Se connecter",
     submitting: "Connexion en cours…",
-    errorInvalid: "Email ou mot de passe incorrect.",
+    errorInvalid: "Identifiants incorrects.",
+    errorRateLimit: "Trop de tentatives. Veuillez patienter quelques minutes.",
     errorNetwork: "Erreur réseau, réessayez.",
   },
   carDetail: {

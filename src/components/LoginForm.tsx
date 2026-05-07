@@ -38,14 +38,16 @@ export default function LoginForm({ t }: { t: T }) {
         const data = await res.json();
         if (data.mfaRequired) {
           setMfa({
-            challengeToken:  data.challengeToken,
+            challengeToken:   data.challengeToken,
             availableMethods: data.availableMethods,
-            preferredMethod: data.preferredMethod,
+            preferredMethod:  data.preferredMethod,
             maskedDestination: data.maskedDestination,
           });
         } else {
           router.replace(searchParams.get("from") || "/admin");
         }
+      } else if (res.status === 429) {
+        setError(t.errorRateLimit);
       } else {
         setError(t.errorInvalid);
       }

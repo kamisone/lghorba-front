@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
+const BACKEND_URL    = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 const ACCESS_COOKIE  = "vitecamion_auth";
 const REFRESH_COOKIE = "vitecamion_refresh";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 5;
 
-/** POST /next-api/auth/mfa  — verify OTP and set auth cookies */
+// Machine-readable codes from the backend mapped to safe user-facing messages.
+// Nothing from the backend's raw `message` field is ever forwarded to the browser.
+const ERROR_MESSAGES: Record<string, string> = {
+  otp_expired:       "Verification code expired. Request a new one.",
+  otp_invalid:       "Invalid code. Check the digits and try again.",
+  challenge_invalid: "Unable to verify your authentication request.",
+  rate_limited:      "Too many attempts. Please wait a few minutes.",
+  cooldown:          "Please wait before requesting another code.",
+  method_unavailable:"This verification method is not available for your account.",
+};
+
+function safeError(body: unknown, status: number): string {
+  const code = (typeof body === "object" && body !== null)
+    ? (body as Record<string, unknown>).code as string | undefined
+    : undefined;
+  if (code && ERROR_MESSAGES[code]) return ERROR_MESSAGES[code];
+  if (status === 429) return ERROR_MESSAGES.rate_limited;
+  if (status === 401) return ERROR_MESSAGES.challenge_invalid;
+  return "Authentication failed. Please try again.";
+}
+
+/** POST — verify OTP and set auth cookies */
 export async function POST(request: NextRequest) {
   const { challengeToken, otp } = await request.json();
 
@@ -17,12 +38,12 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ challengeToken, otp }),
     });
   } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
+    return NextResponse.json({ error: "Unable to reach the authentication server." }, { status: 502 });
   }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    return NextResponse.json(body, { status: res.status });
+    return NextResponse.json({ error: safeError(body, res.status) }, { status: res.status });
   }
 
   const { access_token, refresh_token } = await res.json();
@@ -42,7 +63,7 @@ export async function POST(request: NextRequest) {
   return response;
 }
 
-/** PUT /next-api/auth/mfa  — resend OTP (or switch method) */
+/** PUT — resend OTP (or switch method) */
 export async function PUT(request: NextRequest) {
   const body = await request.json();
 
@@ -54,9 +75,14 @@ export async function PUT(request: NextRequest) {
       body: JSON.stringify(body),
     });
   } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
+    return NextResponse.json({ error: "Unable to reach the authentication server." }, { status: 502 });
   }
 
-  const data = await res.json().catch(() => ({}));
-  return NextResponse.json(data, { status: res.status });
+  if (!res.ok) {
+    const resBody = await res.json().catch(() => ({}));
+    return NextResponse.json({ error: safeError(resBody, res.status) }, { status: res.status });
+  }
+
+  const data = await res.json();
+  return NextResponse.json({ maskedDestination: data.maskedDestination });
 }

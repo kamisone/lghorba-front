@@ -25,17 +25,17 @@ export default function MfaForm({
   const [method,    setMethod]    = useState<"email" | "sms">(preferredMethod);
   const [masked,    setMasked]    = useState(initialMasked);
   const [error,     setError]     = useState("");
+  const [inputError, setInputError] = useState(false);   // highlight digit boxes
   const [loading,   setLoading]   = useState(false);
   const [resending, setResending] = useState(false);
   const [cooldown,  setCooldown]  = useState(0);
-  const inputRefs   = useRef<(HTMLInputElement | null)[]>([]);
-  const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  // Cooldown countdown
   useEffect(() => {
     if (cooldown <= 0) return;
     timerRef.current = setInterval(() => {
@@ -49,11 +49,14 @@ export default function MfaForm({
 
   const otp = digits.join("");
 
+  const clearError = () => { setError(""); setInputError(false); };
+
   const handleDigit = (index: number, value: string) => {
     const char = value.replace(/\D/g, "").slice(-1);
     const next = [...digits];
     next[index] = char;
     setDigits(next);
+    if (inputError && char) setInputError(false);
     if (char && index < 5) inputRefs.current[index + 1]?.focus();
   };
 
@@ -70,14 +73,24 @@ export default function MfaForm({
     const next = [...digits];
     pasted.split("").forEach((c, i) => { next[i] = c; });
     setDigits(next);
+    clearError();
     inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+  };
+
+  const showError = (msg: string, markInputs = false) => {
+    setError(msg);
+    setInputError(markInputs);
+    if (markInputs) {
+      setDigits(["", "", "", "", "", ""]);
+      setTimeout(() => inputRefs.current[0]?.focus(), 0);
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (otp.length < 6) return;
     setLoading(true);
-    setError("");
+    clearError();
     try {
       const res = await fetch("/next-api/auth/mfa", {
         method: "POST",
@@ -88,12 +101,12 @@ export default function MfaForm({
         onSuccess();
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.message ?? "Invalid code. Please try again.");
-        setDigits(["", "", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
+        // Mark inputs as invalid for wrong/expired code; not for challenge errors
+        const markInputs = res.status !== 401;
+        showError(data.error ?? "Authentication failed. Please try again.", markInputs);
       }
     } catch {
-      setError("Network error. Please try again.");
+      showError("A network error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -102,7 +115,7 @@ export default function MfaForm({
   const handleResend = async (newMethod?: "email" | "sms") => {
     if (cooldown > 0 || resending) return;
     setResending(true);
-    setError("");
+    clearError();
     try {
       const res = await fetch("/next-api/auth/mfa", {
         method: "PUT",
@@ -117,11 +130,11 @@ export default function MfaForm({
         inputRefs.current[0]?.focus();
         setCooldown(60);
       } else {
-        setError(data.message ?? "Failed to resend. Please wait and try again.");
+        showError(data.error ?? "Failed to send code. Please try again.");
         if (res.status === 429) setCooldown(60);
       }
     } catch {
-      setError("Network error. Please try again.");
+      showError("A network error occurred. Please try again.");
     } finally {
       setResending(false);
     }
@@ -145,7 +158,7 @@ export default function MfaForm({
             <input
               key={i}
               ref={el => { inputRefs.current[i] = el; }}
-              className={mfaStyles.digitInput}
+              className={[mfaStyles.digitInput, inputError ? mfaStyles.digitInputError : ""].filter(Boolean).join(" ")}
               type="text"
               inputMode="numeric"
               maxLength={1}
@@ -153,11 +166,16 @@ export default function MfaForm({
               onChange={e => handleDigit(i, e.target.value)}
               onKeyDown={e => handleKey(i, e)}
               autoComplete="one-time-code"
+              aria-invalid={inputError}
             />
           ))}
         </div>
 
-        {error && <p className={styles.error}>{error}</p>}
+        {error && (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        )}
 
         <button
           className={styles.btn}

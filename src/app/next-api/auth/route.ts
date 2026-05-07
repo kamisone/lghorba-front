@@ -20,6 +20,9 @@ export async function POST(request: NextRequest) {
   }
 
   if (!res.ok) {
+    if (res.status === 429) {
+      return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+    }
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
   }
 
