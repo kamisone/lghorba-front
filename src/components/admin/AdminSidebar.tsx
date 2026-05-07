@@ -8,7 +8,7 @@ const NAV = [
   { href: "/admin/fleet",             icon: "directions_car",      label: "Fleet"     },
   { href: "/admin/bookings",          icon: "event_available",     label: "Bookings"  },
   { href: "/admin/invoices",          icon: "receipt_long",        label: "Invoices"  },
-  { href: "/admin/pricing-calendar",  icon: "calendar_month",      label: "Pricing"   },
+  { href: "/admin/calendar",           icon: "calendar_month",      label: "Calendar"  },
   { href: "/admin/users",             icon: "person",              label: "Users"     },
   { href: "/admin/admins",            icon: "admin_panel_settings", label: "Admins"   },
   { href: "/admin/contacts",          icon: "mail",                label: "Contacts"  },

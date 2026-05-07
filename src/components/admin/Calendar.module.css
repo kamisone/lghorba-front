@@ -464,6 +464,50 @@
   z-index: 5;
 }
 
+/* ── Availability block cell ── */
+.cellBlocked {
+  cursor: pointer;
+}
+
+.availOverlay {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(239, 68, 68, 0.18),
+    rgba(239, 68, 68, 0.18) 3px,
+    rgba(239, 68, 68, 0.05) 3px,
+    rgba(239, 68, 68, 0.05) 9px
+  );
+  border-top: 1.5px solid rgba(239, 68, 68, 0.45);
+  border-bottom: 1.5px solid rgba(239, 68, 68, 0.45);
+  z-index: 8;
+  pointer-events: none;
+}
+
+.availOverlayFirst {
+  border-left: 2px solid rgba(239, 68, 68, 0.7);
+}
+
+.availOverlayLast {
+  border-right: 2px solid rgba(239, 68, 68, 0.7);
+}
+
+.availBadge {
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  font-size: 0.59rem;
+  font-weight: 700;
+  color: #b91c1c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 8px);
+  line-height: 1.1;
+  pointer-events: none;
+}
+
 /* ── Cell badge (price label on first day of range) ── */
 .cellBadge {
   position: absolute;

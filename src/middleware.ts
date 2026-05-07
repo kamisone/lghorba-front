@@ -22,6 +22,7 @@ export function middleware(request: NextRequest) {
     const isProtected =
       pathname.startsWith("/next-api/sms/") ||
       pathname.startsWith("/next-api/cars/") ||
+      pathname.startsWith("/next-api/bookings/") ||
       pathname.startsWith("/next-api/rent-sessions/") ||
       pathname.startsWith("/next-api/users/") ||
       pathname === "/next-api/users" ||
