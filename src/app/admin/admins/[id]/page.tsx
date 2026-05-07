@@ -9,7 +9,10 @@ interface AdminUser {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   role: string;
+  mfaEnabled: boolean;
+  preferredMfaMethod: "email" | "sms";
   createdAt: string;
 }
 
@@ -28,13 +31,24 @@ export default function AdminDetailPage() {
   const [resetDone, setResetDone] = useState(false);
   const [error, setError] = useState("");
 
+  // MFA form state
+  const [mfaForm, setMfaForm] = useState({ mfaEnabled: false, preferredMfaMethod: "email" as "email" | "sms", phone: "" });
+  const [mfaSaving, setMfaSaving] = useState(false);
+  const [mfaDone, setMfaDone] = useState(false);
+  const [mfaError, setMfaError] = useState("");
+
   useEffect(() => {
     fetch(`/next-api/admins/${id}`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : null)
-      .then(data => {
+      .then((data: AdminUser | null) => {
         if (data) {
           setAdmin(data);
           setForm({ name: data.name, email: data.email, role: data.role });
+          setMfaForm({
+            mfaEnabled: data.mfaEnabled ?? false,
+            preferredMfaMethod: data.preferredMfaMethod ?? "email",
+            phone: data.phone ?? "",
+          });
         }
       })
       .finally(() => setLoading(false));
@@ -84,6 +98,43 @@ export default function AdminDetailPage() {
       }
     } finally {
       setResetSaving(false);
+    }
+  };
+
+  const handleSaveMfa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mfaForm.mfaEnabled && mfaForm.preferredMfaMethod === "sms" && !mfaForm.phone.trim()) {
+      setMfaError("A phone number is required for SMS verification.");
+      return;
+    }
+    setMfaSaving(true);
+    setMfaError("");
+    try {
+      const res = await fetch(`/next-api/admins/${id}/mfa`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mfaEnabled: mfaForm.mfaEnabled,
+          preferredMfaMethod: mfaForm.preferredMfaMethod,
+          phone: mfaForm.phone.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setAdmin(updated);
+        setMfaForm({
+          mfaEnabled: updated.mfaEnabled ?? false,
+          preferredMfaMethod: updated.preferredMfaMethod ?? "email",
+          phone: updated.phone ?? "",
+        });
+        setMfaDone(true);
+        setTimeout(() => setMfaDone(false), 3000);
+      } else {
+        const data = await res.json();
+        setMfaError(data.message ?? "Failed to save MFA settings.");
+      }
+    } finally {
+      setMfaSaving(false);
     }
   };
 
@@ -169,6 +220,64 @@ export default function AdminDetailPage() {
             <dt>Created</dt><dd>{new Date(admin.createdAt).toLocaleDateString()}</dd>
           </dl>
         )}
+      </div>
+
+      {/* ── MFA settings ── */}
+      <div className={styles.card}>
+        <h2 className={styles.sectionTitle}>Two-factor authentication</h2>
+        <form onSubmit={handleSaveMfa} className={styles.editForm}>
+          <div className={styles.formField}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={mfaForm.mfaEnabled}
+                onChange={e => setMfaForm(f => ({ ...f, mfaEnabled: e.target.checked }))}
+                style={{ width: 16, height: 16, cursor: "pointer" }}
+              />
+              <span className={styles.label} style={{ textTransform: "none", letterSpacing: 0, fontSize: "0.9rem" }}>
+                Enable two-factor authentication
+              </span>
+            </label>
+          </div>
+
+          {mfaForm.mfaEnabled && (
+            <>
+              <div className={styles.formField}>
+                <label className={styles.label}>Verification method</label>
+                <select
+                  className={styles.input}
+                  style={{ maxWidth: 200 }}
+                  value={mfaForm.preferredMfaMethod}
+                  onChange={e => setMfaForm(f => ({ ...f, preferredMfaMethod: e.target.value as "email" | "sms" }))}
+                >
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                </select>
+              </div>
+
+              <div className={styles.formField}>
+                <label className={styles.label}>Phone number {mfaForm.preferredMfaMethod === "sms" ? "(required for SMS)" : "(optional, for SMS)"}</label>
+                <input
+                  className={styles.input}
+                  type="tel"
+                  placeholder="+33 6 12 34 56 78"
+                  value={mfaForm.phone}
+                  onChange={e => setMfaForm(f => ({ ...f, phone: e.target.value }))}
+                  style={{ maxWidth: 260 }}
+                />
+              </div>
+            </>
+          )}
+
+          {mfaError && <p className={styles.errorMsg}>{mfaError}</p>}
+          {mfaDone  && <p className={styles.successMsg}>MFA settings saved.</p>}
+
+          <div>
+            <button type="submit" className={styles.saveBtn} disabled={mfaSaving}>
+              {mfaSaving ? "Saving…" : "Save MFA settings"}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* ── Reset password ── */}

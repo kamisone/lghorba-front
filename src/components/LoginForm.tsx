@@ -4,8 +4,16 @@ import { useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Translations } from "@/lib/i18n/translations";
 import styles from "@/app/login/login.module.css";
+import MfaForm from "./MfaForm";
 
 type T = Translations["login"];
+
+interface MfaState {
+  challengeToken: string;
+  availableMethods: ("email" | "sms")[];
+  preferredMethod: "email" | "sms";
+  maskedDestination: string;
+}
 
 export default function LoginForm({ t }: { t: T }) {
   const router = useRouter();
@@ -14,6 +22,7 @@ export default function LoginForm({ t }: { t: T }) {
   const [password, setPassword] = useState("");
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
+  const [mfa,      setMfa]      = useState<MfaState | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -26,7 +35,17 @@ export default function LoginForm({ t }: { t: T }) {
         body: JSON.stringify({ email, password }),
       });
       if (res.ok) {
-        router.replace(searchParams.get("from") || "/admin");
+        const data = await res.json();
+        if (data.mfaRequired) {
+          setMfa({
+            challengeToken:  data.challengeToken,
+            availableMethods: data.availableMethods,
+            preferredMethod: data.preferredMethod,
+            maskedDestination: data.maskedDestination,
+          });
+        } else {
+          router.replace(searchParams.get("from") || "/admin");
+        }
       } else {
         setError(t.errorInvalid);
       }
@@ -36,6 +55,16 @@ export default function LoginForm({ t }: { t: T }) {
       setLoading(false);
     }
   };
+
+  if (mfa) {
+    return (
+      <MfaForm
+        {...mfa}
+        onSuccess={() => router.replace(searchParams.get("from") || "/admin")}
+        onBack={() => { setMfa(null); setPassword(""); setError(""); }}
+      />
+    );
+  }
 
   return (
     <div className={styles.card}>

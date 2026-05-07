@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 const ACCESS_COOKIE  = "vitecamion_auth";
 const REFRESH_COOKIE = "vitecamion_refresh";
-// Browser cookie lifetime = refresh token lifetime (5 days).
-// The JWT itself expires after 15 min; TokenRefresher rotates it silently.
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 5;
 
 export async function POST(request: NextRequest) {
@@ -25,7 +23,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
   }
 
-  const { access_token, refresh_token } = await res.json();
+  const data = await res.json();
+
+  // MFA required — forward the challenge to the browser
+  if (data.mfaRequired) {
+    return NextResponse.json(data, { status: 200 });
+  }
+
+  const { access_token, refresh_token } = data;
   const response = NextResponse.json({ ok: true });
 
   const cookieOpts = {

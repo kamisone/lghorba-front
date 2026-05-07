@@ -1,0 +1,62 @@
+.mfaIcon {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.digitRow {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.digitInput {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  caret-color: transparent;
+}
+
+.digitInput:focus {
+  border-color: var(--color-admin-secondary);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-admin-secondary), 0.12);
+  background: var(--color-white);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.84rem;
+  color: var(--color-admin-secondary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.15s;
+}
+
+.linkBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.linkBtn:hover:not(:disabled) {
+  opacity: 0.75;
+}
