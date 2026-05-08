@@ -1,0 +1,256 @@
+/* ── Workspace shell ─────────────────────────────────────────────────────── */
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* ── Sticky header ───────────────────────────────────────────────────────── */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--color-white, #fff);
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Breadcrumb ──────────────────────────────────────────────────────────── */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.breadcrumbLink {
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.12s;
+}
+.breadcrumbLink:hover { color: var(--color-brand-primary, #f97316); }
+
+.breadcrumbSep { color: #cbd5e1; }
+
+.breadcrumbCurrent {
+  color: #334155;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* ── Vehicle identity strip ──────────────────────────────────────────────── */
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 24px 10px;
+}
+
+.vehiclePhoto {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--color-border, #e2e8f0);
+  flex-shrink: 0;
+  background: #f1f5f9;
+}
+
+.vehiclePhotoPlaceholder {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  flex-shrink: 0;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.vehicleInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.vehicleName {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.vehicleMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.plate {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 1px 7px;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.editBtn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-border, #e2e8f0);
+  background: var(--color-white, #fff);
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.editBtn:hover { border-color: #94a3b8; background: #f8fafc; }
+
+.deleteBtn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #fecaca;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.deleteBtn:hover { background: #fef2f2; }
+
+/* ── Tab navigation ──────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  padding: 0 24px;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.12s, border-color 0.12s;
+  margin-bottom: -1px; /* overlap container border */
+}
+.tab:hover { color: #334155; }
+
+.tabActive {
+  color: var(--color-brand-primary, #f97316);
+  border-bottom-color: var(--color-brand-primary, #f97316);
+  font-weight: 600;
+}
+
+.tabIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ── Content area ────────────────────────────────────────────────────────── */
+
+.content {
+  flex: 1;
+}
+
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
+
+.skeletonPhoto {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  animation: pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.skeletonLine {
+  height: 14px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .breadcrumb { padding: 8px 16px 0; }
+  .identity   { padding: 10px 16px 8px; gap: 10px; }
+  .tabs       { padding: 0 16px; }
+  .vehicleName { font-size: 15px; }
+  .headerActions { display: none; } /* hide on mobile — manage from within the page */
+}
