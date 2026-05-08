@@ -9,7 +9,18 @@ export default function TokenRefresher() {
   useEffect(() => {
     const originalFetch = window.fetch.bind(window);
     let isRefreshing = false;
-    let queue: Array<() => void> = [];
+    let queue: Array<{ resolve: (r: Response) => void; retry: () => Promise<Response> }> = [];
+
+    function drainQueue(succeeded: boolean, fallback?: Response) {
+      const pending = queue;
+      queue = [];
+      isRefreshing = false;
+      if (succeeded) {
+        pending.forEach(({ resolve, retry }) => resolve(retry()));
+      } else {
+        pending.forEach(({ resolve }) => resolve(fallback!));
+      }
+    }
 
     window.fetch = async (...args: Parameters<typeof fetch>) => {
       const input = args[0];
@@ -26,7 +37,7 @@ export default function TokenRefresher() {
       // Another refresh is already in flight — queue this retry
       if (isRefreshing) {
         return new Promise<Response>((resolve) => {
-          queue.push(() => resolve(originalFetch(...args)));
+          queue.push({ resolve, retry: () => originalFetch(...args) });
         });
       }
 
@@ -37,21 +48,17 @@ export default function TokenRefresher() {
 
         if (refreshRes.ok) {
           // New access token set — flush queued retries then retry this one
-          queue.forEach(fn => fn());
-          queue = [];
-          isRefreshing = false;
+          drainQueue(true);
           return originalFetch(...args);
         }
 
         // Refresh token also expired → force re-login
-        queue = [];
-        isRefreshing = false;
+        drainQueue(false, res);
         await originalFetch("/next-api/auth", { method: "DELETE" });
         router.replace("/login");
         return res;
       } catch {
-        queue = [];
-        isRefreshing = false;
+        drainQueue(false, res);
         return res;
       }
     };
