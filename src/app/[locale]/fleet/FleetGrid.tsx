@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { FleetPriceContext } from "./FleetPriceContext";
+import { loadSearchContext } from "@/lib/searchContext";
 import styles from "./fleet.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -20,27 +21,10 @@ export interface FleetCar {
   mileage?: string | null;
 }
 
-// ── Storage helpers ────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface SearchCtx { start: string; end: string }
 interface PriceInfo  { total: number; days: number }
-
-const LS_KEY = "car_search_context";
-const LS_TTL = 7 * 24 * 60 * 60 * 1000;
-
-function loadStoredSearch(): SearchCtx | null {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return null;
-    const p = JSON.parse(raw) as { start?: string; end?: string; savedAt?: number };
-    if (!p.start || !p.end || !p.savedAt) return null;
-    if (Date.now() - p.savedAt > LS_TTL) { localStorage.removeItem(LS_KEY); return null; }
-    if (new Date(p.start) <= new Date()) return null;
-    return { start: p.start, end: p.end };
-  } catch {
-    return null;
-  }
-}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -53,14 +37,13 @@ export default function FleetGrid({ carIds, children }: Props) {
   const [prices,        setPrices]        = useState<Map<string, PriceInfo>>(new Map());
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [ctx,           setCtx]           = useState<SearchCtx | null>(null);
-  const initDone = useRef(false);
 
   // Read search context from localStorage on mount
   useEffect(() => {
-    if (initDone.current) return;
-    initDone.current = true;
-    const stored = loadStoredSearch();
-    if (stored) setCtx(stored);
+    const stored = loadSearchContext();
+    if (stored && new Date(stored.start) > new Date()) {
+      setCtx({ start: stored.start, end: stored.end });
+    }
   }, []);
 
   // Fetch prices for all cars when context is known

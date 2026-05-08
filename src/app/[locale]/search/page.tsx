@@ -121,6 +121,9 @@ export default async function SearchPage({
         end={end}
         locale={locale}
         hasAddress={hasAddress}
+        lat={lat}
+        lng={lng}
+        address={address}
       />
 
     </div>

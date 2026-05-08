@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import CarSlider from "@/components/CarSlider";
@@ -266,52 +267,98 @@ export default async function CarDetailPage({
         )}
 
         {/* ── Location / delivery info ── */}
-        {car.deliveryEnabled ? (
+        {(car.parkingAddress || car.deliveryEnabled) && (
           <div className={styles.specsSection}>
-            <h2 className={styles.specsTitle}>{t.carDetail.delivery.title}</h2>
-            {car.parkingAddress && (
-              <div className={styles.deliveryInfo}>
-                <span className={styles.deliveryIcon}>📍</span>
-                <span>{car.parkingAddress}</span>
-              </div>
-            )}
-            {car.deliveryType === "radius" && car.deliveryRadiusKm != null && (
-              <div className={styles.deliveryInfo}>
-                <span className={styles.deliveryIcon}>🚚</span>
-                <span>
-                  {t.carDetail.delivery.radius} {car.deliveryRadiusKm} {t.carDetail.delivery.km}
-                  {car.deliveryRadiusPrice != null
-                    ? ` · ${car.deliveryRadiusPrice.toFixed(2)} €${t.carDetail.delivery.priceSuffix}`
-                    : ` · ${t.carDetail.delivery.free}`}
-                </span>
-              </div>
-            )}
-            {car.deliveryType === "location" && car.deliveryLocations?.length ? (
-              <ul className={styles.deliveryLocList}>
-                {car.deliveryLocations.map(loc => (
-                  <li key={loc.id} className={styles.deliveryLocItem}>
-                    <span className={styles.deliveryIcon}>🚚</span>
-                    <span>
-                      <strong>{loc.label}</strong>
-                      {` · ${t.carDetail.delivery.locationRadius} ${loc.radiusKm} km`}
-                      {loc.price != null
-                        ? ` · ${loc.price.toFixed(2)} €`
-                        : ` · ${t.carDetail.delivery.free}`}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        ) : car.parkingAddress ? (
-          <div className={styles.specsSection}>
-            <h2 className={styles.specsTitle}>{t.carDetail.delivery.notAvailable}</h2>
-            <div className={styles.deliveryInfo}>
-              <span className={styles.deliveryIcon}>📍</span>
-              <span>{car.parkingAddress}</span>
+            <h2 className={styles.specsTitle}>
+              {car.deliveryEnabled
+                ? t.carDetail.delivery.sectionTitle
+                : t.carDetail.delivery.notAvailable}
+            </h2>
+
+            <div className={styles.locationCards}>
+
+              {/* Base pickup location */}
+              {car.parkingAddress && (
+                <div className={styles.locationCard}>
+                  <div className={styles.locationCardHeader}>
+                    <span className={styles.locationCardIconWrap}>📍</span>
+                    <div className={styles.locationCardMeta}>
+                      <span className={styles.locationCardLabel}>
+                        {t.carDetail.delivery.pickupLocation}
+                      </span>
+                      {!car.deliveryEnabled && (
+                        <span className={styles.locationBadgeOrange}>
+                          {t.carDetail.delivery.pickupOnly}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className={styles.locationCardAddress}>{car.parkingAddress}</p>
+                </div>
+              )}
+
+              {/* Delivery — radius zone */}
+              {car.deliveryEnabled && car.deliveryType === "radius" && car.deliveryRadiusKm != null && (
+                <div className={`${styles.locationCard} ${styles.locationCardDelivery}`}>
+                  <div className={styles.locationCardHeader}>
+                    <span className={styles.locationCardIconWrap}>🚚</span>
+                    <div className={styles.locationCardMeta}>
+                      <span className={styles.locationCardLabel}>
+                        {t.carDetail.delivery.title}
+                      </span>
+                      <span className={car.deliveryRadiusPrice == null
+                        ? styles.locationBadgeGreen
+                        : styles.locationBadgeBlue}>
+                        {car.deliveryRadiusPrice != null
+                          ? `${car.deliveryRadiusPrice.toFixed(2)} €${t.carDetail.delivery.priceSuffix}`
+                          : t.carDetail.delivery.free}
+                      </span>
+                    </div>
+                  </div>
+                  <p className={styles.locationCardDesc}>
+                    {t.carDetail.delivery.radius}{" "}
+                    <strong>{car.deliveryRadiusKm} {t.carDetail.delivery.km}</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* Delivery — fixed locations */}
+              {car.deliveryEnabled && car.deliveryType === "location" && car.deliveryLocations?.length ? (
+                <div className={`${styles.locationCard} ${styles.locationCardDelivery}`}>
+                  <div className={styles.locationCardHeader}>
+                    <span className={styles.locationCardIconWrap}>🚚</span>
+                    <div className={styles.locationCardMeta}>
+                      <span className={styles.locationCardLabel}>
+                        {t.carDetail.delivery.locationTitle}
+                      </span>
+                      <span className={styles.locationCardCount}>
+                        {car.deliveryLocations.length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={styles.deliveryLocGrid}>
+                    {car.deliveryLocations.map(loc => (
+                      <div key={loc.id} className={styles.deliveryLocCard}>
+                        <div className={styles.deliveryLocCardTop}>
+                          <span className={styles.deliveryLocCardName}>{loc.label}</span>
+                          <span className={`${styles.deliveryLocCardPrice} ${loc.price == null ? styles.deliveryLocCardPriceFree : ""}`}>
+                            {loc.price != null
+                              ? `${loc.price.toFixed(2)} €`
+                              : t.carDetail.delivery.free}
+                          </span>
+                        </div>
+                        <p className={styles.deliveryLocCardMeta}>
+                          {t.carDetail.delivery.locationRadius} {loc.radiusKm} km
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
             </div>
           </div>
-        ) : null}
+        )}
       </div>
 
       {/* ── Booking section – full-bleed highlighted row ── */}
@@ -321,16 +368,16 @@ export default async function CarDetailPage({
             <p className={styles.bookingSectionEyebrow}>{t.booking.title}</p>
             <h2 className={styles.bookingSectionTitle}>{title}</h2>
           </div>
-          <BookingPanel
-            carId={car.id}
-            locale={locale}
-            labels={t.booking}
-            initialStart={searchParams.start}
-            initialEnd={searchParams.end}
-            deliveryEnabled={car.deliveryEnabled ?? false}
-            deliveryType={car.deliveryType ?? null}
-            deliveryLocations={car.deliveryLocations ?? []}
-          />
+          <Suspense fallback={null}>
+            <BookingPanel
+              carId={car.id}
+              locale={locale}
+              labels={t.booking}
+              deliveryEnabled={car.deliveryEnabled ?? false}
+              deliveryType={car.deliveryType ?? null}
+              deliveryLocations={car.deliveryLocations ?? []}
+            />
+          </Suspense>
         </div>
       </section>
     </div>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getTranslations } from "@/lib/i18n";
+import { saveSearchContext } from "@/lib/searchContext";
 import styles from "./search.module.css";
 
 interface SearchResult {
@@ -39,9 +40,12 @@ interface Props {
   end:        string;
   locale:     string;
   hasAddress: boolean;
+  lat?:       string;
+  lng?:       string;
+  address?:   string;
 }
 
-export default function SearchResults({ results, start, end, locale, hasAddress }: Props) {
+export default function SearchResults({ results, start, end, locale, hasAddress, lat, lng, address }: Props) {
   const t = getTranslations(locale);
   const [sort,          setSort]          = useState<SortKey>("relevance");
   const [prices,        setPrices]        = useState<Map<string, { total: number; days: number }>>(new Map());
@@ -50,10 +54,11 @@ export default function SearchResults({ results, start, end, locale, hasAddress 
   // Persist search context for fleet-page pre-fill
   useEffect(() => {
     if (!start || !end) return;
-    try {
-      localStorage.setItem("car_search_context", JSON.stringify({ start, end, savedAt: Date.now() }));
-    } catch { /* ignore */ }
-  }, [start, end]);
+    const addr = lat && lng && address
+      ? { lat: parseFloat(lat), lng: parseFloat(lng), label: address }
+      : undefined;
+    saveSearchContext(start, end, addr);
+  }, [start, end, lat, lng, address]);
 
   // Fetch total price for each result
   useEffect(() => {

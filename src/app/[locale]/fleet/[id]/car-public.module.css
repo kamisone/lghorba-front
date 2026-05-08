@@ -436,50 +436,191 @@
   text-align: right;
 }
 
-/* ── Delivery info ── */
-.deliveryInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.85rem 1.25rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  font-size: 0.9rem;
-  color: var(--color-brand-darkest);
+/* ── Location & delivery cards ── */
+.locationCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
-.deliveryIcon {
+.locationCards > :only-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .locationCards { grid-template-columns: 1fr; }
+}
+
+.locationCard {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: 0 2px 10px rgba(var(--rgb-brand-darkest), 0.05);
+}
+
+.locationCardDelivery {
+  border-left: 3px solid #16a34a;
+}
+
+.locationCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.locationCardIconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-surface-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1rem;
   flex-shrink: 0;
 }
 
-.deliveryLocTitle {
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  margin: 0 0 0.6rem;
+.locationCardDelivery .locationCardIconWrap {
+  background: rgba(22, 163, 74, 0.1);
 }
 
-.deliveryLocList {
-  list-style: none;
-  padding: 0;
+.locationCardMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.locationCardLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+}
+
+.locationCardAddress {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-brand-darkest);
   margin: 0;
+  line-height: 1.45;
+}
+
+.locationCardDesc {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.locationCardCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Badges */
+.locationBadgeOrange {
+  display: inline-block;
+  padding: 0.18rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(234, 88, 12, 0.08);
+  color: #c2410c;
+  border: 1px solid rgba(234, 88, 12, 0.16);
+  white-space: nowrap;
+}
+
+.locationBadgeGreen {
+  display: inline-block;
+  padding: 0.18rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(22, 163, 74, 0.08);
+  color: #15803d;
+  border: 1px solid rgba(22, 163, 74, 0.18);
+  white-space: nowrap;
+}
+
+.locationBadgeBlue {
+  display: inline-block;
+  padding: 0.18rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(2, 132, 199, 0.08);
+  color: #0369a1;
+  border: 1px solid rgba(2, 132, 199, 0.16);
+  white-space: nowrap;
+}
+
+/* Delivery location mini-cards */
+.deliveryLocGrid {
   display: flex;
   flex-direction: column;
+  gap: 0.45rem;
+}
+
+.deliveryLocCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(22, 163, 74, 0.04);
+  border: 1px solid rgba(22, 163, 74, 0.14);
+  border-radius: 9px;
+}
+
+.deliveryLocCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
-.deliveryLocItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
+.deliveryLocCardName {
   font-size: 0.88rem;
+  font-weight: 600;
   color: var(--color-brand-darkest);
+}
+
+.deliveryLocCardPrice {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0369a1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.deliveryLocCardPriceFree {
+  color: #15803d;
+}
+
+.deliveryLocCardMeta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 /* ── Bottom CTA ── */

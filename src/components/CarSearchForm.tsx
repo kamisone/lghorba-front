@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AddressAutocomplete, { type SelectedAddress } from "./AddressAutocomplete";
+import { loadSearchContext } from "@/lib/searchContext";
 import styles from "./CarSearchForm.module.css";
-
-const LS_KEY = "car_search_context";
-const LS_TTL = 7 * 24 * 60 * 60 * 1000;
 
 function nowPlusHours(h: number): { date: string; time: string } {
   const d = new Date(Date.now() + h * 3_600_000);
@@ -58,18 +56,12 @@ export default function CarSearchForm({ locale, labels }: Props) {
 
   // Pre-fill from last search context on mount
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return;
-      const ctx = JSON.parse(raw) as { start?: string; end?: string; savedAt?: number };
-      if (!ctx.start || !ctx.end || !ctx.savedAt) return;
-      if (Date.now() - ctx.savedAt > LS_TTL) return;
-      if (new Date(ctx.start) <= new Date()) return;
-      setStartDate(isoToDate(ctx.start));
-      setStartTime(isoToTime(ctx.start));
-      setEndDate(isoToDate(ctx.end));
-      setEndTime(isoToTime(ctx.end));
-    } catch { /* ignore */ }
+    const ctx = loadSearchContext();
+    if (!ctx || new Date(ctx.start) <= new Date()) return;
+    setStartDate(isoToDate(ctx.start));
+    setStartTime(isoToTime(ctx.start));
+    setEndDate(isoToDate(ctx.end));
+    setEndTime(isoToTime(ctx.end));
   }, []);
 
   const validate = useCallback((): boolean => {

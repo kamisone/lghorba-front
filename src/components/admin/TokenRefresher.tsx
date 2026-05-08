@@ -9,7 +9,7 @@ export default function TokenRefresher() {
   useEffect(() => {
     const originalFetch = window.fetch.bind(window);
     let isRefreshing = false;
-    let queue: Array<{ resolve: (r: Response) => void; retry: () => Promise<Response> }> = [];
+    let queue: Array<{ resolve: (r: Response | PromiseLike<Response>) => void; retry: () => Promise<Response> }> = [];
 
     function drainQueue(succeeded: boolean, fallback?: Response) {
       const pending = queue;

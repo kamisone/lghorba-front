@@ -6,6 +6,8 @@ import DateTimePicker, { type DateTimePickerHandle } from "@/components/DateTime
 import PhoneInput from "@/components/PhoneInput";
 import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
 import { getTranslations } from "@/lib/i18n";
+import { saveSearchContext } from "@/lib/searchContext";
+import { useSearchContext } from "@/hooks/useSearchContext";
 import styles from "./BookingPanel.module.css";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -76,8 +78,6 @@ interface Props {
   carId: string;
   locale: string;
   labels: Labels;
-  initialStart?: string;
-  initialEnd?: string;
   deliveryEnabled?: boolean;
   deliveryType?: "radius" | "location" | null;
   deliveryLocations?: DeliveryLocationOption[];
@@ -85,31 +85,13 @@ interface Props {
 
 type PrefillSource = "url" | "storage" | null;
 
-// ── Storage helpers ───────────────────────────────────────────────────────────
-
-const LS_KEY = "car_search_context";
-const LS_TTL = 7 * 24 * 60 * 60 * 1000;
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function isoToLocalDT(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-
-function loadStoredSearch(): { start: string; end: string } | null {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { start?: string; end?: string; savedAt?: number };
-    if (!parsed.start || !parsed.end || !parsed.savedAt) return null;
-    if (Date.now() - parsed.savedAt > LS_TTL) { localStorage.removeItem(LS_KEY); return null; }
-    return { start: parsed.start, end: parsed.end };
-  } catch {
-    return null;
-  }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function nowNextSlot(): string {
   const d = new Date();
@@ -148,9 +130,10 @@ function validateField(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function BookingPanel({ carId, locale, labels, initialStart, initialEnd, deliveryEnabled = false, deliveryType = null, deliveryLocations = [] }: Props) {
+export default function BookingPanel({ carId, locale, labels, deliveryEnabled = false, deliveryType = null, deliveryLocations = [] }: Props) {
   const router = useRouter();
   const t = getTranslations(locale);
+  const searchCtx = useSearchContext();
 
   const [startDateTime, setStartDateTimeRaw] = useState("");
   const [endDateTime,   setEndDateTimeRaw]   = useState("");
@@ -199,31 +182,20 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
     setPrefillSource(null);
   }
 
-  // ── Init: pre-fill from URL params or localStorage ───────────────────────────
+  // ── Init: pre-fill from URL params or localStorage via hook ─────────────────
 
-  const initDone = useRef(false);
   useEffect(() => {
-    if (initDone.current) return;
-    initDone.current = true;
-    const now = new Date();
-    if (initialStart && initialEnd && new Date(initialStart) > now) {
-      setStartDateTimeRaw(isoToLocalDT(initialStart));
-      setEndDateTimeRaw(isoToLocalDT(initialEnd));
-      setStartISOraw(initialStart);
-      setEndISOraw(initialEnd);
-      setPrefillSource("url");
-      return;
+    if (!searchCtx) return;
+    setStartDateTimeRaw(isoToLocalDT(searchCtx.start));
+    setEndDateTimeRaw(isoToLocalDT(searchCtx.end));
+    setStartISOraw(searchCtx.start);
+    setEndISOraw(searchCtx.end);
+    setPrefillSource(searchCtx.source);
+    if (deliveryEnabled && deliveryType === "radius" && searchCtx.address) {
+      setDeliveryAddress({ lat: searchCtx.address.lat, lng: searchCtx.address.lng, label: searchCtx.address.label });
+      setDeliveryMode("delivery");
     }
-    const stored = loadStoredSearch();
-    if (stored && new Date(stored.start) > now) {
-      setStartDateTimeRaw(isoToLocalDT(stored.start));
-      setEndDateTimeRaw(isoToLocalDT(stored.end));
-      setStartISOraw(stored.start);
-      setEndISOraw(stored.end);
-      setPrefillSource("storage");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchCtx, deliveryEnabled, deliveryType]);
 
   // ── Auto-advance: start complete → open end picker ───────────────────────────
 
@@ -233,15 +205,16 @@ export default function BookingPanel({ carId, locale, labels, initialStart, init
     }, 160);
   }
 
-  // ── Sync valid dates back to search context ──────────────────────────────────
+  // ── Sync valid dates (and delivery address) back to search context ───────────
 
   useEffect(() => {
     if (!startISO || !endISO) return;
     if (new Date(startISO) <= new Date() || new Date(endISO) <= new Date(startISO)) return;
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ start: startISO, end: endISO, savedAt: Date.now() }));
-    } catch { /* ignore */ }
-  }, [startISO, endISO]);
+    const addr = deliveryAddress
+      ? { lat: deliveryAddress.lat, lng: deliveryAddress.lng, label: deliveryAddress.label }
+      : undefined;
+    saveSearchContext(startISO, endISO, addr);
+  }, [startISO, endISO, deliveryAddress]);
 
   // ── Fetch availability & price ───────────────────────────────────────────────
 
