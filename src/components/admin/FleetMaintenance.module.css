@@ -1,0 +1,38 @@
+.page { padding: 24px; max-width: 1200px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.title { font-size: 22px; font-weight: 700; color: var(--color-brand-darkest, #0f172a); margin: 0; }
+.headerActions { display: flex; gap: 10px; }
+.secondaryBtn { padding: 7px 16px; border-radius: 8px; border: 1.5px solid var(--color-border, #e2e8f0); background: #fff; font-size: 13px; font-weight: 500; color: var(--color-text-muted, #64748b); text-decoration: none; }
+.secondaryBtn:hover { border-color: #94a3b8; color: #334155; }
+
+.healthRow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+@media (max-width: 900px) { .healthRow { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px) { .healthRow { grid-template-columns: repeat(2, 1fr); } }
+.healthCard { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; border-top: 3px solid transparent; }
+.healthLabel { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 6px; }
+.healthValue { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+
+.overdueBox { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; }
+.overdueTitle { font-size: 13px; font-weight: 700; color: #dc2626; margin: 0 0 10px; }
+.overdueList { display: flex; flex-direction: column; gap: 6px; }
+.overdueItem { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.overdueItemTitle { color: #991b1b; font-weight: 500; }
+.overdueItemDate { color: #dc2626; font-variant-numeric: tabular-nums; }
+.overdueMore { font-size: 11px; color: #dc2626; margin: 4px 0 0; }
+
+.filters { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.filterBtn { padding: 5px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0; background: #fff; font-size: 12px; font-weight: 500; color: #64748b; cursor: pointer; transition: all 0.12s; }
+.filterBtn:hover { border-color: #94a3b8; }
+.filterBtnActive { background: #0f172a; border-color: #0f172a; color: #fff; }
+
+.tableWrap { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table thead tr { background: #f8fafc; }
+.table th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.table td { padding: 10px 14px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.table tr:hover td { background: #f8fafc; }
+.titleCell { font-weight: 500; color: #0f172a; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.typeBadge { font-size: 11px; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 10px; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.viewLink { font-size: 12px; color: var(--color-brand-primary, #f97316); font-weight: 600; text-decoration: none; }
+.viewLink:hover { text-decoration: underline; }

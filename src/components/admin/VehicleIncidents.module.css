@@ -1,0 +1,24 @@
+.panel { padding: 24px; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
+.title { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; }
+.addBtn { padding: 7px 16px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #fff; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.addBtn:hover { border-color: #94a3b8; }
+
+.createForm { display: flex; flex-direction: column; gap: 8px; min-width: 280px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+.select { padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; }
+.textarea { padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; resize: vertical; font-family: inherit; }
+.checkLabel { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.formActions { display: flex; gap: 8px; }
+.saveBtn { padding: 7px 14px; border-radius: 8px; border: none; background: #0f172a; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+.saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cancelBtn { padding: 7px 14px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #fff; font-size: 13px; cursor: pointer; }
+
+.empty { font-size: 13px; color: #94a3b8; }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; }
+.cardTop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.typeBadge { font-size: 12px; font-weight: 600; color: #334155; }
+.sevBadge { padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: capitalize; }
+.repairBadge { font-size: 11px; color: #d97706; font-weight: 600; }
+.date { font-size: 11px; color: #94a3b8; margin-left: auto; }
+.desc { font-size: 13px; color: #475569; margin: 0; }
