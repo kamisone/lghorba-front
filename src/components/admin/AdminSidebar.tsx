@@ -10,6 +10,7 @@ const NAV = [
   { href: "/admin/invoices",          icon: "receipt_long",        label: "Invoices"  },
   { href: "/admin/email-ingestion",   icon: "mark_email_unread",   label: "Email Import" },
   { href: "/admin/maintenance",       icon: "build",               label: "Maintenance" },
+  { href: "/admin/analytics",         icon: "monitoring",          label: "Analytics" },
   { href: "/admin/calendar",           icon: "calendar_month",      label: "Calendar"  },
   { href: "/admin/users",             icon: "person",              label: "Users"     },
   { href: "/admin/admins",            icon: "admin_panel_settings", label: "Admins"   },
