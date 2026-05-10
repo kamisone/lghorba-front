@@ -64,6 +64,10 @@ interface DeliveryValidation {
   fee: number | null;
 }
 
+type CouponValidationResult =
+  | { valid: true; discountAmount: number; finalPrice: number; code: string | null; name: string }
+  | { valid: false; error: string };
+
 export interface DeliveryLocationOption {
   id: string;
   label: string;
@@ -154,6 +158,12 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
 
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  // ── Coupon state ──────────────────────────────────────────────────────────────
+  const [couponCode,      setCouponCode]      = useState("");
+  const [couponResult,    setCouponResult]    = useState<CouponValidationResult | null>(null);
+  const [couponChecking,  setCouponChecking]  = useState(false);
+  const couponTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Delivery state ────────────────────────────────────────────────────────────
   const [deliveryMode,       setDeliveryMode]       = useState<"pickup" | "delivery">("pickup");
@@ -293,6 +303,43 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
     return () => controller.abort();
   }, [carId, deliveryEnabled, deliveryType, deliveryMode, deliveryAddress]);
 
+  // ── Coupon validation (debounced, fires when code or price changes) ──────────
+
+  const selectedLocForCoupon = deliveryLocations.find(l => l.id === selectedLocationId) ?? null;
+  const computedDeliveryFee: number = deliveryEnabled && deliveryMode === "delivery"
+    ? deliveryType === "location"
+      ? (selectedLocForCoupon?.price ?? 0)
+      : (deliveryValidation?.available ? (deliveryValidation.fee ?? 0) : 0)
+    : 0;
+
+  useEffect(() => {
+    if (couponTimerRef.current) clearTimeout(couponTimerRef.current);
+    if (!couponCode.trim() || !priceResult) {
+      setCouponResult(null);
+      return;
+    }
+    const subtotal    = priceResult.totalPrice;
+    const deliveryFee = computedDeliveryFee;
+    const days        = priceResult.numberOfDays;
+    couponTimerRef.current = setTimeout(async () => {
+      setCouponChecking(true);
+      try {
+        const res = await fetch("/next-api/public/promotions/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: couponCode.trim(), carId, subtotal, deliveryFee, days }),
+        });
+        const data = await res.json();
+        setCouponResult(data as CouponValidationResult);
+      } catch {
+        setCouponResult(null);
+      } finally {
+        setCouponChecking(false);
+      }
+    }, 600);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [couponCode, priceResult, computedDeliveryFee, carId]);
+
   // ── Submit ────────────────────────────────────────────────────────────────────
 
   const handleBook = async () => {
@@ -340,6 +387,7 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
           customerName:  name.trim(),
           customerEmail: email.trim(),
           customerPhone: phone.trim(),
+          ...(couponCode.trim() ? { couponCode: couponCode.trim() } : {}),
           ...deliveryPayload,
         }),
       });
@@ -724,6 +772,33 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
           </div>
 
           <p className={styles.requiredNote}>{labels.requiredNote}</p>
+
+          {/* ── Coupon code ── */}
+          <div className={styles.couponRow}>
+            <input
+              type="text"
+              className={styles.couponInput}
+              placeholder="Code promo"
+              value={couponCode}
+              onChange={e => { setCouponCode(e.target.value); setCouponResult(null); }}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            {couponChecking && <span className={styles.couponSpinner} />}
+            {!couponChecking && couponResult && (
+              couponResult.valid
+                ? <span className={styles.couponOk}>✓ −€{couponResult.discountAmount.toFixed(2)}</span>
+                : <span className={styles.couponErr}>{couponResult.error}</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Discount total ── */}
+      {couponResult?.valid && (
+        <div className={styles.discountSummary}>
+          <span className={styles.discountLabel}>Total après remise</span>
+          <span className={styles.discountTotal}>€{couponResult.finalPrice.toFixed(2)}</span>
         </div>
       )}
 

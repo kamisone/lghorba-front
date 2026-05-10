@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/fleet",             icon: "directions_car",      label: "Fleet"     },
   { href: "/admin/bookings",          icon: "event_available",     label: "Bookings"  },
   { href: "/admin/invoices",          icon: "receipt_long",        label: "Invoices"  },
+  { href: "/admin/promotions",        icon: "sell",                label: "Promotions" },
   { href: "/admin/email-ingestion",   icon: "mark_email_unread",   label: "Email Import" },
   { href: "/admin/maintenance",       icon: "build",               label: "Maintenance" },
   { href: "/admin/analytics",         icon: "monitoring",          label: "Analytics" },

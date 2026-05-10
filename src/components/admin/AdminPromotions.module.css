@@ -1,0 +1,262 @@
+.page {
+  padding: 1.5rem 2rem;
+  max-width: 1200px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #111);
+}
+
+.loading,
+.empty {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-top: 2rem;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────────*/
+.tableWrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.table th {
+  background: #f9fafb;
+  text-align: left;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td { border-bottom: none; }
+
+.rowInactive td { opacity: 0.5; }
+
+.colName { min-width: 180px; }
+
+.promoName {
+  font-weight: 600;
+  color: #111;
+}
+
+.code {
+  font-family: monospace;
+  background: #f3f4f6;
+  padding: 0.15em 0.45em;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.muted { color: #9ca3af; }
+
+.tagAuto,
+.tagFirst {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.1em 0.45em;
+  border-radius: 999px;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.tagAuto  { background: #ede9fe; color: #7c3aed; }
+.tagFirst { background: #fef3c7; color: #b45309; }
+
+.toggleBtn {
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 0.2em 0.7em;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.toggleOn  { background: #dcfce7; color: #166534; }
+.toggleOff { background: #f3f4f6; color: #6b7280; }
+.toggleBtn:hover { opacity: 0.7; }
+
+.linkBtn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.actions { display: flex; gap: 0.4rem; white-space: nowrap; }
+
+.btnEdit,
+.btnDelete {
+  font-size: 0.75rem;
+  padding: 0.25em 0.7em;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btnEdit   { background: #e0e7ff; color: #3730a3; }
+.btnDelete { background: #fee2e2; color: #991b1b; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────*/
+.btnPrimary {
+  background: var(--color-brand-primary, #2563eb);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btnPrimary:hover    { opacity: 0.85; }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnSecondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnSecondary:hover { background: #e5e7eb; }
+
+/* ── Modal ───────────────────────────────────────────────────────────────────*/
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.modalTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* ── Form ────────────────────────────────────────────────────────────────────*/
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem 1.25rem;
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.formInput,
+.formSelect {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  border-color: var(--color-brand-primary, #2563eb);
+}
+
+.checkboxRow {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+.formError {
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+}
+
+/* ── Usages table ────────────────────────────────────────────────────────────*/
+.discountCell {
+  color: #15803d;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .page { padding: 1rem; }
+  .formGrid { grid-template-columns: 1fr; }
+}
