@@ -545,6 +545,12 @@
   border: 1px solid var(--color-border);
 }
 
+.badge_cancelled_payment_timeout {
+  background: rgba(249, 115, 22, 0.08);
+  color: #c2410c;
+  border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
 .badge_source_private {
   background: rgba(107, 114, 128, 0.1);
   color: #374151;
@@ -878,6 +884,28 @@
   font-size: 0.75rem;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+.expirationNotice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  font-size: 0.8rem;
+  color: #c2410c;
+}
+
+.expirationIcon {
+  font-size: 1rem;
+}
+
+.expirationTime {
+  font-size: 0.75rem;
+  opacity: 0.8;
 }
 
 /* Modal actions */

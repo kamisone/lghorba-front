@@ -31,12 +31,15 @@ export interface AdminBooking {
   startDateTime: string;
   endDateTime: string;
   totalPrice: number | string;
-  status: "pending_payment" | "pending" | "confirmed" | "cancelled";
+  status: "pending_payment" | "pending" | "confirmed" | "cancelled" | "cancelled_payment_timeout";
   source: "private" | "turo" | "getaround";
   reservationNumber: string | null;
   totalEarning: number | string | null;
   gpsStopMode: "auto" | "manual";
   hasSession: boolean;
+  cancellationReason: string | null;
+  cancelledAt: string | null;
+  expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -114,8 +117,12 @@ function matchesSearch(b: AdminBooking, q: string): boolean {
 
 // ── Edit guards + adapters ────────────────────────────────────────────────────
 
+function isCancelledStatus(status: AdminBooking["status"]): boolean {
+  return status === "cancelled" || status === "cancelled_payment_timeout";
+}
+
 function isModifiableBooking(b: AdminBooking): boolean {
-  if (b.status === "cancelled" || b.status === "pending_payment") return false;
+  if (isCancelledStatus(b.status) || b.status === "pending_payment") return false;
   return new Date(b.endDateTime) > new Date();
 }
 
@@ -126,7 +133,9 @@ function toCalendarBooking(b: AdminBooking): CalendarBooking {
     startDateTime: b.startDateTime,
     endDateTime: b.endDateTime,
     source: b.source,
-    status: b.status === "pending_payment" ? "pending" : (b.status as "pending" | "confirmed" | "cancelled"),
+    status: b.status === "pending_payment" ? "pending"
+      : isCancelledStatus(b.status) ? "cancelled"
+      : (b.status as "pending" | "confirmed" | "cancelled"),
     reservationNumber: b.reservationNumber,
     totalEarning: b.totalEarning != null ? Number(b.totalEarning) : null,
     autoStartTracking: false,
@@ -153,9 +162,13 @@ function toAdminCar(b: AdminBooking): Car {
 
 function StatusBadge({ status }: { status: AdminBooking["status"] }) {
   const label =
-    status === "pending_payment" ? "Awaiting payment"
+    status === "pending_payment"           ? "Awaiting payment"
+    : status === "cancelled_payment_timeout" ? "Expired (unpaid)"
     : status.charAt(0).toUpperCase() + status.slice(1);
-  const cls = status === "pending_payment" ? "pending" : status;
+  const cls =
+    status === "pending_payment" ? "pending"
+    : status === "cancelled_payment_timeout" ? "cancelled_payment_timeout"
+    : status;
   return <span className={`${styles.badge} ${styles[`badge_${cls}`]}`}>{label}</span>;
 }
 
@@ -310,8 +323,22 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
             );
           })()}
 
+          {booking.status === "cancelled_payment_timeout" && (
+            <div className={styles.expirationNotice}>
+              <span className={styles.expirationIcon}>⏱</span>
+              <span>Auto-cancelled — payment not received within 15 minutes</span>
+              {booking.cancelledAt && (
+                <span className={styles.expirationTime}>at {fmtDateTime(booking.cancelledAt)}</span>
+              )}
+            </div>
+          )}
+
           <div className={styles.timestamps}>
             <p>Created {fmtDateTime(booking.createdAt)}</p>
+            {booking.expiresAt && booking.status === "pending_payment" && (
+              <p>Expires {fmtDateTime(booking.expiresAt)}</p>
+            )}
+            {booking.cancelledAt && <p>Cancelled {fmtDateTime(booking.cancelledAt)}</p>}
             {booking.updatedAt !== booking.createdAt && <p>Updated {fmtDateTime(booking.updatedAt)}</p>}
           </div>
         </div>
@@ -338,7 +365,7 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
               Confirm booking
             </button>
           )}
-          {booking.status !== "cancelled" && (
+          {!isCancelledStatus(booking.status) && (
             <button className={styles.actionCancel} onClick={() => onCancel(booking.id)} disabled={actionLoading}>
               Cancel
             </button>
@@ -543,7 +570,7 @@ export default function AdminBookings() {
     const events: TimelineEvent[] = [];
 
     for (const b of bookings) {
-      if (b.status === "cancelled") continue;
+      if (isCancelledStatus(b.status)) continue;
       const end   = new Date(b.endDateTime);
       if (end <= now) continue;
 
@@ -581,11 +608,17 @@ export default function AdminBookings() {
     const now = new Date();
     return bookings.filter(b => {
       const isPast      = new Date(b.endDateTime) <= now;
-      const isCancelled = b.status === "cancelled";
-      if (!isPast && !isCancelled) return false;
+      if (!isPast && !isCancelledStatus(b.status)) return false;
 
       if (search && !matchesSearch(b, search)) return false;
-      if (statusFilter !== "all" && b.status !== statusFilter) return false;
+      // "cancelled" filter matches both cancelled variants
+      if (statusFilter !== "all") {
+        if (statusFilter === "cancelled") {
+          if (!isCancelledStatus(b.status)) return false;
+        } else {
+          if (b.status !== statusFilter) return false;
+        }
+      }
       if (sourceFilter !== "all" && b.source !== sourceFilter) return false;
       if (carFilter !== "all" && b.carId !== carFilter) return false;
       if (dateFrom && b.startDateTime < `${dateFrom}T00:00:00`) return false;
@@ -598,7 +631,7 @@ export default function AdminBookings() {
 
   const activeCount = useMemo(() => {
     const now = new Date();
-    return bookings.filter(b => b.status !== "cancelled" && new Date(b.endDateTime) > now).length;
+    return bookings.filter(b => !isCancelledStatus(b.status) && new Date(b.endDateTime) > now).length;
   }, [bookings]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -864,7 +897,7 @@ export default function AdminBookings() {
                           {b.status === "pending" && (
                             <button className={styles.iconConfirm} title="Confirm" disabled={actionLoading} onClick={() => updateStatus(b.id, "confirmed")}>✓</button>
                           )}
-                          {b.status !== "cancelled" && (
+                          {!isCancelledStatus(b.status) && (
                             <button className={styles.iconCancel} title="Cancel" disabled={actionLoading} onClick={() => updateStatus(b.id, "cancelled")}>✗</button>
                           )}
                           <button className={styles.iconDelete} title="Delete" disabled={actionLoading} onClick={() => deleteBooking(b.id)}>⊗</button>
