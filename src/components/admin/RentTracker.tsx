@@ -31,6 +31,28 @@ function computeForfaitKm(startDateTime: string, endDateTime: string): number {
   return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24))) * 200;
 }
 
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function totalTripKm(positions: RentPosition[]): number {
+  let km = 0;
+  for (let i = 1; i < positions.length; i++) {
+    km += haversineKm(positions[i - 1].lat, positions[i - 1].lng, positions[i].lat, positions[i].lng);
+  }
+  return km;
+}
+
+function fmtKm(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  return `${km.toFixed(1)} km`;
+}
+
 interface Props {
   car: Car;
   onBookingUpdate: (b: CalendarBooking) => void;
@@ -518,7 +540,11 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
             <div className={styles.mapHeader}>
               <div className={styles.mapRange}>
                 <span className={styles.mapRangeStart}>● 1</span>
-                <span className={styles.mapRangeDash} />
+                <span className={styles.mapRangeDash}>
+                  {positions.length >= 2 && (
+                    <span className={styles.mapRangeDist}>{fmtKm(totalTripKm(positions))}</span>
+                  )}
+                </span>
                 <span className={styles.mapRangeEnd}>● {positions.length}</span>
               </div>
               <button className={styles.mapExpandBtn} onClick={() => setMapFullscreen(true)} title="Fullscreen">⛶</button>
@@ -628,7 +654,11 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                           <div className={styles.mapHeader}>
                             <div className={styles.mapRange}>
                               <span className={styles.mapRangeStart}>● 1</span>
-                              <span className={styles.mapRangeDash} />
+                              <span className={styles.mapRangeDash}>
+                                {session.positions.length >= 2 && (
+                                  <span className={styles.mapRangeDist}>{fmtKm(totalTripKm(session.positions))}</span>
+                                )}
+                              </span>
                               <span className={styles.mapRangeEnd}>● {session.positions.length}</span>
                             </div>
                             <button className={styles.mapExpandBtn} onClick={() => setFullscreenSessionId(session.id)} title="Fullscreen">⛶</button>
