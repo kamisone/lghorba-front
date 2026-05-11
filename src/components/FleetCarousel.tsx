@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { getTranslations } from "@/lib/i18n";
 import styles from "./FleetCarousel.module.css";
 
 export interface CarouselCar {
@@ -22,21 +23,27 @@ interface Props {
   cars: CarouselCar[];
   locale: string;
   labels: {
-    eyebrow: string;
-    title: string;
+    eyebrow:      string;
+    title:        string;
     availableToday: string;
-    availableFrom: string;
-    viewDetails: string;
+    availableFrom:  string;
+    viewDetails:  string;
+    seats:        string;
+    prevVehicles: string;
+    nextVehicles: string;
+    prevPhoto:    string;
+    nextPhoto:    string;
   };
 }
 
 // ── In-card photo slider ──────────────────────────────────────────────────────
 
 function CardSlider({
-  carId, carName, photoIds, hasPhoto, badgeText, isAvailableToday,
+  carId, carName, photoIds, hasPhoto, badgeText, isAvailableToday, prevPhotoLabel, nextPhotoLabel,
 }: {
   carId: string; carName: string; photoIds: string[]; hasPhoto: boolean;
   badgeText: string; isAvailableToday: boolean;
+  prevPhotoLabel: string; nextPhotoLabel: string;
 }) {
   const [photoIdx, setPhotoIdx] = useState(0);
   const touchRef = useRef<number | null>(null);
@@ -79,8 +86,8 @@ function CardSlider({
       <div className={styles.photoGradient} />
       {total > 1 && (
         <>
-          <button className={`${styles.photoBtn} ${styles.photoBtnPrev}`} onClick={prev} aria-label="Previous photo">‹</button>
-          <button className={`${styles.photoBtn} ${styles.photoBtnNext}`} onClick={next} aria-label="Next photo">›</button>
+          <button className={`${styles.photoBtn} ${styles.photoBtnPrev}`} onClick={prev} aria-label={prevPhotoLabel}>‹</button>
+          <button className={`${styles.photoBtn} ${styles.photoBtnNext}`} onClick={next} aria-label={nextPhotoLabel}>›</button>
           <div className={styles.photoDots}>
             {photoIds.map((_, i) => (
               <span key={i} className={`${styles.photoDot} ${i === photoIdx ? styles.photoDotActive : ""}`} />
@@ -113,6 +120,8 @@ function computeLayout(containerW: number): { visible: number; cardW: number } {
 // ── Carousel ──────────────────────────────────────────────────────────────────
 
 export default function FleetCarousel({ cars, locale, labels }: Props) {
+  const t     = getTranslations(locale);
+  const enums = t.carEnums;
   const total = cars.length;
 
   const [offset,    setOffset]   = useState(0);   // cards scrolled from the left
@@ -220,6 +229,8 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
                   hasPhoto={car.hasPhoto}
                   badgeText={badgeText}
                   isAvailableToday={car.isAvailable}
+                  prevPhotoLabel={labels.prevPhoto}
+                  nextPhotoLabel={labels.nextPhoto}
                 />
                 <div className={styles.info}>
                   <div className={styles.nameRow}>
@@ -228,10 +239,10 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
                   </div>
                   {(car.vehicleType || car.energy || car.gearbox || car.numberOfSeats) && (
                     <div className={styles.specs}>
-                      {car.vehicleType   && <span className={styles.spec}>{car.vehicleType}</span>}
-                      {car.energy        && <span className={styles.spec}>{car.energy}</span>}
-                      {car.gearbox       && <span className={styles.spec}>{car.gearbox}</span>}
-                      {car.numberOfSeats && <span className={styles.spec}>{car.numberOfSeats} seats</span>}
+                      {car.vehicleType   && <span className={styles.spec}>{enums.vehicleTypeMap[car.vehicleType] ?? car.vehicleType}</span>}
+                      {car.energy        && <span className={styles.spec}>{enums.energyMap[car.energy] ?? car.energy}</span>}
+                      {car.gearbox       && <span className={styles.spec}>{enums.gearboxMap[car.gearbox] ?? car.gearbox}</span>}
+                      {car.numberOfSeats && <span className={styles.spec}>{car.numberOfSeats} {labels.seats}</span>}
                     </div>
                   )}
                   <span className={styles.cta}>{labels.viewDetails}</span>
@@ -247,14 +258,14 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
           className={`${styles.arrow} ${styles.arrowPrev} ${!canGoLeft ? styles.arrowHidden : ""}`}
           onClick={() => go(-1)}
           disabled={!canGoLeft}
-          aria-label="Previous vehicles"
+          aria-label={labels.prevVehicles}
         >‹</button>
 
         <button
           className={`${styles.arrow} ${styles.arrowNext} ${!canGoRight ? styles.arrowHidden : ""}`}
           onClick={() => go(1)}
           disabled={!canGoRight}
-          aria-label="Next vehicles"
+          aria-label={labels.nextVehicles}
         >›</button>
       </div>
     </section>

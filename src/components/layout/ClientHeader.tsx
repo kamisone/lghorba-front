@@ -30,7 +30,7 @@ export default function ClientHeader({ locale }: Props) {
         <div className={styles.inner}>
 
           {/* ── Logo ── */}
-          <Link href={`/${locale}`} className={styles.logo} aria-label="vitecamion — home">
+          <Link href={`/${locale}`} className={styles.logo} aria-label={t.nav.logoAriaLabel}>
             <Image
               src="/assets/logo_vitecamion_icon.png"
               alt=""
@@ -51,7 +51,7 @@ export default function ClientHeader({ locale }: Props) {
           </Link>
 
           {/* ── Desktop nav ── */}
-          <nav className={styles.navLinks} aria-label="Main navigation">
+          <nav className={styles.navLinks} aria-label={t.nav.navAriaLabel}>
             {navLinks.map(link => (
               <ActiveNavLink
                 key={link.href}
@@ -67,7 +67,7 @@ export default function ClientHeader({ locale }: Props) {
 
           {/* ── Right slot ── */}
           <div className={styles.navRight}>
-            <LangSwitcher locale={locale} />
+            <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} />
             <span className={styles.navDivider} aria-hidden="true" />
             <Link href={ctaHref} className={styles.navCta}>
               {t.nav.bookNow}

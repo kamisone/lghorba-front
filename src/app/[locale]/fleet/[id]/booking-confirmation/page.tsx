@@ -102,7 +102,7 @@ export default async function BookingConfirmationPage({
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>{t.booking.confirmStatus}</span>
             <span className={`${styles.statusPill} ${styles[`status_${booking.status}`]}`}>
-              {booking.status === "pending" ? t.booking.confirmPending : booking.status}
+              {t.booking.statuses[booking.status] ?? booking.status}
             </span>
           </div>
         </div>

@@ -49,11 +49,12 @@ export async function generateMetadata({
   params: { locale: string };
 }): Promise<Metadata> {
   const t = getTranslations(params.locale);
+  const siteTitle = `Vitecamion — ${t.meta.homeTitle}`;
   return {
-    title: "Vitecamion — Car rental on Turo, Getaround & Private",
+    title: siteTitle,
     description: t.hero.sub,
     openGraph: {
-      title: "Vitecamion — Car rental on Turo, Getaround & Private",
+      title: siteTitle,
       description: t.hero.sub,
     },
   };
@@ -151,6 +152,11 @@ export default async function LandingPage({ params }: { params: { locale: string
             availableToday: t.fleet.availableToday,
             availableFrom:  t.fleet.availableFrom,
             viewDetails:    t.carDetail.viewDetails,
+            seats:          t.featuredFleet.seats,
+            prevVehicles:   t.featuredFleet.prevVehicles,
+            nextVehicles:   t.featuredFleet.nextVehicles,
+            prevPhoto:      t.featuredFleet.prevPhoto,
+            nextPhoto:      t.featuredFleet.nextPhoto,
           }}
         />
       )}

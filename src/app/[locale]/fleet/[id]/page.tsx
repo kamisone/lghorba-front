@@ -104,12 +104,14 @@ export async function generateMetadata({
 }: {
   params: { locale: string; id: string };
 }): Promise<Metadata> {
+  const t   = getTranslations(params.locale as Locale);
   const car = await getCar(params.id, params.locale);
-  if (!car) return { title: "Vehicle — Vitecamion" };
+  if (!car) return { title: `${t.meta.vehicleFallback} — Vitecamion` };
   const title = [car.brand, car.model, car.finishing].filter(Boolean).join(" ") || car.name;
+  const desc  = car.description ?? `${t.meta.carDescPrefix}${title}${t.meta.carDescSuffix}`;
   return {
     title: `${title} — Vitecamion`,
-    description: car.description ?? `Rent the ${title} on Vitecamion.`,
+    description: desc,
     openGraph: {
       title: `${title} — Vitecamion`,
       description: car.description ?? undefined,
@@ -137,19 +139,29 @@ const SPEC_ICONS: Record<string, JSX.Element> = {
 };
 
 type SpecLabels = Translations["carDetail"]["specs"];
-type SpecItem = { key: keyof SpecLabels; value: string };
+type SpecItem   = { key: keyof SpecLabels; value: string };
+type CarEnums   = Translations["carEnums"];
 
-function buildSpecs(car: PublicCarDetail): SpecItem[] {
+// Translate a categorical DB value through a locale map; fall back to the
+// stored value so unknown / future enum entries are never silently swallowed.
+const tv = (map: Record<string, string>, v: string): string => map[v] || v;
+
+function buildSpecs(
+  car:       PublicCarDetail,
+  powerUnit: string,
+  kmUnit:    string,
+  enums:     CarEnums,
+): SpecItem[] {
   const items: (SpecItem | false)[] = [
-    !!car.vehicleType    && { key: "type",      value: car.vehicleType },
+    !!car.vehicleType    && { key: "type",      value: tv(enums.vehicleTypeMap, car.vehicleType) },
     !!car.brand          && { key: "brand",     value: car.brand! },
     !!car.model          && { key: "model",     value: car.model! },
     !!car.finishing      && { key: "finishing", value: car.finishing! },
     !!car.modelYear      && { key: "year",      value: String(car.modelYear) },
-    !!car.energy         && { key: "energy",    value: car.energy! },
-    !!car.gearbox        && { key: "gearbox",   value: car.gearbox! },
-    !!car.din            && { key: "power",     value: `${car.din} hp` },
-    !!car.mileage        && { key: "mileage",   value: `${car.mileage} km` },
+    !!car.energy         && { key: "energy",    value: tv(enums.energyMap, car.energy!) },
+    !!car.gearbox        && { key: "gearbox",   value: tv(enums.gearboxMap, car.gearbox!) },
+    !!car.din            && { key: "power",     value: `${car.din} ${powerUnit}` },
+    !!car.mileage        && { key: "mileage",   value: `${car.mileage} ${kmUnit}` },
     !!car.numberOfDoors  && { key: "doors",     value: String(car.numberOfDoors) },
     !!car.numberOfSeats  && { key: "seats",     value: String(car.numberOfSeats) },
     !!car.color          && { key: "color",     value: car.color! },
@@ -189,12 +201,12 @@ export default async function CarDetailPage({
 
   const availableFromLabel = nextAvailableDate
     ? `${t.fleet.availableFrom} ${new Date(nextAvailableDate + "T00:00:00Z").toLocaleDateString(
-        locale === "fr" ? "fr-FR" : "en-GB",
+        locale,
         { day: "numeric", month: "short", timeZone: "UTC" },
       )}`
     : null;
 
-  const specs = buildSpecs(car);
+  const specs = buildSpecs(car, t.carDetail.specs.powerUnit, t.fleet.km, t.carEnums);
   const photoIds = photos.map(p => p.id);
   const title = [car.brand, car.model, car.finishing].filter(Boolean).join(" ") || car.name;
 
@@ -226,6 +238,7 @@ export default async function CarDetailPage({
           carName={car.name}
           viewPhotoLabel={t.fleet.viewPhoto}
           photosLabel={t.fleet.photos}
+          ariaLabels={t.carSlider}
         />
         {car.isAvailable ? (
           <div className={styles.sliderBadge}>

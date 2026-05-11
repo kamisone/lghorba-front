@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { getTranslations } from "@/lib/i18n";
 import styles from "./ClientHeader.module.css";
 
 interface Props {
@@ -18,6 +19,7 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale }: Prop
   const pathname = usePathname();
   const [open,    setOpen]    = useState(false);
   const [mounted, setMounted] = useState(false);
+  const t = getTranslations(locale);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -50,7 +52,7 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale }: Prop
         className={styles.drawer}
         role="dialog"
         aria-modal="true"
-        aria-label="Navigation menu"
+        aria-label={t.nav.navigationMenu}
       >
         <div className={styles.drawerHead}>
           <Link
@@ -77,13 +79,13 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale }: Prop
           <button
             className={styles.drawerClose}
             onClick={() => setOpen(false)}
-            aria-label="Close menu"
+            aria-label={t.nav.closeDrawer}
           >
             ✕
           </button>
         </div>
 
-        <nav className={styles.drawerNav} aria-label="Mobile navigation">
+        <nav className={styles.drawerNav} aria-label={t.nav.mobileNavAriaLabel}>
           {links.map(l => (
             <a
               key={l.href}
@@ -115,7 +117,7 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale }: Prop
       <button
         className={`${styles.hamburger} ${open ? styles.hamburgerOpen : ""}`}
         onClick={() => setOpen(o => !o)}
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
         aria-expanded={open}
         aria-controls="mobile-drawer"
       >

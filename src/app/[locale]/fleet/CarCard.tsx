@@ -13,9 +13,10 @@ interface Props {
 export default function CarCard({ car, locale }: Props) {
   const t = getTranslations(locale);
 
+  const enums = t.carEnums;
   const availableFromLabel = car.nextAvailableDate
     ? `${t.fleet.availableFrom} ${new Date(car.nextAvailableDate + "T00:00:00Z").toLocaleDateString(
-        locale === "fr" ? "fr-FR" : "en-GB",
+        locale,
         { day: "numeric", month: "short", timeZone: "UTC" },
       )}`
     : t.fleet.availableFrom;
@@ -51,11 +52,11 @@ export default function CarCard({ car, locale }: Props) {
 
         {(car.vehicleType || car.energy || car.gearbox || car.numberOfSeats || car.mileage) && (
           <div className={styles.specs}>
-            {car.vehicleType   && <span className={styles.spec}>{car.vehicleType}</span>}
-            {car.energy        && <span className={styles.spec}>{car.energy}</span>}
-            {car.gearbox       && <span className={styles.spec}>{car.gearbox}</span>}
-            {car.numberOfSeats && <span className={styles.spec}>{car.numberOfSeats} seats</span>}
-            {car.mileage       && <span className={styles.spec}>{car.mileage} km</span>}
+            {car.vehicleType   && <span className={styles.spec}>{enums.vehicleTypeMap[car.vehicleType] ?? car.vehicleType}</span>}
+            {car.energy        && <span className={styles.spec}>{enums.energyMap[car.energy] ?? car.energy}</span>}
+            {car.gearbox       && <span className={styles.spec}>{enums.gearboxMap[car.gearbox] ?? car.gearbox}</span>}
+            {car.numberOfSeats && <span className={styles.spec}>{car.numberOfSeats} {t.fleet.seats}</span>}
+            {car.mileage       && <span className={styles.spec}>{car.mileage} {t.fleet.km}</span>}
           </div>
         )}
 

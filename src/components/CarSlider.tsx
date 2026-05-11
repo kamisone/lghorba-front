@@ -4,15 +4,37 @@ import { useState, useEffect, useCallback } from "react";
 import styles from "@/app/[locale]/fleet/[id]/car-public.module.css";
 import PhotoGallery from "./PhotoGallery";
 
+interface AriaLabels {
+  openGallery:   string;
+  prevPhoto:     string;
+  nextPhoto:     string;
+  photoN:        string;
+  viewAllPrefix: string;
+  viewAllSuffix: string;
+  photoAlt:      string;
+}
+
+const ARIA_DEFAULTS: AriaLabels = {
+  openGallery:   "Open photo gallery",
+  prevPhoto:     "Previous photo",
+  nextPhoto:     "Next photo",
+  photoN:        "Photo",
+  viewAllPrefix: "View all",
+  viewAllSuffix: "photos in gallery",
+  photoAlt:      "photo",
+};
+
 interface Props {
   carId: string;
   photoIds: string[];
   carName: string;
   viewPhotoLabel?: string;
   photosLabel?: string;
+  ariaLabels?: Partial<AriaLabels>;
 }
 
-export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "View photo", photosLabel = "photos" }: Props) {
+export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "View photo", photosLabel = "photos", ariaLabels }: Props) {
+  const aria: AriaLabels = { ...ARIA_DEFAULTS, ...ariaLabels };
   const [current,     setCurrent]     = useState(0);
   const [loaded,      setLoaded]      = useState<Record<number, boolean>>({});
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -49,7 +71,7 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
         onClick={() => setGalleryOpen(true)}
         role="button"
         tabIndex={0}
-        aria-label="Open photo gallery"
+        aria-label={aria.openGallery}
         onKeyDown={e => e.key === "Enter" && setGalleryOpen(true)}
       >
         {photoIds.map((id, i) => (
@@ -62,7 +84,7 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={`/next-api/public/cars/${carId}/photos/${id}`}
-                alt={`${carName} — photo ${i + 1}`}
+                alt={`${carName} — ${aria.photoAlt} ${i + 1}`}
                 className={styles.sliderImg}
                 onLoad={() => setLoaded(prev => ({ ...prev, [i]: true }))}
               />
@@ -74,7 +96,7 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
         <button
           className={styles.viewGalleryBtn}
           onClick={e => { e.stopPropagation(); setGalleryOpen(true); }}
-          aria-label={`View all ${total} photos in gallery`}
+          aria-label={`${aria.viewAllPrefix} ${total} ${aria.viewAllSuffix}`}
           tabIndex={-1} // track handles keyboard; this is a visual affordance
         >
           <span className="material-symbols-outlined">photo_library</span>
@@ -88,14 +110,14 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
           <button
             className={`${styles.sliderArrow} ${styles.sliderArrowPrev}`}
             onClick={e => { e.stopPropagation(); prev(); }}
-            aria-label="Previous photo"
+            aria-label={aria.prevPhoto}
           >
             ‹
           </button>
           <button
             className={`${styles.sliderArrow} ${styles.sliderArrowNext}`}
             onClick={e => { e.stopPropagation(); next(); }}
-            aria-label="Next photo"
+            aria-label={aria.nextPhoto}
           >
             ›
           </button>
@@ -110,7 +132,7 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
               key={i}
               className={`${styles.sliderDot} ${i === current ? styles.sliderDotActive : ""}`}
               onClick={e => { e.stopPropagation(); setCurrent(i); }}
-              aria-label={`Photo ${i + 1}`}
+              aria-label={`${aria.photoN} ${i + 1}`}
             />
           ))}
         </div>
@@ -124,7 +146,7 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
               key={id}
               className={`${styles.sliderThumb} ${i === current ? styles.sliderThumbActive : ""}`}
               onClick={e => { e.stopPropagation(); setCurrent(i); }}
-              aria-label={`Photo ${i + 1}`}
+              aria-label={`${aria.photoN} ${i + 1}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/next-api/public/cars/${carId}/photos/${id}`} alt="" className={styles.sliderThumbImg} />

@@ -10,7 +10,7 @@ const META: Record<string, { label: string; flag: string }> = {
   fr: { label: "Français", flag: "🇫🇷" },
 };
 
-export default function LangSwitcher({ locale }: { locale: string }) {
+export default function LangSwitcher({ locale, ariaLabel = "Select language" }: { locale: string; ariaLabel?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -38,7 +38,7 @@ export default function LangSwitcher({ locale }: { locale: string }) {
         className={styles.trigger}
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        aria-label="Select language"
+        aria-label={ariaLabel}
       >
         <span className={styles.globe}>🌐</span>
         <span className={styles.code}>{locale.toUpperCase()}</span>

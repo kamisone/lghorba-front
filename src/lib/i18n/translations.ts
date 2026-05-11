@@ -8,6 +8,14 @@ export const en = {
     howItWorks: "How it works",
     contact: "Contact",
     bookNow: "Book now",
+    openMenu:           "Open menu",
+    closeMenu:          "Close menu",
+    closeDrawer:        "Close navigation",
+    navAriaLabel:       "Main navigation",
+    mobileNavAriaLabel: "Mobile navigation",
+    navigationMenu:     "Navigation menu",
+    selectLanguage:     "Select language",
+    logoAriaLabel:      "vitecamion — home",
   },
   hero: {
     pill: "🚗 Car rental · Turo · Getaround · Private",
@@ -45,8 +53,13 @@ export const en = {
     },
   },
   featuredFleet: {
-    eyebrow: "Featured vehicles",
-    title: "Pick your ride",
+    eyebrow:      "Featured vehicles",
+    title:        "Pick your ride",
+    prevVehicles: "Previous vehicles",
+    nextVehicles: "Next vehicles",
+    prevPhoto:    "Previous photo",
+    nextPhoto:    "Next photo",
+    seats:        "seats",
   },
   fleet: {
     eyebrow: "Our vehicles",
@@ -62,6 +75,8 @@ export const en = {
     empty:        "No vehicles available right now. Check back soon.",
     viewPhoto:    "View photo",
     photos:       "photos",
+    seats:        "seats",
+    km:           "km",
   },
   how: {
     eyebrow: "Simple process",
@@ -126,6 +141,8 @@ export const en = {
     vehiclesSingular: "vehicle available",
     vehiclesPlural:   "vehicles available",
     hidden:           "hidden",
+    distM:            "m",
+    distKm:           "km",
   },
   booking: {
     title: "Book this vehicle",
@@ -168,7 +185,17 @@ export const en = {
     confirmDates: "Dates",
     confirmTotal: "Total",
     confirmStatus: "Status",
+    couponPlaceholder: "Promo code",
+    discountedTotal:   "Total after discount",
+    dismiss:           "Dismiss",
     confirmPending: "Pending confirmation",
+    statuses: {
+      pending_payment:           "Awaiting payment",
+      pending:                   "Pending confirmation",
+      confirmed:                 "Confirmed",
+      cancelled:                 "Cancelled",
+      cancelled_payment_timeout: "Payment expired",
+    },
     backToFleet: "← Back to fleet",
     paymentStep1: "Processing your payment…",
     paymentStep2: "Awaiting confirmation…",
@@ -282,7 +309,8 @@ export const en = {
       doors: "Doors",
       seats: "Seats",
       color: "Color",
-      condition: "Condition",
+      condition:  "Condition",
+      powerUnit:  "hp",
     },
   },
   payment: {
@@ -514,6 +542,35 @@ export const en = {
     seconds:          "seconds",
     retry:            "Retry",
   },
+  carEnums: {
+    vehicleTypeMap: {
+      "4x4": "4x4", "SUV": "SUV", "Sedan": "Sedan", "Estate": "Estate",
+      "Convertible": "Convertible", "City car": "City car", "Cut": "Cut",
+      "Minivan": "Minivan", "Commercial vehicle": "Commercial vehicle",
+    } as Record<string, string>,
+    energyMap: {
+      "Petrol": "Petrol", "Diesel": "Diesel", "Hybrid": "Hybrid",
+      "Electric": "Electric", "Petrol/Electric": "Petrol/Electric",
+    } as Record<string, string>,
+    gearboxMap: {
+      "Manual": "Manual", "Automatic": "Automatic",
+    } as Record<string, string>,
+  },
+  carSlider: {
+    openGallery:   "Open photo gallery",
+    prevPhoto:     "Previous photo",
+    nextPhoto:     "Next photo",
+    photoN:        "Photo",
+    viewAllPrefix: "View all",
+    viewAllSuffix: "photos in gallery",
+    photoAlt:      "photo",
+  },
+  meta: {
+    homeTitle:      "Car rental on Turo, Getaround & Private",
+    vehicleFallback: "Vehicle",
+    carDescPrefix:  "Rent the ",
+    carDescSuffix:  " on Vitecamion.",
+  },
 };
 
 export const fr: Translations = {
@@ -524,6 +581,14 @@ export const fr: Translations = {
     howItWorks: "Comment ça marche",
     contact: "Contact",
     bookNow: "Réserver",
+    openMenu:           "Ouvrir le menu",
+    closeMenu:          "Fermer le menu",
+    closeDrawer:        "Fermer la navigation",
+    navAriaLabel:       "Navigation principale",
+    mobileNavAriaLabel: "Navigation mobile",
+    navigationMenu:     "Menu de navigation",
+    selectLanguage:     "Choisir la langue",
+    logoAriaLabel:      "vitecamion — accueil",
   },
   hero: {
     pill: "🚗 Location · Turo · Getaround · Privé",
@@ -561,8 +626,13 @@ export const fr: Translations = {
     },
   },
   featuredFleet: {
-    eyebrow: "Véhicules en vedette",
-    title: "Choisissez votre véhicule",
+    eyebrow:      "Véhicules en vedette",
+    title:        "Choisissez votre véhicule",
+    prevVehicles: "Véhicules précédents",
+    nextVehicles: "Véhicules suivants",
+    prevPhoto:    "Photo précédente",
+    nextPhoto:    "Photo suivante",
+    seats:        "places",
   },
   fleet: {
     eyebrow: "Nos véhicules",
@@ -578,6 +648,8 @@ export const fr: Translations = {
     empty:        "Aucun véhicule disponible pour le moment. Revenez bientôt.",
     viewPhoto:    "Voir la photo",
     photos:       "photos",
+    seats:        "places",
+    km:           "km",
   },
   how: {
     eyebrow: "Processus simple",
@@ -642,6 +714,8 @@ export const fr: Translations = {
     vehiclesSingular: "véhicule disponible",
     vehiclesPlural:   "véhicules disponibles",
     hidden:           "masqué",
+    distM:            "m",
+    distKm:           "km",
   },
   booking: {
     title: "Réserver ce véhicule",
@@ -684,7 +758,17 @@ export const fr: Translations = {
     confirmDates: "Dates",
     confirmTotal: "Total",
     confirmStatus: "Statut",
+    couponPlaceholder: "Code promo",
+    discountedTotal:   "Total après remise",
+    dismiss:           "Fermer",
     confirmPending: "En attente de confirmation",
+    statuses: {
+      pending_payment:           "En attente de paiement",
+      pending:                   "En attente de confirmation",
+      confirmed:                 "Confirmée",
+      cancelled:                 "Annulée",
+      cancelled_payment_timeout: "Paiement expiré",
+    },
     backToFleet: "← Retour à la flotte",
     paymentStep1: "Traitement de votre paiement…",
     paymentStep2: "En attente de confirmation…",
@@ -798,7 +882,8 @@ export const fr: Translations = {
       doors: "Portes",
       seats: "Places",
       color: "Couleur",
-      condition: "État",
+      condition:  "État",
+      powerUnit:  "ch",
     },
   },
   payment: {
@@ -1029,6 +1114,35 @@ export const fr: Translations = {
     redirecting:      "Redirection dans",
     seconds:          "secondes",
     retry:            "Réessayer",
+  },
+  carEnums: {
+    vehicleTypeMap: {
+      "4x4": "4x4", "SUV": "SUV", "Sedan": "Berline", "Estate": "Break",
+      "Convertible": "Cabriolet", "City car": "Citadine", "Cut": "Pickup",
+      "Minivan": "Monospace", "Commercial vehicle": "Utilitaire",
+    },
+    energyMap: {
+      "Petrol": "Essence", "Diesel": "Diesel", "Hybrid": "Hybride",
+      "Electric": "Électrique", "Petrol/Electric": "Essence/Électrique",
+    },
+    gearboxMap: {
+      "Manual": "Manuelle", "Automatic": "Automatique",
+    },
+  },
+  carSlider: {
+    openGallery:   "Ouvrir la galerie photos",
+    prevPhoto:     "Photo précédente",
+    nextPhoto:     "Photo suivante",
+    photoN:        "Photo",
+    viewAllPrefix: "Voir les",
+    viewAllSuffix: "photos en galerie",
+    photoAlt:      "photo",
+  },
+  meta: {
+    homeTitle:       "Location de voiture sur Turo, Getaround & Privé",
+    vehicleFallback: "Véhicule",
+    carDescPrefix:   "Louez ",
+    carDescSuffix:   " sur Vitecamion.",
   },
 };
 

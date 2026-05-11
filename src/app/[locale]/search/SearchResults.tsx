@@ -46,7 +46,8 @@ interface Props {
 }
 
 export default function SearchResults({ results, start, end, locale, hasAddress, lat, lng, address }: Props) {
-  const t = getTranslations(locale);
+  const t     = getTranslations(locale);
+  const enums = t.carEnums;
   const [sort,          setSort]          = useState<SortKey>("relevance");
   const [prices,        setPrices]        = useState<Map<string, { total: number; days: number }>>(new Map());
   const [loadingPrices, setLoadingPrices] = useState(false);
@@ -123,7 +124,9 @@ export default function SearchResults({ results, start, end, locale, hasAddress,
   }
 
   function fmtDist(km: number): string {
-    return km < 1 ? `${Math.round(km * 1000)} m` : `${km} km`;
+    return km < 1
+      ? `${Math.round(km * 1000)} ${t.search.distM}`
+      : `${km} ${t.search.distKm}`;
   }
 
   return (
@@ -229,9 +232,9 @@ export default function SearchResults({ results, start, end, locale, hasAddress,
 
                   {(car.vehicleType || car.energy || car.gearbox || car.numberOfSeats) && (
                     <div className={styles.cardSpecs}>
-                      {car.vehicleType   && <span className={styles.spec}>{car.vehicleType}</span>}
-                      {car.energy        && <span className={styles.spec}>{car.energy}</span>}
-                      {car.gearbox       && <span className={styles.spec}>{car.gearbox}</span>}
+                      {car.vehicleType   && <span className={styles.spec}>{enums.vehicleTypeMap[car.vehicleType] ?? car.vehicleType}</span>}
+                      {car.energy        && <span className={styles.spec}>{enums.energyMap[car.energy] ?? car.energy}</span>}
+                      {car.gearbox       && <span className={styles.spec}>{enums.gearboxMap[car.gearbox] ?? car.gearbox}</span>}
                       {car.numberOfSeats && <span className={styles.spec}>{car.numberOfSeats} {t.search.seats}</span>}
                     </div>
                   )}

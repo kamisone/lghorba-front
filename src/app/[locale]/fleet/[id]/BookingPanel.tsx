@@ -53,10 +53,13 @@ interface Labels {
   noPriceConfigured: string;
   prefillFromSearch: string;
   prefillLastSearch: string;
-  pickupPlaceholder: string;
-  returnPlaceholder: string;
-  checking: string;
-  requiredNote: string;
+  pickupPlaceholder:  string;
+  returnPlaceholder:  string;
+  checking:           string;
+  requiredNote:       string;
+  couponPlaceholder:  string;
+  discountedTotal:    string;
+  dismiss:            string;
 }
 
 interface DeliveryValidation {
@@ -104,8 +107,8 @@ function nowNextSlot(): string {
   return d.toISOString().slice(0, 16);
 }
 
-function fmtBreakdownDate(date: string) {
-  return new Date(date + "T00:00:00Z").toLocaleDateString(undefined, {
+function fmtBreakdownDate(date: string, locale: string) {
+  return new Date(date + "T00:00:00Z").toLocaleDateString(locale, {
     day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
   });
 }
@@ -517,7 +520,7 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
           <button
             className={styles.prefillBannerDismiss}
             onClick={() => setPrefillSource(null)}
-            aria-label="Dismiss"
+            aria-label={labels.dismiss}
           >
             ×
           </button>
@@ -570,7 +573,7 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
               {priceResult.breakdown.map((item, i) => (
                 <div key={i} className={styles.breakdownRow}>
                   <span className={styles.breakdownDates}>
-                    {fmtBreakdownDate(item.startDate)} – {fmtBreakdownDate(item.endDate)}
+                    {fmtBreakdownDate(item.startDate, locale)} – {fmtBreakdownDate(item.endDate, locale)}
                     {" "}
                     <span className={styles.breakdownLabel}>{item.label ?? labels.baseRate}</span>
                   </span>
@@ -778,7 +781,7 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
             <input
               type="text"
               className={styles.couponInput}
-              placeholder="Code promo"
+              placeholder={labels.couponPlaceholder}
               value={couponCode}
               onChange={e => { setCouponCode(e.target.value); setCouponResult(null); }}
               autoComplete="off"
@@ -797,7 +800,7 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
       {/* ── Discount total ── */}
       {couponResult?.valid && (
         <div className={styles.discountSummary}>
-          <span className={styles.discountLabel}>Total après remise</span>
+          <span className={styles.discountLabel}>{labels.discountedTotal}</span>
           <span className={styles.discountTotal}>€{couponResult.finalPrice.toFixed(2)}</span>
         </div>
       )}
