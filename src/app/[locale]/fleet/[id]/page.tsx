@@ -1,7 +1,6 @@
 import type { JSX } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import CarSlider from "@/components/CarSlider";
@@ -213,22 +212,19 @@ export default async function CarDetailPage({
   return (
     <div className={styles.page}>
 
-      {/* ── Breadcrumb / search context ── */}
-      {searchParams.start && searchParams.end ? (
-        <SearchContextBar
-          start={searchParams.start}
-          end={searchParams.end}
-          locale={locale}
-          backLabel={t.search.backToSearch}
-          searchHref={`/${locale}/search?start=${encodeURIComponent(searchParams.start)}&end=${encodeURIComponent(searchParams.end)}`}
-        />
-      ) : (
-        <div className={styles.breadcrumb}>
-          <Link href={`/${locale}/fleet`} className={styles.backLink}>
-            ← {t.fleet.title}
-          </Link>
-        </div>
-      )}
+      {/* ── Breadcrumb / search context ──
+           SearchContextBar owns both states: it shows the search bar when URL
+           dates are valid and future, and falls back to the fleet breadcrumb
+           otherwise. No branching needed here. */}
+      <SearchContextBar
+        urlStart={searchParams.start ?? ""}
+        urlEnd={searchParams.end ?? ""}
+        locale={locale}
+        backLabel={t.search.backToSearch}
+        searchHref={`/${locale}/search?start=${encodeURIComponent(searchParams.start ?? "")}&end=${encodeURIComponent(searchParams.end ?? "")}`}
+        fleetHref={`/${locale}/fleet`}
+        fleetLabel={t.fleet.title}
+      />
 
       {/* ── Photo slider ── */}
       <div className={styles.sliderSection}>
@@ -381,16 +377,16 @@ export default async function CarDetailPage({
             <p className={styles.bookingSectionEyebrow}>{t.booking.title}</p>
             <h2 className={styles.bookingSectionTitle}>{title}</h2>
           </div>
-          <Suspense fallback={null}>
-            <BookingPanel
-              carId={car.id}
-              locale={locale}
-              labels={t.booking}
-              deliveryEnabled={car.deliveryEnabled ?? false}
-              deliveryType={car.deliveryType ?? null}
-              deliveryLocations={car.deliveryLocations ?? []}
-            />
-          </Suspense>
+          <BookingPanel
+            carId={car.id}
+            locale={locale}
+            labels={t.booking}
+            deliveryEnabled={car.deliveryEnabled ?? false}
+            deliveryType={car.deliveryType ?? null}
+            deliveryLocations={car.deliveryLocations ?? []}
+            urlStart={searchParams.start ?? ""}
+            urlEnd={searchParams.end ?? ""}
+          />
         </div>
       </section>
     </div>

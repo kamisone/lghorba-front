@@ -7,7 +7,7 @@ import PhoneInput from "@/components/PhoneInput";
 import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
 import { getTranslations } from "@/lib/i18n";
 import { saveSearchContext } from "@/lib/searchContext";
-import { useSearchContext } from "@/hooks/useSearchContext";
+import { useResolvedBookingDates } from "@/hooks/useResolvedBookingDates";
 import styles from "./BookingPanel.module.css";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -88,6 +88,8 @@ interface Props {
   deliveryEnabled?: boolean;
   deliveryType?: "radius" | "location" | null;
   deliveryLocations?: DeliveryLocationOption[];
+  urlStart?: string;
+  urlEnd?: string;
 }
 
 type PrefillSource = "url" | "storage" | null;
@@ -137,10 +139,10 @@ function validateField(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function BookingPanel({ carId, locale, labels, deliveryEnabled = false, deliveryType = null, deliveryLocations = [] }: Props) {
+export default function BookingPanel({ carId, locale, labels, deliveryEnabled = false, deliveryType = null, deliveryLocations = [], urlStart = "", urlEnd = "" }: Props) {
   const router = useRouter();
   const t = getTranslations(locale);
-  const searchCtx = useSearchContext();
+  const searchCtx = useResolvedBookingDates(urlStart, urlEnd);
 
   const [startDateTime, setStartDateTimeRaw] = useState("");
   const [endDateTime,   setEndDateTimeRaw]   = useState("");
