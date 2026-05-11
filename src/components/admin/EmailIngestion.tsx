@@ -357,7 +357,7 @@ function ExpandedDetail({
       {/* Actions */}
       <div className={styles.expandedActions}>
         {email.bookingId && (
-          <Link href={`/admin/bookings`} className={styles.bookingLink}>
+          <Link href={`/admin/bookings?modal=booking&id=${email.bookingId}`} className={styles.bookingLink}>
             → View booking
           </Link>
         )}
