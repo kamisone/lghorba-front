@@ -15,6 +15,7 @@ const NAV = [
   { href: "/admin/calendar",           icon: "calendar_month",      label: "Calendar"  },
   { href: "/admin/users",             icon: "person",              label: "Users"     },
   { href: "/admin/admins",            icon: "admin_panel_settings", label: "Admins"   },
+  { href: "/admin/notifications/reminders", icon: "notifications", label: "Reminders" },
   { href: "/admin/contacts",          icon: "mail",                label: "Contacts"  },
   { href: "/admin/guest-access",      icon: "key",                 label: "Guest Access" },
   { href: "/admin/content",           icon: "article",             label: "Content"      },
