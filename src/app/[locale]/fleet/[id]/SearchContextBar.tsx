@@ -17,6 +17,7 @@ interface Props {
 function fmtDate(iso: string, locale: string): string {
   return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+    timeZone: "Europe/Paris",
   }).format(new Date(iso));
 }
 

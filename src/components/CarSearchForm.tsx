@@ -8,10 +8,19 @@ import styles from "./CarSearchForm.module.css";
 
 function nowPlusHours(h: number): { date: string; time: string } {
   const d = new Date(Date.now() + h * 3_600_000);
+  const pad = (n: number) => String(n).padStart(2, "0");
   return {
-    date: d.toISOString().slice(0, 10),
-    time: `${String(d.getHours()).padStart(2, "0")}:00`,
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:00`,
   };
+}
+
+function toOffsetISO(date: string, time: string): string {
+  const d = new Date(`${date}T${time}`);
+  const tzo = -d.getTimezoneOffset();
+  const sign = tzo >= 0 ? "+" : "-";
+  const pad2 = (n: number) => String(Math.abs(n)).padStart(2, "0");
+  return `${date}T${time}:00${sign}${pad2(Math.floor(Math.abs(tzo) / 60))}:${pad2(Math.abs(tzo) % 60)}`;
 }
 
 function isoToDate(iso: string): string {
@@ -78,8 +87,8 @@ export default function CarSearchForm({ locale, labels }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    const start = new Date(`${startDate}T${startTime}`).toISOString();
-    const end   = new Date(`${endDate}T${endTime}`).toISOString();
+    const start = toOffsetISO(startDate, startTime);
+    const end   = toOffsetISO(endDate, endTime);
     const params = new URLSearchParams({ start, end });
     if (address) {
       params.set("lat",     String(address.lat));

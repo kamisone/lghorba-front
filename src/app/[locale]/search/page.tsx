@@ -86,6 +86,7 @@ export default async function SearchPage({
 
   const fmt = new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
     dateStyle: "medium", timeStyle: "short",
+    timeZone: "Europe/Paris",
   });
   const startFmt = start ? fmt.format(new Date(start)) : "";
   const endFmt   = end   ? fmt.format(new Date(end))   : "";
