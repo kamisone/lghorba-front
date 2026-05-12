@@ -1,3 +1,9 @@
+// Translation system — domain split:
+// This file owns ALL static UI strings (nav, hero, booking flow, legal pages, enum labels, meta tags).
+// Per-entity content (car name, description) is owned by the backend TranslationsService (DB-backed).
+// The backend applies car translations at query time when a `lang` param is passed.
+// Never duplicate content between these two systems.
+
 export type Translations = typeof en;
 
 export const en = {

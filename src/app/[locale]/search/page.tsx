@@ -30,12 +30,12 @@ interface SearchResult {
 }
 
 async function searchCars(params: {
-  start: string; end: string; lat: string; lng: string; address: string;
+  start: string; end: string; lat: string; lng: string; address: string; locale: string;
 }): Promise<SearchResult[]> {
-  const { start, end, lat, lng, address } = params;
+  const { start, end, lat, lng, address, locale } = params;
   if (!start || !end) return [];
 
-  const body: Record<string, unknown> = { startDateTime: start, endDateTime: end };
+  const body: Record<string, unknown> = { startDateTime: start, endDateTime: end, lang: locale };
   if (lat && lng && address) {
     body.addressLat   = parseFloat(lat);
     body.addressLng   = parseFloat(lng);
@@ -82,7 +82,7 @@ export default async function SearchPage({
   const t       = getTranslations(locale);
   const hasAddress = Boolean(address && lat && lng);
 
-  const results = await searchCars({ start, end, lat, lng, address });
+  const results = await searchCars({ start, end, lat, lng, address, locale });
 
   const fmt = new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
     dateStyle: "medium", timeStyle: "short",

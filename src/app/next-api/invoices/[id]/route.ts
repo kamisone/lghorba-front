@@ -1,21 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { proxyRequest } from "@/lib/proxy";
 
-const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
-
-function bearer(req: NextRequest): Record<string, string> {
-  const token = req.cookies.get("vitecamion_auth")?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const res = await fetch(`${BACKEND_URL}/invoices/${params.id}`, {
-      cache: "no-store",
-      headers: bearer(req),
-    });
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
-  }
+export function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  return proxyRequest(req, "GET", `/invoices/${params.id}`);
 }

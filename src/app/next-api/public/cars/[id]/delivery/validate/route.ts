@@ -1,18 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { proxyRequest } from "@/lib/proxy";
 
-const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
-
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/public/cars/${params.id}/delivery/validate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      cache: "no-store",
-    });
-    return NextResponse.json(await res.json(), { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
-  }
+export function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  return proxyRequest(req, "POST", `/public/cars/${params.id}/delivery/validate`, { auth: false });
 }

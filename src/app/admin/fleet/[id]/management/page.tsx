@@ -66,14 +66,8 @@ export default function ManagementPage() {
   const [deletingPhotoId,  setDeletingPhotoId]  = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  const [lastConsumed, setLastConsumed] = useState<LastConsumed | null>(() => {
-    if (typeof window === "undefined") return null;
-    try { return JSON.parse(localStorage.getItem(storageKey) ?? "null"); } catch { return null; }
-  });
-  const [waitingAction,  setWaitingAction]  = useState<ActionKey | null>(() => {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem(waitingKey) as ActionKey | null;
-  });
+  const [lastConsumed, setLastConsumed] = useState<LastConsumed | null>(null);
+  const [waitingAction,  setWaitingAction]  = useState<ActionKey | null>(null);
   const [sendingAction,  setSendingAction]  = useState<ActionKey | null>(null);
   const [sendError,      setSendError]      = useState<ActionKey | null>(null);
   const [releaseClicks,  setReleaseClicks]  = useState(0);
@@ -82,9 +76,17 @@ export default function ManagementPage() {
 
   const unlockTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const waitingActionRef  = useRef(waitingAction);
-  const inboundIdAtSendRef = useRef<number | null>(
-    typeof window !== "undefined" ? Number(localStorage.getItem(inboundIdAtSendKey)) || null : null,
-  );
+  const inboundIdAtSendRef = useRef<number | null>(null);
+
+  // Restore persisted state after hydration — must not read localStorage during SSR
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(storageKey) ?? "null") as LastConsumed | null;
+      if (stored) setLastConsumed(stored);
+    } catch {}
+    setWaitingAction(localStorage.getItem(waitingKey) as ActionKey | null);
+    inboundIdAtSendRef.current = Number(localStorage.getItem(inboundIdAtSendKey)) || null;
+  }, [storageKey, waitingKey, inboundIdAtSendKey]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   waitingActionRef.current = waitingAction;

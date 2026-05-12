@@ -1,19 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { proxyRequest } from "@/lib/proxy";
 
-const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
-
-function bearer(request: NextRequest): Record<string, string> {
-  const token = request.cookies.get("vitecamion_auth")?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const res = await fetch(`${BACKEND_URL}/contacts/${params.id}/read`, {
-    method: "PATCH",
-    headers: bearer(request),
-  });
-  return NextResponse.json(await res.json().catch(() => ({})), { status: res.status });
+export function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  return proxyRequest(req, "PATCH", `/contacts/${params.id}/read`);
 }

@@ -1,77 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { proxyRequest } from "@/lib/proxy";
 
-const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
-
-function bearer(req: NextRequest): Record<string, string> {
-  const token = req.cookies.get("vitecamion_auth")?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+export function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  return proxyRequest(req, "GET", `/bookings/${params.id}`);
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const res = await fetch(`${BACKEND_URL}/bookings/${params.id}`, {
-      cache: "no-store",
-      headers: bearer(req),
-    });
-    if (!res.ok) return NextResponse.json(null, { status: res.status });
-    return NextResponse.json(await res.json());
-  } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
-  }
-}
-
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/bookings/${params.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", ...bearer(req) },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (res.ok) {
+export function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  return proxyRequest(req, "PUT", `/bookings/${params.id}`, {
+    onSuccess: (_, body) => {
       revalidateTag("cars");
-      if (body.carId) revalidateTag(`availability-${body.carId}`);
-    }
-    return NextResponse.json(data, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
-  }
+      const b = body as { carId?: string } | undefined;
+      if (b?.carId) revalidateTag(`availability-${b.carId}`);
+    },
+  });
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/bookings/${params.id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...bearer(req) },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      // Status change (e.g. confirmed → cancelled) affects availability display.
+export function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  return proxyRequest(req, "PATCH", `/bookings/${params.id}/status`, {
+    onSuccess: (_, body) => {
       revalidateTag("cars");
-      if (body.carId) revalidateTag(`availability-${body.carId}`);
-    }
-    return NextResponse.json(data, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
-  }
+      const b = body as { carId?: string } | undefined;
+      if (b?.carId) revalidateTag(`availability-${b.carId}`);
+    },
+  });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const res = await fetch(`${BACKEND_URL}/bookings/${params.id}`, {
-      method: "DELETE",
-      headers: bearer(req),
-    });
-    if (res.ok) {
-      // carId isn't in a DELETE body; use coarse invalidation across all public pages.
-      revalidateTag("cars");
-    }
-    return new NextResponse(null, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
-  }
+export function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  return proxyRequest(req, "DELETE", `/bookings/${params.id}`, {
+    onSuccess: () => revalidateTag("cars"),
+  });
 }
