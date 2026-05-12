@@ -1,106 +1,67 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
-import DateTimePicker, { type DateTimePickerHandle } from "@/components/DateTimePicker";
+import { useEffect } from "react";
+import DateTimePicker from "@/components/DateTimePicker";
 import PhoneInput from "@/components/PhoneInput";
-import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { getTranslations } from "@/lib/i18n";
 import { saveSearchContext } from "@/lib/searchContext";
-import { useResolvedBookingDates } from "@/hooks/useResolvedBookingDates";
+import { useBookingDates } from "./useBookingDates";
+import { useBookingPricing } from "./useBookingPricing";
+import { useDeliveryMode, type DeliveryLocationOption } from "./useDeliveryMode";
+import { useBookingForm } from "./useBookingForm";
 import styles from "./BookingPanel.module.css";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+export type { DeliveryLocationOption };
 
-interface PriceBreakdownItem {
-  startDate: string;
-  endDate: string;
-  pricePerDay: number;
-  days: number;
-  subtotal: number;
-  label: string | null;
-}
-
-interface PriceResult {
-  totalPrice: number;
-  numberOfDays: number;
-  breakdown: PriceBreakdownItem[];
-  basePricePerDay: number | null;
-}
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Labels {
-  title: string;
-  startDate: string;
-  endDate: string;
-  selectDates: string;
-  available: string;
-  unavailable: string;
-  totalPrice: string;
-  perDay: string;
-  days: string;
-  breakdown: string;
-  baseRate: string;
-  bookNow: string;
-  submitting: string;
-  nameLabel: string;
-  namePlaceholder: string;
-  emailLabel: string;
+  title:            string;
+  startDate:        string;
+  endDate:          string;
+  selectDates:      string;
+  available:        string;
+  unavailable:      string;
+  totalPrice:       string;
+  perDay:           string;
+  days:             string;
+  breakdown:        string;
+  baseRate:         string;
+  bookNow:          string;
+  submitting:       string;
+  nameLabel:        string;
+  namePlaceholder:  string;
+  emailLabel:       string;
   emailPlaceholder: string;
-  phoneLabel: string;
+  phoneLabel:       string;
   phonePlaceholder: string;
-  dateError: string;
-  minimumOneDay: string;
+  dateError:        string;
+  minimumOneDay:    string;
   noPriceConfigured: string;
   prefillFromSearch: string;
   prefillLastSearch: string;
-  pickupPlaceholder:  string;
-  returnPlaceholder:  string;
-  checking:           string;
-  requiredNote:       string;
-  couponPlaceholder:  string;
-  discountedTotal:    string;
-  dismiss:            string;
-}
-
-interface DeliveryValidation {
-  available: boolean;
-  fee: number | null;
-}
-
-type CouponValidationResult =
-  | { valid: true; discountAmount: number; finalPrice: number; code: string | null; name: string }
-  | { valid: false; error: string };
-
-export interface DeliveryLocationOption {
-  id: string;
-  label: string;
-  address: string;
-  lat: number;
-  lng: number;
-  radiusKm: number;
-  price: number | null;
+  pickupPlaceholder: string;
+  returnPlaceholder: string;
+  checking:          string;
+  requiredNote:      string;
+  couponPlaceholder: string;
+  discountedTotal:   string;
+  dismiss:           string;
 }
 
 interface Props {
-  carId: string;
-  locale: string;
-  labels: Labels;
-  deliveryEnabled?: boolean;
-  deliveryType?: "radius" | "location" | null;
+  carId:              string;
+  locale:             string;
+  labels:             Labels;
+  deliveryEnabled?:   boolean;
+  deliveryType?:      "radius" | "location" | null;
   deliveryLocations?: DeliveryLocationOption[];
-  urlStart?: string;
-  urlEnd?: string;
+  urlStart?:          string;
+  urlEnd?:            string;
 }
-
-type PrefillSource = "url" | "storage" | null;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function isoToLocalDT(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 function nowNextSlot(): string {
   const d = new Date();
@@ -115,113 +76,43 @@ function fmtBreakdownDate(date: string, locale: string) {
   });
 }
 
-type ValidationMessages = ReturnType<typeof getTranslations>["booking"]["validation"];
-
-function validateField(
-  field: "name" | "email" | "phone",
-  value: string,
-  v: ValidationMessages,
-): string {
-  const s = value.trim();
-  if (field === "name")  return s ? "" : v.nameRequired;
-  if (field === "phone") {
-    if (!s) return v.phoneRequired;
-    if (s.replace(/\D/g, "").length < 6) return v.phoneInvalid;
-    return "";
-  }
-  if (field === "email") {
-    if (!s) return v.emailRequired;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return v.emailInvalid;
-    return "";
-  }
-  return "";
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function BookingPanel({ carId, locale, labels, deliveryEnabled = false, deliveryType = null, deliveryLocations = [], urlStart = "", urlEnd = "" }: Props) {
-  const router = useRouter();
+export default function BookingPanel({
+  carId,
+  locale,
+  labels,
+  deliveryEnabled   = false,
+  deliveryType      = null,
+  deliveryLocations = [],
+  urlStart          = "",
+  urlEnd            = "",
+}: Props) {
   const t = getTranslations(locale);
-  const searchCtx = useResolvedBookingDates(urlStart, urlEnd);
 
-  const [startDateTime, setStartDateTimeRaw] = useState("");
-  const [endDateTime,   setEndDateTimeRaw]   = useState("");
-  const [startISO,      setStartISOraw]      = useState("");
-  const [endISO,        setEndISOraw]        = useState("");
-  const [prefillSource, setPrefillSource]    = useState<PrefillSource>(null);
-  const [available,     setAvailable]        = useState<boolean | null>(null);
-  const [priceResult,   setPriceResult]      = useState<PriceResult | null>(null);
-  const [checking,      setChecking]         = useState(false);
-  const [dateError,     setDateError]        = useState("");
+  const dates = useBookingDates(urlStart, urlEnd, deliveryEnabled, deliveryType);
+  const { startDateTime, endDateTime, startISO, endISO, prefillSource, setPrefillSource,
+          prefillAddress, setStartDateTime, setEndDateTime, endPickerRef, handleStartComplete } = dates;
 
-  const [name,  setName]  = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const pricing = useBookingPricing(carId, startISO, endISO, locale, labels.dateError);
+  const { available, priceResult, checking, dateError } = pricing;
 
-  const [fieldErrors, setFieldErrors] = useState({ name: "", email: "", phone: "" });
-  const [touched,     setTouched]     = useState({ name: false, email: false, phone: false });
+  const delivery = useDeliveryMode(carId, deliveryEnabled, deliveryType, deliveryLocations, prefillAddress);
+  const { deliveryMode, setDeliveryMode, selectedLocationId, setSelectedLocationId,
+          deliveryAddress, setDeliveryAddress, deliveryValidation, setDeliveryValidation,
+          checkingDelivery, activeDeliveryFee, deliveryReady } = delivery;
 
-  const [submitting,  setSubmitting]  = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const form = useBookingForm({
+    carId, locale, startISO, endISO, available, priceResult,
+    deliveryEnabled, deliveryMode, deliveryType, deliveryAddress,
+    deliveryValidation, selectedLocationId, deliveryLocations, activeDeliveryFee,
+  });
+  const { name, setName, email, setEmail, phone, setPhone,
+          fieldErrors, setFieldErrors, touched, setTouched,
+          submitting, submitError, couponCode, setCouponCode,
+          couponResult, setCouponResult, couponChecking, validate, handleBook } = form;
 
-  // ── Coupon state ──────────────────────────────────────────────────────────────
-  const [couponCode,      setCouponCode]      = useState("");
-  const [couponResult,    setCouponResult]    = useState<CouponValidationResult | null>(null);
-  const [couponChecking,  setCouponChecking]  = useState(false);
-  const couponTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ── Delivery state ────────────────────────────────────────────────────────────
-  const [deliveryMode,       setDeliveryMode]       = useState<"pickup" | "delivery">("pickup");
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
-  const [deliveryAddress,    setDeliveryAddress]    = useState<SelectedAddress | null>(null);
-  const [deliveryValidation, setDeliveryValidation] = useState<DeliveryValidation | null>(null);
-  const [checkingDelivery,   setCheckingDelivery]   = useState(false);
-
-  const endPickerRef = useRef<DateTimePickerHandle>(null);
-
-  // ── Setters that cascade-clear the dependent field ──────────────────────────
-
-  function setStartDateTime(v: string) {
-    setStartDateTimeRaw(v);
-    setStartISOraw(v ? new Date(v).toISOString() : "");
-    setPrefillSource(null);
-    if (endDateTime && v && new Date(endDateTime) <= new Date(v)) {
-      setEndDateTimeRaw("");
-      setEndISOraw("");
-    }
-  }
-
-  function setEndDateTime(v: string) {
-    setEndDateTimeRaw(v);
-    setEndISOraw(v ? new Date(v).toISOString() : "");
-    setPrefillSource(null);
-  }
-
-  // ── Init: pre-fill from URL params or localStorage via hook ─────────────────
-
-  useEffect(() => {
-    if (!searchCtx) return;
-    setStartDateTimeRaw(isoToLocalDT(searchCtx.start));
-    setEndDateTimeRaw(isoToLocalDT(searchCtx.end));
-    setStartISOraw(searchCtx.start);
-    setEndISOraw(searchCtx.end);
-    setPrefillSource(searchCtx.source);
-    if (deliveryEnabled && deliveryType === "radius" && searchCtx.address) {
-      setDeliveryAddress({ lat: searchCtx.address.lat, lng: searchCtx.address.lng, label: searchCtx.address.label });
-      setDeliveryMode("delivery");
-    }
-  }, [searchCtx, deliveryEnabled, deliveryType]);
-
-  // ── Auto-advance: start complete → open end picker ───────────────────────────
-
-  function handleStartComplete() {
-    setTimeout(() => {
-      endPickerRef.current?.openPicker();
-    }, 160);
-  }
-
-  // ── Sync valid dates (and delivery address) back to search context ───────────
-
+  // Persist valid dates + delivery address to search context
   useEffect(() => {
     if (!startISO || !endISO) return;
     if (new Date(startISO) <= new Date() || new Date(endISO) <= new Date(startISO)) return;
@@ -231,205 +122,14 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
     saveSearchContext(startISO, endISO, addr);
   }, [startISO, endISO, deliveryAddress]);
 
-  // ── Fetch availability & price ───────────────────────────────────────────────
-
-  const fetchAvailabilityAndPrice = useCallback(async (start: string, end: string) => {
-    setChecking(true);
-    setAvailable(null);
-    setPriceResult(null);
-    setSubmitError("");
-    try {
-      const [availRes, priceRes] = await Promise.all([
-        fetch(`/next-api/public/cars/${carId}/availability?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`),
-        fetch(`/next-api/public/cars/${carId}/price?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`),
-      ]);
-      if (availRes.ok) {
-        const data = await availRes.json();
-        setAvailable(data.available ?? false);
-      }
-      if (priceRes.ok) {
-        const data: PriceResult = await priceRes.json();
-        setPriceResult(data);
-      }
-    } catch {
-      // network error — leave states null
-    } finally {
-      setChecking(false);
-    }
-  }, [carId]);
-
-  useEffect(() => {
-    if (!startISO || !endISO) {
-      setAvailable(null);
-      setPriceResult(null);
-      setDateError("");
-      return;
-    }
-    const start = new Date(startISO);
-    const end   = new Date(endISO);
-    if (start <= new Date()) {
-      setDateError(t.booking.pickupFuture);
-      setAvailable(null); setPriceResult(null);
-      return;
-    }
-    if (end <= start) {
-      setDateError(labels.dateError);
-      setAvailable(null); setPriceResult(null);
-      return;
-    }
-    setDateError("");
-    fetchAvailabilityAndPrice(startISO, endISO);
-  }, [startISO, endISO, fetchAvailabilityAndPrice, labels.dateError, t.booking.pickupFuture]);
-
-  // ── Validate delivery address (radius mode only) ──────────────────────────────
-
-  useEffect(() => {
-    if (!deliveryEnabled || deliveryType !== "radius" || deliveryMode !== "delivery" || !deliveryAddress) {
-      setDeliveryValidation(null);
-      return;
-    }
-    const controller = new AbortController();
-    setCheckingDelivery(true);
-    setDeliveryValidation(null);
-    fetch(`/next-api/public/cars/${carId}/delivery/validate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        addressLat:   deliveryAddress.lat,
-        addressLng:   deliveryAddress.lng,
-        addressLabel: deliveryAddress.label,
-      }),
-      signal: controller.signal,
-    })
-      .then(r => r.ok ? r.json() as Promise<DeliveryValidation> : null)
-      .then(data => { if (data) setDeliveryValidation(data); })
-      .catch(() => {/* ignore abort */})
-      .finally(() => setCheckingDelivery(false));
-    return () => controller.abort();
-  }, [carId, deliveryEnabled, deliveryType, deliveryMode, deliveryAddress]);
-
-  // ── Coupon validation (debounced, fires when code or price changes) ──────────
-
-  const selectedLocForCoupon = deliveryLocations.find(l => l.id === selectedLocationId) ?? null;
-  const computedDeliveryFee: number = deliveryEnabled && deliveryMode === "delivery"
-    ? deliveryType === "location"
-      ? (selectedLocForCoupon?.price ?? 0)
-      : (deliveryValidation?.available ? (deliveryValidation.fee ?? 0) : 0)
-    : 0;
-
-  useEffect(() => {
-    if (couponTimerRef.current) clearTimeout(couponTimerRef.current);
-    if (!couponCode.trim() || !priceResult) {
-      setCouponResult(null);
-      return;
-    }
-    const subtotal    = priceResult.totalPrice;
-    const deliveryFee = computedDeliveryFee;
-    const days        = priceResult.numberOfDays;
-    couponTimerRef.current = setTimeout(async () => {
-      setCouponChecking(true);
-      try {
-        const res = await fetch("/next-api/public/promotions/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: couponCode.trim(), carId, subtotal, deliveryFee, days }),
-        });
-        const data = await res.json();
-        setCouponResult(data as CouponValidationResult);
-      } catch {
-        setCouponResult(null);
-      } finally {
-        setCouponChecking(false);
-      }
-    }, 600);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [couponCode, priceResult, computedDeliveryFee, carId]);
-
-  // ── Submit ────────────────────────────────────────────────────────────────────
-
-  const handleBook = async () => {
-    if (!startISO || !endISO || !available || !priceResult) return;
-
-    // Validate all contact fields before submitting
-    const errors = {
-      name:  validateField("name",  name,  t.booking.validation),
-      email: validateField("email", email, t.booking.validation),
-      phone: validateField("phone", phone, t.booking.validation),
-    };
-    setFieldErrors(errors);
-    setTouched({ name: true, email: true, phone: true });
-    if (errors.name || errors.email || errors.phone) return;
-
-    setSubmitting(true);
-    setSubmitError("");
-    try {
-      const selectedLoc = deliveryLocations.find(l => l.id === selectedLocationId);
-      let deliveryPayload: Record<string, unknown> = {};
-      if (deliveryEnabled && deliveryMode === "delivery") {
-        if (deliveryType === "location" && selectedLoc) {
-          deliveryPayload = {
-            deliveryRequested:  true,
-            deliveryAddress:    selectedLoc.address,
-            deliveryAddressLat: selectedLoc.lat,
-            deliveryAddressLng: selectedLoc.lng,
-          };
-        } else if (deliveryType === "radius" && deliveryAddress && deliveryValidation?.available) {
-          deliveryPayload = {
-            deliveryRequested:  true,
-            deliveryAddress:    deliveryAddress.label,
-            deliveryAddressLat: deliveryAddress.lat,
-            deliveryAddressLng: deliveryAddress.lng,
-          };
-        }
-      }
-      const res = await fetch("/next-api/public/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          carId,
-          startDateTime: startISO,
-          endDateTime:   endISO,
-          customerName:  name.trim(),
-          customerEmail: email.trim(),
-          customerPhone: phone.trim(),
-          ...(couponCode.trim() ? { couponCode: couponCode.trim() } : {}),
-          ...deliveryPayload,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setSubmitError(data?.message ?? t.booking.genericError); return; }
-      // Store the clientSecret in sessionStorage — retrieved by the payment page
-      sessionStorage.setItem(`stripe_cs_${data.id}`, data.clientSecret);
-      router.push(`/${locale}/fleet/${carId}/payment?bookingId=${data.id}`);
-    } catch {
-      setSubmitError(t.booking.networkError);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // ── Derived state ────────────────────────────────────────────────────────────
-
-  const selectedLoc = deliveryLocations.find(l => l.id === selectedLocationId) ?? null;
-
-  const deliveryReady = !deliveryEnabled || deliveryMode === "pickup"
-    || (deliveryType === "location" && selectedLocationId !== null)
-    || (deliveryType === "radius" && deliveryValidation?.available === true && !checkingDelivery);
-
-  const activeDeliveryFee: number = deliveryEnabled && deliveryMode === "delivery"
-    ? deliveryType === "location"
-      ? (selectedLoc?.price ?? 0)
-      : (deliveryValidation?.available ? (deliveryValidation.fee ?? 0) : 0)
-    : 0;
+  // ── Derived ──────────────────────────────────────────────────────────────────
 
   const canBook      = available === true && priceResult !== null && !checking && !submitting && deliveryReady;
   const hasNoPricing = priceResult !== null && priceResult.basePricePerDay === null && priceResult.breakdown.length === 0;
   const minStart     = nowNextSlot();
-
-  // Step state
-  const startDone  = !!startDateTime;
-  const endDone    = !!endDateTime;
-  const stepState  = !startDone ? 0 : !endDone ? 1 : 2;
+  const startDone    = !!startDateTime;
+  const endDone      = !!endDateTime;
+  const stepState    = !startDone ? 0 : !endDone ? 1 : 2;
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -708,11 +408,11 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
               aria-describedby={touched.name && fieldErrors.name ? "bp-name-err" : undefined}
               onChange={e => {
                 setName(e.target.value);
-                if (touched.name) setFieldErrors(prev => ({ ...prev, name: validateField("name", e.target.value, t.booking.validation) }));
+                if (touched.name) setFieldErrors(prev => ({ ...prev, name: validate("name", e.target.value) }));
               }}
               onBlur={() => {
                 setTouched(prev => ({ ...prev, name: true }));
-                setFieldErrors(prev => ({ ...prev, name: validateField("name", name, t.booking.validation) }));
+                setFieldErrors(prev => ({ ...prev, name: validate("name", name) }));
               }}
             />
             {touched.name && fieldErrors.name && (
@@ -737,11 +437,11 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
               aria-describedby={touched.email && fieldErrors.email ? "bp-email-err" : undefined}
               onChange={e => {
                 setEmail(e.target.value);
-                if (touched.email) setFieldErrors(prev => ({ ...prev, email: validateField("email", e.target.value, t.booking.validation) }));
+                if (touched.email) setFieldErrors(prev => ({ ...prev, email: validate("email", e.target.value) }));
               }}
               onBlur={() => {
                 setTouched(prev => ({ ...prev, email: true }));
-                setFieldErrors(prev => ({ ...prev, email: validateField("email", email, t.booking.validation) }));
+                setFieldErrors(prev => ({ ...prev, email: validate("email", email) }));
               }}
             />
             {touched.email && fieldErrors.email && (
@@ -764,11 +464,11 @@ export default function BookingPanel({ carId, locale, labels, deliveryEnabled = 
               noCountriesLabel={t.phone.noCountriesFound}
               onChange={v => {
                 setPhone(v);
-                if (touched.phone) setFieldErrors(prev => ({ ...prev, phone: validateField("phone", v, t.booking.validation) }));
+                if (touched.phone) setFieldErrors(prev => ({ ...prev, phone: validate("phone", v) }));
               }}
               onBlur={() => {
                 setTouched(prev => ({ ...prev, phone: true }));
-                setFieldErrors(prev => ({ ...prev, phone: validateField("phone", phone, t.booking.validation) }));
+                setFieldErrors(prev => ({ ...prev, phone: validate("phone", phone) }));
               }}
             />
             {touched.phone && fieldErrors.phone && (
