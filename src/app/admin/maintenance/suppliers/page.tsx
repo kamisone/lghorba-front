@@ -1,4 +1,4 @@
-import MaintenanceSuppliers from "@/components/admin/MaintenanceSuppliers";
+import MaintenanceSuppliers from "@/components/admin/maintenance/MaintenanceSuppliers";
 
 export default function SuppliersPage() {
   return <MaintenanceSuppliers />;

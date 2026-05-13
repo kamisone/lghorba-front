@@ -1,4 +1,4 @@
-import AnalyticsTelemetry from "@/components/admin/AnalyticsTelemetry";
+import AnalyticsTelemetry from "@/components/admin/analytics/AnalyticsTelemetry";
 
 export const metadata = { robots: "noindex" };
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useModalUrl } from "@/hooks/useModalUrl";
-import CreateGuestTokenModal from "@/components/admin/CreateGuestTokenModal";
+import CreateGuestTokenModal from "@/components/admin/users/CreateGuestTokenModal";
 
 type GuestAction = "open" | "close" | "parking";
 type TokenStatus = "active" | "expired" | "revoked";

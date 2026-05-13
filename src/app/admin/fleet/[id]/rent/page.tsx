@@ -3,9 +3,9 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { CalendarBooking, Car } from "@/components/admin/data";
-import RentTracker from "@/components/admin/RentTracker";
-import RentCalendar from "@/components/admin/RentCalendar";
+import type { CalendarBooking, Car } from "@/components/admin/fleet/data";
+import RentTracker from "@/components/admin/fleet/RentTracker";
+import RentCalendar from "@/components/admin/fleet/RentCalendar";
 import styles from "./rent.module.css";
 
 export default function RentPage() {

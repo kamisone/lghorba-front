@@ -1,4 +1,4 @@
-import AnalyticsUtilization from "@/components/admin/AnalyticsUtilization";
+import AnalyticsUtilization from "@/components/admin/analytics/AnalyticsUtilization";
 
 export const metadata = { robots: "noindex" };
 

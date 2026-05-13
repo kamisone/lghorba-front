@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
-import type { Car, CalendarBooking } from "./data";
+import type { Car, CalendarBooking } from "../fleet/data";
 import BookingAdminModal from "./BookingAdminModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import { useBusinessTz } from "@/contexts/TzContext";

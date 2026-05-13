@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import AdminHeader from "@/components/layout/AdminHeader";
-import TokenRefresher from "@/components/admin/TokenRefresher";
+import TokenRefresher from "@/components/admin/shell/TokenRefresher";
 import { TzProvider } from "@/contexts/TzContext";
 
 export const metadata: Metadata = {

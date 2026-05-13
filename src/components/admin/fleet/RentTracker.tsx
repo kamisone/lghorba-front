@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import type { CalendarBooking, Car } from "./data";
 import RentMap, { type RentPosition } from "./RentMap";
-import BookingAdminModal from "./BookingAdminModal";
+import BookingAdminModal from "../bookings/BookingAdminModal";
 import { useToast } from "@/components/toast/ToastContext";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import styles from "./RentTracker.module.css";

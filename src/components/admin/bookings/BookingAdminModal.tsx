@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { BookingSource, CalendarBooking, Car, GpsStopMode } from "./data";
+import type { BookingSource, CalendarBooking, Car, GpsStopMode } from "../fleet/data";
 import GuestAutocomplete, { type GuestUser } from "./GuestAutocomplete";
 import { useBusinessTz } from "@/contexts/TzContext";
 import { isoToLocalDT } from "@/lib/dateUtils";

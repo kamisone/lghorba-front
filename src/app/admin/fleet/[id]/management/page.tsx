@@ -2,9 +2,9 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState, useCallback, useRef } from "react";
-import type { Car } from "@/components/admin/data";
+import type { Car } from "@/components/admin/fleet/data";
 import styles from "../car-detail.module.css";
-import { extractMapsUrl, extractLatLng } from "@/components/admin/mapUtils";
+import { extractMapsUrl, extractLatLng } from "@/components/admin/fleet/mapUtils";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

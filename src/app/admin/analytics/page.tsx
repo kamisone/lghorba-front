@@ -1,4 +1,4 @@
-import OperationsAnalytics from "@/components/admin/OperationsAnalytics";
+import OperationsAnalytics from "@/components/admin/analytics/OperationsAnalytics";
 
 export const metadata = { robots: "noindex" };
 

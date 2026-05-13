@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CalendarEntryModal, { type AvailabilityBlock, type CalendarEntryMode } from "./CalendarEntryModal";
-import type { CarPricing } from "./PricingModal";
+import type { CarPricing } from "../fleet/PricingModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import { useBusinessTz } from "@/contexts/TzContext";
 import { todayStr as todayStrUtil, fmtDateTime } from "@/lib/dateUtils";

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import type { CalendarBooking, Car } from "./data";
-import BookingAdminModal from "./BookingAdminModal";
+import BookingAdminModal from "../bookings/BookingAdminModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import styles from "./RentCalendar.module.css";
 

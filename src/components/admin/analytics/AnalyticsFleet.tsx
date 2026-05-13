@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import type { Car } from "./data";
+import type { Car } from "../fleet/data";
 import styles from "./AnalyticsFleet.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────

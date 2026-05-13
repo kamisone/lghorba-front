@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import CarFormModal from "@/components/admin/CarFormModal";
-import type { Car } from "@/components/admin/data";
-import styles from "@/components/admin/VehicleWorkspace.module.css";
+import CarFormModal from "@/components/admin/fleet/CarFormModal";
+import type { Car } from "@/components/admin/fleet/data";
+import styles from "@/components/admin/fleet/VehicleWorkspace.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useModalUrl } from "@/hooks/useModalUrl";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { CarPricing } from "./PricingModal";
+import type { CarPricing } from "../fleet/PricingModal";
 import styles from "./CalendarEntryModal.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 
 // Loaded client-side only: ContentEditor → RichTextEditor → TipTap (ProseMirror has browser globals)
 const ContentEditor = dynamic(
-  () => import("@/components/admin/ContentEditor"),
+  () => import("@/components/admin/content/ContentEditor"),
   { ssr: false },
 );
 

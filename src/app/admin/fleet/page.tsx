@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import type { Car } from "@/components/admin/data";
-import CarFormModal from "@/components/admin/CarFormModal";
+import type { Car } from "@/components/admin/fleet/data";
+import CarFormModal from "@/components/admin/fleet/CarFormModal";
 import styles from "./cars.module.css";
 
 interface SmsMessage {

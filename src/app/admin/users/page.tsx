@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import styles from "./users.module.css";
-import CreateUserModal from "@/components/admin/CreateUserModal";
+import CreateUserModal from "@/components/admin/users/CreateUserModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

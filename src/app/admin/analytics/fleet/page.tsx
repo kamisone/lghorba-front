@@ -1,4 +1,4 @@
-import AnalyticsFleet from "@/components/admin/AnalyticsFleet";
+import AnalyticsFleet from "@/components/admin/analytics/AnalyticsFleet";
 
 export const metadata = { robots: "noindex" };
 

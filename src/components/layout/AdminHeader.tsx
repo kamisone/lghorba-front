@@ -1,4 +1,4 @@
-import AdminShell from "@/components/admin/AdminShell";
+import AdminShell from "@/components/admin/shell/AdminShell";
 
 /**
  * Admin-section layout shell — sidebar navigation + content area.
