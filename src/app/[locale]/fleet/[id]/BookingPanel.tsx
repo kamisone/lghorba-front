@@ -10,6 +10,7 @@ import { useBookingDates } from "./useBookingDates";
 import { useBookingPricing } from "./useBookingPricing";
 import { useDeliveryMode, type DeliveryLocationOption } from "./useDeliveryMode";
 import { useBookingForm } from "./useBookingForm";
+import { nowNextSlot } from "@/lib/dateUtils";
 import styles from "./BookingPanel.module.css";
 
 export type { DeliveryLocationOption };
@@ -59,16 +60,10 @@ interface Props {
   deliveryLocations?: DeliveryLocationOption[];
   urlStart?:          string;
   urlEnd?:            string;
+  businessTz?:        string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function nowNextSlot(): string {
-  const d = new Date();
-  const m = d.getMinutes();
-  d.setMinutes(m >= 30 ? 60 : 30, 0, 0);
-  return d.toISOString().slice(0, 16);
-}
 
 function fmtBreakdownDate(date: string, locale: string) {
   return new Date(date + "T00:00:00Z").toLocaleDateString(locale, {
@@ -87,10 +82,11 @@ export default function BookingPanel({
   deliveryLocations = [],
   urlStart          = "",
   urlEnd            = "",
+  businessTz        = "Europe/Paris",
 }: Props) {
   const t = getTranslations(locale);
 
-  const dates = useBookingDates(urlStart, urlEnd, deliveryEnabled, deliveryType);
+  const dates = useBookingDates(urlStart, urlEnd, deliveryEnabled, deliveryType, businessTz);
   const { startDateTime, endDateTime, startISO, endISO, prefillSource, setPrefillSource,
           prefillAddress, setStartDateTime, setEndDateTime, endPickerRef, handleStartComplete } = dates;
 
@@ -126,7 +122,7 @@ export default function BookingPanel({
 
   const canBook      = available === true && priceResult !== null && !checking && !submitting && deliveryReady;
   const hasNoPricing = priceResult !== null && priceResult.basePricePerDay === null && priceResult.breakdown.length === 0;
-  const minStart     = nowNextSlot();
+  const minStart     = nowNextSlot(businessTz);
   const startDone    = !!startDateTime;
   const endDone      = !!endDateTime;
   const stepState    = !startDone ? 0 : !endDone ? 1 : 2;
@@ -168,6 +164,7 @@ export default function BookingPanel({
             locale={locale}
             clearLabel={t.dateTimePicker.clear}
             noSlotsLabel={t.dateTimePicker.noSlots}
+            businessTz={businessTz}
           />
         </div>
 
@@ -205,6 +202,7 @@ export default function BookingPanel({
             locale={locale}
             clearLabel={t.dateTimePicker.clear}
             noSlotsLabel={t.dateTimePicker.noSlots}
+            businessTz={businessTz}
           />
         </div>
 

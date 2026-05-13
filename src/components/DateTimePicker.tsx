@@ -4,6 +4,7 @@ import {
   forwardRef, useCallback, useEffect,
   useImperativeHandle, useRef, useState,
 } from "react";
+import { todayStr } from "@/lib/dateUtils";
 import styles from "./DateTimePicker.module.css";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -68,13 +69,15 @@ interface Props {
   locale?: string;
   clearLabel?: string;
   noSlotsLabel?: string;
+  businessTz?: string;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTimePicker(
   { value, onChange, minValue, label, error, placeholder = "Select date & time", onComplete,
-    locale = "en", clearLabel = "Clear", noSlotsLabel = "No available time slots for this date." },
+    locale = "en", clearLabel = "Clear", noSlotsLabel = "No available time slots for this date.",
+    businessTz = "UTC" },
   ref,
 ) {
   const DAY_LABELS  = buildDayLabels(locale);
@@ -88,7 +91,7 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
   // Single ref on the trigger+popup wrapper – used for outside-click detection.
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  const today        = new Date().toISOString().slice(0, 10);
+  const today        = todayStr(businessTz);
   const minDate      = minValue ? minValue.slice(0, 10) : today;
   const minTime      = minValue ? minValue.slice(11, 16) : undefined;
   const selectedDate = value.slice(0, 10) || "";

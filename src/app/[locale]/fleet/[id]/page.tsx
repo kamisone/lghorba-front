@@ -59,6 +59,17 @@ interface PublicCarDetail {
 
 const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
+async function getBusinessTimezone(): Promise<string> {
+  try {
+    const res = await fetch(`${API}/public/platform-settings`, { cache: "no-store" });
+    if (!res.ok) return "Europe/Paris";
+    const data = await res.json() as { timezone?: string };
+    return data.timezone ?? "Europe/Paris";
+  } catch {
+    return "Europe/Paris";
+  }
+}
+
 async function getCar(id: string, lang: string): Promise<PublicCarDetail | null> {
   try {
     const res = await fetch(
@@ -181,7 +192,11 @@ export default async function CarDetailPage({
   const locale = params.locale as Locale;
   const id = params.id;
   const t = getTranslations(locale);
-  const [car, photos] = await Promise.all([getCar(id, locale), getPhotos(id)]);
+  const [car, photos, businessTz] = await Promise.all([
+    getCar(id, locale),
+    getPhotos(id),
+    getBusinessTimezone(),
+  ]);
 
   if (!car) {
     return (
@@ -386,6 +401,7 @@ export default async function CarDetailPage({
             deliveryLocations={car.deliveryLocations ?? []}
             urlStart={searchParams.start ?? ""}
             urlEnd={searchParams.end ?? ""}
+            businessTz={businessTz}
           />
         </div>
       </section>

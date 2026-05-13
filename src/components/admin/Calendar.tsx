@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import CalendarEntryModal, { type AvailabilityBlock, type CalendarEntryMode } from "./CalendarEntryModal";
 import type { CarPricing } from "./PricingModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
+import { useBusinessTz } from "@/contexts/TzContext";
+import { todayStr as todayStrUtil, fmtDateTime } from "@/lib/dateUtils";
 import styles from "./Calendar.module.css";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -113,18 +115,9 @@ function addDay(date: string, n = 1): string {
   return d.toISOString().slice(0, 10);
 }
 
-function todayStr() { return new Date().toISOString().slice(0, 10); }
 
-function formatDateTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString("en-GB", {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-    });
-  } catch { return iso.slice(0, 16).replace("T", " "); }
-}
-
-function buildCalendar(base: Date, numMonths: number): { days: DayInfo[]; months: MonthGroup[] } {
-  const today  = todayStr();
+function buildCalendar(base: Date, numMonths: number, tz: string): { days: DayInfo[]; months: MonthGroup[] } {
+  const today  = todayStrUtil(tz);
   const days: DayInfo[]      = [];
   const months: MonthGroup[] = [];
   const start = new Date(Date.UTC(base.getFullYear(), base.getMonth(), 1));
@@ -371,6 +364,7 @@ const CarRow = React.memo(function CarRow({
 const NUM_MONTHS = 3;
 
 export default function Calendar() {
+  const tz = useBusinessTz();
   const [cars,        setCars]        = useState<Car[]>([]);
   const [pricings,    setPricings]    = useState<Record<string, CarPricing[]>>({});
   const [availBlocks, setAvailBlocks] = useState<Record<string, AvailabilityBlock[]>>({});
@@ -395,7 +389,7 @@ export default function Calendar() {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const { days, months } = useMemo(() => buildCalendar(baseDate, NUM_MONTHS), [baseDate]);
+  const { days, months } = useMemo(() => buildCalendar(baseDate, NUM_MONTHS, tz), [baseDate, tz]);
 
   const pricingMaps = useMemo(() => {
     const out: Record<string, Record<string, CarPricing>> = {};
@@ -820,11 +814,11 @@ export default function Calendar() {
           <div className={styles.popoverDates}>
             <div className={styles.popoverDateRow}>
               <span className={styles.popoverDateLabel}>Start</span>
-              <span className={styles.popoverDateVal}>{formatDateTime(bookingPopover.booking.startDateTime)}</span>
+              <span className={styles.popoverDateVal}>{fmtDateTime(bookingPopover.booking.startDateTime, tz)}</span>
             </div>
             <div className={styles.popoverDateRow}>
               <span className={styles.popoverDateLabel}>End</span>
-              <span className={styles.popoverDateVal}>{formatDateTime(bookingPopover.booking.endDateTime)}</span>
+              <span className={styles.popoverDateVal}>{fmtDateTime(bookingPopover.booking.endDateTime, tz)}</span>
             </div>
           </div>
           <div className={styles.popoverSource}>via {bookingPopover.booking.source}</div>

@@ -5,6 +5,14 @@ import Link from "next/link";
 import type { Car, CalendarBooking } from "./data";
 import BookingAdminModal from "./BookingAdminModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
+import { useBusinessTz } from "@/contexts/TzContext";
+import {
+  fmtDateTime as fmtDT,
+  fmtTime as fmtTimeUtil,
+  dayKey as dayKeyUtil,
+  isToday as isTodayUtil,
+  dayLabel as dayLabelUtil,
+} from "@/lib/dateUtils";
 import styles from "./AdminBookings.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -60,47 +68,8 @@ function daysDiff(start: string, end: string): number {
   return Math.max(1, Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / 86_400_000));
 }
 
-function fmtTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-}
-
-function fmtDate(d: string): string {
-  return new Date(d).toLocaleString("en-GB", {
-    day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-  });
-}
-
-function fmtDateTime(d: string): string {
-  return new Date(d).toLocaleString("en-GB", {
-    day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-  });
-}
-
 function fmtPrice(p: number | string): string {
   return `€${Number(p).toFixed(2)}`;
-}
-
-function startOfDay(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-
-function dayLabel(dateISO: string): string {
-  const date  = new Date(dateISO);
-  const today = startOfDay(new Date());
-  const diff  = Math.round((startOfDay(date).getTime() - today.getTime()) / 86_400_000);
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Tomorrow";
-  if (diff === -1) return "Yesterday";
-  return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-}
-
-function dayKey(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-}
-
-function isToday(iso: string): boolean {
-  return dayKey(iso) === dayKey(new Date().toISOString());
 }
 
 function matchesSearch(b: AdminBooking, q: string): boolean {
@@ -189,6 +158,7 @@ function SourceBadge({ source }: { source: AdminBooking["source"] }) {
 interface ModalProps {
   booking: AdminBooking;
   actionLoading: boolean;
+  tz: string;
   onClose: () => void;
   onConfirm: (id: string) => void;
   onCancel:  (id: string) => void;
@@ -196,7 +166,7 @@ interface ModalProps {
   onEdit:    (b: AdminBooking) => void;
 }
 
-function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, onDelete, onEdit }: ModalProps) {
+function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel, onDelete, onEdit }: ModalProps) {
   const duration    = daysDiff(booking.startDateTime, booking.endDateTime);
   const pricePerDay = Number(booking.totalPrice) / duration;
 
@@ -244,11 +214,11 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
           <div className={styles.priceSummary}>
             <div className={styles.priceRow}>
               <span className={styles.priceLabel}>Pick-up</span>
-              <span className={styles.priceValue}>{fmtDate(booking.startDateTime)}</span>
+              <span className={styles.priceValue}>{fmtDT(booking.startDateTime, tz)}</span>
             </div>
             <div className={styles.priceRow}>
               <span className={styles.priceLabel}>Return</span>
-              <span className={styles.priceValue}>{fmtDate(booking.endDateTime)}</span>
+              <span className={styles.priceValue}>{fmtDT(booking.endDateTime, tz)}</span>
             </div>
             <div className={styles.priceDivider} />
             <div className={styles.priceRow}>
@@ -328,18 +298,18 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
               <span className={styles.expirationIcon}>⏱</span>
               <span>Auto-cancelled — payment not received within 15 minutes</span>
               {booking.cancelledAt && (
-                <span className={styles.expirationTime}>at {fmtDateTime(booking.cancelledAt)}</span>
+                <span className={styles.expirationTime}>at {fmtDT(booking.cancelledAt, tz)}</span>
               )}
             </div>
           )}
 
           <div className={styles.timestamps}>
-            <p>Created {fmtDateTime(booking.createdAt)}</p>
+            <p>Created {fmtDT(booking.createdAt, tz)}</p>
             {booking.expiresAt && booking.status === "pending_payment" && (
-              <p>Expires {fmtDateTime(booking.expiresAt)}</p>
+              <p>Expires {fmtDT(booking.expiresAt, tz)}</p>
             )}
-            {booking.cancelledAt && <p>Cancelled {fmtDateTime(booking.cancelledAt)}</p>}
-            {booking.updatedAt !== booking.createdAt && <p>Updated {fmtDateTime(booking.updatedAt)}</p>}
+            {booking.cancelledAt && <p>Cancelled {fmtDT(booking.cancelledAt, tz)}</p>}
+            {booking.updatedAt !== booking.createdAt && <p>Updated {fmtDT(booking.updatedAt, tz)}</p>}
           </div>
         </div>
 
@@ -381,7 +351,7 @@ function BookingModal({ booking, actionLoading, onClose, onConfirm, onCancel, on
 
 // ── Timeline event card ───────────────────────────────────────────────────────
 
-function EventCard({ event, onOpen }: { event: TimelineEvent; onOpen: (b: AdminBooking) => void }) {
+function EventCard({ event, onOpen, tz }: { event: TimelineEvent; onOpen: (b: AdminBooking) => void; tz: string }) {
   const { type, booking } = event;
   const isPickup = type === "pickup";
 
@@ -409,7 +379,7 @@ function EventCard({ event, onOpen }: { event: TimelineEvent; onOpen: (b: AdminB
             {isPickup ? "Pick-up" : "Return"}
           </span>
           <span className={styles.eventTimeSep} aria-hidden="true">·</span>
-          <span className={styles.eventTime}>{fmtTime(event.dateTime)}</span>
+          <span className={styles.eventTime}>{fmtTimeUtil(event.dateTime, tz)}</span>
           <SourceBadge source={booking.source} />
         </div>
         <div className={styles.eventMeta}>
@@ -433,6 +403,7 @@ function EventCard({ event, onOpen }: { event: TimelineEvent; onOpen: (b: AdminB
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function AdminBookings() {
+  const tz = useBusinessTz();
   const [bookings,      setBookings]      = useState<AdminBooking[]>([]);
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState<string | null>(null);
@@ -591,16 +562,16 @@ export default function AdminBookings() {
     // Group by day
     const groups: { key: string; label: string; today: boolean; events: TimelineEvent[] }[] = [];
     for (const ev of events) {
-      const k = dayKey(ev.dateTime);
+      const k = dayKeyUtil(ev.dateTime, tz);
       let g = groups.find(g => g.key === k);
       if (!g) {
-        g = { key: k, label: dayLabel(ev.dateTime), today: isToday(ev.dateTime), events: [] };
+        g = { key: k, label: dayLabelUtil(ev.dateTime, tz), today: isTodayUtil(ev.dateTime, tz), events: [] };
         groups.push(g);
       }
       g.events.push(ev);
     }
     return groups;
-  }, [bookings, search, sourceFilter, carFilter]);
+  }, [bookings, search, sourceFilter, carFilter, tz]);
 
   // ── History tab: filter past + cancelled ──────────────────────────────────
 
@@ -788,7 +759,7 @@ export default function AdminBookings() {
                   </div>
                   <div className={styles.dayEvents}>
                     {group.events.map((ev, i) => (
-                      <EventCard key={`${ev.booking.id}-${i}`} event={ev} onOpen={openBookingDetail} />
+                      <EventCard key={`${ev.booking.id}-${i}`} event={ev} onOpen={openBookingDetail} tz={tz} />
                     ))}
                   </div>
                 </div>
@@ -886,8 +857,8 @@ export default function AdminBookings() {
                         </div>
                       </td>
                       <td className={styles.mono}>{b.car?.immatriculation ?? "—"}</td>
-                      <td className={styles.dateCell}>{fmtDate(b.startDateTime)}</td>
-                      <td className={styles.dateCell}>{fmtDate(b.endDateTime)}</td>
+                      <td className={styles.dateCell}>{fmtDT(b.startDateTime, tz)}</td>
+                      <td className={styles.dateCell}>{fmtDT(b.endDateTime, tz)}</td>
                       <td className={styles.center}>{daysDiff(b.startDateTime, b.endDateTime)}</td>
                       <td className={styles.priceCell}>{fmtPrice(b.totalPrice)}</td>
                       <td><SourceBadge source={b.source} /></td>
@@ -917,6 +888,7 @@ export default function AdminBookings() {
         <BookingModal
           booking={selected}
           actionLoading={actionLoading}
+          tz={tz}
           onClose={closeBookingDetail}
           onConfirm={id => updateStatus(id, "confirmed")}
           onCancel={id  => updateStatus(id, "cancelled")}

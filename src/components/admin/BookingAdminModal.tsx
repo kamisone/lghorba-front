@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import type { BookingSource, CalendarBooking, Car, GpsStopMode } from "./data";
 import GuestAutocomplete, { type GuestUser } from "./GuestAutocomplete";
+import { useBusinessTz } from "@/contexts/TzContext";
+import { isoToLocalDT } from "@/lib/dateUtils";
 import styles from "./RentScheduleModal.module.css";
 
 interface Props {
@@ -62,12 +64,6 @@ function computeForfaitKm(from: string, to: string): number {
   return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24))) * 200;
 }
 
-function toDateTimeInput(iso: string): string {
-  const d = new Date(iso);
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-}
-
 const EMPTY: FormValues = {
   source: "turo", from: "", to: "",
   guestName: "", guestNumber: "", guestEmail: "",
@@ -77,6 +73,7 @@ const EMPTY: FormValues = {
 };
 
 export default function BookingAdminModal({ car, booking, existingBookings, sessionStarted, onClose, onSaved, onDelete }: Props) {
+  const tz     = useBusinessTz();
   const isEdit = !!booking;
   // Lock the auto-start tracking toggle when a rent session already exists for
   // this booking (active or ended). Callers are responsible for passing
@@ -102,8 +99,8 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
       });
       setForm({
         source: booking.source,
-        from: toDateTimeInput(booking.startDateTime),
-        to: toDateTimeInput(booking.endDateTime),
+        from: isoToLocalDT(booking.startDateTime, tz),
+        to: isoToLocalDT(booking.endDateTime, tz),
         guestName: u?.name ?? "",
         guestNumber: u?.phone ?? "",
         guestEmail: u?.email ?? "",
@@ -119,7 +116,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
         color: booking.color ?? "",
       });
     }
-  }, [booking]);
+  }, [booking, tz]);
 
   const set = (field: keyof FormValues) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(prev => ({ ...prev, [field]: e.target.value }));
@@ -137,8 +134,8 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
   // If dates are unchanged there cannot be a NEW overlap introduced, and pre-existing
   // overlaps in the data should not block saving unrelated metadata changes.
   const datesChanged = !isEdit || !booking || (
-    form.from !== toDateTimeInput(booking.startDateTime) ||
-    form.to   !== toDateTimeInput(booking.endDateTime)
+    form.from !== isoToLocalDT(booking.startDateTime, tz) ||
+    form.to   !== isoToLocalDT(booking.endDateTime, tz)
   );
   const overlapDetected = datesChanged && existingBookings
     ? hasOverlap(form.from, form.to, existingBookings, booking?.id)

@@ -3,20 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import { type DateTimePickerHandle } from "@/components/DateTimePicker";
 import { type SelectedAddress } from "@/components/AddressAutocomplete";
 import { useResolvedBookingDates } from "@/hooks/useResolvedBookingDates";
+import { isoToLocalDT } from "@/lib/dateUtils";
 
 export type PrefillSource = "url" | "storage" | null;
-
-function isoToLocalDT(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 export function useBookingDates(
   urlStart:        string,
   urlEnd:          string,
   deliveryEnabled: boolean,
   deliveryType:    "radius" | "location" | null,
+  businessTz:      string = "Europe/Paris",
 ) {
   const searchCtx   = useResolvedBookingDates(urlStart, urlEnd);
   const endPickerRef = useRef<DateTimePickerHandle>(null);
@@ -30,15 +26,15 @@ export function useBookingDates(
 
   useEffect(() => {
     if (!searchCtx) return;
-    setStartRaw(isoToLocalDT(searchCtx.start));
-    setEndRaw(isoToLocalDT(searchCtx.end));
+    setStartRaw(isoToLocalDT(searchCtx.start, businessTz));
+    setEndRaw(isoToLocalDT(searchCtx.end, businessTz));
     setStartISO(searchCtx.start);
     setEndISO(searchCtx.end);
     setPrefillSource(searchCtx.source);
     if (deliveryEnabled && deliveryType === "radius" && searchCtx.address) {
       setPrefillAddress({ lat: searchCtx.address.lat, lng: searchCtx.address.lng, label: searchCtx.address.label });
     }
-  }, [searchCtx, deliveryEnabled, deliveryType]);
+  }, [searchCtx, deliveryEnabled, deliveryType, businessTz]);
 
   function setStartDateTime(v: string) {
     setStartRaw(v);

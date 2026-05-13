@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useBusinessTz } from "@/contexts/TzContext";
+import { fmtDateTime } from "@/lib/dateUtils";
 import styles from "./AdminReminders.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -98,13 +100,6 @@ function renderPreview(t: string) {
   return t.replace(/\{\{(\w+)\}\}/g, (_, k: string) => SAMPLE_VARS[k] ?? `{{${k}}}`);
 }
 
-function fmtDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
 
 function settingsDirtyCheck(a: ReminderSettings | null, b: ReminderSettings | null) {
   if (!a || !b) return false;
@@ -178,6 +173,7 @@ function StatusBadge({ status }: { status: ReminderLog["status"] }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AdminReminders() {
+  const tz           = useBusinessTz();
   const router       = useRouter();
   const searchParams = useSearchParams();
   const rawTab     = searchParams.get("tab");
@@ -688,7 +684,7 @@ export default function AdminReminders() {
                       <tr key={log.id}>
                         <td><StatusBadge status={log.status} /></td>
                         <td><span className={styles.mono}>{log.bookingId.slice(0, 8)}…</span></td>
-                        <td className={styles.nowrap}>{fmtDate(log.scheduledFor)}</td>
+                        <td className={styles.nowrap}>{log.scheduledFor ? fmtDateTime(log.scheduledFor, tz, "fr-FR") : "—"}</td>
                         <td><ChannelPill status={log.smsStatus} /></td>
                         <td className={styles.mono}>{log.recipientPhone ?? "—"}</td>
                         <td><ChannelPill status={log.emailStatus} /></td>
