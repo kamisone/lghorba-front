@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useBusinessTz } from "@/contexts/TzContext";
+import { useErrorStore } from "@/lib/errorReporter";
 import CommandPalette from "./CommandPalette";
+import ErrorsPanel from "@/components/admin/monitoring/ErrorsPanel";
 import styles from "./AdminTopBar.module.css";
 
 // ── Breadcrumb ────────────────────────────────────────────────────────────────
@@ -97,14 +99,18 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
   const crumbs    = buildBreadcrumb(pathname);
   const totalNotifs = pendingBookings + reminderFailures;
 
+  const { errors } = useErrorStore();
+
   const [paletteOpen,  setPaletteOpen]  = useState(false);
   const [profileOpen,  setProfileOpen]  = useState(false);
   const [notifOpen,    setNotifOpen]    = useState(false);
+  const [errorsOpen,   setErrorsOpen]   = useState(false);
   const [profile,      setProfile]      = useState<AdminProfile | null>(null);
   const [notifItems,   setNotifItems]   = useState<NotifItem[]>([]);
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef   = useRef<HTMLDivElement>(null);
+  const errorsRef  = useRef<HTMLDivElement>(null);
 
   // Fetch admin profile once
   useEffect(() => {
@@ -143,6 +149,7 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
     const h = (e: MouseEvent) => {
       if (!profileRef.current?.contains(e.target as Node)) setProfileOpen(false);
       if (!notifRef.current?.contains(e.target as Node))   setNotifOpen(false);
+      if (!errorsRef.current?.contains(e.target as Node))  setErrorsOpen(false);
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
@@ -204,6 +211,21 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
             <span className={`material-symbols-outlined ${styles.tzIcon}`}>schedule</span>
             <span className={styles.tzLabel}>{tz}</span>
           </Link>
+
+          {/* Error indicator */}
+          <div ref={errorsRef} className={styles.notifWrap}>
+            <button
+              className={`${styles.iconBtn} ${errors.length > 0 ? styles.iconBtnError : ""}`}
+              onClick={() => setErrorsOpen(o => !o)}
+              aria-label={`Client errors${errors.length > 0 ? ` (${errors.length})` : ""}`}
+            >
+              <span className="material-symbols-outlined">warning</span>
+              {errors.length > 0 && (
+                <span className={`${styles.badge} ${styles.badgeError}`}>{errors.length > 9 ? "9+" : errors.length}</span>
+              )}
+            </button>
+            {errorsOpen && <ErrorsPanel onClose={() => setErrorsOpen(false)} />}
+          </div>
 
           {/* Notifications */}
           <div ref={notifRef} className={styles.notifWrap}>

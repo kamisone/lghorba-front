@@ -186,6 +186,9 @@
 .iconBtnAlert { color: var(--color-warning); }
 .iconBtnAlert:hover { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
 
+.iconBtnError { color: var(--color-error, #dc2626); }
+.iconBtnError:hover { color: var(--color-error, #dc2626); background: var(--color-error-bg, #fef2f2); border-color: var(--color-error, #dc2626); }
+
 .badge {
   position: absolute;
   top: 4px;
@@ -203,6 +206,10 @@
   padding: 0 3px;
   pointer-events: none;
   line-height: 1;
+}
+
+.badgeError {
+  background: var(--color-error, #dc2626);
 }
 
 /* ── Dropdown shared ── */

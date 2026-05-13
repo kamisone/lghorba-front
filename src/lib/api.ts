@@ -13,7 +13,14 @@ export class ApiError extends Error {
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
-  if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => ({})));
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err  = new ApiError(res.status, body);
+    if (res.status >= 500 && typeof window !== "undefined") {
+      import("./errorReporter").then(({ reportError }) => reportError(err, { url, context: `api:${res.status}` }));
+    }
+    throw err;
+  }
   return res.json() as Promise<T>;
 }
 

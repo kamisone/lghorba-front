@@ -10,7 +10,7 @@ interface Props {
 
 export default function AdminError({ error, reset }: Props) {
   useEffect(() => {
-    // TODO: replace with captureException(error) once Sentry/Datadog is wired up
+    import("@/lib/errorReporter").then(({ reportError }) => reportError(error, { context: "admin-error-boundary" }));
     console.error("[admin error boundary]", error);
   }, [error]);
 
