@@ -21,7 +21,7 @@ export default function ClientHeader({ locale }: Props) {
     { href: `/${locale}#how`,       label: t.nav.howItWorks },
     { href: `/${locale}/contact`,   label: t.nav.contact },
   ];
-  const ctaHref = `/${locale}/contact`;
+  const ctaHref = `/${locale}/fleet`;
 
   return (
     <>
