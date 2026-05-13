@@ -3,8 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getTranslations } from "@/lib/i18n";
 import { type SelectedAddress } from "@/components/AddressAutocomplete";
+import { api, type CouponValidationResult } from "@/lib/api";
 import { type PriceResult } from "./useBookingPricing";
 import { type DeliveryLocationOption, type DeliveryValidation } from "./useDeliveryMode";
+
+export type { CouponValidationResult } from "@/lib/api";
 
 type ValidationMessages = ReturnType<typeof getTranslations>["booking"]["validation"];
 
@@ -24,9 +27,6 @@ function validateField(field: "name" | "email" | "phone", value: string, v: Vali
   return "";
 }
 
-export type CouponValidationResult =
-  | { valid: true;  discountAmount: number; finalPrice: number; code: string | null; name: string }
-  | { valid: false; error: string };
 
 interface Deps {
   carId:              string;
@@ -82,12 +82,8 @@ export function useBookingForm(deps: Deps) {
     couponTimerRef.current = setTimeout(async () => {
       setCouponChecking(true);
       try {
-        const res = await fetch("/next-api/public/promotions/validate", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: couponCode.trim(), carId, subtotal, deliveryFee, days }),
-        });
-        setCouponResult(await res.json() as CouponValidationResult);
+        const result = await api.promotions.validate({ code: couponCode.trim(), carId, subtotal, deliveryFee, days });
+        setCouponResult(result);
       } catch {
         setCouponResult(null);
       } finally {
@@ -135,26 +131,26 @@ export function useBookingForm(deps: Deps) {
           };
         }
       }
-      const res = await fetch("/next-api/public/bookings", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          carId,
-          startDateTime: startISO,
-          endDateTime:   endISO,
-          customerName:  name.trim(),
-          customerEmail: email.trim(),
-          customerPhone: phone.trim(),
-          ...(couponCode.trim() ? { couponCode: couponCode.trim() } : {}),
-          ...deliveryPayload,
-        }),
+      const data = await api.bookings.create({
+        carId,
+        startDateTime: startISO,
+        endDateTime:   endISO,
+        customerName:  name.trim(),
+        customerEmail: email.trim(),
+        customerPhone: phone.trim(),
+        ...(couponCode.trim() ? { couponCode: couponCode.trim() } : {}),
+        ...deliveryPayload as object,
       });
-      const data = await res.json();
-      if (!res.ok) { setSubmitError(data?.message ?? t.booking.genericError); return; }
       sessionStorage.setItem(`stripe_cs_${data.id}`, data.clientSecret);
       router.push(`/${locale}/fleet/${carId}/payment?bookingId=${data.id}`);
-    } catch {
-      setSubmitError(t.booking.networkError);
+    } catch (err) {
+      const { ApiError } = await import("@/lib/api");
+      if (err instanceof ApiError) {
+        const body = err.body as { message?: string } | null;
+        setSubmitError(body?.message ?? t.booking.genericError);
+      } else {
+        setSubmitError(t.booking.networkError);
+      }
     } finally {
       setSubmitting(false);
     }

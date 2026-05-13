@@ -1,22 +1,9 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { getTranslations } from "@/lib/i18n";
+import { api, type PriceResult } from "@/lib/api";
 
-export interface PriceBreakdownItem {
-  startDate:    string;
-  endDate:      string;
-  pricePerDay:  number;
-  days:         number;
-  subtotal:     number;
-  label:        string | null;
-}
-
-export interface PriceResult {
-  totalPrice:      number;
-  numberOfDays:    number;
-  breakdown:       PriceBreakdownItem[];
-  basePricePerDay: number | null;
-}
+export type { PriceBreakdownItem, PriceResult } from "@/lib/api";
 
 export function useBookingPricing(
   carId:        string,
@@ -37,18 +24,12 @@ export function useBookingPricing(
     setAvailable(null);
     setPriceResult(null);
     try {
-      const [availRes, priceRes] = await Promise.all([
-        fetch(`/next-api/public/cars/${carId}/availability?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`),
-        fetch(`/next-api/public/cars/${carId}/price?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`),
+      const [availData, priceData] = await Promise.all([
+        api.cars.checkAvailability(carId, start, end),
+        api.cars.getPrice(carId, start, end),
       ]);
-      if (availRes.ok) {
-        const data = await availRes.json();
-        setAvailable(data.available ?? false);
-      }
-      if (priceRes.ok) {
-        const data: PriceResult = await priceRes.json();
-        setPriceResult(data);
-      }
+      setAvailable(availData.available ?? false);
+      setPriceResult(priceData);
     } catch {
       // network error — leave states null
     } finally {

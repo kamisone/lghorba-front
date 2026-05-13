@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { type SelectedAddress } from "@/components/AddressAutocomplete";
+import { api, type DeliveryValidation } from "@/lib/api";
+
+export type { DeliveryValidation } from "@/lib/api";
 
 export interface DeliveryLocationOption {
   id:       string;
@@ -10,11 +13,6 @@ export interface DeliveryLocationOption {
   lng:      number;
   radiusKm: number;
   price:    number | null;
-}
-
-export interface DeliveryValidation {
-  available: boolean;
-  fee:       number | null;
 }
 
 export function useDeliveryMode(
@@ -46,18 +44,12 @@ export function useDeliveryMode(
     const controller = new AbortController();
     setCheckingDelivery(true);
     setDeliveryValidation(null);
-    fetch(`/next-api/public/cars/${carId}/delivery/validate`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        addressLat:   deliveryAddress.lat,
-        addressLng:   deliveryAddress.lng,
-        addressLabel: deliveryAddress.label,
-      }),
-      signal: controller.signal,
-    })
-      .then(r => r.ok ? r.json() as Promise<DeliveryValidation> : null)
-      .then(data => { if (data) setDeliveryValidation(data); })
+    api.cars.validateDelivery(
+      carId,
+      { addressLat: deliveryAddress.lat, addressLng: deliveryAddress.lng, addressLabel: deliveryAddress.label },
+      controller.signal,
+    )
+      .then(data => setDeliveryValidation(data))
       .catch(() => {/* ignore abort */})
       .finally(() => setCheckingDelivery(false));
     return () => controller.abort();

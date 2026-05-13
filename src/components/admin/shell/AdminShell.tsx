@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { api } from "@/lib/api";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopBar from "./AdminTopBar";
 import styles from "./AdminShell.module.css";
@@ -14,23 +15,17 @@ interface Counts {
 }
 
 async function fetchCounts(): Promise<Counts> {
-  const [bookingsRes, remindersRes] = await Promise.allSettled([
-    fetch("/next-api/bookings",                               { cache: "no-store" }),
-    fetch("/next-api/notifications/reminders/logs?status=failed&limit=50", { cache: "no-store" }),
+  const [bookingsResult, remindersResult] = await Promise.allSettled([
+    api.admin.bookings.list(),
+    api.admin.reminders.failedLogs(),
   ]);
 
-  let pendingBookings  = 0;
-  let reminderFailures = 0;
+  const pendingBookings = bookingsResult.status === "fulfilled"
+    ? bookingsResult.value.filter(b => b.status === "pending").length
+    : 0;
 
-  if (bookingsRes.status === "fulfilled" && bookingsRes.value.ok) {
-    const data: Array<{ status: string }> = await bookingsRes.value.json().catch(() => []);
-    pendingBookings = data.filter(b => b.status === "pending").length;
-  }
-
-  if (remindersRes.status === "fulfilled" && remindersRes.value.ok) {
-    const data: { total?: number; items?: unknown[] } = await remindersRes.value.json().catch(() => ({}));
-    reminderFailures = data.total ?? data.items?.length ?? 0;
-  }
+  const remindersData = remindersResult.status === "fulfilled" ? remindersResult.value : {};
+  const reminderFailures = remindersData.total ?? remindersData.items?.length ?? 0;
 
   return { pendingBookings, reminderFailures };
 }

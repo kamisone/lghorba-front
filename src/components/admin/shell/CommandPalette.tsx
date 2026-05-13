@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import styles from "./CommandPalette.module.css";
 
 // ── Static nav entries ────────────────────────────────────────────────────────
@@ -69,9 +70,8 @@ export default function CommandPalette({ open, onClose }: Props) {
   // Fetch cars once when palette opens
   useEffect(() => {
     if (!open) return;
-    fetch("/next-api/cars", { cache: "no-store" })
-      .then(r => r.ok ? r.json() : [])
-      .then((data: Array<{ id: string; name: string; brand?: string | null; model?: string | null; immatriculation?: string | null }>) => {
+    api.admin.cars.list()
+      .then(data => {
         setCars(data.map(c => ({
           type: "car" as const,
           id: c.id,
