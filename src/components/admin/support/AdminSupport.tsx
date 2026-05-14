@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { io, Socket } from "socket.io-client";
 import { getTranslations } from "@/lib/i18n";
 import { WS_HOST, WS_PATH } from "@/lib/wsConfig";
@@ -99,6 +100,29 @@ function lastSeenAdminMsgId(msgs: Message[]): string | null {
 export default function AdminSupport() {
   const locale = "en" as const;
   const t = getTranslations(locale).adminSupport;
+
+  const router      = useRouter();
+  const searchParams = useSearchParams();
+  const urlConvId    = searchParams.get("conv");
+
+  // Push/replace ?conv param without touching other query params.
+  const pushConvUrl = useCallback((id: string) => {
+    const p = new URLSearchParams(window.location.search);
+    p.set("conv", id);
+    router.push(`${window.location.pathname}?${p}`, { scroll: false });
+  }, [router]);
+
+  const clearConvUrl = useCallback(() => {
+    const p = new URLSearchParams(window.location.search);
+    p.delete("conv");
+    const qs = p.toString();
+    router.replace(qs ? `${window.location.pathname}?${qs}` : window.location.pathname, { scroll: false });
+  }, [router]);
+
+  // Ref keeps the WS handler (closed over once in a [] effect) pointing at the
+  // always-fresh clearConvUrl without adding it to the effect's dep array.
+  const clearConvUrlRef = useRef(clearConvUrl);
+  clearConvUrlRef.current = clearConvUrl;
 
   const statusLabel = (s: string) =>
     ({ open: t.status.open, waiting_admin: t.status.waiting, waiting_guest: t.status.replied, closed: t.status.closed, archived: t.status.archived })[s] ?? s;
@@ -228,7 +252,11 @@ export default function AdminSupport() {
         socket.on("conversation:update", (update: Partial<Conversation> & { id: string; deleted?: boolean }) => {
           if (update.deleted) {
             setConversations(prev => prev.filter(c => c.id !== update.id));
-            if (selectedIdRef.current === update.id) { setSelectedId(null); setMessages([]); }
+            if (selectedIdRef.current === update.id) {
+              setSelectedId(null);
+              setMessages([]);
+              clearConvUrlRef.current();
+            }
             return;
           }
           setConversations(prev => {
@@ -305,7 +333,10 @@ export default function AdminSupport() {
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
-  const selectConversation = useCallback(async (id: string) => {
+  // Load messages + join socket room — no URL side effect.
+  // Called both by selectConversation (user click) and the URL-reaction effect
+  // (back/forward navigation, initial page load with ?conv=…).
+  const loadConversationById = useCallback(async (id: string) => {
     setSelectedId(id);
     setMsgLoading(true);
     setConversations(prev => prev.map(c => c.id === id ? { ...c, unreadAdminCount: 0 } : c));
@@ -318,6 +349,22 @@ export default function AdminSupport() {
       }
     } finally { setMsgLoading(false); }
   }, []);
+
+  // User-initiated selection: load data + push ?conv=<id> into history.
+  const selectConversation = useCallback((id: string) => {
+    loadConversationById(id);
+    pushConvUrl(id);
+  }, [loadConversationById, pushConvUrl]);
+
+  // React to URL changes from back/forward navigation and direct URL loads.
+  useEffect(() => {
+    if (!urlConvId) {
+      if (selectedIdRef.current !== null) { setSelectedId(null); setMessages([]); }
+      return;
+    }
+    if (urlConvId === selectedIdRef.current) return;
+    loadConversationById(urlConvId);
+  }, [urlConvId, loadConversationById]);
 
   // ── Send with ACK ──────────────────────────────────────────────────────────
 
@@ -417,7 +464,7 @@ export default function AdminSupport() {
   const deleteConversation = async (id: string) => {
     await fetch(`/next-api/support/admin/conversations/${id}`, { method: "DELETE" });
     setConversations(prev => prev.filter(c => c.id !== id));
-    if (selectedId === id) { setSelectedId(null); setMessages([]); }
+    if (selectedId === id) { setSelectedId(null); setMessages([]); clearConvUrl(); }
     setDeleteConfirmId(null);
   };
 
