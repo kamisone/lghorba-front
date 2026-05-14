@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   response.cookies.set(ACCESS_COOKIE, access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     maxAge: COOKIE_MAX_AGE,
   });

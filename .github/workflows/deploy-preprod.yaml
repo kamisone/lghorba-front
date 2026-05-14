@@ -57,6 +57,7 @@ jobs:
           script: |
             kubectl delete secret front-envs --ignore-not-found=true
             kubectl create secret generic front-envs \
+            --from-literal NODE_ENV=${{ secrets.NODE_ENV }} \
             --from-literal PREPROD_PUBLIC_APP_URL=${{ secrets.PREPROD_PUBLIC_APP_URL }} \
             --from-literal API_BASE_URL_SERVER=${{ secrets.API_BASE_URL_SERVER }}
             kubectl apply -f /srv/k8s/front
