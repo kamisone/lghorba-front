@@ -40,16 +40,19 @@ interface UseSupportChatReturn {
   status:         ConnectionStatus;
   unreadCount:    number;
   conversationId: string | null;
+  adminTyping:    boolean;
   sendMessage:    (content: string, guestName?: string) => void;
   retryMessage:   (clientId: string) => void;
   markRead:       () => void;
   retry:          () => void;
+  emitTyping:     (isTyping: boolean) => void;
 }
 
 export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
   const [messages,       setMessages]       = useState<SupportMessage[]>([]);
   const [status,         setStatus]         = useState<ConnectionStatus>("idle");
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [adminTyping,    setAdminTyping]    = useState(false);
 
   // ── Derived unread count ───────────────────────────────────────────────────
   // Count admin messages the guest has not yet seen (readAt === null).
@@ -167,8 +170,12 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
       ));
     });
 
+    socket.on("user:typing", ({ senderType, isTyping }: { senderType: string; isTyping: boolean }) => {
+      if (senderType === "admin") setAdminTyping(isTyping);
+    });
+
     socket.on("connect",       async () => { setStatus("connected"); await onReconnect(socket); });
-    socket.on("disconnect",    ()       => setStatus("disconnected"));
+    socket.on("disconnect",    ()       => { setAdminTyping(false); setStatus("disconnected"); });
     socket.on("connect_error", ()       => setStatus("error"));
 
     socketRef.current = socket;
@@ -303,7 +310,11 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
     connect();
   }, [connect]);
 
-  return { messages, status, unreadCount, conversationId, sendMessage, retryMessage, markRead, retry };
+  const emitTyping = useCallback((isTyping: boolean) => {
+    socketRef.current?.emit("typing", { isTyping });
+  }, []);
+
+  return { messages, status, unreadCount, conversationId, adminTyping, sendMessage, retryMessage, markRead, retry, emitTyping };
 }
 
 // ── Utility: merge + dedup by id ──────────────────────────────────────────────

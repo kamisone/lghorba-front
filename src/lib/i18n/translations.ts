@@ -596,6 +596,7 @@ export const en = {
     statusFailed:     "Failed",
     tabUnreadOne:     "New message — Support",
     tabUnreadMany:    "new messages — Support",
+    agentTyping:      "Support is typing…",
   },
   adminSupport: {
     title:            "Support",
@@ -632,6 +633,7 @@ export const en = {
       closedNotice: "This conversation is closed.",
       archived:     "This conversation is archived.",
       firstReply:   "First reply",
+      guestTyping:  "Guest is typing…",
     },
     confirm: {
       deleteTitle: "Delete conversation?",
@@ -1251,6 +1253,7 @@ export const fr: Translations = {
     statusFailed:     "Échec",
     tabUnreadOne:     "Nouveau message — Support",
     tabUnreadMany:    "nouveaux messages — Support",
+    agentTyping:      "Le support est en train d'écrire…",
   },
   adminSupport: {
     title:            "Support",
@@ -1287,6 +1290,7 @@ export const fr: Translations = {
       closedNotice: "Cette conversation est fermée.",
       archived:     "Cette conversation est archivée.",
       firstReply:   "Première réponse",
+      guestTyping:  "Le client est en train d'écrire…",
     },
     confirm: {
       deleteTitle: "Supprimer la conversation ?",

@@ -129,11 +129,13 @@ export default function AdminSupport() {
   const [wsStatus,        setWsStatus]        = useState<"connecting" | "connected" | "error">("connecting");
   const [analytics,       setAnalytics]       = useState<Analytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [guestTyping,     setGuestTyping]     = useState<Record<string, boolean>>({});
 
   const socketRef        = useRef<Socket | null>(null);
   const bottomRef        = useRef<HTMLDivElement>(null);
   const filterRef        = useRef<FilterStatus>("all");
   const searchRef        = useRef("");
+  const typingTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   filterRef.current = filter;
   searchRef.current = search;
@@ -240,6 +242,14 @@ export default function AdminSupport() {
           });
         });
 
+        socket.on("user:typing", ({ conversationId, senderType, isTyping }: {
+          conversationId: string; senderType: string; isTyping: boolean;
+        }) => {
+          if (senderType === "guest") {
+            setGuestTyping(prev => ({ ...prev, [conversationId]: isTyping }));
+          }
+        });
+
         socketRef.current = socket;
       })
       .catch(() => setWsStatus("error"));
@@ -298,9 +308,22 @@ export default function AdminSupport() {
 
   // ── Send with ACK ──────────────────────────────────────────────────────────
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value.slice(0, 2000));
+    const socket = socketRef.current;
+    if (!selectedId || !socket?.connected) return;
+    socket.emit("typing", { conversationId: selectedId, isTyping: true });
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      socket.emit("typing", { conversationId: selectedId, isTyping: false });
+    }, 2000);
+  };
+
   const sendMessage = () => {
     const socket = socketRef.current;
     if (!selectedId || !input.trim() || wsStatus !== "connected" || !socket) return;
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    socket.emit("typing", { conversationId: selectedId, isTyping: false });
 
     const clientId = crypto.randomUUID();
     const optimistic: Message = {
@@ -598,6 +621,15 @@ export default function AdminSupport() {
               <div ref={bottomRef} />
             </div>
 
+            {selectedId && guestTyping[selectedId] && (
+              <div className={styles.typingIndicator}>
+                <span className={styles.typingDot} />
+                <span className={styles.typingDot} />
+                <span className={styles.typingDot} />
+                <span className={styles.typingLabel}>{t.chat.guestTyping}</span>
+              </div>
+            )}
+
             {selected.status !== "closed" && selected.status !== "archived" ? (
               <div className={styles.inputRow}>
                 <textarea
@@ -605,7 +637,7 @@ export default function AdminSupport() {
                   placeholder={t.chat.placeholder}
                   value={input}
                   rows={2}
-                  onChange={e => setInput(e.target.value.slice(0, 2000))}
+                  onChange={handleInputChange}
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                 />
                 <button className={styles.sendBtn} onClick={sendMessage} disabled={!input.trim() || wsStatus !== "connected"}>

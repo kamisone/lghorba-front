@@ -47,12 +47,13 @@ export default function SupportWidget({ locale }: Props) {
   const [guestName, setGuestName] = useState("");
   const [nameSet,   setNameSet]   = useState(false);
 
-  const { messages, status, unreadCount, sendMessage, retryMessage, retry } = useSupportChat(open);
+  const { messages, status, unreadCount, adminTyping, sendMessage, retryMessage, retry, emitTyping } = useSupportChat(open);
 
   const bottomRef        = useRef<HTMLDivElement>(null);
   const inputRef         = useRef<HTMLTextAreaElement>(null);
   const originalTitleRef = useRef<string>("");
   const prevUnreadRef    = useRef(0);
+  const typingTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Capture the page title once on mount so we can restore it later
   useEffect(() => { originalTitleRef.current = document.title; }, []);
@@ -108,9 +109,19 @@ export default function SupportWidget({ locale }: Props) {
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
+  const handleTypingChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value.slice(0, MAX_LEN));
+    if (status !== "connected") return;
+    emitTyping(true);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => emitTyping(false), 2000);
+  };
+
   const handleSend = () => {
     const content = input.trim();
     if (!content || status !== "connected") return;
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    emitTyping(false);
     const name = !nameSet && guestName.trim() ? guestName.trim() : undefined;
     if (name) setNameSet(true);
     sendMessage(content, name);
@@ -197,6 +208,14 @@ export default function SupportWidget({ locale }: Props) {
             {(status === "connecting" || status === "idle") && (
               <p className={styles.connectingMsg}>{t.connecting}</p>
             )}
+            {adminTyping && (
+              <div className={styles.typingIndicator}>
+                <span className={styles.typingDot} />
+                <span className={styles.typingDot} />
+                <span className={styles.typingDot} />
+                <span className={styles.typingLabel}>{t.agentTyping}</span>
+              </div>
+            )}
             <div ref={bottomRef} />
           </div>
 
@@ -220,7 +239,7 @@ export default function SupportWidget({ locale }: Props) {
               className={styles.input}
               placeholder={status === "connected" ? t.inputPlaceholder : t.notConnected}
               value={input}
-              onChange={e => setInput(e.target.value.slice(0, MAX_LEN))}
+              onChange={handleTypingChange}
               onKeyDown={handleKey}
               rows={2}
               disabled={status !== "connected"}
