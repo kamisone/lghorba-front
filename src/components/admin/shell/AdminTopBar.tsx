@@ -27,6 +27,7 @@ const SEGMENT_LABELS: Record<string, string | null> = {
   "guest-access":    "Guest Access",
   content:           "Content",
   "email-ingestion": "Email Import",
+  support:           "Support",
   notifications:     null,
   reminders:         "Reminders",
   management:        "Management",

@@ -1,0 +1,650 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
+import { getTranslations } from "@/lib/i18n";
+import styles from "./AdminSupport.module.css";
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface Conversation {
+  id: string;
+  guestToken: string;
+  guestName: string | null;
+  assignedAdminId: string | null;
+  status: string;
+  lastMessageAt: string | null;
+  unreadAdminCount: number;
+  firstResponseAt: string | null;
+  createdAt: string;
+}
+
+interface Message {
+  id: string;
+  conversationId: string;
+  senderType: "guest" | "admin" | "system";
+  senderId: string | null;
+  content: string;
+  readAt: string | null;
+  createdAt: string;
+  // Admin-side lifecycle
+  _clientId?: string;
+  _status?: "sending" | "sent" | "failed";
+}
+
+interface NotifSettings {
+  smsEnabled:         boolean;
+  smsPhones:          string[];
+  smsCooldownMin:     number;
+  inactiveCloseHours: number;
+}
+
+interface Analytics {
+  totalConversations:  number;
+  openConversations:   number;
+  closedToday:         number;
+  unresolvedCount:     number;
+  avgFirstResponseMs:  number | null;
+  messageVolumeByDay:  { date: string; count: number }[];
+  peakHours:           { hour: number; count: number }[];
+}
+
+type FilterStatus = "all" | "open" | "waiting_admin" | "waiting_guest" | "closed" | "archived";
+type Tab = "conversations" | "analytics";
+
+const WS_URL      = process.env.API_BASE_URL_BROWSER;
+const ACK_TIMEOUT = 8_000;
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+// Cache formatters — Intl object creation is expensive
+const rtfCache = new Map<string, Intl.RelativeTimeFormat>();
+function rtf(locale: string) {
+  if (!rtfCache.has(locale))
+    rtfCache.set(locale, new Intl.RelativeTimeFormat(locale, { numeric: "auto" }));
+  return rtfCache.get(locale)!;
+}
+
+function relTime(iso: string | null, locale: string): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  const fmt  = rtf(locale);
+  if (diff < 60_000)     return fmt.format(-Math.floor(diff / 1_000),    "second");
+  if (diff < 3_600_000)  return fmt.format(-Math.floor(diff / 60_000),   "minute");
+  if (diff < 86_400_000) return fmt.format(-Math.floor(diff / 3_600_000),"hour");
+  return fmt.format(-Math.floor(diff / 86_400_000), "day");
+}
+
+function fmtMs(ms: number | null): string {
+  if (ms === null) return "—";
+  if (ms < 60_000)    return `${Math.round(ms / 1_000)}s`;
+  if (ms < 3_600_000) return `${Math.round(ms / 60_000)}m`;
+  return `${Math.round(ms / 3_600_000)}h`;
+}
+
+function statusClass(s: string, css: Record<string, string>): string {
+  return ({ open: css.statusOpen, waiting_admin: css.statusWaiting, waiting_guest: css.statusReplied, closed: css.statusClosed, archived: css.statusClosed })[s] ?? "";
+}
+
+// Last admin message that the guest has read
+function lastSeenAdminMsgId(msgs: Message[]): string | null {
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    if (msgs[i].senderType === "admin" && msgs[i].readAt) return msgs[i].id;
+  }
+  return null;
+}
+
+// ── Component ──────────────────────────────────────────────────────────────────
+
+export default function AdminSupport() {
+  const locale = "en" as const;
+  const t = getTranslations(locale).adminSupport;
+
+  const statusLabel = (s: string) =>
+    ({ open: t.status.open, waiting_admin: t.status.waiting, waiting_guest: t.status.replied, closed: t.status.closed, archived: t.status.archived })[s] ?? s;
+
+  const [tab,             setTab]             = useState<Tab>("conversations");
+  const [conversations,   setConversations]   = useState<Conversation[]>([]);
+  const [selectedId,      setSelectedId]      = useState<string | null>(null);
+  const [messages,        setMessages]        = useState<Message[]>([]);
+  const [filter,          setFilter]          = useState<FilterStatus>("all");
+  const [search,          setSearch]          = useState("");
+  const [input,           setInput]           = useState("");
+  const [loading,         setLoading]         = useState(true);
+  const [msgLoading,      setMsgLoading]      = useState(false);
+  const [settings,        setSettings]        = useState<NotifSettings | null>(null);
+  const [showSettings,    setShowSettings]    = useState(false);
+  const [phoneDraft,      setPhoneDraft]      = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [wsStatus,        setWsStatus]        = useState<"connecting" | "connected" | "error">("connecting");
+  const [analytics,       setAnalytics]       = useState<Analytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  const socketRef        = useRef<Socket | null>(null);
+  const bottomRef        = useRef<HTMLDivElement>(null);
+  const pendingRef       = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const selectedIdRef    = useRef<string | null>(null);
+  const activeTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const originalTitleRef = useRef<string>("");
+
+  useEffect(() => { originalTitleRef.current = document.title; }, []);
+
+  useEffect(() => {
+    if (!originalTitleRef.current) return;
+    const total = conversations.reduce((s, c) => s + c.unreadAdminCount, 0);
+    document.title = total > 0
+      ? total === 1 ? t.tabUnreadOne : `(${total}) ${t.tabUnreadMany}`
+      : originalTitleRef.current;
+  }, [conversations, t]);
+
+  useEffect(() => () => { if (originalTitleRef.current) document.title = originalTitleRef.current; }, []);
+
+  selectedIdRef.current = selectedId;
+
+  const selected  = conversations.find(c => c.id === selectedId) ?? null;
+  const seenMsgId = lastSeenAdminMsgId(messages);
+
+  // ── Passive seen: emit conversation:active ─────────────────────────────────
+
+  const emitActive = useCallback(() => {
+    if (activeTimerRef.current) clearTimeout(activeTimerRef.current);
+    activeTimerRef.current = setTimeout(() => {
+      activeTimerRef.current = null;
+      const socket = socketRef.current;
+      const id     = selectedIdRef.current;
+      if (!socket?.connected || !id || document.visibilityState !== "visible") return;
+      socket.emit("conversation:active", { conversationId: id });
+      // Optimistic: clear local unread count for this conversation
+      setConversations(prev => prev.map(c => c.id === id ? { ...c, unreadAdminCount: 0 } : c));
+    }, 400);
+  }, []);
+
+  // ── WebSocket ──────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/next-api/support/ws-ticket")
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { token: string } | null) => {
+        if (cancelled || !data?.token) return;
+
+        const socket = io(`${WS_URL}/support`, {
+          auth:       { adminToken: data.token },
+          transports: ["websocket", "polling"],
+        });
+
+        socket.on("connected",     () => setWsStatus("connected"));
+        socket.on("connect_error", () => setWsStatus("error"));
+
+        socket.on("message:new", (msg: Message & { clientId?: string }) => {
+          const incomingClientId = msg.clientId ?? msg._clientId;
+          setMessages(prev => {
+            if (prev.some(m => m.id === msg.id)) return prev;
+            if (incomingClientId && prev.some(m => m._clientId === incomingClientId)) return prev;
+            return [...prev, { ...msg, _clientId: incomingClientId, _status: "sent" as const }];
+          });
+          // If this message is in the currently viewed conversation and the tab is
+          // visible, auto-mark it as read without requiring any user action.
+          if (msg.senderType === "guest" && msg.conversationId === selectedIdRef.current) {
+            emitActive();
+          }
+        });
+
+        socket.on("messages:seen", ({ seenAt, messageIds }: { seenBy: string; seenAt: string; messageIds: string[] }) => {
+          setMessages(prev => prev.map(m => messageIds.includes(m.id) ? { ...m, readAt: seenAt } : m));
+        });
+
+        socket.on("conversation:update", (update: Partial<Conversation> & { id: string; deleted?: boolean }) => {
+          if (update.deleted) {
+            setConversations(prev => prev.filter(c => c.id !== update.id));
+            if (selectedId === update.id) { setSelectedId(null); setMessages([]); }
+            return;
+          }
+          setConversations(prev => prev.map(c => c.id === update.id ? { ...c, ...update } : c));
+        });
+
+        socketRef.current = socket;
+      })
+      .catch(() => setWsStatus("error"));
+
+    return () => {
+      cancelled = true;
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  // Emit active when admin selects a conversation
+  useEffect(() => { if (selectedId) emitActive(); }, [selectedId, emitActive]);
+
+  // Emit active when tab regains focus while a conversation is open
+  useEffect(() => {
+    const onVisibility = () => { if (document.visibilityState === "visible" && selectedIdRef.current) emitActive(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [emitActive]);
+
+  // ── Conversations ──────────────────────────────────────────────────────────
+
+  const loadConversations = useCallback(async () => {
+    setLoading(true);
+    try {
+      const qs = new URLSearchParams();
+      if (filter !== "all") qs.set("status", filter);
+      if (search) qs.set("search", search);
+      const res = await fetch(`/next-api/support/admin/conversations?${qs}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json() as { conversations: Conversation[] };
+        setConversations(data.conversations ?? []);
+      }
+    } finally { setLoading(false); }
+  }, [filter, search]);
+
+  useEffect(() => { loadConversations(); }, [loadConversations]);
+
+  const selectConversation = useCallback(async (id: string) => {
+    setSelectedId(id);
+    setMsgLoading(true);
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, unreadAdminCount: 0 } : c));
+    socketRef.current?.emit("admin:join:conversation", { conversationId: id });
+    try {
+      const res = await fetch(`/next-api/support/admin/conversations/${id}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json() as { messages: Message[] };
+        setMessages((data.messages ?? []).map(m => ({ ...m, _status: "sent" as const })));
+      }
+    } finally { setMsgLoading(false); }
+  }, []);
+
+  // ── Send with ACK ──────────────────────────────────────────────────────────
+
+  const sendMessage = () => {
+    const socket = socketRef.current;
+    if (!selectedId || !input.trim() || wsStatus !== "connected" || !socket) return;
+
+    const clientId = crypto.randomUUID();
+    const optimistic: Message = {
+      id: `opt-${clientId}`, conversationId: selectedId,
+      senderType: "admin", senderId: null,
+      content: input.trim(), readAt: null,
+      createdAt: new Date().toISOString(),
+      _clientId: clientId, _status: "sending",
+    };
+
+    setMessages(prev => [...prev, optimistic]);
+    setInput("");
+
+    const timer = setTimeout(() => {
+      pendingRef.current.delete(clientId);
+      setMessages(prev => prev.map(m => m._clientId === clientId ? { ...m, _status: "failed" } : m));
+    }, ACK_TIMEOUT);
+
+    pendingRef.current.set(clientId, timer);
+
+    socket.emit(
+      "admin:message:send",
+      { conversationId: selectedId, content: optimistic.content, clientId },
+      (ack: { ok: boolean; message?: Message; clientId?: string }) => {
+        clearTimeout(timer);
+        pendingRef.current.delete(clientId);
+        if (ack.ok && ack.message) {
+          setMessages(prev => prev.map(m =>
+            m._clientId === clientId ? { ...ack.message!, _clientId: clientId, _status: "sent" } : m,
+          ));
+        } else {
+          setMessages(prev => prev.map(m => m._clientId === clientId ? { ...m, _status: "failed" } : m));
+        }
+      },
+    );
+  };
+
+  const retryAdminMessage = (clientId: string) => {
+    const socket = socketRef.current;
+    const msg = messages.find(m => m._clientId === clientId);
+    if (!msg || !socket || wsStatus !== "connected") return;
+
+    setMessages(prev => prev.map(m => m._clientId === clientId ? { ...m, _status: "sending" } : m));
+
+    const timer = setTimeout(() => {
+      pendingRef.current.delete(clientId);
+      setMessages(prev => prev.map(m => m._clientId === clientId ? { ...m, _status: "failed" } : m));
+    }, ACK_TIMEOUT);
+    pendingRef.current.set(clientId, timer);
+
+    socket.emit(
+      "admin:message:send",
+      { conversationId: selectedId, content: msg.content, clientId },
+      (ack: { ok: boolean; message?: Message }) => {
+        clearTimeout(timer);
+        pendingRef.current.delete(clientId);
+        if (ack.ok && ack.message) {
+          setMessages(prev => prev.map(m =>
+            m._clientId === clientId ? { ...ack.message!, _clientId: clientId, _status: "sent" } : m,
+          ));
+        } else {
+          setMessages(prev => prev.map(m => m._clientId === clientId ? { ...m, _status: "failed" } : m));
+        }
+      },
+    );
+  };
+
+  // ── Admin actions ──────────────────────────────────────────────────────────
+
+  const setStatus = async (id: string, status: string) => {
+    await fetch(`/next-api/support/admin/conversations/${id}/status`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+  };
+
+  const deleteConversation = async (id: string) => {
+    await fetch(`/next-api/support/admin/conversations/${id}`, { method: "DELETE" });
+    setConversations(prev => prev.filter(c => c.id !== id));
+    if (selectedId === id) { setSelectedId(null); setMessages([]); }
+    setDeleteConfirmId(null);
+  };
+
+  // ── Settings ───────────────────────────────────────────────────────────────
+
+  const loadSettings = async () => {
+    const res = await fetch("/next-api/support/admin/settings");
+    if (res.ok) setSettings(await res.json());
+  };
+
+  const saveSettings = async () => {
+    if (!settings) return;
+    await fetch("/next-api/support/admin/settings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    });
+  };
+
+  const addPhone = () => {
+    const p = phoneDraft.trim();
+    if (!p || settings?.smsPhones.includes(p)) return;
+    setSettings(s => s ? { ...s, smsPhones: [...s.smsPhones, p] } : s);
+    setPhoneDraft("");
+  };
+
+  useEffect(() => { if (showSettings) loadSettings(); }, [showSettings]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Analytics ──────────────────────────────────────────────────────────────
+
+  const loadAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true);
+    try {
+      const res = await fetch("/next-api/support/admin/analytics", { cache: "no-store" });
+      if (res.ok) setAnalytics(await res.json());
+    } finally { setAnalyticsLoading(false); }
+  }, []);
+
+  useEffect(() => { if (tab === "analytics") loadAnalytics(); }, [tab, loadAnalytics]);
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  const filtered = conversations.filter(c =>
+    (filter === "all" || c.status === filter) &&
+    (!search || (c.guestName ?? c.guestToken).toLowerCase().includes(search.toLowerCase())),
+  );
+
+  return (
+    <div className={styles.page}>
+
+      {/* ── Sidebar ── */}
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarHeader}>
+          <h1 className={styles.sidebarTitle}>
+            <span className="material-symbols-outlined">support_agent</span>
+            {t.title}
+          </h1>
+          <div className={styles.sidebarActions}>
+            <span className={`${styles.wsIndicator} ${wsStatus === "connected" ? styles.wsGreen : styles.wsRed}`} title={wsStatus} />
+            <button className={styles.settingsBtn} onClick={() => setShowSettings(true)} title={t.notifTitle}>
+              <span className="material-symbols-outlined">tune</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Tab switcher */}
+        <div className={styles.tabRow}>
+          <button className={`${styles.tabBtn} ${tab === "conversations" ? styles.tabBtnActive : ""}`} onClick={() => setTab("conversations")}>{t.tabConversations}</button>
+          <button className={`${styles.tabBtn} ${tab === "analytics"    ? styles.tabBtnActive : ""}`} onClick={() => setTab("analytics")}>{t.tabAnalytics}</button>
+        </div>
+
+        {tab === "conversations" && <>
+          <div className={styles.searchWrap}>
+            <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
+            <input className={styles.searchInput} placeholder={t.search} value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+
+          <div className={styles.filterTabs}>
+            {(["all","waiting_admin","open","waiting_guest","closed","archived"] as FilterStatus[]).map(f => (
+              <button key={f} className={`${styles.filterTab} ${filter === f ? styles.filterTabActive : ""}`} onClick={() => setFilter(f)}>
+                {f === "all" ? t.filterAll : statusLabel(f)}
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.convList}>
+            {loading && <p className={styles.loadingMsg}>{t.loading}</p>}
+            {!loading && filtered.length === 0 && <p className={styles.emptyMsg}>{t.empty}</p>}
+            {filtered.map(conv => (
+              <button key={conv.id} className={`${styles.convItem} ${selectedId === conv.id ? styles.convItemActive : ""}`} onClick={() => selectConversation(conv.id)}>
+                <div className={styles.convItemTop}>
+                  <span className={styles.convGuestName}>{conv.guestName ?? conv.guestToken.slice(0, 8).toUpperCase()}</span>
+                  <span className={styles.convTime}>{relTime(conv.lastMessageAt, locale)}</span>
+                </div>
+                <div className={styles.convItemBottom}>
+                  <span className={`${styles.statusBadge} ${statusClass(conv.status, styles)}`}>{statusLabel(conv.status)}</span>
+                  {conv.unreadAdminCount > 0 && <span className={styles.unreadBadge}>{conv.unreadAdminCount}</span>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </>}
+
+        {tab === "analytics" && (
+          <div className={styles.analyticsPanel}>
+            {analyticsLoading && <p className={styles.loadingMsg}>{t.loading}</p>}
+            {analytics && <>
+              <div className={styles.statGrid}>
+                <div className={styles.stat}><span className={styles.statVal}>{analytics.totalConversations}</span><span className={styles.statLabel}>{t.analytics.total}</span></div>
+                <div className={styles.stat}><span className={styles.statVal}>{analytics.openConversations}</span><span className={styles.statLabel}>{t.analytics.open}</span></div>
+                <div className={styles.stat}><span className={styles.statVal}>{analytics.closedToday}</span><span className={styles.statLabel}>{t.analytics.closedToday}</span></div>
+                <div className={styles.stat}><span className={`${styles.statVal} ${analytics.unresolvedCount > 0 ? styles.statValWarn : ""}`}>{analytics.unresolvedCount}</span><span className={styles.statLabel}>{t.analytics.unresolved}</span></div>
+              </div>
+              <div className={styles.statFull}>
+                <span className={styles.statLabel}>{t.analytics.avgResponse}</span>
+                <span className={styles.statVal}>{fmtMs(analytics.avgFirstResponseMs)}</span>
+              </div>
+              <div className={styles.chartSection}>
+                <p className={styles.chartTitle}>{t.analytics.volume}</p>
+                <div className={styles.barChart}>
+                  {analytics.messageVolumeByDay.slice(-14).map(d => {
+                    const max = Math.max(...analytics.messageVolumeByDay.map(x => x.count), 1);
+                    return (
+                      <div key={d.date} className={styles.barWrap} title={`${d.date}: ${d.count}`}>
+                        <div className={styles.bar} style={{ height: `${Math.round((d.count / max) * 100)}%` }} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className={styles.chartSection}>
+                <p className={styles.chartTitle}>{t.analytics.peakHours}</p>
+                <div className={styles.barChart}>
+                  {analytics.peakHours.map(h => {
+                    const max = Math.max(...analytics.peakHours.map(x => x.count), 1);
+                    return (
+                      <div key={h.hour} className={styles.barWrap} title={`${h.hour}:00 — ${h.count}`}>
+                        <div className={styles.bar} style={{ height: `${Math.round((h.count / max) * 100)}%` }} />
+                        <span className={styles.barLabel}>{h.hour}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>}
+          </div>
+        )}
+      </aside>
+
+      {/* ── Chat pane ── */}
+      <main className={styles.chat}>
+        {!selected ? (
+          <div className={styles.emptyChat}>
+            <span className={`material-symbols-outlined ${styles.emptyChatIcon}`}>forum</span>
+            <p>{t.selectPrompt}</p>
+          </div>
+        ) : (
+          <>
+            <div className={styles.chatHeader}>
+              <div>
+                <p className={styles.chatGuestName}>{selected.guestName ?? selected.guestToken.slice(0,8).toUpperCase()}</p>
+                <p className={styles.chatMeta}>
+                  {selected.id.slice(0,8).toUpperCase()} ·{" "}
+                  <span className={`${styles.statusBadge} ${statusClass(selected.status, styles)}`}>{statusLabel(selected.status)}</span>
+                  {selected.firstResponseAt && <span className={styles.responseTime}> · {t.chat.firstReply} {relTime(selected.firstResponseAt, locale)}</span>}
+                </p>
+              </div>
+              <div className={styles.chatActions}>
+                {selected.status !== "closed" ? (
+                  <button className={styles.actionBtn} onClick={() => setStatus(selected.id, "closed")}>
+                    <span className="material-symbols-outlined">check_circle</span>{t.actions.close}
+                  </button>
+                ) : (
+                  <button className={styles.actionBtn} onClick={() => setStatus(selected.id, "open")}>
+                    <span className="material-symbols-outlined">restart_alt</span>{t.actions.reopen}
+                  </button>
+                )}
+                <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} onClick={() => setDeleteConfirmId(selected.id)}>
+                  <span className="material-symbols-outlined">delete</span>{t.actions.delete}
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.messages}>
+              {msgLoading && <p className={styles.loadingMsg}>{t.loading}</p>}
+              {messages.map(msg => {
+                const isFailed   = msg._status === "failed";
+                const isAdminMsg = msg.senderType === "admin";
+                const isSeenMsg  = msg.id === seenMsgId;
+                const bubbleContent = msg.senderType === "system"
+                  ? (t.system as Record<string, string>)[msg.content] ?? msg.content
+                  : msg.content;
+
+                return (
+                  <div key={msg.id} className={styles.msgGroup}>
+                    <div className={`${styles.bubble} ${isAdminMsg ? styles.bubbleAdmin : msg.senderType === "system" ? styles.bubbleSystem : styles.bubbleGuest} ${isFailed ? styles.bubbleFailed : ""}`}>
+                      {msg.senderType !== "admin" && msg.senderType !== "system" && (
+                        <span className={styles.bubbleSender}>{selected.guestName ?? t.guestFallback}</span>
+                      )}
+                      <p className={styles.bubbleText}>{bubbleContent}</p>
+                      <div className={styles.bubbleMeta}>
+                        <span className={styles.bubbleTime}>
+                          {new Date(msg.createdAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        {isAdminMsg && msg._status === "sending" && <span className={styles.statusSending} title={t.actions.sendingTitle}>◷</span>}
+                        {isAdminMsg && isFailed && (
+                          <button className={styles.retryInline} onClick={() => msg._clientId && retryAdminMessage(msg._clientId)}>{t.actions.retry}</button>
+                        )}
+                      </div>
+                    </div>
+                    {isSeenMsg && <span className={styles.seenLabel}>{t.seenByGuest}</span>}
+                  </div>
+                );
+              })}
+              <div ref={bottomRef} />
+            </div>
+
+            {selected.status !== "closed" && selected.status !== "archived" ? (
+              <div className={styles.inputRow}>
+                <textarea
+                  className={styles.input}
+                  placeholder={t.chat.placeholder}
+                  value={input}
+                  rows={2}
+                  onChange={e => setInput(e.target.value.slice(0, 2000))}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                />
+                <button className={styles.sendBtn} onClick={sendMessage} disabled={!input.trim() || wsStatus !== "connected"}>
+                  <span className="material-symbols-outlined">send</span>
+                </button>
+              </div>
+            ) : (
+              <p className={styles.closedNotice}>
+                {selected.status === "archived" ? t.chat.archived : t.chat.closedNotice}
+                {selected.status === "closed" && <button onClick={() => setStatus(selected.id, "open")} className={styles.reopenLink}>{t.actions.reopen}</button>}
+              </p>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* ── Delete confirm modal ── */}
+      {deleteConfirmId && (
+        <div className={styles.modalOverlay} onClick={() => setDeleteConfirmId(null)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>{t.confirm.deleteTitle}</h3>
+            <p className={styles.modalBody}>{t.confirm.deleteBody}</p>
+            <div className={styles.modalActions}>
+              <button className={styles.modalCancel} onClick={() => setDeleteConfirmId(null)}>{t.actions.cancel}</button>
+              <button className={styles.modalDelete} onClick={() => deleteConversation(deleteConfirmId)}>{t.actions.deletePermanently}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Settings modal ── */}
+      {showSettings && (
+        <div className={styles.modalOverlay} onClick={() => setShowSettings(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>{t.notifTitle}</h3>
+            {settings && (
+              <div className={styles.settingsForm}>
+                <label className={styles.settingsRow}>
+                  <span>{t.settings.smsEnabled}</span>
+                  <input type="checkbox" checked={settings.smsEnabled} onChange={e => setSettings(s => s ? { ...s, smsEnabled: e.target.checked } : s)} />
+                </label>
+                <label className={styles.settingsRow}>
+                  <span>{t.settings.smsCooldown}</span>
+                  <input type="number" min={1} max={1440} value={settings.smsCooldownMin} className={styles.settingsInput}
+                    onChange={e => setSettings(s => s ? { ...s, smsCooldownMin: Number(e.target.value) } : s)} />
+                </label>
+                <label className={styles.settingsRow}>
+                  <span>{t.settings.autoClose}</span>
+                  <input type="number" min={1} max={8760} value={settings.inactiveCloseHours} className={styles.settingsInput}
+                    onChange={e => setSettings(s => s ? { ...s, inactiveCloseHours: Number(e.target.value) } : s)} />
+                </label>
+                <div className={styles.settingsPhones}>
+                  <span className={styles.settingsLabel}>{t.settings.phones}</span>
+                  {settings.smsPhones.map(p => (
+                    <div key={p} className={styles.phoneChip}>
+                      {p}
+                      <button onClick={() => setSettings(s => s ? { ...s, smsPhones: s.smsPhones.filter(x => x !== p) } : s)}>×</button>
+                    </div>
+                  ))}
+                  <div className={styles.phoneAddRow}>
+                    <input className={styles.settingsInput} placeholder={t.settings.phonePlaceholder} value={phoneDraft}
+                      onChange={e => setPhoneDraft(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") addPhone(); }} />
+                    <button className={styles.addPhoneBtn} onClick={addPhone}>{t.actions.add}</button>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className={styles.modalActions}>
+              <button className={styles.modalCancel} onClick={() => setShowSettings(false)}>{t.actions.cancel}</button>
+              <button className={styles.modalDelete} style={{ background: "#001829" }} onClick={() => { saveSettings(); setShowSettings(false); }}>{t.actions.save}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

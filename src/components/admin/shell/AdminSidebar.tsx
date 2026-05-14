@@ -45,6 +45,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Communication",
     items: [
+      { href: "/admin/support",                 icon: "support_agent",     label: "Support"      },
       { href: "/admin/notifications/reminders", icon: "notifications",     label: "Reminders",   badge: "reminderFailures" },
       { href: "/admin/email-ingestion",         icon: "mark_email_unread", label: "Email Import" },
     ],
