@@ -116,7 +116,7 @@ export default function AdminSupport() {
   const [showSettings,    setShowSettings]    = useState(false);
   const [phoneDraft,      setPhoneDraft]      = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [wsStatus,        setWsStatus]        = useState<"connecting" | "connected" | "error">("connecting");
+  const [wsStatus,        setWsStatus]        = useState<"connecting" | "connected" | "error" | "disconnected">("connecting");
   const [analytics,       setAnalytics]       = useState<Analytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [guestTyping,     setGuestTyping]     = useState<Record<string, boolean>>({});
@@ -177,13 +177,23 @@ export default function AdminSupport() {
         if (cancelled || !data?.token) return;
 
         const socket = io(`${WS_HOST}/support`, {
-          auth:       { adminToken: data.token },
-          transports: ["websocket", "polling"],
-          path:       WS_PATH,
+          auth:                 { adminToken: data.token },
+          transports:           ["websocket", "polling"],
+          path:                 WS_PATH,
+          reconnectionDelay:    2_000,
+          reconnectionDelayMax: 15_000,
         });
 
         socket.on("connected",     () => setWsStatus("connected"));
         socket.on("connect_error", () => setWsStatus("error"));
+        socket.on("disconnect",    () => setWsStatus("disconnected"));
+
+        // Re-join the selected conversation room after a reconnect so the
+        // server continues forwarding messages for that conversation.
+        socket.on("connect", () => {
+          const id = selectedIdRef.current;
+          if (id) socket.emit("admin:join:conversation", { conversationId: id });
+        });
 
         socket.on("message:new", (msg: Message & { clientId?: string }) => {
           const incomingClientId = msg.clientId ?? msg._clientId;
@@ -257,11 +267,24 @@ export default function AdminSupport() {
   // Emit active when admin selects a conversation
   useEffect(() => { if (selectedId) emitActive(); }, [selectedId, emitActive]);
 
-  // Emit active when tab regains focus while a conversation is open
+  // Reconnect + emit active when tab regains focus or network returns
   useEffect(() => {
-    const onVisibility = () => { if (document.visibilityState === "visible" && selectedIdRef.current) emitActive(); };
+    const forceReconnect = () => {
+      const s = socketRef.current;
+      if (s && !s.connected) { s.disconnect(); s.connect(); }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        forceReconnect();
+        if (selectedIdRef.current) emitActive();
+      }
+    };
     document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online", forceReconnect);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", forceReconnect);
+    };
   }, [emitActive]);
 
   // ── Conversations ──────────────────────────────────────────────────────────

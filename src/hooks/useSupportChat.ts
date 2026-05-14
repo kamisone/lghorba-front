@@ -48,10 +48,6 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
   const [adminTyping,    setAdminTyping]    = useState(false);
 
   // ── Derived unread count ───────────────────────────────────────────────────
-  // Count admin messages the guest has not yet seen (readAt === null).
-  // Derived from messages state — single source of truth.
-  // Eliminates double-counting from competing setState calls on message:new,
-  // history fetch, and emitActive.
   const unreadCount = messages.filter(
     m => m.senderType === "admin" && m.readAt === null && !m.id.startsWith("opt-"),
   ).length;
@@ -63,8 +59,12 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
   const bootstrappedRef = useRef(false);
   const isOpenRef       = useRef(isOpen);
   const activeTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Keeps onReconnect and messages always fresh inside stable event listeners.
+  const messagesRef     = useRef<SupportMessage[]>([]);
+  const onReconnectRef  = useRef<((socket: Socket) => Promise<void>) | null>(null);
 
-  isOpenRef.current = isOpen;
+  isOpenRef.current   = isOpen;
+  messagesRef.current = messages;
 
   // ── Passive seen ───────────────────────────────────────────────────────────
 
@@ -77,144 +77,8 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
       if (!isOpenRef.current)                     return;
       if (document.visibilityState !== "visible") return;
       socket.emit("conversation:active");
-      // No setUnreadCount(0) here — count drops naturally when messages:seen
-      // arrives and sets readAt on the admin messages.
     }, ACTIVE_DEBOUNCE);
   }, []);
-
-  // ── Bootstrap + connect ────────────────────────────────────────────────────
-
-  const connect = useCallback(async () => {
-    if (socketRef.current?.connected) return;
-    setStatus("connecting");
-
-    if (!bootstrappedRef.current) {
-      try {
-        await fetch("/next-api/support/guest/bootstrap", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: "{}",
-        });
-        bootstrappedRef.current = true;
-      } catch { /* non-fatal */ }
-    }
-
-    // Fetch history — messages carry their readAt state from the DB,
-    // so the derived unreadCount will be correct without any extra counter.
-    try {
-      const histRes = await fetch("/next-api/support/guest/history");
-      if (histRes.ok) {
-        const data = await histRes.json() as {
-          messages: SupportMessage[];
-          conversationId?: string;
-        };
-        if (data.messages?.length)  setMessages(prev => mergeMessages(prev, data.messages));
-        if (data.conversationId)  { setConversationId(data.conversationId); convIdRef.current = data.conversationId; }
-        // unreadGuestCount from DB is intentionally not used here —
-        // derived count from readAt is the authoritative value.
-      }
-    } catch { /* non-fatal */ }
-
-    let ticket: string | null = null;
-    try {
-      const tr = await fetch("/next-api/support/guest/ws-ticket", { method: "POST" });
-      if (tr.ok) ticket = ((await tr.json()) as { ticket?: string }).ticket ?? null;
-    } catch { /* non-fatal */ }
-
-    if (!ticket) { setStatus("error"); return; }
-
-    const socket = io(`${WS_HOST}/support`, {
-      auth:                 { guestTicket: ticket },
-      transports:           ["websocket", "polling"],
-      path:                 WS_PATH,
-      reconnectionDelay:    2_000,
-      reconnectionDelayMax: 15_000,
-    });
-
-    socket.on("connected", ({ conversationId: cid }: { role: string; conversationId: string | null }) => {
-      setStatus("connected");
-      if (cid) { setConversationId(cid); convIdRef.current = cid; }
-      if (isOpenRef.current) emitActive();
-    });
-
-    socket.on("message:new", (msg: SupportMessage & { clientId?: string }) => {
-      const normalized: SupportMessage = {
-        ...msg,
-        _clientId: msg.clientId ?? msg._clientId,
-        _status:   "sent",
-      };
-      // Adding the message to state is enough — the derived unreadCount
-      // increments automatically because the new admin message has readAt === null.
-      setMessages(prev => mergeMessages(prev, [normalized]));
-
-      // When widget is open + tab visible, request the server to mark as seen.
-      // The resulting messages:seen event will set readAt, dropping the count.
-      if (msg.senderType === "admin" && isOpenRef.current && document.visibilityState === "visible") {
-        emitActive();
-      }
-    });
-
-    socket.on("messages:seen", ({ seenAt, messageIds }: {
-      seenBy: string; seenAt: string; messageIds: string[];
-    }) => {
-      // Setting readAt on admin messages causes derived unreadCount to decrease.
-      setMessages(prev => prev.map(m =>
-        messageIds.includes(m.id) ? { ...m, readAt: seenAt } : m,
-      ));
-    });
-
-    socket.on("user:typing", ({ senderType, isTyping }: { senderType: string; isTyping: boolean }) => {
-      if (senderType === "admin") setAdminTyping(isTyping);
-    });
-
-    socket.on("connect",       async () => { setStatus("connected"); await onReconnect(socket); });
-    socket.on("disconnect",    ()       => { setAdminTyping(false); setStatus("disconnected"); });
-    socket.on("connect_error", ()       => setStatus("error"));
-
-    socketRef.current = socket;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    connect();
-    return () => {
-      if (activeTimerRef.current) clearTimeout(activeTimerRef.current);
-      socketRef.current?.disconnect();
-      socketRef.current = null;
-    };
-  }, [connect]);
-
-  // ── Passive seen: open + visibility ───────────────────────────────────────
-
-  useEffect(() => {
-    if (!isOpen) return;
-    emitActive();
-    const onVisibility = () => { if (document.visibilityState === "visible") emitActive(); };
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [isOpen, emitActive]);
-
-  // ── Reconnect: sync missed messages + retry pending ────────────────────────
-
-  const onReconnect = useCallback(async (socket: Socket) => {
-    const lastMsg = messages[messages.length - 1];
-    if (lastMsg) {
-      socket.emit("guest:sync", { since: lastMsg.createdAt }, (resp: { ok: boolean; messages?: SupportMessage[] }) => {
-        if (resp.ok && resp.messages?.length) {
-          setMessages(prev => mergeMessages(prev, resp.messages!.map(m => ({ ...m, _status: "sent" as MessageStatus }))));
-        }
-      });
-    }
-
-    setMessages(prev => {
-      const toRetry = prev.filter(m => m._status === "sending" || m._status === "failed");
-      for (const msg of toRetry) {
-        if (msg._clientId) doSend(socket, msg.content, msg._clientId, (msg._retryCount ?? 0) + 1);
-      }
-      return prev;
-    });
-
-    if (isOpenRef.current) emitActive();
-  }, [messages, emitActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Send with ACK + timeout ────────────────────────────────────────────────
 
@@ -237,7 +101,6 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
         clearTimeout(timer);
         pendingRef.current.delete(clientId);
         if (ack.ok && ack.message) {
-          // Capture conversationId on the first message (lazy conversation creation)
           if (!convIdRef.current && ack.message.conversationId) {
             convIdRef.current = ack.message.conversationId;
             setConversationId(ack.message.conversationId);
@@ -255,6 +118,178 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
       },
     );
   }, []);
+
+  // ── Reconnect: sync missed messages + retry pending ────────────────────────
+
+  const onReconnect = useCallback(async (socket: Socket) => {
+    const msgs    = messagesRef.current;
+    const lastMsg = msgs[msgs.length - 1];
+    if (lastMsg) {
+      socket.emit("guest:sync", { since: lastMsg.createdAt }, (resp: { ok: boolean; messages?: SupportMessage[] }) => {
+        if (resp.ok && resp.messages?.length) {
+          setMessages(prev => mergeMessages(prev, resp.messages!.map(m => ({ ...m, _status: "sent" as MessageStatus }))));
+        }
+      });
+    }
+
+    setMessages(prev => {
+      const toRetry = prev.filter(m => m._status === "sending" || m._status === "failed");
+      for (const msg of toRetry) {
+        if (msg._clientId) doSend(socket, msg.content, msg._clientId, (msg._retryCount ?? 0) + 1);
+      }
+      return prev;
+    });
+
+    if (isOpenRef.current) emitActive();
+  }, [emitActive, doSend]);
+
+  // Keep the ref always current so the stable connect-event listener picks it up.
+  onReconnectRef.current = onReconnect;
+
+  // ── Bootstrap + connect ────────────────────────────────────────────────────
+
+  const connect = useCallback(async () => {
+    // If a socket already exists (connected or mid-reconnect) do not create another.
+    if (socketRef.current) return;
+    setStatus("connecting");
+
+    if (!bootstrappedRef.current) {
+      try {
+        await fetch("/next-api/support/guest/bootstrap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        });
+        bootstrappedRef.current = true;
+      } catch { /* non-fatal */ }
+    }
+
+    try {
+      const histRes = await fetch("/next-api/support/guest/history");
+      if (histRes.ok) {
+        const data = await histRes.json() as {
+          messages: SupportMessage[];
+          conversationId?: string;
+        };
+        if (data.messages?.length)  setMessages(prev => mergeMessages(prev, data.messages));
+        if (data.conversationId)  { setConversationId(data.conversationId); convIdRef.current = data.conversationId; }
+      }
+    } catch { /* non-fatal */ }
+
+    // auth is a callback so socket.io invokes it on every connect attempt.
+    // This guarantees a fresh ticket (2-minute TTL) on reconnects after
+    // sleep, tab suspension, or long network interruptions.
+    const socket = io(`${WS_HOST}/support`, {
+      auth: (cb: (data: Record<string, unknown>) => void) => {
+        fetch("/next-api/support/guest/ws-ticket", { method: "POST" })
+          .then(r => r.ok ? (r.json() as Promise<{ ticket?: string }>) : null)
+          .then(data => cb({ guestTicket: data?.ticket ?? "" }))
+          .catch(()  => cb({ guestTicket: "" }));
+      },
+      transports:           ["websocket", "polling"],
+      path:                 WS_PATH,
+      reconnectionDelay:    2_000,
+      reconnectionDelayMax: 15_000,
+    });
+
+    socket.on("connected", ({ conversationId: cid }: { role: string; conversationId: string | null }) => {
+      setStatus("connected");
+      if (cid) { setConversationId(cid); convIdRef.current = cid; }
+      if (isOpenRef.current) emitActive();
+    });
+
+    socket.on("message:new", (msg: SupportMessage & { clientId?: string }) => {
+      const normalized: SupportMessage = {
+        ...msg,
+        _clientId: msg.clientId ?? msg._clientId,
+        _status:   "sent",
+      };
+      setMessages(prev => mergeMessages(prev, [normalized]));
+      if (msg.senderType === "admin" && isOpenRef.current && document.visibilityState === "visible") {
+        emitActive();
+      }
+    });
+
+    socket.on("messages:seen", ({ seenAt, messageIds }: {
+      seenBy: string; seenAt: string; messageIds: string[];
+    }) => {
+      setMessages(prev => prev.map(m =>
+        messageIds.includes(m.id) ? { ...m, readAt: seenAt } : m,
+      ));
+    });
+
+    socket.on("user:typing", ({ senderType, isTyping }: { senderType: string; isTyping: boolean }) => {
+      if (senderType === "admin") setAdminTyping(isTyping);
+    });
+
+    socket.on("connect", async () => {
+      setStatus("connected");
+      await onReconnectRef.current?.(socket);
+    });
+
+    socket.on("disconnect", (reason) => {
+      setAdminTyping(false);
+      setStatus("disconnected");
+      // socket.io stops auto-reconnecting when the server explicitly closes the
+      // connection. Resume manually so recovery still happens.
+      if (reason === "io server disconnect") {
+        setTimeout(() => socket.connect(), 2_000);
+      }
+    });
+
+    // Show "disconnected" (not "error") while socket.io retries automatically.
+    socket.on("connect_error", () => setStatus("disconnected"));
+
+    socketRef.current = socket;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Reconnect without creating a new socket ────────────────────────────────
+  // Called from visibility/online/focus events. Resumes the existing socket's
+  // reconnect loop if it exists; otherwise falls back to a full connect().
+
+  const reconnectIfNeeded = useCallback(() => {
+    const socket = socketRef.current;
+    if (!socket) { connect(); return; }
+    if (socket.connected) return;
+    // disconnect() resets socket.io's internal backoff timer so the
+    // subsequent connect() starts immediately instead of waiting.
+    socket.disconnect();
+    socket.connect();
+  }, [connect]);
+
+  useEffect(() => {
+    connect();
+    return () => {
+      if (activeTimerRef.current) clearTimeout(activeTimerRef.current);
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
+  }, [connect]);
+
+  // ── Reconnect + passive seen on visibility / network / focus ──────────────
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        reconnectIfNeeded();
+        if (isOpenRef.current) emitActive();
+      }
+    };
+    const onOnline = () => reconnectIfNeeded();
+    const onFocus  = () => reconnectIfNeeded();
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online",             onOnline);
+    window.addEventListener("focus",              onFocus);
+
+    if (isOpen) emitActive();
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online",             onOnline);
+      window.removeEventListener("focus",              onFocus);
+    };
+  }, [isOpen, emitActive, reconnectIfNeeded]);
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -291,7 +326,6 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
   }, [doSend]);
 
   const markRead = useCallback(() => {
-    // Trigger server-side read; count drops when messages:seen updates readAt.
     emitActive();
   }, [emitActive]);
 

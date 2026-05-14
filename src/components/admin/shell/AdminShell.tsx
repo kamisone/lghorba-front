@@ -43,6 +43,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname    = usePathname();
   // Tracks unreadAdminCount per conversation so we can handle transitions accurately
   const convUnreadRef = useRef(new Map<string, number>());
+  const wsRef         = useRef<ReturnType<typeof io> | null>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 640);
@@ -59,7 +60,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   // ── Support WS: realtime waiting badge ──────────────────────────────────────
   useEffect(() => {
-    let socket: ReturnType<typeof io> | null = null;
     let cancelled = false;
 
     fetch("/next-api/support/ws-ticket")
@@ -67,10 +67,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       .then((data: { token: string } | null) => {
         if (cancelled || !data?.token) return;
 
-        socket = io(`${WS_HOST}/support`, {
-          auth:       { adminToken: data.token },
-          transports: ["websocket", "polling"],
-          path:       WS_PATH,
+        const socket = io(`${WS_HOST}/support`, {
+          auth:                 { adminToken: data.token },
+          transports:           ["websocket", "polling"],
+          path:                 WS_PATH,
+          reconnectionDelay:    2_000,
+          reconnectionDelayMax: 15_000,
         });
 
         socket.on("connected", ({ unreadConvsCount }: { unreadConvsCount: number }) => {
@@ -95,10 +97,26 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             setCounts(c => ({ ...c, waitingAdmin: Math.max(0, c.waitingAdmin - 1) }));
           }
         });
+
+        wsRef.current = socket;
       })
       .catch(() => {});
 
-    return () => { cancelled = true; socket?.disconnect(); };
+    const forceReconnect = () => {
+      const s = wsRef.current;
+      if (s && !s.connected) { s.disconnect(); s.connect(); }
+    };
+    const onVisibility = () => { if (document.visibilityState === "visible") forceReconnect(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online", forceReconnect);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", forceReconnect);
+      wsRef.current?.disconnect();
+      wsRef.current = null;
+    };
   }, []);
 
   const handleToggle = useCallback(() => {
