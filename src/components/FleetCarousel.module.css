@@ -234,26 +234,25 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.30);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .badgeAvail {
-  background: rgba(34, 197, 94, 0.18);
-  color: #4ade80;
-  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: rgba(21, 128, 61, 0.90);
 }
 
-/* "Available from [date]" — calm sky-blue, inviting not alarming */
+/* "Available from [date]" */
 .badgeFrom {
-  background: rgba(56, 189, 248, 0.14);
-  color: #7dd3fc;
-  border: 1px solid rgba(125, 211, 252, 0.28);
+  background: rgba(3, 105, 161, 0.90);
 }
 
 /* keep for backward compat, same as .badgeFrom */
 .badgeBusy {
-  background: rgba(56, 189, 248, 0.14);
-  color: #7dd3fc;
-  border: 1px solid rgba(125, 211, 252, 0.28);
+  background: rgba(3, 105, 161, 0.90);
 }
 
 /* ── Info panel ── */

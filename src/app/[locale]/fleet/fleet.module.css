@@ -137,26 +137,25 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .badgeAvail {
-  background: rgba(22, 163, 74, 0.12);
-  color: #16a34a;
-  border: 1px solid rgba(22, 163, 74, 0.22);
+  background: rgba(21, 128, 61, 0.90);
 }
 
 /* "Available from [date]" */
 .badgeFrom {
-  background: rgba(2, 132, 199, 0.10);
-  color: #0284c7;
-  border: 1px solid rgba(2, 132, 199, 0.20);
+  background: rgba(3, 105, 161, 0.90);
 }
 
 /* keep for backward compat */
 .badgeBusy {
-  background: rgba(2, 132, 199, 0.10);
-  color: #0284c7;
-  border: 1px solid rgba(2, 132, 199, 0.20);
+  background: rgba(3, 105, 161, 0.90);
 }
 
 .info {
