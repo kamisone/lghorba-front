@@ -111,8 +111,9 @@ export default function SupportWidget({ locale }: Props) {
   const handleSend = () => {
     const content = input.trim();
     if (!content || status !== "connected") return;
-    if (!nameSet && guestName) setNameSet(true);
-    sendMessage(content);
+    const name = !nameSet && guestName.trim() ? guestName.trim() : undefined;
+    if (name) setNameSet(true);
+    sendMessage(content, name);
     setInput("");
   };
 

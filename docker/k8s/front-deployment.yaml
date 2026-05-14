@@ -32,11 +32,6 @@ spec:
                 secretKeyRef:
                   name: front-envs
                   key: PREPROD_PUBLIC_APP_URL
-            - name: API_BASE_URL_BROWSER
-              valueFrom:
-                secretKeyRef:
-                  name: front-envs
-                  key: API_BASE_URL_BROWSER
             - name: API_BASE_URL_SERVER
               valueFrom:
                 secretKeyRef:

@@ -21,6 +21,7 @@ jobs:
           APP_MODE: ${{ secrets.APP_MODE }}
           NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
           API_BASE_URL_SERVER: https://vitecamion.com/api
+          API_BASE_URL_BROWSER: https://vitecamion.com/api
 
 
       - name: Log in to docker hub registry
@@ -59,7 +60,6 @@ jobs:
             kubectl create secret generic front-envs \
             --from-literal NODE_ENV=${{ secrets.NODE_ENV }} \
             --from-literal PREPROD_PUBLIC_APP_URL=${{ secrets.PREPROD_PUBLIC_APP_URL }} \
-            --from-literal API_BASE_URL_BROWSER=${{ secrets.API_BASE_URL_BROWSER }} \
             --from-literal API_BASE_URL_SERVER=${{ secrets.API_BASE_URL_SERVER }}
             kubectl apply -f /srv/k8s/front
             minikube addons enable ingress

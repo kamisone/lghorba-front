@@ -22,7 +22,14 @@ export interface SupportMessage {
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "disconnected" | "error";
 
-const WS_URL           = process.env.API_BASE_URL_BROWSER;
+function parseWs(raw: string): { host: string; path: string } {
+  const u    = new URL(raw);
+  const base = u.pathname.replace(/\/$/, "");
+  return { host: u.origin, path: `${base}/socket.io` };
+}
+const { host: WS_HOST, path: WS_PATH } = parseWs(
+  process.env.API_BASE_URL_BROWSER ?? "http://localhost:4000",
+);
 const ACK_TIMEOUT      = 8_000;
 const ACTIVE_DEBOUNCE  = 400;
 
@@ -33,7 +40,7 @@ interface UseSupportChatReturn {
   status:         ConnectionStatus;
   unreadCount:    number;
   conversationId: string | null;
-  sendMessage:    (content: string) => void;
+  sendMessage:    (content: string, guestName?: string) => void;
   retryMessage:   (clientId: string) => void;
   markRead:       () => void;
   retry:          () => void;
@@ -55,6 +62,7 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
 
   const socketRef       = useRef<Socket | null>(null);
   const convIdRef       = useRef<string | null>(null);
+  const guestNameRef    = useRef<string | undefined>(undefined);
   const pendingRef      = useRef<Map<string, { content: string; retryCount: number; timer: ReturnType<typeof setTimeout> }>>(new Map());
   const bootstrappedRef = useRef(false);
   const isOpenRef       = useRef(isOpen);
@@ -119,17 +127,17 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
 
     if (!ticket) { setStatus("error"); return; }
 
-    const socket = io(`${WS_URL}/support`, {
+    const socket = io(`${WS_HOST}/support`, {
       auth:                 { guestTicket: ticket },
       transports:           ["websocket", "polling"],
+      path:                 WS_PATH,
       reconnectionDelay:    2_000,
       reconnectionDelayMax: 15_000,
     });
 
-    socket.on("connected", ({ conversationId: cid }: { role: string; conversationId: string }) => {
+    socket.on("connected", ({ conversationId: cid }: { role: string; conversationId: string | null }) => {
       setStatus("connected");
-      setConversationId(cid);
-      convIdRef.current = cid;
+      if (cid) { setConversationId(cid); convIdRef.current = cid; }
       if (isOpenRef.current) emitActive();
     });
 
@@ -224,11 +232,16 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
 
     socket.emit(
       "message:send",
-      { content, clientId },
+      { content, clientId, guestName: guestNameRef.current },
       (ack: { ok: boolean; message?: SupportMessage; clientId?: string; error?: string }) => {
         clearTimeout(timer);
         pendingRef.current.delete(clientId);
         if (ack.ok && ack.message) {
+          // Capture conversationId on the first message (lazy conversation creation)
+          if (!convIdRef.current && ack.message.conversationId) {
+            convIdRef.current = ack.message.conversationId;
+            setConversationId(ack.message.conversationId);
+          }
           setMessages(prev => prev.map(m =>
             m._clientId === clientId
               ? { ...ack.message!, _clientId: clientId, _status: "sent" as MessageStatus }
@@ -245,9 +258,10 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  const sendMessage = useCallback((content: string) => {
+  const sendMessage = useCallback((content: string, guestName?: string) => {
     const socket = socketRef.current;
     if (!socket?.connected || !content.trim()) return;
+    if (guestName && !guestNameRef.current) guestNameRef.current = guestName;
 
     const clientId = crypto.randomUUID();
     const optimistic: SupportMessage = {

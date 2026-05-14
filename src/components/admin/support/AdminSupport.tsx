@@ -52,7 +52,17 @@ interface Analytics {
 type FilterStatus = "all" | "open" | "waiting_admin" | "waiting_guest" | "closed" | "archived";
 type Tab = "conversations" | "analytics";
 
-const WS_URL      = process.env.API_BASE_URL_BROWSER;
+// Splits API_BASE_URL_BROWSER into host + socket.io mount path.
+// "https://vitecamion.com/api" → host "https://vitecamion.com", path "/api/socket.io"
+// "http://localhost:4000"      → host "http://localhost:4000",   path "/socket.io"
+function parseWs(raw: string): { host: string; path: string } {
+  const u    = new URL(raw);
+  const base = u.pathname.replace(/\/$/, "");
+  return { host: u.origin, path: `${base}/socket.io` };
+}
+const { host: WS_HOST, path: WS_PATH } = parseWs(
+  process.env.API_BASE_URL_BROWSER ?? "http://localhost:4000",
+);
 const ACK_TIMEOUT = 8_000;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -122,6 +132,11 @@ export default function AdminSupport() {
 
   const socketRef        = useRef<Socket | null>(null);
   const bottomRef        = useRef<HTMLDivElement>(null);
+  const filterRef        = useRef<FilterStatus>("all");
+  const searchRef        = useRef("");
+
+  filterRef.current = filter;
+  searchRef.current = search;
   const pendingRef       = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const selectedIdRef    = useRef<string | null>(null);
   const activeTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -169,9 +184,10 @@ export default function AdminSupport() {
       .then((data: { token: string } | null) => {
         if (cancelled || !data?.token) return;
 
-        const socket = io(`${WS_URL}/support`, {
+        const socket = io(`${WS_HOST}/support`, {
           auth:       { adminToken: data.token },
           transports: ["websocket", "polling"],
+          path:       WS_PATH,
         });
 
         socket.on("connected",     () => setWsStatus("connected"));
@@ -195,13 +211,33 @@ export default function AdminSupport() {
           setMessages(prev => prev.map(m => messageIds.includes(m.id) ? { ...m, readAt: seenAt } : m));
         });
 
+        socket.on("conversation:new", (conv: Conversation) => {
+          setConversations(prev => {
+            if (prev.some(c => c.id === conv.id)) return prev;
+            const f = filterRef.current;
+            const q = searchRef.current.toLowerCase();
+            const passesFilter = f === "all" || f === conv.status;
+            const passesSearch = !q || (conv.guestName ?? conv.guestToken).toLowerCase().includes(q);
+            if (!passesFilter || !passesSearch) return prev;
+            return [conv, ...prev];
+          });
+        });
+
         socket.on("conversation:update", (update: Partial<Conversation> & { id: string; deleted?: boolean }) => {
           if (update.deleted) {
             setConversations(prev => prev.filter(c => c.id !== update.id));
-            if (selectedId === update.id) { setSelectedId(null); setMessages([]); }
+            if (selectedIdRef.current === update.id) { setSelectedId(null); setMessages([]); }
             return;
           }
-          setConversations(prev => prev.map(c => c.id === update.id ? { ...c, ...update } : c));
+          setConversations(prev => {
+            const updated = prev.map(c => c.id === update.id ? { ...c, ...update } : c);
+            if (!update.lastMessageAt) return updated;
+            return [...updated].sort((a, b) => {
+              const ta = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+              const tb = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+              return tb - ta;
+            });
+          });
         });
 
         socketRef.current = socket;

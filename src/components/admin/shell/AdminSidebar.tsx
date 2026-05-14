@@ -10,7 +10,7 @@ interface NavItem {
   href:  string;
   icon:  string;
   label: string;
-  badge?: "pendingBookings" | "reminderFailures";
+  badge?: "pendingBookings" | "reminderFailures" | "waitingAdmin";
 }
 
 interface NavGroup {
@@ -45,7 +45,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Communication",
     items: [
-      { href: "/admin/support",                 icon: "support_agent",     label: "Support"      },
+      { href: "/admin/support",                 icon: "support_agent",     label: "Support",     badge: "waitingAdmin" },
       { href: "/admin/notifications/reminders", icon: "notifications",     label: "Reminders",   badge: "reminderFailures" },
       { href: "/admin/email-ingestion",         icon: "mark_email_unread", label: "Email Import" },
     ],
@@ -70,6 +70,7 @@ interface Props {
   onMobileClose?:    () => void;
   pendingBookings?:  number;
   reminderFailures?: number;
+  waitingAdmin?:     number;
 }
 
 // ── Icon helper ───────────────────────────────────────────────────────────────
@@ -87,12 +88,14 @@ export default function AdminSidebar({
   onMobileClose,
   pendingBookings  = 0,
   reminderFailures = 0,
+  waitingAdmin     = 0,
 }: Props) {
   const pathname = usePathname();
 
   const badgeCount = (key: NavItem["badge"]): number => {
     if (key === "pendingBookings")  return pendingBookings;
     if (key === "reminderFailures") return reminderFailures;
+    if (key === "waitingAdmin")     return waitingAdmin;
     return 0;
   };
 
