@@ -127,6 +127,7 @@ export default function AdminSupport() {
   const statusLabel = (s: string) =>
     ({ open: t.status.open, waiting_admin: t.status.waiting, waiting_guest: t.status.replied, closed: t.status.closed, archived: t.status.archived })[s] ?? s;
 
+  const [drawerOpen,      setDrawerOpen]      = useState(false);
   const [tab,             setTab]             = useState<Tab>("conversations");
   const [conversations,   setConversations]   = useState<Conversation[]>([]);
   const [selectedId,      setSelectedId]      = useState<string | null>(null);
@@ -354,6 +355,7 @@ export default function AdminSupport() {
   const selectConversation = useCallback((id: string) => {
     loadConversationById(id);
     pushConvUrl(id);
+    setDrawerOpen(false);
   }, [loadConversationById, pushConvUrl]);
 
   // React to URL changes from back/forward navigation and direct URL loads.
@@ -514,8 +516,13 @@ export default function AdminSupport() {
   return (
     <div className={styles.page}>
 
-      {/* ── Sidebar ── */}
-      <aside className={styles.sidebar}>
+      {/* ── Drawer backdrop (mobile only) ── */}
+      {drawerOpen && (
+        <div className={styles.drawerBackdrop} onClick={() => setDrawerOpen(false)} aria-hidden="true" />
+      )}
+
+      {/* ── Sidebar / Drawer ── */}
+      <aside className={`${styles.sidebar} ${drawerOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarHeader}>
           <h1 className={styles.sidebarTitle}>
             <span className="material-symbols-outlined">support_agent</span>
@@ -617,12 +624,18 @@ export default function AdminSupport() {
       <main className={styles.chat}>
         {!selected ? (
           <div className={styles.emptyChat}>
+            <button className={styles.drawerToggle} onClick={() => setDrawerOpen(true)} aria-label="Open conversations">
+              <span className="material-symbols-outlined">menu</span>
+            </button>
             <span className={`material-symbols-outlined ${styles.emptyChatIcon}`}>forum</span>
             <p>{t.selectPrompt}</p>
           </div>
         ) : (
           <>
             <div className={styles.chatHeader}>
+              <button className={styles.drawerToggle} onClick={() => setDrawerOpen(true)} aria-label="Open conversations">
+                <span className="material-symbols-outlined">menu</span>
+              </button>
               <div>
                 <p className={styles.chatGuestName}>{selected.guestName ?? selected.guestToken.slice(0,8).toUpperCase()}</p>
                 <p className={styles.chatMeta}>

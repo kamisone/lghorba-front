@@ -675,15 +675,65 @@
   white-space: nowrap;
 }
 
+/* ── Drawer toggle button (hidden on desktop) ── */
+.drawerToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  color: var(--color-text-primary, #111827);
+  transition: background 0.1s;
+}
+.drawerToggle span { font-size: 22px; }
+
+/* Backdrop — rendered in DOM but hidden on desktop */
+.drawerBackdrop { display: none; }
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .sidebar  { width: 240px; }
-  .bubble   { max-width: 85%; }
+  .sidebar { width: 240px; }
+  .bubble  { max-width: 85%; }
 }
 
-@media (max-width: 540px) {
-  .sidebar  { display: none; }
-  .page     { flex-direction: column; }
+@media (max-width: 640px) {
+  /* Drawer: slides in over the chat, does not push it */
+  .sidebar {
+    position: fixed;
+    top: 56px;   /* below the admin top bar */
+    left: 0;
+    bottom: 0;
+    width: min(85vw, 320px);
+    z-index: 201;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: none;
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+  }
+
+  .drawerBackdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 200;
+  }
+
+  .drawerToggle {
+    display: flex;
+  }
+  .drawerToggle:hover { background: rgba(0, 0, 0, 0.06); }
+
+  .bubble { max-width: 88%; }
 }
 
 /* ── Typing indicator ── */
