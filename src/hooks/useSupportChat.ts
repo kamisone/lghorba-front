@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { WS_HOST, WS_PATH } from "@/lib/wsConfig";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -22,14 +23,6 @@ export interface SupportMessage {
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "disconnected" | "error";
 
-function parseWs(raw: string): { host: string; path: string } {
-  const u    = new URL(raw);
-  const base = u.pathname.replace(/\/$/, "");
-  return { host: u.origin, path: `${base}/socket.io` };
-}
-const { host: WS_HOST, path: WS_PATH } = parseWs(
-  process.env.API_BASE_URL_BROWSER ?? "http://localhost:4000",
-);
 const ACK_TIMEOUT      = 8_000;
 const ACTIVE_DEBOUNCE  = 400;
 

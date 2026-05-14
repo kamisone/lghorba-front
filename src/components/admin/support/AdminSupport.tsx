@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { getTranslations } from "@/lib/i18n";
+import { WS_HOST, WS_PATH } from "@/lib/wsConfig";
 import styles from "./AdminSupport.module.css";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -52,17 +53,6 @@ interface Analytics {
 type FilterStatus = "all" | "open" | "waiting_admin" | "waiting_guest" | "closed" | "archived";
 type Tab = "conversations" | "analytics";
 
-// Splits API_BASE_URL_BROWSER into host + socket.io mount path.
-// "https://vitecamion.com/api" → host "https://vitecamion.com", path "/api/socket.io"
-// "http://localhost:4000"      → host "http://localhost:4000",   path "/socket.io"
-function parseWs(raw: string): { host: string; path: string } {
-  const u    = new URL(raw);
-  const base = u.pathname.replace(/\/$/, "");
-  return { host: u.origin, path: `${base}/socket.io` };
-}
-const { host: WS_HOST, path: WS_PATH } = parseWs(
-  process.env.API_BASE_URL_BROWSER ?? "http://localhost:4000",
-);
 const ACK_TIMEOUT = 8_000;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getTranslations } from "@/lib/i18n";
 import { saveSearchContext } from "@/lib/searchContext";
+import { api } from "@/lib/api";
 import styles from "./search.module.css";
 
 interface SearchResult {
@@ -73,10 +74,7 @@ export default function SearchResults({ results, start, end, locale, hasAddress,
     setPrices(new Map());
     Promise.allSettled(
       results.map(car =>
-        fetch(
-          `/next-api/public/cars/${car.id}/price?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
-          { signal: controller.signal },
-        ).then(r => r.ok ? (r.json() as Promise<{ totalPrice: number; numberOfDays: number }>) : null)
+        api.cars.getPrice(car.id, start, end, controller.signal).catch(() => null)
       )
     ).then(settled => {
       if (controller.signal.aborted) return;

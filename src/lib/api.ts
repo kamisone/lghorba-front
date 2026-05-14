@@ -149,9 +149,10 @@ export const api = {
         `${R.publicCarAvailability(carId)}?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
       ),
 
-    getPrice: (carId: string, start: string, end: string) =>
+    getPrice: (carId: string, start: string, end: string, signal?: AbortSignal) =>
       get<PriceResult>(
         `${R.publicCarPrice(carId)}?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
+        signal ? { signal } : undefined,
       ),
 
     validateDelivery: (

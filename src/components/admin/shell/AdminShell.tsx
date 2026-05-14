@@ -4,18 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { io } from "socket.io-client";
 import { api } from "@/lib/api";
+import { WS_HOST, WS_PATH } from "@/lib/wsConfig";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopBar from "./AdminTopBar";
 import styles from "./AdminShell.module.css";
-
-function parseWs(raw: string): { host: string; path: string } {
-  const u    = new URL(raw);
-  const base = u.pathname.replace(/\/$/, "");
-  return { host: u.origin, path: `${base}/socket.io` };
-}
-const { host: WS_HOST, path: WS_PATH } = parseWs(
-  process.env.API_BASE_URL_BROWSER ?? "http://localhost:4000",
-);
 
 // ── Badge-count fetching ──────────────────────────────────────────────────────
 

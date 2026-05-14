@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Car } from "@/components/admin/fleet/data";
 import CarFormModal from "@/components/admin/fleet/CarFormModal";
+import { api } from "@/lib/api";
 import styles from "./cars.module.css";
 
 interface SmsMessage {
@@ -58,9 +59,9 @@ export default function CarsPage() {
 
   const fetchCars = async () => {
     try {
-      const res = await fetch("/next-api/cars", { cache: "no-store" });
-      if (res.ok) setCars(await res.json());
-    } finally {
+      setCars(await api.admin.cars.list() as Car[]);
+    } catch { /* leave state empty */ }
+    finally {
       setLoading(false);
     }
   };

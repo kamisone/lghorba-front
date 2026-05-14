@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getTranslations } from "@/lib/i18n";
+import { api } from "@/lib/api";
 import styles from "./booking-confirmation.module.css";
 
 interface Props {
@@ -48,9 +49,7 @@ export default function PaymentWaitingState({ bookingId, locale }: Props) {
   useEffect(() => {
     const id = setInterval(async () => {
       try {
-        const res  = await fetch(`/next-api/public/bookings/${bookingId}`, { cache: "no-store" });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await api.bookings.getById(bookingId);
         if (data.status === "confirmed" || data.status === "cancelled") {
           router.refresh();
         }

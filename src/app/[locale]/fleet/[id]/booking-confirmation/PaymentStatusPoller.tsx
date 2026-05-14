@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface Props {
   bookingId: string;
@@ -14,9 +15,7 @@ export default function PaymentStatusPoller({ bookingId, intervalMs = 3000 }: Pr
   useEffect(() => {
     const id = setInterval(async () => {
       try {
-        const res = await fetch(`/next-api/public/bookings/${bookingId}`, { cache: "no-store" });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await api.bookings.getById(bookingId);
         if (data.status === "confirmed" || data.status === "cancelled") {
           router.refresh();
         }

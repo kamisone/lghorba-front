@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { FleetPriceContext } from "./FleetPriceContext";
 import { loadSearchContext } from "@/lib/searchContext";
+import { api } from "@/lib/api";
 import styles from "./fleet.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -56,10 +57,7 @@ export default function FleetGrid({ carIds, children }: Props) {
 
     Promise.allSettled(
       carIds.map(carId =>
-        fetch(
-          `/next-api/public/cars/${carId}/price?startDateTime=${encodeURIComponent(start)}&endDateTime=${encodeURIComponent(end)}`,
-          { signal: controller.signal },
-        ).then(r => r.ok ? (r.json() as Promise<{ totalPrice: number; numberOfDays: number }>) : null)
+        api.cars.getPrice(carId, start, end, controller.signal).catch(() => null)
       )
     ).then(settled => {
       if (controller.signal.aborted) return;
