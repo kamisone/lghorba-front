@@ -71,4 +71,7 @@ export interface Car {
   deliveryType?: "radius" | "location" | null;
   deliveryRadiusKm?: number | null;
   deliveryRadiusPrice?: number | null;
+  // External platform links
+  turoLink?: string | null;
+  getaroundLink?: string | null;
 }

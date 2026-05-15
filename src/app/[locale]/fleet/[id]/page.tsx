@@ -8,6 +8,7 @@ import CarSlider from "@/components/CarSlider";
 import BookingPanel from "./BookingPanel";
 import SearchContextBar from "./SearchContextBar";
 import ShareVehicle from "./ShareVehicle";
+import BookingOptions from "./BookingOptions";
 import VehicleFaqAccordion, { type FaqItem } from "@/components/VehicleFaqAccordion";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import styles from "./car-public.module.css";
@@ -59,6 +60,8 @@ interface PublicCarDetail {
   deliveryRadiusKm?: number | null;
   deliveryRadiusPrice?: number | null;
   deliveryLocations?: DeliveryLocation[];
+  turoLink?: string | null;
+  getaroundLink?: string | null;
 }
 
 const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
@@ -330,7 +333,7 @@ export default async function CarDetailPage({
       </div>
 
       {/* ── Content: title + specs ── */}
-      <div className={styles.content}>
+      <div className={styles.content} id="booking-options">
         <div className={styles.titleRow}>
           <div>
             <h1 className={styles.carName}>{title}</h1>
@@ -451,10 +454,20 @@ export default async function CarDetailPage({
             </div>
           </div>
         )}
+
+        {/* ── Booking Options ── */}
+        <BookingOptions
+          turoLink={car.turoLink ?? null}
+          getaroundLink={car.getaroundLink ?? null}
+          urlStart={searchParams.start ?? ""}
+          urlEnd={searchParams.end ?? ""}
+          businessTz={businessTz}
+          labels={t.bookingOptions}
+        />
       </div>
 
       {/* ── Booking section – full-bleed highlighted row ── */}
-      <section className={styles.bookingSection} aria-label={t.booking.title}>
+      <section id="booking" className={styles.bookingSection} aria-label={t.booking.title}>
         <div className={styles.bookingInner}>
           <div className={styles.bookingSectionHead}>
             <p className={styles.bookingSectionEyebrow}>{t.booking.title}</p>

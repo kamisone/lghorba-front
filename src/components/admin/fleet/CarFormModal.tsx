@@ -73,7 +73,11 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
   const [newLocationRadius, setNewLocationRadius]   = useState("0.5");
   const [newLocationPrice, setNewLocationPrice]     = useState("");
 
-  // Populate location/delivery from car
+  // Platform links state
+  const [turoLink, setTuroLink]           = useState("");
+  const [getaroundLink, setGetaroundLink] = useState("");
+
+  // Populate location/delivery/platform links from car
   useEffect(() => {
     if (car) {
       if (car.parkingLat != null && car.parkingLng != null && car.parkingAddress) {
@@ -83,6 +87,8 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
       setDeliveryType((car.deliveryType as "radius" | "location") ?? "radius");
       setDeliveryRadius(car.deliveryRadiusKm != null ? String(car.deliveryRadiusKm) : "");
       setDeliveryRadiusPrice(car.deliveryRadiusPrice != null ? String(car.deliveryRadiusPrice) : "");
+      setTuroLink(car.turoLink ?? "");
+      setGetaroundLink(car.getaroundLink ?? "");
     }
   }, [car]);
 
@@ -204,6 +210,8 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
         deliveryLocations: deliveryEnabled && deliveryType === "location"
           ? deliveryLocations.map(({ id: _id, ...l }) => l)
           : [],
+        turoLink:       turoLink.trim()      || null,
+        getaroundLink:  getaroundLink.trim() || null,
       };
 
       const url = isEdit ? `/next-api/cars/${car.id}` : "/next-api/cars";
@@ -528,6 +536,32 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
               )}
             </>
           )}
+
+          {/* ── Platform Links ── */}
+          <p className={styles.section}>Platform Links</p>
+          <div className={styles.field}>
+            <label className={styles.label}>Turo listing URL</label>
+            <input
+              className={styles.input}
+              type="url"
+              value={turoLink}
+              onChange={e => setTuroLink(e.target.value)}
+              placeholder="https://turo.com/us/en/car-rental/…"
+            />
+          </div>
+          <div className={styles.field}>
+            <label className={styles.label}>Getaround listing URL</label>
+            <input
+              className={styles.input}
+              type="url"
+              value={getaroundLink}
+              onChange={e => setGetaroundLink(e.target.value)}
+              placeholder="https://getaround.com/cars/…"
+            />
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", margin: "-0.25rem 0 0", lineHeight: 1.45 }}>
+            If set, these appear as secondary booking options on the public vehicle page. Leave empty to hide the platform.
+          </p>
 
           {/* ── Details ── */}
           <p className={styles.section}>Details</p>

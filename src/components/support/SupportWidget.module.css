@@ -505,7 +505,7 @@
 /* ── Mobile: full-screen chat ── */
 @media (max-width: 540px) {
   .root {
-    bottom: 16px;
+    bottom: 70px;
     right: 16px;
   }
 
