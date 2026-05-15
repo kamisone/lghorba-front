@@ -1,0 +1,157 @@
+/* ── Share bar ────────────────────────────────────────────────────────────────*/
+.shareBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+/* Native share pill — visible only on mobile via navigator.share */
+.nativeShareBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem 0.4rem 0.65rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-white);
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.nativeShareBtn:hover,
+.nativeShareBtn:focus-visible {
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  background: rgba(var(--rgb-brand-primary), 0.04);
+  outline: none;
+}
+.nativeShareBtn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(var(--rgb-brand-primary), 0.25);
+}
+
+/* Icon row */
+.iconRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+/* Generic icon button */
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.12s;
+  flex-shrink: 0;
+}
+.iconBtn:hover {
+  transform: translateY(-1px);
+}
+.iconBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--rgb-brand-primary), 0.25);
+}
+.iconBtn:active {
+  transform: translateY(0);
+}
+
+/* Platform-specific hover colours */
+.whatsapp:hover,
+.whatsapp:focus-visible {
+  border-color: #25d366;
+  color: #25d366;
+  background: rgba(37, 211, 102, 0.06);
+}
+
+.facebook:hover,
+.facebook:focus-visible {
+  border-color: #1877f2;
+  color: #1877f2;
+  background: rgba(24, 119, 242, 0.06);
+}
+
+.twitter:hover,
+.twitter:focus-visible {
+  border-color: #000;
+  color: #000;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.linkedin:hover,
+.linkedin:focus-visible {
+  border-color: #0a66c2;
+  color: #0a66c2;
+  background: rgba(10, 102, 194, 0.06);
+}
+
+/* Copy link pill — slightly wider, has text label */
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 34px;
+  padding: 0 0.75rem 0 0.6rem;
+  border-radius: 20px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.copyBtn:hover {
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  background: rgba(var(--rgb-brand-primary), 0.04);
+  transform: translateY(-1px);
+}
+.copyBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--rgb-brand-primary), 0.25);
+}
+.copyBtn:active {
+  transform: translateY(0);
+}
+
+.copiedBtn {
+  border-color: #16a34a;
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.06);
+}
+.copiedBtn:hover {
+  border-color: #16a34a;
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.1);
+}
+
+/* Mobile: compress to just icons on very small screens */
+@media (max-width: 400px) {
+  .copyBtn span {
+    display: none;
+  }
+  .copyBtn {
+    width: 34px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+  }
+}

@@ -1,11 +1,13 @@
 import type { JSX } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import CarSlider from "@/components/CarSlider";
 import BookingPanel from "./BookingPanel";
 import SearchContextBar from "./SearchContextBar";
+import ShareVehicle from "./ShareVehicle";
 import VehicleFaqAccordion, { type FaqItem } from "@/components/VehicleFaqAccordion";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import styles from "./car-public.module.css";
@@ -123,6 +125,13 @@ export async function generateStaticParams() {
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
+function resolveSiteUrl(): string {
+  const h = headers();
+  const host = h.get("host") ?? "vitecamion.com";
+  const proto = host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https";
+  return `${proto}://${host}`;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -131,15 +140,38 @@ export async function generateMetadata({
   const t   = getTranslations(params.locale as Locale);
   const car = await getCar(params.id, params.locale);
   if (!car) return { title: `${t.meta.vehicleFallback} — Vitecamion` };
-  const title = [car.brand, car.model, car.finishing].filter(Boolean).join(" ") || car.name;
-  const desc  = car.description ?? `${t.meta.carDescPrefix}${title}${t.meta.carDescSuffix}`;
+
+  const title   = [car.brand, car.model, car.finishing].filter(Boolean).join(" ") || car.name;
+  const desc    = car.description ?? `${t.meta.carDescPrefix}${title}${t.meta.carDescSuffix}`;
+  const siteUrl = resolveSiteUrl();
+  const pageUrl = `${siteUrl}/${params.locale}/fleet/${params.id}`;
+  const ogImage = `${siteUrl}/next-api/public/cars/${params.id}/photo`;
+  const ogLocale = params.locale === "fr" ? "fr_FR" : "en_US";
+
   return {
     title: `${title} — Vitecamion`,
     description: desc,
+    alternates: {
+      canonical: pageUrl,
+      languages: {
+        "fr": `${siteUrl}/fr/fleet/${params.id}`,
+        "en": `${siteUrl}/en/fleet/${params.id}`,
+      },
+    },
     openGraph: {
       title: `${title} — Vitecamion`,
-      description: car.description ?? undefined,
-      images: [`/next-api/public/cars/${params.id}/photo`],
+      description: desc,
+      url: pageUrl,
+      siteName: "Vitecamion",
+      type: "website",
+      locale: ogLocale,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} — Vitecamion`,
+      description: desc,
+      images: [ogImage],
     },
   };
 }
@@ -304,6 +336,7 @@ export default async function CarDetailPage({
             <h1 className={styles.carName}>{title}</h1>
             {title !== car.name && <p className={styles.carSub}>{car.name}</p>}
           </div>
+          <ShareVehicle title={title} labels={t.share} />
         </div>
 
         {car.description && <p className={styles.description}>{car.description}</p>}

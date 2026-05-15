@@ -588,6 +588,13 @@ export const en = {
     viewAllSuffix: "photos in gallery",
     photoAlt:      "photo",
   },
+  share: {
+    share:     "Share",
+    shareVia:  "Share this vehicle",
+    copyLink:  "Copy link",
+    copied:    "Link copied!",
+    email:     "Share by email",
+  },
   meta: {
     homeTitle:      "Car rental on Turo, Getaround & Private",
     vehicleFallback: "Vehicle",
@@ -1261,6 +1268,13 @@ export const fr: Translations = {
     viewAllPrefix: "Voir les",
     viewAllSuffix: "photos en galerie",
     photoAlt:      "photo",
+  },
+  share: {
+    share:     "Partager",
+    shareVia:  "Partager ce véhicule",
+    copyLink:  "Copier le lien",
+    copied:    "Lien copié !",
+    email:     "Partager par e-mail",
   },
   meta: {
     homeTitle:       "Location de voiture sur Turo, Getaround & Privé",
