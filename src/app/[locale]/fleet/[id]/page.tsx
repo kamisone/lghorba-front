@@ -6,6 +6,7 @@ import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import CarSlider from "@/components/CarSlider";
 import BookingPanel from "./BookingPanel";
 import SearchContextBar from "./SearchContextBar";
+import VehicleFaqAccordion, { type FaqItem } from "@/components/VehicleFaqAccordion";
 import styles from "./car-public.module.css";
 import ListingIcon from "@/icons/car/ListingIcon";
 import CarTypeIcon from "@/icons/car/CarTypeIcon";
@@ -88,6 +89,18 @@ async function getPhotos(id: string): Promise<{ id: string }[]> {
       cache: "force-cache",
       next: { tags: [`car-photos-${id}`] },
     });
+    return res.ok ? res.json() : [];
+  } catch {
+    return [];
+  }
+}
+
+async function getFaqs(id: string, lang: string): Promise<FaqItem[]> {
+  try {
+    const res = await fetch(
+      `${API}/public/vehicle-faqs?entityType=car&entityId=${encodeURIComponent(id)}&lang=${encodeURIComponent(lang)}`,
+      { cache: "force-cache", next: { tags: [`car-faqs-${id}`] } },
+    );
     return res.ok ? res.json() : [];
   } catch {
     return [];
@@ -192,10 +205,11 @@ export default async function CarDetailPage({
   const locale = params.locale as Locale;
   const id = params.id;
   const t = getTranslations(locale);
-  const [car, photos, businessTz] = await Promise.all([
+  const [car, photos, businessTz, faqs] = await Promise.all([
     getCar(id, locale),
     getPhotos(id),
     getBusinessTimezone(),
+    getFaqs(id, locale),
   ]);
 
   if (!car) {
@@ -224,8 +238,28 @@ export default async function CarDetailPage({
   const photoIds = photos.map(p => p.id);
   const title = [car.brand, car.model, car.finishing].filter(Boolean).join(" ") || car.name;
 
+  const faqJsonLd = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer,
+      },
+    })),
+  } : null;
+
   return (
     <div className={styles.page}>
+
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
 
       {/* ── Breadcrumb / search context ──
            SearchContextBar owns both states: it shows the search bar when URL
@@ -403,6 +437,15 @@ export default async function CarDetailPage({
             urlEnd={searchParams.end ?? ""}
             businessTz={businessTz}
           />
+
+          {faqs.length > 0 && (
+            <VehicleFaqAccordion
+              faqs={faqs}
+              title={t.vehicleFaq.title}
+              toggleLabel={t.vehicleFaq.toggleLabel}
+              dark
+            />
+          )}
         </div>
       </section>
     </div>

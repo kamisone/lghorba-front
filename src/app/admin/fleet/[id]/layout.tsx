@@ -41,6 +41,7 @@ const TABS = [
   { segment: "maintenance", label: "Maintenance", icon: "🔧" },
   { segment: "inspections", label: "Inspections", icon: "🔍" },
   { segment: "incidents",   label: "Incidents",   icon: "⚠" },
+  { segment: "faq",         label: "FAQ",         icon: "❓" },
 ] as const;
 
 // ── Layout ────────────────────────────────────────────────────────────────────

@@ -1,0 +1,121 @@
+.section {
+  margin-top: 2.5rem;
+}
+
+.heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-brand-darkest, #0f172a);
+  margin: 0 0 1rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.details {
+  width: 100%;
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:hover {
+  background: #f8fafc;
+}
+
+.question {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.chevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition: transform 0.2s ease;
+}
+
+details[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.answer {
+  padding: 0 1.25rem 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.answer p {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+/* ── Dark variant (used inside navy booking section) ── */
+
+.dark {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dark .heading {
+  color: #f1f5f9;
+}
+
+.dark .item {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .summary:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dark .question {
+  color: #f1f5f9;
+}
+
+.dark .chevron {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+}
+
+.dark .answer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .answer p {
+  color: #94a3b8;
+}

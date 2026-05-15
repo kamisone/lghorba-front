@@ -319,6 +319,10 @@ export const en = {
       powerUnit:  "hp",
     },
   },
+  vehicleFaq: {
+    title: "Frequently Asked Questions",
+    toggleLabel: "Toggle answer",
+  },
   payment: {
     title: "Complete your booking",
     subtitle: "Enter your payment details below",
@@ -975,6 +979,10 @@ export const fr: Translations = {
       condition:  "État",
       powerUnit:  "ch",
     },
+  },
+  vehicleFaq: {
+    title: "Questions fréquentes",
+    toggleLabel: "Afficher / masquer la réponse",
   },
   payment: {
     title: "Finalisez votre réservation",
