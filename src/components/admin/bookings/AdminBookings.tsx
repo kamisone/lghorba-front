@@ -234,6 +234,17 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
               <span className={styles.priceLabel}>Total</span>
               <span className={styles.priceTotalValue}>{fmtPrice(booking.totalPrice)}</span>
             </div>
+            {booking.totalEarning != null && (
+              <>
+                <div className={styles.priceDivider} />
+                <div className={styles.priceRow}>
+                  <span className={styles.priceLabel}>Earning</span>
+                  <span className={`${styles.priceValue} ${styles.priceEarningValue}`}>
+                    {fmtPrice(booking.totalEarning)}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Customer / guest info lives on booking.user for all booking sources. */}
@@ -242,17 +253,33 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
             const name  = booking.user?.name  ?? null;
             const email = booking.user?.email ?? null;
             const phone = booking.user?.phone ?? null;
-            if (!name && !email && !phone && !booking.reservationNumber && booking.totalEarning == null) return null;
+            if (!name && !email && !phone && !booking.reservationNumber) return null;
             return (
               <div className={styles.customerSection}>
-                <div className={styles.customerSectionHead}>
-                  <span className={styles.customerSectionIcon} aria-hidden="true">
-                    {isPrivate ? "👤" : "✈️"}
-                  </span>
-                  <span className={styles.sectionLabel}>
-                    {isPrivate ? "Customer" : "Guest"}
-                  </span>
-                </div>
+                {booking.user?.id ? (
+                  <Link
+                    href={`/admin/users/${booking.user.id}`}
+                    className={`${styles.customerSectionHead} ${styles.customerSectionHeadLink}`}
+                    onClick={onClose}
+                  >
+                    <span className={styles.customerSectionIcon} aria-hidden="true">
+                      {isPrivate ? "👤" : "✈️"}
+                    </span>
+                    <span className={styles.sectionLabel}>
+                      {isPrivate ? "Customer" : "Guest"}
+                    </span>
+                    <span className={styles.customerSectionChevron} aria-hidden="true">›</span>
+                  </Link>
+                ) : (
+                  <div className={styles.customerSectionHead}>
+                    <span className={styles.customerSectionIcon} aria-hidden="true">
+                      {isPrivate ? "👤" : "✈️"}
+                    </span>
+                    <span className={styles.sectionLabel}>
+                      {isPrivate ? "Customer" : "Guest"}
+                    </span>
+                  </div>
+                )}
                 <div className={styles.customerRows}>
                   {name && (
                     <div className={styles.customerRow}>
@@ -277,14 +304,6 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
                       <span className={styles.customerRowLabel}>Ref #</span>
                       <span className={`${styles.customerRowValue} ${styles.customerRowMono}`}>
                         {booking.reservationNumber}
-                      </span>
-                    </div>
-                  )}
-                  {booking.totalEarning != null && (
-                    <div className={`${styles.customerRow} ${styles.customerRowEarning}`}>
-                      <span className={styles.customerRowLabel}>Earning</span>
-                      <span className={`${styles.customerRowValue} ${styles.customerRowEarningValue}`}>
-                        {fmtPrice(booking.totalEarning)}
                       </span>
                     </div>
                   )}

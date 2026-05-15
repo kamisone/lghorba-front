@@ -45,16 +45,24 @@ const COLORS = [
   "#64748b", "#1e293b",
 ];
 
-function hasOverlap(from: string, to: string, bookings: CalendarBooking[], excludeId?: string): boolean {
-  if (!from || !to) return false;
+function getOverlaps(from: string, to: string, bookings: CalendarBooking[], excludeId?: string): CalendarBooking[] {
+  if (!from || !to) return [];
   const newFrom = new Date(from).getTime();
   const newTo   = new Date(to).getTime();
-  if (newTo <= newFrom) return false;
-  return bookings.some(b => {
+  if (newTo <= newFrom) return [];
+  return bookings.filter(b => {
     if (excludeId && b.id === excludeId) return false;
+    if (b.status === "cancelled") return false;
     const bFrom = new Date(b.startDateTime).getTime();
     const bTo   = new Date(b.endDateTime).getTime();
     return newFrom < bTo && bFrom < newTo;
+  });
+}
+
+function fmtCompact(iso: string, tz: string): string {
+  return new Date(iso).toLocaleString("en-GB", {
+    timeZone: tz, day: "numeric", month: "short",
+    hour: "2-digit", minute: "2-digit",
   });
 }
 
@@ -137,9 +145,10 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
     form.from !== isoToLocalDT(booking.startDateTime, tz) ||
     form.to   !== isoToLocalDT(booking.endDateTime, tz)
   );
-  const overlapDetected = datesChanged && existingBookings
-    ? hasOverlap(form.from, form.to, existingBookings, booking?.id)
-    : false;
+  const overlaps = datesChanged && existingBookings
+    ? getOverlaps(form.from, form.to, existingBookings, booking?.id)
+    : [];
+  const overlapDetected = overlaps.length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,8 +253,26 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
           )}
 
           {overlapDetected && (
-            <div className={styles.errorBanner}>
-              These dates overlap with an existing rent period for this car.
+            <div className={styles.overlapBanner}>
+              <span className={styles.overlapBannerTitle}>
+                Overlaps with {overlaps.length} existing booking{overlaps.length > 1 ? "s" : ""}
+              </span>
+              <div className={styles.overlapList}>
+                {overlaps.map(b => (
+                  <div key={b.id} className={styles.overlapItem}>
+                    <span className={`${styles.overlapSource} ${styles[`overlapSource_${b.source}`]}`}>
+                      {b.source}
+                    </span>
+                    <span className={styles.overlapName}>{b.user?.name ?? "—"}</span>
+                    {b.reservationNumber && (
+                      <span className={styles.overlapRef}>#{b.reservationNumber}</span>
+                    )}
+                    <span className={styles.overlapDates}>
+                      {fmtCompact(b.startDateTime, tz)} → {fmtCompact(b.endDateTime, tz)}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           {apiError && !overlapDetected && (
