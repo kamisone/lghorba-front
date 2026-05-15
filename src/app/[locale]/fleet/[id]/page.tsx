@@ -7,6 +7,7 @@ import CarSlider from "@/components/CarSlider";
 import BookingPanel from "./BookingPanel";
 import SearchContextBar from "./SearchContextBar";
 import VehicleFaqAccordion, { type FaqItem } from "@/components/VehicleFaqAccordion";
+import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import styles from "./car-public.module.css";
 import ListingIcon from "@/icons/car/ListingIcon";
 import CarTypeIcon from "@/icons/car/CarTypeIcon";
@@ -446,6 +447,12 @@ export default async function CarDetailPage({
               dark
             />
           )}
+
+          <AvailabilityCalendar
+            carId={car.id}
+            labels={t.availabilityCalendar}
+            dark
+          />
         </div>
       </section>
     </div>
