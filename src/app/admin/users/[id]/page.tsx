@@ -22,6 +22,7 @@ interface User {
   score?: number;
   turoJoinDate?: string;
   getaroundJoinDate?: string;
+  platformProfileUrl?: string;
   createdAt: string;
   rentSessions?: RentSession[];
 }
@@ -33,6 +34,7 @@ interface EditForm {
   score: string;
   turoJoinDate: string;
   getaroundJoinDate: string;
+  platformProfileUrl: string;
 }
 
 const SCORE_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -64,7 +66,7 @@ export default function UserDetailPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<EditForm>({ name: "", phone: "", email: "", score: "", turoJoinDate: "", getaroundJoinDate: "" });
+  const [form, setForm] = useState<EditForm>({ name: "", phone: "", email: "", score: "", turoJoinDate: "", getaroundJoinDate: "", platformProfileUrl: "" });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -76,6 +78,7 @@ export default function UserDetailPage() {
     score: u.score != null ? String(u.score) : "",
     turoJoinDate: u.turoJoinDate ? u.turoJoinDate.slice(0, 10) : "",
     getaroundJoinDate: u.getaroundJoinDate ? u.getaroundJoinDate.slice(0, 10) : "",
+    platformProfileUrl: u.platformProfileUrl ?? "",
   });
 
   useEffect(() => {
@@ -100,6 +103,7 @@ export default function UserDetailPage() {
           score: form.score !== "" ? Number(form.score) : null,
           turoJoinDate: form.turoJoinDate || null,
           getaroundJoinDate: form.getaroundJoinDate || null,
+          platformProfileUrl: form.platformProfileUrl.trim() || null,
         }),
       });
       if (res.ok) {
@@ -197,6 +201,17 @@ export default function UserDetailPage() {
               </div>
             </div>
 
+            <div className={styles.formField}>
+              <label className={styles.label}>Platform profile URL</label>
+              <input
+                className={styles.input}
+                type="url"
+                placeholder="https://turo.com/…/drivers/… or https://getaround.com/…"
+                value={form.platformProfileUrl}
+                onChange={e => setForm(f => ({ ...f, platformProfileUrl: e.target.value }))}
+              />
+            </div>
+
             <div className={styles.formActions}>
               <button
                 type="button"
@@ -223,7 +238,16 @@ export default function UserDetailPage() {
               }
             </dd>
             <dt>Turo</dt>
-            <dd>{user.turoJoinDate ? new Date(user.turoJoinDate).toLocaleDateString() : <span className={styles.na}>—</span>}</dd>
+            <dd>
+              {user.turoJoinDate ? new Date(user.turoJoinDate).toLocaleDateString() : <span className={styles.na}>—</span>}
+            </dd>
+            <dt>Profile</dt>
+            <dd>
+              {user.platformProfileUrl
+                ? <a href={user.platformProfileUrl} target="_blank" rel="noopener noreferrer" className={styles.profileLink}>View profile ↗</a>
+                : <span className={styles.na}>—</span>
+              }
+            </dd>
             <dt>Getaround</dt>
             <dd>{user.getaroundJoinDate ? new Date(user.getaroundJoinDate).toLocaleDateString() : <span className={styles.na}>—</span>}</dd>
             <dt>Joined</dt><dd>{new Date(user.createdAt).toLocaleDateString()}</dd>
