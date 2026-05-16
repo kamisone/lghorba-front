@@ -51,6 +51,12 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Trip Insights",
+    items: [
+      { href: "/admin/insights/destinations", icon: "location_on", label: "Destinations" },
+    ],
+  },
+  {
     label: "Tools",
     items: [
       { href: "/admin/maintenance", icon: "build",                label: "Maintenance" },
