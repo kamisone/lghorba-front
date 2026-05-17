@@ -9,7 +9,7 @@ RUN chown -R node:node /usr/local/lib/node_modules \
 
 USER node:node
 
-COPY . .
+COPY --chown=node:node . .
 
 EXPOSE 3000
 
