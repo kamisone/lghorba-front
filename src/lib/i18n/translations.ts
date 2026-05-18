@@ -149,6 +149,8 @@ export const en = {
     hidden:           "hidden",
     distM:            "m",
     distKm:           "km",
+    searching:        "Searching…",
+    anyLocation:      "Any location",
   },
   booking: {
     title: "Book this vehicle",
@@ -842,6 +844,8 @@ export const fr: Translations = {
     hidden:           "masqué",
     distM:            "m",
     distKm:           "km",
+    searching:        "Recherche…",
+    anyLocation:      "Toute localisation",
   },
   booking: {
     title: "Réserver ce véhicule",

@@ -50,17 +50,22 @@ export default function SearchContextBar({
     );
   }
 
+  // For URL source the server already built the correct href.
+  // For storage source we reconstruct it from the resolved context so the
+  // user can modify their search instead of being sent to the fleet list.
+  const backHref = ctx.source === "url"
+    ? searchHref
+    : `/${locale}/search?start=${encodeURIComponent(ctx.start)}&end=${encodeURIComponent(ctx.end)}${
+        ctx.address
+          ? `&lat=${ctx.address.lat}&lng=${ctx.address.lng}&address=${encodeURIComponent(ctx.address.label)}`
+          : ""
+      }`;
+
   return (
     <div className={styles.searchContextBar}>
-      {ctx.source === "url" ? (
-        <Link href={searchHref} className={styles.searchContextBack}>
-          ← {backLabel}
-        </Link>
-      ) : (
-        <Link href={fleetHref} className={styles.searchContextBack}>
-          ← {fleetLabel}
-        </Link>
-      )}
+      <Link href={backHref} className={styles.searchContextBack}>
+        ← {backLabel}
+      </Link>
       <span className={styles.searchContextDates}>
         📅 {fmtDate(ctx.start, locale)} → {fmtDate(ctx.end, locale)}
       </span>

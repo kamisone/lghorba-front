@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./search.module.css";
-import BackButton from "./BackButton";
-import SearchResults from "./SearchResults";
+import SearchClient from "./SearchClient";
 
 const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
@@ -49,7 +48,7 @@ async function searchCars(params: {
       body:    JSON.stringify(body),
       cache:   "no-store",
     });
-    return res.ok ? res.json() : [];
+    return res.ok ? await res.json() : [];
   } catch {
     return [];
   }
@@ -79,52 +78,20 @@ export default async function SearchPage({
   const lat     = searchParams.lat     ?? "";
   const lng     = searchParams.lng     ?? "";
   const address = searchParams.address ?? "";
-  const t       = getTranslations(locale);
-  const hasAddress = Boolean(address && lat && lng);
-
   const results = await searchCars({ start, end, lat, lng, address, locale });
-
-  const fmt = new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
-    dateStyle: "medium", timeStyle: "short",
-    timeZone: "Europe/Paris",
-  });
-  const startFmt = start ? fmt.format(new Date(start)) : "";
-  const endFmt   = end   ? fmt.format(new Date(end))   : "";
 
   return (
     <div className={styles.page}>
 
-      {/* ── Header — server-rendered ── */}
-      <div className={styles.header}>
-        <div className={styles.headerBg} aria-hidden="true">
-          <div className={styles.headerBgGlow} />
-          <div className={styles.headerBgGrid} />
-        </div>
-        <div className={styles.headerContent}>
-          <BackButton label={t.search.backToSearch} />
-          <h1 className={styles.headerTitle}>{t.search.resultsTitle}</h1>
-          <div className={styles.headerMeta}>
-            <span className={styles.headerMetaItem}>📅 {startFmt} → {endFmt}</span>
-            {address && (
-              <>
-                <span className={styles.headerMetaSep}>·</span>
-                <span className={styles.headerMetaItem}>📍 {address}</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Results — client island handles sort + prices ── */}
-      <SearchResults
-        results={results}
-        start={start}
-        end={end}
+      {/* ── Sticky refinement panel + results — all client state ── */}
+      <SearchClient
+        initialResults={results}
+        initialStart={start}
+        initialEnd={end}
+        initialLat={lat}
+        initialLng={lng}
+        initialAddress={address}
         locale={locale}
-        hasAddress={hasAddress}
-        lat={lat}
-        lng={lng}
-        address={address}
       />
 
     </div>

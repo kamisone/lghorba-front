@@ -4,6 +4,29 @@
  * No global state — safe for SSR and browser alike.
  */
 
+// ── Local browser date/time ↔ UTC ISO ────────────────────────────────────────
+
+/**
+ * Split a UTC ISO string into { date: "YYYY-MM-DD", time: "HH:mm" }
+ * expressed in the browser's local timezone (safe to pass to <input type="date/time">).
+ */
+export function isoToLocalParts(iso: string): { date: string; time: string } {
+  const d   = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
+}
+
+/**
+ * Convert a local date "YYYY-MM-DD" + time "HH:mm" (browser local timezone) to
+ * a UTC ISO string. Uses Z suffix — no "+" in the output, proxy-safe.
+ */
+export function localPartsToUTC(date: string, time: string): string {
+  return new Date(`${date}T${time}`).toISOString();
+}
+
 // ── Core converter ────────────────────────────────────────────────────────────
 
 /**

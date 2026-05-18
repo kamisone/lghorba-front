@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AddressAutocomplete, { type SelectedAddress } from "./AddressAutocomplete";
+import { isoToLocalParts, localPartsToUTC } from "@/lib/dateUtils";
 import { loadSearchContext } from "@/lib/searchContext";
 import styles from "./CarSearchForm.module.css";
 
@@ -13,25 +14,6 @@ function nowPlusHours(h: number): { date: string; time: string } {
     date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
     time: `${pad(d.getHours())}:00`,
   };
-}
-
-function toOffsetISO(date: string, time: string): string {
-  const d = new Date(`${date}T${time}`);
-  const tzo = -d.getTimezoneOffset();
-  const sign = tzo >= 0 ? "+" : "-";
-  const pad2 = (n: number) => String(Math.abs(n)).padStart(2, "0");
-  return `${date}T${time}:00${sign}${pad2(Math.floor(Math.abs(tzo) / 60))}:${pad2(Math.abs(tzo) % 60)}`;
-}
-
-function isoToDate(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-function isoToTime(iso: string): string {
-  const d = new Date(iso);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 export interface SearchFormLabels {
@@ -67,10 +49,10 @@ export default function CarSearchForm({ locale, labels }: Props) {
   useEffect(() => {
     const ctx = loadSearchContext();
     if (!ctx || new Date(ctx.start) <= new Date()) return;
-    setStartDate(isoToDate(ctx.start));
-    setStartTime(isoToTime(ctx.start));
-    setEndDate(isoToDate(ctx.end));
-    setEndTime(isoToTime(ctx.end));
+    const sp = isoToLocalParts(ctx.start);
+    const ep = isoToLocalParts(ctx.end);
+    setStartDate(sp.date); setStartTime(sp.time);
+    setEndDate(ep.date);   setEndTime(ep.time);
   }, []);
 
   const validate = useCallback((): boolean => {
@@ -87,8 +69,8 @@ export default function CarSearchForm({ locale, labels }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    const start = toOffsetISO(startDate, startTime);
-    const end   = toOffsetISO(endDate, endTime);
+    const start = localPartsToUTC(startDate, startTime);
+    const end   = localPartsToUTC(endDate, endTime);
     const params = new URLSearchParams({ start, end });
     if (address) {
       params.set("lat",     String(address.lat));

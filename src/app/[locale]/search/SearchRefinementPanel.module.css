@@ -1,0 +1,260 @@
+/* ── Panel shell — sticky ── */
+.panel {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Collapsed bar (mobile-only, hidden on desktop) ── */
+.collapsedBar {
+  display: none;
+}
+
+/* ── Form ── */
+.form {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 12px 24px;
+}
+
+.fieldsRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+/* ── Field group ── */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-label);
+  white-space: nowrap;
+}
+
+.optionalBadge {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 1px 7px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ── Date + time row ── */
+.datetimeRow {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── Inputs ── */
+.dateInput,
+.timeInput {
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+  background: var(--color-white);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+.dateInput:hover,
+.timeInput:hover { border-color: rgba(var(--rgb-brand-primary), 0.35); }
+.dateInput:focus,
+.timeInput:focus {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-primary), 0.1);
+}
+.dateInput { flex: 1; min-width: 0; }
+.timeInput { width: 86px; flex-shrink: 0; }
+
+.inputErr {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
+}
+.errMsg {
+  font-size: 0.72rem;
+  color: var(--color-error);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ── Arrow separator ── */
+.arrow {
+  color: var(--color-text-placeholder);
+  font-size: 1rem;
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Address field grows to fill remaining space ── */
+.addressField {
+  flex: 1;
+  min-width: 160px;
+}
+
+/* ── Search button ── */
+.searchBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 10px 20px;
+  background: var(--gradient-brand);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.14s, box-shadow 0.14s, filter 0.14s;
+  box-shadow: 0 3px 14px rgba(var(--rgb-brand-primary), 0.32);
+  white-space: nowrap;
+  align-self: flex-end;
+  min-height: 40px;
+}
+.searchBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(var(--rgb-brand-primary), 0.4);
+  filter: brightness(1.06);
+}
+.searchBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.searchBtnLabel { line-height: 1; }
+
+/* ── Spinner ── */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ────────────────────────────────────────────
+   Mobile (≤ 640px): collapsed summary + drawer
+   ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Show the collapsed bar */
+  .collapsedBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .collapsedSummary {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chevron {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  .chevronUp {
+    transform: rotate(180deg);
+  }
+
+  /* Hide the form by default on mobile */
+  .form {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Show when expanded */
+  .form.formExpanded {
+    display: block;
+  }
+
+  /* Stack fields vertically on mobile */
+  .fieldsRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .arrow { display: none; }
+
+  .addressField {
+    min-width: 0;
+    flex: unset;
+  }
+
+  .searchBtn {
+    width: 100%;
+    padding: 14px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    align-self: stretch;
+  }
+
+  .dateInput,
+  .timeInput {
+    padding: 11px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ── Tablet: show form, allow wrap if needed ── */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .form { padding: 12px 20px; }
+
+  .fieldsRow {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .addressField {
+    flex: 1 1 180px;
+  }
+
+  .timeInput { width: 78px; }
+}
