@@ -151,6 +151,10 @@ export const en = {
     distKm:           "km",
     searching:        "Searching…",
     anyLocation:      "Any location",
+    showMap:          "Show map",
+    hideMap:          "Hide map",
+    noMapData:        "No location data for this vehicle",
+    mapVehicles:      "vehicles on map",
   },
   booking: {
     title: "Book this vehicle",
@@ -846,6 +850,10 @@ export const fr: Translations = {
     distKm:           "km",
     searching:        "Recherche…",
     anyLocation:      "Toute localisation",
+    showMap:          "Voir la carte",
+    hideMap:          "Masquer la carte",
+    noMapData:        "Aucune donnée de localisation pour ce véhicule",
+    mapVehicles:      "véhicules sur la carte",
   },
   booking: {
     title: "Réserver ce véhicule",

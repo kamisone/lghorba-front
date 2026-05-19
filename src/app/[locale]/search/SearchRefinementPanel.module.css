@@ -1,7 +1,7 @@
 /* ── Panel shell — sticky ── */
 .panel {
   position: sticky;
-  top: 0;
+  top: 64px; /* fixed site header is 64px */
   z-index: 50;
   background: var(--color-white);
   border-bottom: 1px solid var(--color-border);

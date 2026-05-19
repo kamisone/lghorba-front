@@ -20,6 +20,8 @@ interface SearchResult {
   numberOfSeats:    number | null;
   basePricePerDay:  number | null;
   parkingAddress:   string | null;
+  parkingLat:       number | null;
+  parkingLng:       number | null;
   deliveryEnabled:      boolean;
   deliveryType:         string | null;
   deliveryRadiusKm:     number | null;

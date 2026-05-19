@@ -151,8 +151,29 @@
 /* ── Results grid ── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ── Card wrapper (hosts hover/selected state from map sync) ── */
+.cardWrapper {
+  border-radius: 16px;
+  outline: 2.5px solid transparent;
+  outline-offset: 0px;
+  transition: outline-color 0.15s, box-shadow 0.15s;
+}
+
+/* Hovered from map marker */
+.cardWrapper.cardHovered {
+  outline-color: rgba(var(--rgb-brand-primary), 0.35);
+}
+/* Selected by marker click */
+.cardWrapper.cardSelected {
+  outline-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 3px rgba(141, 194, 32, 0.22);
+}
+.cardWrapper.cardSelected .card {
+  border-color: var(--color-brand-accent);
 }
 
 /* ── Car card ── */

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { type SelectedAddress } from "@/components/AddressAutocomplete";
 import { saveSearchContext } from "@/lib/searchContext";
@@ -9,7 +10,13 @@ import SearchRefinementPanel from "./SearchRefinementPanel";
 import SearchResults from "./SearchResults";
 import styles from "./SearchClient.module.css";
 
-interface SearchResult {
+// Lazy-load the map (Leaflet is not SSR-compatible)
+const SearchMap = dynamic(() => import("./SearchMap"), {
+  ssr: false,
+  loading: () => <div className={styles.mapSkeleton} />,
+});
+
+export interface SearchResult {
   id:               string;
   name:             string;
   description:      string | null;
@@ -24,6 +31,8 @@ interface SearchResult {
   numberOfSeats:    number | null;
   basePricePerDay:  number | null;
   parkingAddress:   string | null;
+  parkingLat:       number | null;
+  parkingLng:       number | null;
   deliveryEnabled:      boolean;
   deliveryType:         string | null;
   deliveryRadiusKm:     number | null;
@@ -62,6 +71,12 @@ export default function SearchClient({
   const [address,  setAddress]  = useState(initialAddress);
   const [loading,  setLoading]  = useState(false);
 
+  // ── Map interaction state ─────────────────────────────────────────────────
+  const [hoveredCarId,  setHoveredCarId]  = useState<string | null>(null);
+  const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
+  // Mobile: map overlay visibility
+  const [mapVisible, setMapVisible] = useState(false);
+
   const abortRef = useRef<AbortController | null>(null);
 
   const initialAddressObj: SelectedAddress | null =
@@ -69,17 +84,17 @@ export default function SearchClient({
       ? { lat: parseFloat(initialLat), lng: parseFloat(initialLng), label: initialAddress }
       : null;
 
+  // ── Search ────────────────────────────────────────────────────────────────
+
   const handleSearch = useCallback(async (
     newStart:   string,
     newEnd:     string,
     newAddress: SelectedAddress | null,
   ) => {
-    // Cancel any in-flight request
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    // Sync URL without triggering a server re-render scroll jump
     const params = new URLSearchParams({ start: newStart, end: newEnd });
     if (newAddress) {
       params.set("lat",     String(newAddress.lat));
@@ -89,6 +104,9 @@ export default function SearchClient({
     router.push(`/${locale}/search?${params.toString()}`, { scroll: false });
 
     setLoading(true);
+    setSelectedCarId(null);
+    setHoveredCarId(null);
+
     try {
       const body: Record<string, unknown> = {
         startDateTime: newStart,
@@ -101,7 +119,7 @@ export default function SearchClient({
         body.addressLabel = newAddress.label;
       }
 
-      const res  = await fetch("/next-api/public/cars/search", {
+      const res = await fetch("/next-api/public/cars/search", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(body),
@@ -119,7 +137,6 @@ export default function SearchClient({
       setLng(newAddress  ? String(newAddress.lng) : "");
       setAddress(newAddress ? newAddress.label : "");
 
-      // Persist for cross-page pre-fill
       saveSearchContext(newStart, newEnd,
         newAddress ? { lat: newAddress.lat, lng: newAddress.lng, label: newAddress.label } : undefined,
       );
@@ -132,10 +149,53 @@ export default function SearchClient({
     }
   }, [locale, router]);
 
+  // ── Map interaction handlers ──────────────────────────────────────────────
+
+  const handleMarkerHover  = useCallback((id: string | null) => setHoveredCarId(id), []);
+  const handleMarkerClick  = useCallback((id: string) => setSelectedCarId(id), []);
+  const handleMapClick     = useCallback(() => setSelectedCarId(null), []);
+  const handleCardHover    = useCallback((id: string | null) => setHoveredCarId(id), []);
+  const handleCardSelect   = useCallback((id: string | null) => setSelectedCarId(id), []);
+
+  // ── Derived values ────────────────────────────────────────────────────────
+
   const hasAddress = Boolean(address && lat && lng);
+
+  // Cars that can be shown on the map (have lat/lng).
+  // useMemo keeps a stable array reference so the SearchMap useEffect([cars])
+  // does NOT re-run when only selectedCarId/hoveredCarId changes — without this,
+  // every marker click triggers drawMarkers → clearMarkers which destroys the popup.
+  const mapCars = useMemo(() =>
+    results
+      .filter((c): c is SearchResult & { parkingLat: number; parkingLng: number } =>
+        c.parkingLat != null && c.parkingLng != null,
+      )
+      .map(c => ({
+        id:              c.id,
+        name:            c.name,
+        hasPhoto:        c.hasPhoto,
+        basePricePerDay: c.basePricePerDay,
+        parkingLat:      c.parkingLat,
+        parkingLng:      c.parkingLng,
+        distanceKm:      c.distanceKm,
+      })),
+  [results]);
+
+  const mapLabels = {
+    openDetails: t.carDetail.viewDetails.replace(" →", ""),
+    perDay:      t.search.perDay,
+    totalLabel:  t.search.totalLabel,
+    showMap:     t.search.showMap,
+  };
+
+  // ── Map count badge ───────────────────────────────────────────────────────
+  const mapCountLabel = mapCars.length > 0
+    ? `${mapCars.length} ${t.search.mapVehicles}`
+    : null;
 
   return (
     <>
+      {/* ── Sticky refinement panel ── */}
       <SearchRefinementPanel
         initialStart={initialStart}
         initialEnd={initialEnd}
@@ -156,18 +216,79 @@ export default function SearchClient({
         onSearch={handleSearch}
       />
 
-      <div className={`${styles.resultsWrap} ${loading ? styles.resultsLoading : ""}`}>
-        <SearchResults
-          results={results}
-          start={start}
-          end={end}
-          locale={locale}
-          hasAddress={hasAddress}
-          lat={lat}
-          lng={lng}
-          address={address}
-        />
+      {/* ── Split layout: list (left) + map (right on desktop) ── */}
+      <div className={styles.splitWrapper}>
+
+        {/* ── List pane ── */}
+        <div className={`${styles.listPane} ${loading ? styles.listLoading : ""}`}>
+          <SearchResults
+            results={results}
+            start={start}
+            end={end}
+            locale={locale}
+            hasAddress={hasAddress}
+            lat={lat}
+            lng={lng}
+            address={address}
+            hoveredCarId={hoveredCarId}
+            selectedCarId={selectedCarId}
+            onCardHover={handleCardHover}
+            onCardSelect={handleCardSelect}
+          />
+        </div>
+
+        {/* ── Map pane (desktop: sticky right column; mobile: fullscreen overlay) ── */}
+        <div
+          className={`${styles.mapPane} ${mapVisible ? styles.mapPaneVisible : ""}`}
+          aria-hidden={!mapVisible}
+        >
+          {/* Close button (mobile only) */}
+          <button
+            type="button"
+            className={styles.mapCloseBtn}
+            onClick={() => setMapVisible(false)}
+            aria-label={t.search.hideMap}
+          >
+            ✕ {t.search.hideMap}
+          </button>
+
+          {/* Map count badge */}
+          {mapCountLabel && (
+            <div className={styles.mapBadge} aria-live="polite">
+              {mapCountLabel}
+            </div>
+          )}
+
+          <SearchMap
+            cars={mapCars}
+            hoveredCarId={hoveredCarId}
+            selectedCarId={selectedCarId}
+            start={start}
+            end={end}
+            locale={locale}
+            labels={mapLabels}
+            visible={mapVisible}
+            onMarkerHover={handleMarkerHover}
+            onMarkerClick={handleMarkerClick}
+            onMapClick={handleMapClick}
+          />
+        </div>
       </div>
+
+      {/* ── Mobile floating "Show map" button ── */}
+      <button
+        type="button"
+        className={`${styles.fab} ${mapVisible ? styles.fabHidden : ""}`}
+        onClick={() => setMapVisible(true)}
+        aria-label={t.search.showMap}
+        aria-pressed={mapVisible}
+      >
+        <span className={styles.fabIcon} aria-hidden>🗺</span>
+        <span>{t.search.showMap}</span>
+        {mapCars.length > 0 && (
+          <span className={styles.fabCount}>{mapCars.length}</span>
+        )}
+      </button>
     </>
   );
 }
