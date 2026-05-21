@@ -22,9 +22,10 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Operations",
     items: [
-      { href: "/admin/fleet",    icon: "directions_car",  label: "Fleet"    },
-      { href: "/admin/calendar", icon: "calendar_month",  label: "Calendar" },
-      { href: "/admin/bookings", icon: "event_available", label: "Bookings", badge: "pendingBookings" },
+      { href: "/admin/fleet",     icon: "directions_car",  label: "Fleet"    },
+      { href: "/admin/calendar",  icon: "calendar_month",  label: "Calendar" },
+      { href: "/admin/bookings",  icon: "event_available", label: "Bookings", badge: "pendingBookings" },
+      { href: "/admin/parkings",  icon: "local_parking",   label: "Parkings" },
     ],
   },
   {

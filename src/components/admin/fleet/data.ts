@@ -64,6 +64,7 @@ export interface Car {
   basePricePerDay?: number | null;
   basePricePerWeekendDay?: number | null;
   // Location & delivery
+  parkingId?: string | null;
   parkingAddress?: string | null;
   parkingLat?: number | null;
   parkingLng?: number | null;

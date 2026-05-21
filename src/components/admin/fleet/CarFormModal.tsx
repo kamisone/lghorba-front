@@ -6,6 +6,15 @@ import styles from "./CarFormModal.module.css";
 import BilingualField from "./BilingualField";
 import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
 
+interface ParkingOption {
+  id: string;
+  label: string;
+  address: string;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
 interface Props {
   car?: Car;
   onClose: () => void;
@@ -61,8 +70,11 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
   const [loading, setLoading]                     = useState(false);
   const [error, setError]                         = useState("");
 
+  // Parking slot selection
+  const [parkings,   setParkings]   = useState<ParkingOption[]>([]);
+  const [parkingId,  setParkingId]  = useState<string>("");
+
   // Location & delivery state
-  const [parkingAddress, setParkingAddress]         = useState<SelectedAddress | null>(null);
   const [deliveryEnabled, setDeliveryEnabled]       = useState(false);
   const [deliveryType, setDeliveryType]             = useState<"radius" | "location">("radius");
   const [deliveryRadius, setDeliveryRadius]         = useState("");
@@ -77,12 +89,18 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
   const [turoLink, setTuroLink]           = useState("");
   const [getaroundLink, setGetaroundLink] = useState("");
 
+  // Load available parkings for the select dropdown
+  useEffect(() => {
+    fetch("/next-api/parkings?isActive=true")
+      .then(r => r.ok ? r.json() : [])
+      .then((list: ParkingOption[]) => setParkings(list))
+      .catch(() => {});
+  }, []);
+
   // Populate location/delivery/platform links from car
   useEffect(() => {
     if (car) {
-      if (car.parkingLat != null && car.parkingLng != null && car.parkingAddress) {
-        setParkingAddress({ label: car.parkingAddress, lat: car.parkingLat, lng: car.parkingLng });
-      }
+      setParkingId((car as any).parkingId ?? "");
       setDeliveryEnabled(car.deliveryEnabled ?? false);
       setDeliveryType((car.deliveryType as "radius" | "location") ?? "radius");
       setDeliveryRadius(car.deliveryRadiusKm != null ? String(car.deliveryRadiusKm) : "");
@@ -200,9 +218,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
         vehicleCondition: form.vehicleCondition || null,
         basePricePerDay:        Number(form.basePricePerDay),
         basePricePerWeekendDay: form.basePricePerWeekendDay ? Number(form.basePricePerWeekendDay) : null,
-        parkingAddress:   parkingAddress?.label ?? null,
-        parkingLat:       parkingAddress?.lat   ?? null,
-        parkingLng:       parkingAddress?.lng   ?? null,
+        parkingId:        parkingId || null,
         deliveryEnabled,
         deliveryType:        deliveryEnabled ? deliveryType : null,
         deliveryRadiusKm:    deliveryEnabled && deliveryType === "radius" && deliveryRadius ? Number(deliveryRadius) : null,
@@ -375,15 +391,36 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
           <p className={styles.section}>Location &amp; Delivery</p>
 
           <div className={styles.field}>
-            <label className={styles.label}>Parking address</label>
-            <AddressAutocomplete
-              value={parkingAddress}
-              onChange={setParkingAddress}
-              placeholder="Search parking address in France…"
-            />
-            {parkingAddress && (
+            <label className={styles.label}>Assigned parking slot</label>
+            <select
+              className={styles.select}
+              value={parkingId}
+              onChange={e => setParkingId(e.target.value)}
+            >
+              <option value="">— No parking assigned —</option>
+              {parkings.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.label}{p.city ? ` · ${p.city}` : ""}
+                </option>
+              ))}
+            </select>
+            {parkingId && (() => {
+              const selected = parkings.find(p => p.id === parkingId);
+              return selected ? (
+                <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", margin: "4px 0 0 2px" }}>
+                  {selected.address}
+                  {selected.latitude && selected.longitude
+                    ? ` · ${selected.latitude.toFixed(5)}, ${selected.longitude.toFixed(5)}`
+                    : ""}
+                </p>
+              ) : null;
+            })()}
+            {parkings.length === 0 && (
               <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", margin: "4px 0 0 2px" }}>
-                📍 {parkingAddress.lat.toFixed(5)}, {parkingAddress.lng.toFixed(5)}
+                No parking slots created yet —{" "}
+                <a href="/admin/parkings" target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-admin-secondary)" }}>
+                  add one in Parking Management
+                </a>
               </p>
             )}
           </div>

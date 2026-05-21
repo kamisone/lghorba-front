@@ -7,6 +7,7 @@ export interface SelectedAddress {
   label: string;
   lat:   number;
   lng:   number;
+  city?: string;
 }
 
 interface Suggestion {
@@ -97,7 +98,7 @@ export default function AddressAutocomplete({
     setQuery(s.label);
     setSuggestions([]);
     setOpen(false);
-    onChange({ label: s.label, lat: s.lat, lng: s.lng });
+    onChange({ label: s.label, lat: s.lat, lng: s.lng, city: s.city });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
