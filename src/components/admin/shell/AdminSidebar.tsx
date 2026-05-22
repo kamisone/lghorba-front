@@ -58,12 +58,20 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Content",
+    items: [
+      { href: "/admin/blog",            icon: "edit_note",   label: "Articles"    },
+      { href: "/admin/blog/categories", icon: "label",       label: "Categories"  },
+      { href: "/admin/blog/tags",       icon: "tag",         label: "Tags"        },
+      { href: "/admin/content",         icon: "web_stories", label: "Policies"       },
+    ],
+  },
+  {
     label: "Tools",
     items: [
       { href: "/admin/maintenance", icon: "build",                label: "Maintenance" },
       { href: "/admin/analytics",   icon: "monitoring",           label: "Analytics"   },
       { href: "/admin/admins",      icon: "admin_panel_settings", label: "Admins"      },
-      { href: "/admin/content",     icon: "article",              label: "Content"     },
     ],
   },
 ];
