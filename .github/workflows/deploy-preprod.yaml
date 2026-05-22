@@ -20,6 +20,7 @@ jobs:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
           APP_MODE: ${{ secrets.APP_MODE }}
           NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
           API_BASE_URL_SERVER: https://vitecamion.com/api
           API_BASE_URL_BROWSER: https://vitecamion.com/api
 
