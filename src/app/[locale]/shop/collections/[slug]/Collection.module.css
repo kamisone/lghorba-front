@@ -1,0 +1,48 @@
+.container { max-width: 1280px; margin: 0 auto; padding: 32px 16px; }
+
+/* ── Hero banner ── */
+.hero {
+  position: relative; height: 260px; border-radius: 22px;
+  overflow: hidden; margin-bottom: 36px;
+  background: var(--color-brand-dark);
+  box-shadow: 0 8px 32px rgba(0,24,41,.18);
+}
+.heroImage { object-fit: cover; }
+.heroOverlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,24,41,.75) 0%, rgba(0,24,41,.15) 60%, transparent 100%);
+  display: flex; flex-direction: column; justify-content: flex-end; padding: 36px;
+}
+.heroTitle { color: #fff; font-size: 38px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+.heroDesc { color: rgba(255,255,255,.82); margin-top: 10px; font-size: 16px; line-height: 1.55; max-width: 600px; }
+
+/* ── Editorial copy ── */
+.heroCopy {
+  font-size: 17px; color: var(--color-text-secondary); line-height: 1.75;
+  max-width: 720px; margin-bottom: 36px;
+}
+
+/* ── Product grid ── */
+.empty { color: var(--color-text-muted); text-align: center; padding: 60px; font-size: 15px; }
+.productGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 22px; }
+
+.productCard {
+  border: 1px solid var(--color-border); border-radius: 14px;
+  overflow: hidden; background: #fff; text-decoration: none; color: inherit;
+  display: block; transition: box-shadow .22s, transform .22s;
+}
+.productCard:hover { box-shadow: 0 8px 24px rgba(0,24,41,.1); transform: translateY(-2px); }
+
+.productImageWrap { position: relative; aspect-ratio: 1; background: var(--color-surface); overflow: hidden; }
+.productImage { object-fit: cover; transition: transform .35s ease; }
+.productCard:hover .productImage { transform: scale(1.04); }
+
+.productInfo { padding: 14px; }
+.productTitle { margin: 0; font-weight: 500; font-size: 14px; line-height: 1.35; color: var(--color-text-heading); }
+.productPrice { margin: 7px 0 0; font-weight: 700; color: var(--color-brand-primary); }
+
+/* ── Body HTML ── */
+.bodyHtml {
+  max-width: 720px; margin: 48px auto 0;
+  line-height: 1.8; color: var(--color-text-secondary); font-size: 15px;
+}

@@ -1,0 +1,72 @@
+/* Shared admin shop styles */
+.container { padding: 24px; max-width: 1400px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.title { font-size: 24px; font-weight: 700; margin: 0; }
+.btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; }
+.btnPrimary { background: #1d4ed8; color: #fff; }
+.btnPrimary:hover { background: #1e40af; }
+.btnSecondary { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+.btnSecondary:hover { background: #e5e7eb; }
+.btnDanger { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+.btnDanger:hover { background: #fecaca; }
+.btnSuccess { background: #d1fae5; color: #059669; border: 1px solid #6ee7b7; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+.table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+.table tr:hover td { background: #f9fafb; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.badgePending   { background: #fef9c3; color: #854d0e; }
+.badgePaid      { background: #d1fae5; color: #065f46; }
+.badgeActive    { background: #d1fae5; color: #065f46; }
+.badgeDraft     { background: #f3f4f6; color: #6b7280; }
+.badgeShipped   { background: #dbeafe; color: #1d4ed8; }
+.badgeCancelled { background: #fee2e2; color: #dc2626; }
+.badgePublished { background: #d1fae5; color: #065f46; }
+.badgeRejected  { background: #fee2e2; color: #dc2626; }
+
+.filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.filterInput { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+.filterSelect { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+
+.pagination { display: flex; gap: 8px; margin-top: 16px; align-items: center; justify-content: flex-end; }
+.pageInfo { font-size: 14px; color: #6b7280; margin-right: 8px; }
+
+.kpiGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpiCard { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; }
+.kpiLabel { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.kpiValue { font-size: 28px; font-weight: 700; }
+.kpiSub { font-size: 13px; color: #9ca3af; margin-top: 2px; }
+
+.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.formField { display: flex; flex-direction: column; gap: 4px; }
+.formField label { font-size: 13px; font-weight: 500; color: #374151; }
+.formField input, .formField textarea, .formField select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+.formField input:focus, .formField textarea:focus { outline: none; border-color: #1d4ed8; }
+.formSpan2 { grid-column: span 2; }
+
+.imagePreview { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; border: 1px solid #e5e7eb; }
+.uploadBtn { padding: 6px 12px; border: 1px dashed #d1d5db; border-radius: 8px; cursor: pointer; font-size: 13px; color: #6b7280; background: #f9fafb; }
+.uploadBtn:hover { border-color: #9ca3af; }
+
+/* ── Skeleton loading ── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+.skeleton {
+  display: block;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e9ebee 50%, #f3f4f6 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+.skeletonKpi { height: 28px; width: 70%; margin-top: 6px; }
+
+.subtitle { font-size: 14px; color: #9ca3af; font-weight: 400; }
+.link { color: #1d4ed8; text-decoration: none; }
+.link:hover { text-decoration: underline; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; }
+.input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; }
+.input:focus { outline: none; border-color: #1d4ed8; }

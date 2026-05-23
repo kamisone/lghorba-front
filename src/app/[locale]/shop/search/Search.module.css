@@ -1,0 +1,43 @@
+/* Search-specific styles only — shared layout/hero/card styles come from Shop.module.css */
+
+/* ── Filter sidebar sub-sections ── */
+.filterBlock { margin-bottom: 24px; }
+.filterGroupTitle {
+  font-size: 11px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--color-text-muted);
+  margin: 0 0 8px;
+}
+
+.brandBtn {
+  display: block; width: 100%; text-align: left;
+  padding: 6px 10px; border-radius: 7px; border: none;
+  background: transparent; color: var(--color-text-primary);
+  cursor: pointer; font-size: 13px; margin-bottom: 2px;
+  transition: background .15s, color .15s;
+}
+.brandBtn:hover { background: var(--color-surface); }
+.brandBtnActive {
+  background: rgba(0,70,110,.08) !important;
+  color: var(--color-brand-primary) !important;
+  font-weight: 600;
+}
+.brandBtnActive::before {
+  content: "";
+  display: inline-block; width: 3px; height: 12px;
+  background: var(--color-brand-accent);
+  border-radius: 2px; margin-right: 8px; vertical-align: middle;
+}
+.brandCount { color: var(--color-text-muted); font-weight: 400; }
+
+.priceRow { display: flex; gap: 6px; align-items: center; }
+.priceInput {
+  width: 74px; padding: 7px 10px;
+  border: 1px solid var(--color-border); border-radius: 7px;
+  font-size: 13px; color: var(--color-text-primary);
+  transition: border-color .18s;
+}
+.priceInput:focus { outline: none; border-color: var(--color-brand-primary); }
+.priceDash { color: var(--color-text-muted); }
+
+/* ── Results meta ── */
+.processingTime { font-size: 11px; color: var(--color-border); }

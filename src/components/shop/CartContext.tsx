@@ -1,0 +1,218 @@
+"use client";
+
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+
+export interface AppliedCoupon {
+  code: string;
+  discountCents: number;
+  type: string;
+}
+
+export interface CartItem {
+  id: string;
+  variantId: string;
+  productId: string;
+  titleSnapshot: string;
+  skuSnapshot: string | null;
+  imageUrl: string | null;
+  quantity: number;
+  unitPriceCents: number;
+  lineTotalCents: number;
+}
+
+export interface Cart {
+  id: string;
+  token: string;
+  items: CartItem[];
+  subtotalCents: number;
+  itemCount: number;
+}
+
+interface CartContextValue {
+  cart: Cart | null;
+  loading: boolean;
+  mutating: boolean;
+  addItem: (variantId: string, quantity?: number) => Promise<{ ok: boolean; message?: string }>;
+  updateItem: (itemId: string, quantity: number) => Promise<void>;
+  removeItem: (itemId: string) => Promise<void>;
+  validateCoupon: (code: string) => Promise<{ valid: boolean; discountCents: number; type: string; message?: string }>;
+  token: string;
+  refresh: () => Promise<void>;
+  appliedCoupon: AppliedCoupon | null;
+  setAppliedCoupon: (c: AppliedCoupon | null) => void;
+  isDrawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
+}
+
+const CartContext = createContext<CartContextValue | null>(null);
+
+function getOrCreateToken(): string {
+  if (typeof window === "undefined") return "";
+  let token = localStorage.getItem("shop_cart_token");
+  if (!token) {
+    token = crypto.randomUUID();
+    localStorage.setItem("shop_cart_token", token);
+  }
+  return token;
+}
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [token, setToken] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return getOrCreateToken();
+  });
+  const [cart, setCart]       = useState<Cart | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [mutating, setMutating] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Always-current cart ref for optimistic rollback without stale closures
+  const cartRef = useRef<Cart | null>(null);
+  useEffect(() => { cartRef.current = cart; }, [cart]);
+
+  function applyCart(data: Cart) {
+    if (data.token && data.token !== token) {
+      localStorage.setItem("shop_cart_token", data.token);
+      setToken(data.token);
+    }
+    setCart(data);
+  }
+
+  const fetchCart = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/next-api/public/shop/cart/${token}`);
+      if (res.ok) applyCart(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  useEffect(() => {
+    if (token) fetchCart();
+  }, [token, fetchCart]);
+
+  const addItem = useCallback(async (variantId: string, quantity = 1): Promise<{ ok: boolean; message?: string }> => {
+    setMutating(true);
+    try {
+      const res = await fetch(`/next-api/public/shop/cart/${token}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variantId, quantity }),
+      });
+      if (res.ok) {
+        applyCart(await res.json());
+        return { ok: true };
+      }
+      const err = await res.json().catch(() => ({}));
+      return { ok: false, message: (err as any).message ?? "Could not add item" };
+    } catch {
+      return { ok: false, message: "Network error" };
+    } finally {
+      setMutating(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  const updateItem = useCallback(async (itemId: string, quantity: number) => {
+    const prevCart = cartRef.current;
+
+    // Optimistic update
+    setCart(current => {
+      if (!current) return current;
+      const item = current.items.find(i => i.id === itemId);
+      if (!item) return current;
+      const newLineTotal = item.unitPriceCents * quantity;
+      return {
+        ...current,
+        items: current.items.map(i =>
+          i.id === itemId ? { ...i, quantity, lineTotalCents: newLineTotal } : i
+        ),
+        itemCount: current.itemCount + (quantity - item.quantity),
+        subtotalCents: current.subtotalCents + (newLineTotal - item.lineTotalCents),
+      };
+    });
+
+    setMutating(true);
+    try {
+      const res = await fetch(`/next-api/public/shop/cart/${token}/items/${itemId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity }),
+      });
+      if (res.ok) applyCart(await res.json());
+      else setCart(prevCart);
+    } catch {
+      setCart(prevCart);
+    } finally {
+      setMutating(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  const removeItem = useCallback(async (itemId: string) => {
+    const prevCart = cartRef.current;
+
+    // Optimistic update
+    setCart(current => {
+      if (!current) return current;
+      const item = current.items.find(i => i.id === itemId);
+      if (!item) return current;
+      return {
+        ...current,
+        items: current.items.filter(i => i.id !== itemId),
+        itemCount: current.itemCount - item.quantity,
+        subtotalCents: current.subtotalCents - item.lineTotalCents,
+      };
+    });
+
+    setMutating(true);
+    try {
+      const res = await fetch(`/next-api/public/shop/cart/${token}/items/${itemId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) applyCart(await res.json());
+      else setCart(prevCart);
+    } catch {
+      setCart(prevCart);
+    } finally {
+      setMutating(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  const validateCoupon = useCallback(async (code: string) => {
+    const subtotalCents = cart?.subtotalCents ?? 0;
+    const res = await fetch(`/next-api/public/shop/cart/${token}/validate-coupon`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, subtotalCents }),
+    });
+    return res.json();
+  }, [token, cart]);
+
+  const openDrawer  = useCallback(() => setIsDrawerOpen(true),  []);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+
+  return (
+    <CartContext.Provider value={{
+      cart, loading, mutating,
+      addItem, updateItem, removeItem, validateCoupon,
+      token, refresh: fetchCart,
+      appliedCoupon, setAppliedCoupon,
+      isDrawerOpen, openDrawer, closeDrawer,
+    }}>
+      {children}
+    </CartContext.Provider>
+  );
+}
+
+export function useCart(): CartContextValue {
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart must be used within a CartProvider");
+  return ctx;
+}

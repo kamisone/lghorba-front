@@ -29,8 +29,13 @@ const NAV_ENTRIES: NavEntry[] = [
   { type: "nav", label: "Email Import", description: "IMAP booking ingestion",    icon: "mark_email_unread",    href: "/admin/email-ingestion"            },
   { type: "nav", label: "Maintenance",  description: "Maintenance scheduling",    icon: "build",                href: "/admin/maintenance"                },
   { type: "nav", label: "Admins",       description: "Administrator accounts",    icon: "admin_panel_settings", href: "/admin/admins"                     },
-  { type: "nav", label: "Content",      description: "Site content management",   icon: "article",              href: "/admin/content"                    },
-  { type: "nav", label: "Settings",     description: "Platform configuration",    icon: "settings",             href: "/admin/settings"                   },
+  { type: "nav", label: "Shop Products",  description: "Product catalog",           icon: "inventory_2",          href: "/admin/shop/products"              },
+  { type: "nav", label: "Shop Orders",   description: "Customer orders",           icon: "shopping_bag",         href: "/admin/shop/orders"                },
+  { type: "nav", label: "Shop Inventory",description: "Stock management",          icon: "warehouse",            href: "/admin/shop/inventory"             },
+  { type: "nav", label: "Price Rules",   description: "Flash sales & discounts",   icon: "local_offer",          href: "/admin/shop/price-rules"           },
+  { type: "nav", label: "Reviews",       description: "Product review moderation", icon: "star",                 href: "/admin/shop/reviews"               },
+  { type: "nav", label: "Content",       description: "Site content management",   icon: "article",              href: "/admin/content"                    },
+  { type: "nav", label: "Settings",      description: "Platform configuration",    icon: "settings",             href: "/admin/settings"                   },
 ];
 
 // ── Car result type ───────────────────────────────────────────────────────────

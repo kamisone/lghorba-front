@@ -4,6 +4,9 @@ import ClientHeader from "@/components/layout/ClientHeader";
 import ClientFooter from "@/components/layout/ClientFooter";
 import CookieConsentProvider from "@/components/consent/CookieConsentProvider";
 import SupportWidget from "@/components/support/SupportWidget";
+import { CartProvider } from "@/components/shop/CartContext";
+import { WishlistProvider } from "@/components/shop/WishlistContext";
+import CartDrawer from "@/components/shop/CartDrawer";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -22,10 +25,15 @@ export default function LocaleLayout({
 
   return (
     <CookieConsentProvider locale={params.locale}>
-      <ClientHeader locale={params.locale} />
-      <main>{children}</main>
-      <ClientFooter locale={params.locale} />
-      <SupportWidget locale={params.locale} />
+      <CartProvider>
+        <WishlistProvider>
+          <ClientHeader locale={params.locale} />
+          <main>{children}</main>
+          <ClientFooter locale={params.locale} />
+          <SupportWidget locale={params.locale} />
+          <CartDrawer locale={params.locale} />
+        </WishlistProvider>
+      </CartProvider>
     </CookieConsentProvider>
   );
 }

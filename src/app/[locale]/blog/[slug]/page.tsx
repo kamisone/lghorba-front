@@ -52,6 +52,18 @@ async function fetchRelated(postId: string): Promise<Post[]> {
   }
 }
 
+async function fetchProductRefs(postId: string): Promise<any[]> {
+  try {
+    const res = await fetch(`${API}/public/blog/posts/${postId}/products`, {
+      next: { revalidate: 120 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await fetchPost(params.slug);
   if (!post) return { title: "Article not found" };
@@ -89,7 +101,10 @@ export default async function BlogArticlePage({ params }: Props) {
   const post    = await fetchPost(params.slug);
   if (!post) notFound();
 
-  const related = await fetchRelated(post.id);
+  const [related, productRefs] = await Promise.all([
+    fetchRelated(post.id),
+    fetchProductRefs(post.id),
+  ]);
 
   // ── Schema.org Article structured data ────────────────────────────────────
   const imageUrl = post.featuredImageUrl ?? undefined;
@@ -117,6 +132,43 @@ export default async function BlogArticlePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
       <ArticlePage post={post} locale={params.locale} related={related} />
+
+      {productRefs.length > 0 && (
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 16px 64px" }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Featured Products</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 16 }}>
+            {productRefs.map((ref: any) => (
+              <a
+                key={ref.referenceId}
+                href={`/${params.locale}/shop/${ref.product.slug}`}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "#fff" }}>
+                  {ref.product.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={ref.product.imageUrl}
+                      alt={ref.product.title}
+                      style={{ width: "100%", aspectRatio: "1", objectFit: "cover" }}
+                    />
+                  )}
+                  <div style={{ padding: 12 }}>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{ref.product.title}</p>
+                    {ref.label && (
+                      <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6b7280" }}>{ref.label}</p>
+                    )}
+                    {ref.product.priceCents != null && (
+                      <p style={{ margin: "6px 0 0", fontWeight: 700 }}>
+                        €{(ref.product.priceCents / 100).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 }

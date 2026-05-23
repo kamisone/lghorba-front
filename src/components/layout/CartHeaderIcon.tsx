@@ -1,0 +1,38 @@
+"use client";
+
+import { useCart } from "@/components/shop/CartContext";
+import styles from "./CartHeaderIcon.module.css";
+
+export default function CartHeaderIcon() {
+  const { cart, openDrawer } = useCart();
+  const count = cart?.itemCount ?? 0;
+
+  return (
+    <button
+      onClick={openDrawer}
+      className={styles.cartBtn}
+      aria-label={count > 0 ? `Open cart, ${count} item${count !== 1 ? "s" : ""}` : "Open cart"}
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+      </svg>
+      {count > 0 && (
+        <span className={styles.badge} aria-hidden="true">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </button>
+  );
+}

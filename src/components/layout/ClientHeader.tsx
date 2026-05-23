@@ -5,6 +5,7 @@ import LangSwitcher from "@/components/LangSwitcher";
 import HamburgerMenu from "./HamburgerMenu";
 import ScrollAwareHeader from "./ScrollAwareHeader";
 import ActiveNavLink from "./ActiveNavLink";
+import CartHeaderIcon from "./CartHeaderIcon";
 import styles from "./ClientHeader.module.css";
 
 interface Props {
@@ -68,6 +69,7 @@ export default function ClientHeader({ locale }: Props) {
           {/* ── Right slot ── */}
           <div className={styles.navRight}>
             <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} />
+            <CartHeaderIcon />
             <span className={styles.navDivider} aria-hidden="true" />
             <Link href={ctaHref} className={styles.navCta}>
               {t.nav.bookNow}

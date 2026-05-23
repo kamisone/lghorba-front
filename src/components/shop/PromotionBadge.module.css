@@ -1,0 +1,46 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  border-radius: 6px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Sizes */
+.sm {
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 5px;
+}
+.md {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 7px;
+}
+.lg {
+  font-size: 14px;
+  padding: 7px 14px;
+  border-radius: 8px;
+}
+
+/* Variants */
+.green {
+  background: var(--color-brand-accent);
+  color: var(--color-brand-darkest);
+}
+.blue {
+  background: var(--color-brand-primary);
+  color: #fff;
+}
+.orange {
+  background: #f97316;
+  color: #fff;
+}
+
+.icon {
+  font-style: normal;
+  flex-shrink: 0;
+}

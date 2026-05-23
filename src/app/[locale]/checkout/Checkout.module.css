@@ -1,0 +1,172 @@
+.container { max-width: 1100px; margin: 0 auto; padding: 36px 16px 80px; }
+.heading { font-size: 28px; font-weight: 700; color: var(--color-text-heading); margin-bottom: 24px; }
+.empty { max-width: 400px; margin: 80px auto; text-align: center; }
+
+.layout { display: grid; grid-template-columns: 1fr 360px; gap: 44px; align-items: start; }
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+
+/* ── Step indicator ── */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 36px;
+  user-select: none;
+}
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+}
+.stepItem:last-child { flex: none; }
+.stepDot {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  background: var(--color-surface); border: 2px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: background .22s, border-color .22s, color .22s;
+}
+.stepDotActive { background: var(--color-brand-primary); border-color: var(--color-brand-primary); color: #fff; }
+.stepDotDone   { background: var(--color-brand-accent); border-color: var(--color-brand-accent); color: var(--color-brand-darkest); }
+.stepLabel {
+  font-size: 12px; font-weight: 600; margin-left: 8px; color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.stepLabelActive { color: var(--color-brand-primary); }
+.stepLabelDone   { color: var(--color-brand-accent); }
+.stepLine {
+  flex: 1; height: 2px; margin: 0 10px;
+  background: var(--color-border); border-radius: 1px;
+  transition: background .22s;
+}
+.stepLineDone { background: var(--color-brand-accent); }
+
+/* ── Form ── */
+.formSection { min-width: 0; }
+.sectionTitle { font-size: 17px; font-weight: 700; color: var(--color-text-heading); margin: 28px 0 14px; }
+.sectionTitle:first-child { margin-top: 0; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 5px; }
+.field input,
+.field select {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--color-border); border-radius: 9px;
+  font-size: 14px; color: var(--color-text-primary);
+  background: var(--color-surface);
+  transition: border-color .18s, box-shadow .18s;
+  box-sizing: border-box;
+}
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(0,70,110,.1);
+}
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+
+/* ── Reservation timer ── */
+.reservationTimer {
+  font-size: 13px; font-weight: 600; color: var(--color-text-secondary);
+  padding: 9px 14px; border-radius: 8px;
+  background: rgba(0,70,110,.05); border: 1px solid var(--color-border);
+  margin-bottom: 18px; text-align: center;
+}
+.reservationUrgent {
+  color: #ef4444; background: #fef2f2; border-color: #fecaca;
+}
+
+/* ── Shipping options ── */
+.shippingMethods { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.shippingOption {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+.shippingOption input[type=radio] { accent-color: var(--color-brand-primary); width: 16px; height: 16px; }
+.shippingOptionSelected {
+  border-color: var(--color-brand-primary);
+  background: rgba(0,70,110,.04);
+}
+.shippingName  { font-weight: 600; font-size: 14px; color: var(--color-text-heading); }
+.shippingDays  { font-size: 12px; color: var(--color-text-muted); }
+.shippingPrice { font-size: 14px; font-weight: 700; color: var(--color-text-heading); white-space: nowrap; }
+
+/* ── Action row ── */
+.actionRow { display: flex; gap: 12px; margin-top: 8px; }
+
+.error { color: #ef4444; font-size: 13px; margin: 10px 0 0; }
+
+.continueBtn {
+  width: 100%; padding: 15px;
+  background: var(--color-brand-primary); color: #fff;
+  border: none; border-radius: 12px; font-size: 16px; font-weight: 700;
+  cursor: pointer; margin-top: 10px; letter-spacing: .01em;
+  transition: background .18s, transform .15s;
+}
+.continueBtn:disabled { opacity: .6; cursor: not-allowed; }
+.continueBtn:hover:not(:disabled) { background: var(--color-brand-mid); transform: translateY(-1px); }
+
+.backBtn {
+  padding: 15px 22px;
+  background: transparent; color: var(--color-text-secondary);
+  border: 1.5px solid var(--color-border); border-radius: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: background .18s, border-color .18s;
+  white-space: nowrap;
+  margin-top: 10px;
+}
+.backBtn:hover { background: rgba(0,70,110,.05); border-color: var(--color-brand-primary); }
+
+/* ── Stripe / Payment ── */
+.stripeForm { display: flex; flex-direction: column; gap: 20px; }
+.payBtn {
+  padding: 15px; background: var(--color-brand-accent);
+  color: var(--color-brand-darkest); border: none; border-radius: 12px;
+  font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: .01em;
+  transition: background .18s, transform .15s;
+}
+.payBtn:disabled { opacity: .6; cursor: not-allowed; }
+.payBtn:hover:not(:disabled) { background: #7eb31a; transform: translateY(-1px); }
+
+/* ── Order summary ── */
+.summary {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 18px; padding: 26px;
+  position: sticky; top: 24px;
+  height: fit-content;
+}
+.summary h3 { font-size: 17px; font-weight: 700; color: var(--color-text-heading); margin: 0 0 16px; }
+
+.lineItems { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.summaryItem {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 8px; font-size: 13px; color: var(--color-text-secondary);
+}
+.summaryItemName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.summaryItemQty  { color: var(--color-text-muted); font-style: normal; font-weight: 400; }
+.summaryItemPrice { font-weight: 600; white-space: nowrap; color: var(--color-text-heading); }
+
+.summaryPromo {
+  padding: 14px 0;
+  border-top: 1px solid var(--color-border);
+}
+.summaryBreakdown {
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+.couponLockedNote {
+  font-size: 12px; color: #16a34a; margin-top: 10px;
+  padding: 7px 12px; background: #f0fdf4; border-radius: 7px; border: 1px solid #bbf7d0;
+}

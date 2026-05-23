@@ -4,19 +4,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./AdminSidebar.module.css";
 
-// ── Nav groups ────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface NavItem {
-  href:  string;
-  icon:  string;
+  href?:   string;
+  icon:    string;
+  label:   string;
+  badge?:  "pendingBookings" | "reminderFailures" | "waitingAdmin";
+  future?: boolean;
+}
+
+interface NavSubGroup {
   label: string;
-  badge?: "pendingBookings" | "reminderFailures" | "waitingAdmin";
+  icon:  string;
+  items: NavItem[];
 }
 
 interface NavGroup {
-  label: string;
-  items: NavItem[];
+  label:      string;
+  items?:     NavItem[];
+  subGroups?: NavSubGroup[];
 }
+
+// ── Nav data ──────────────────────────────────────────────────────────────────
 
 const NAV_GROUPS: NavGroup[] = [
   {
@@ -46,7 +56,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Communication",
     items: [
-      { href: "/admin/support",                 icon: "support_agent",     label: "Support",     badge: "waitingAdmin" },
+      { href: "/admin/support",                 icon: "support_agent",     label: "Support",     badge: "waitingAdmin"     },
       { href: "/admin/notifications/reminders", icon: "notifications",     label: "Reminders",   badge: "reminderFailures" },
       { href: "/admin/email-ingestion",         icon: "mark_email_unread", label: "Email Import" },
     ],
@@ -58,12 +68,126 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Commerce",
+    subGroups: [
+      {
+        label: "Catalog",
+        icon:  "category",
+        items: [
+          { href: "/admin/shop/products",           icon: "inventory_2",  label: "Products"               },
+          { href: "/admin/shop/categories",         icon: "folder_open",  label: "Categories"             },
+          { href: "/admin/shop/collections",        icon: "collections",  label: "Collections"            },
+          { href: "/admin/shop/variant-attributes", icon: "tune",         label: "Variations & Attributes" },
+          { href: "/admin/shop/inventory",          icon: "warehouse",    label: "Inventory"              },
+          { href: "/admin/shop/reviews",            icon: "star",         label: "Product Reviews"        },
+          { href: "/admin/shop/media",              icon: "photo_library", label: "Media Library"         },
+        ],
+      },
+      {
+        label: "Orders",
+        icon:  "shopping_bag",
+        items: [
+          { href: "/admin/shop/orders",             icon: "shopping_bag",      label: "All Orders"       },
+          { href: "/admin/shop/orders/drafts",      icon: "draft",             label: "Draft Orders"     },
+          { href: "/admin/shop/returns",            icon: "assignment_return", label: "Returns & Refunds" },
+          { href: "/admin/shop/order-status-refs",  icon: "timeline",          label: "Order Statuses"   },
+          { href: "/admin/shop/carts",              icon: "shopping_cart",     label: "Abandoned Carts"  },
+        ],
+      },
+      {
+        label: "Customers",
+        icon:  "group",
+        items: [
+          { href: "/admin/shop/customers",            icon: "person",              label: "Customers"             },
+          { href: "/admin/shop/customers/groups",     icon: "group",               label: "Customer Groups"       },
+          { href: "/admin/shop/customers/addresses",  icon: "location_on",         label: "Addresses"             },
+          { href: "/admin/shop/payment-methods",      icon: "account_balance_wallet", label: "Saved Payment Methods" },
+          { href: "/admin/shop/customers/activity",   icon: "history",             label: "Customer Activity"     },
+        ],
+      },
+      {
+        label: "Promotions",
+        icon:  "sell",
+        items: [
+          { href: "/admin/shop/promotions",           icon: "percent",             label: "Promotions"        },
+          { href: "/admin/shop/coupons",              icon: "confirmation_number", label: "Coupons"           },
+          { href: "/admin/shop/analytics/promotions", icon: "bar_chart",           label: "Discount Analytics" },
+        ],
+      },
+      {
+        label: "Shipping",
+        icon:  "local_shipping",
+        items: [
+          { href: "/admin/shop/shipping",                    icon: "local_shipping", label: "Shipping Config"      },
+          { href: "/admin/shop/shipping/delivery-rules",     icon: "rule",           label: "Delivery Rules"       },
+          { href: "/admin/shop/fulfillment",                 icon: "package_2",      label: "Fulfillment Tracking" },
+        ],
+      },
+      {
+        label: "Payments",
+        icon:  "payments",
+        items: [
+          { href: "/admin/shop/transactions",                icon: "receipt",         label: "Transactions"     },
+          { href: "/admin/shop/payment-types",               icon: "credit_card",     label: "Payment Types"    },
+          { href: "/admin/shop/transactions/refunds",        icon: "currency_exchange", label: "Refunds"        },
+          { href: "/admin/shop/transactions/stripe-events",  icon: "bolt",            label: "Stripe Events"    },
+          { href: "/admin/shop/transactions/failures",       icon: "error",           label: "Payment Failures" },
+        ],
+      },
+      {
+        label: "Analytics",
+        icon:  "insights",
+        items: [
+          { href: "/admin/shop/analytics/revenue",     icon: "trending_up",  label: "Revenue Analytics"   },
+          { href: "/admin/shop/analytics/products",    icon: "auto_graph",   label: "Product Performance" },
+          { href: "/admin/shop/analytics/conversion",  icon: "conversion",   label: "Conversion Metrics"  },
+          { href: "/admin/shop/analytics/customers",   icon: "group",        label: "Customer Insights"   },
+          { href: "/admin/shop/analytics/promotions",  icon: "percent",      label: "Promotion Performance" },
+          { href: "/admin/shop/analytics/inventory",   icon: "warehouse",    label: "Inventory Analytics" },
+        ],
+      },
+      {
+        label: "Content & Merchandising",
+        icon:  "web_stories",
+        items: [
+          { href: "/admin/blog",                         icon: "edit_note",     label: "Blog Posts"              },
+          { href: "/admin/shop/collections/seo",         icon: "search",        label: "SEO Landing Pages"       },
+          { href: "/admin/shop/collections/featured",    icon: "star",          label: "Featured Collections"    },
+          { href: "/admin/shop/merchandising",           icon: "storefront",    label: "Homepage Merchandising"  },
+          { href: "/admin/shop/recommendations",         icon: "recommend",     label: "Product Recommendations" },
+        ],
+      },
+      {
+        label: "Marketplace",
+        icon:  "store",
+        items: [
+          { href: "/admin/shop/vendors",             icon: "store",    label: "Vendors"            },
+          { href: "/admin/shop/payouts",             icon: "payments", label: "Vendor Payouts"     },
+          { href: "/admin/shop/vendors/products",    icon: "inventory_2", label: "Vendor Products" },
+          { href: "/admin/shop/vendors/performance", icon: "leaderboard", label: "Vendor Performance" },
+        ],
+      },
+      {
+        label: "Settings",
+        icon:  "settings",
+        items: [
+          { href: "/admin/shop/countries",           icon: "flag",         label: "Countries"              },
+          { href: "/admin/shop/settings/taxes",      icon: "receipt_long", label: "Taxes & VAT"            },
+          { href: "/admin/shop/settings/currency",   icon: "currency_exchange", label: "Currency Settings" },
+          { href: "/admin/shop/settings/config",     icon: "tune",         label: "Commerce Configuration" },
+          { href: "/admin/shop/settings/notifications", icon: "mail",      label: "Notification Templates" },
+          { href: "/admin/shop/settings/checkout",   icon: "shopping_cart_checkout", label: "Checkout Settings" },
+        ],
+      },
+    ],
+  },
+  {
     label: "Content",
     items: [
-      { href: "/admin/blog",            icon: "edit_note",   label: "Articles"    },
-      { href: "/admin/blog/categories", icon: "label",       label: "Categories"  },
-      { href: "/admin/blog/tags",       icon: "tag",         label: "Tags"        },
-      { href: "/admin/content",         icon: "web_stories", label: "Policies"       },
+      { href: "/admin/blog",            icon: "edit_note",   label: "Articles"   },
+      { href: "/admin/blog/categories", icon: "label",       label: "Categories" },
+      { href: "/admin/blog/tags",       icon: "tag",         label: "Tags"       },
+      { href: "/admin/content",         icon: "web_stories", label: "Policies"   },
     ],
   },
   {
@@ -88,7 +212,7 @@ interface Props {
   waitingAdmin?:     number;
 }
 
-// ── Icon helper ───────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function Icon({ name, className }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined ${styles.icon} ${className ?? ""}`}>{name}</span>;
@@ -120,6 +244,40 @@ export default function AdminSidebar({
     mobileOpen ? styles.sidebarMobileOpen : "",
   ].filter(Boolean).join(" ");
 
+  function renderItem(item: NavItem) {
+    if (item.future) {
+      return (
+        <div key={item.label} className={styles.futureItem} title={collapsed ? item.label : undefined}>
+          <Icon name={item.icon} className={styles.navIcon} />
+          <span className={styles.navLabel}>{item.label}</span>
+          <span className={styles.futureBadge}>soon</span>
+        </div>
+      );
+    }
+
+    const href   = item.href!;
+    const active = pathname === href || pathname.startsWith(href + "/");
+    const count  = item.badge ? badgeCount(item.badge) : 0;
+    return (
+      <Link
+        key={href}
+        href={href}
+        className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
+        title={collapsed ? item.label : undefined}
+        onClick={onMobileClose}
+      >
+        <Icon name={item.icon} className={styles.navIcon} />
+        <span className={styles.navLabel}>{item.label}</span>
+        {count > 0 && (
+          <span className={`${styles.navBadge} ${active ? styles.navBadgeActive : ""}`}>
+            {count > 99 ? "99+" : count}
+          </span>
+        )}
+        {active && <span className={styles.navActiveBar} />}
+      </Link>
+    );
+  }
+
   return (
     <aside className={cls}>
 
@@ -144,33 +302,25 @@ export default function AdminSidebar({
         {NAV_GROUPS.map(group => (
           <div key={group.label} className={styles.group}>
             <span className={styles.groupLabel}>{group.label}</span>
-            {group.items.map(({ href, icon, label, badge }) => {
-              const active = pathname === href || pathname.startsWith(href + "/");
-              const count  = badge ? badgeCount(badge) : 0;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
-                  title={collapsed ? label : undefined}
-                  onClick={onMobileClose}
-                >
-                  <Icon name={icon} className={styles.navIcon} />
-                  <span className={styles.navLabel}>{label}</span>
-                  {count > 0 && (
-                    <span className={`${styles.navBadge} ${active ? styles.navBadgeActive : ""}`}>
-                      {count > 99 ? "99+" : count}
-                    </span>
-                  )}
-                  {active && <span className={styles.navActiveBar} />}
-                </Link>
-              );
-            })}
+
+            {group.subGroups ? (
+              group.subGroups.map(subGroup => (
+                <div key={subGroup.label} className={styles.subGroup}>
+                  <div className={styles.subGroupHeader}>
+                    <Icon name={subGroup.icon} className={styles.subGroupIcon} />
+                    <span className={styles.subGroupLabel}>{subGroup.label}</span>
+                  </div>
+                  {subGroup.items.map(item => renderItem(item))}
+                </div>
+              ))
+            ) : (
+              group.items!.map(item => renderItem(item))
+            )}
           </div>
         ))}
       </nav>
 
-      {/* ── Footer: settings only (logout moved to top bar profile menu) ── */}
+      {/* ── Footer: settings ── */}
       <div className={styles.footer}>
         {(() => {
           const active = pathname.startsWith("/admin/settings");

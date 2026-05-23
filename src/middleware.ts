@@ -37,7 +37,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // ── Admin pages: require auth cookie ─────────────────────────────────────
+  // ── Admin pages: require admin auth cookie ───────────────────────────────
   if (pathname.startsWith("/admin")) {
     const token = request.cookies.get(COOKIE_NAME)?.value;
     if (!token) {
@@ -46,6 +46,13 @@ export function middleware(request: NextRequest) {
       loginUrl.searchParams.set("from", pathname);
       return NextResponse.redirect(loginUrl);
     }
+    return NextResponse.next();
+  }
+
+  // ── Vendor portal: require vendor auth cookie ─────────────────────────────
+  if (pathname.startsWith("/vendor") && !pathname.startsWith("/vendor/login") && !pathname.startsWith("/vendor/register")) {
+    const token = request.cookies.get("vitecamion_vendor_auth")?.value;
+    if (!token) return NextResponse.redirect(new URL("/vendor/login", request.url));
     return NextResponse.next();
   }
 
