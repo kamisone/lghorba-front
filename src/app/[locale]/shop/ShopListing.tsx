@@ -14,6 +14,7 @@ interface Product {
   slug: string;
   title: string;
   featuredImageUrl: string | null;
+  outOfStock?: boolean;
   variants: Array<{ id: string; priceCents: number; compareAtPriceCents: number | null; isDefault: boolean }>;
 }
 interface Category { id: string; name: string; slug: string }
@@ -75,6 +76,7 @@ function ProductCard({
   const defaultVariant = product.variants.find(v => v.isDefault) ?? product.variants[0];
   const wishlisted = isWishlisted(product.id);
   const isOnSale = !!(defaultVariant?.compareAtPriceCents && defaultVariant.compareAtPriceCents > defaultVariant.priceCents);
+  const outOfStock = !!product.outOfStock;
 
   return (
     <div className={styles.productCard}>
@@ -91,8 +93,12 @@ function ProductCard({
           <div className={styles.productImagePlaceholder} />
         )}
 
-        {/* Promotion badge takes priority over generic sale badge */}
-        {promotion ? (
+        {outOfStock && <div className={styles.outOfStockOverlay} aria-hidden="true" />}
+
+        {/* Badge priority: out-of-stock > promotion > sale */}
+        {outOfStock ? (
+          <span className={styles.outOfStockBadge}>{t.outOfStock}</span>
+        ) : promotion ? (
           <span className={styles.promoBadgeWrap}>
             <PromotionBadge promotion={promotion} size="sm" />
           </span>
@@ -112,17 +118,19 @@ function ProductCard({
         <h3 className={styles.productTitle}>{product.title}</h3>
         {defaultVariant && (
           <div className={styles.productPrice}>
-            {isOnSale && <span className={styles.comparePrice}>€{centsToEuros(defaultVariant.compareAtPriceCents!)}</span>}
+            {isOnSale && !outOfStock && <span className={styles.comparePrice}>€{centsToEuros(defaultVariant.compareAtPriceCents!)}</span>}
             <span className={styles.price}>€{centsToEuros(defaultVariant.priceCents)}</span>
           </div>
         )}
-        {defaultVariant?.id && (
+        {outOfStock ? (
+          <div className={styles.outOfStockBtn}>{t.outOfStock}</div>
+        ) : defaultVariant?.id ? (
           <AddToCartButton
             variantId={defaultVariant.id}
             size="sm"
             className={styles.cardAddToCart}
           />
-        )}
+        ) : null}
       </div>
     </div>
   );

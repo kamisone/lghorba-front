@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./ProductGallery.module.css";
 
 interface Props {
@@ -165,8 +166,8 @@ export default function ProductGallery({ images, title }: Props) {
         </div>
       )}
 
-      {/* Lightbox */}
-      {lightbox && (
+      {/* Lightbox — rendered via portal so it escapes the sticky galleryCol stacking context */}
+      {lightbox && createPortal(
         <div
           className={styles.lightboxBackdrop}
           onClick={() => setLightbox(false)}
@@ -217,7 +218,8 @@ export default function ProductGallery({ images, title }: Props) {
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

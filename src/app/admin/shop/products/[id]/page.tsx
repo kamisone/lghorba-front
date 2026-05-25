@@ -129,6 +129,19 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const linkedAttrIds = new Set(productAttrs.map(pa => pa.attributeId));
   const unlinkedAttrs = allAttrs.filter(a => a.isActive && !linkedAttrIds.has(a.id));
 
+  async function generateCombinations(silent = false): Promise<void> {
+    const res = await fetch(`/next-api/shop/products/${params.id}/variants/generate-combinations`, { method: "POST" });
+    if (res.ok) {
+      const data = await res.json();
+      if (!silent || data.created > 0) {
+        toast.success(`${data.created} new SKU(s) created, ${data.skipped} already existed`);
+      }
+    } else {
+      const err = await res.json().catch(() => ({}));
+      if (!silent) toast.error((err as any).message ?? "Failed to generate combinations");
+    }
+  }
+
   async function linkAttribute() {
     if (!attrLinkId) return;
     const selectedAttr = allAttrs.find(a => a.id === attrLinkId);
@@ -152,6 +165,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     setAttrLinkDefaultId("");
     if (res.ok) {
       toast.success("Variation added to product");
+      await generateCombinations(true);
     } else if (res.status === 409) {
       toast.success("Variation already linked — list refreshed");
     } else {
@@ -409,9 +423,21 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
             {/* ── Variations ── */}
             <div className={`${styles.section} ${styles.sectionLast}`}>
-              <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>🎨</span>
-                <span className={styles.sectionTitle}>Variations</span>
+              <div className={styles.sectionHead} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span className={styles.sectionIcon}>🎨</span>
+                  <span className={styles.sectionTitle}>Variations</span>
+                </div>
+                {productAttrs.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => generateCombinations(false)}
+                    className={styles.saveBtn}
+                    style={{ fontSize: 12, padding: "5px 12px" }}
+                  >
+                    Generate Combinations
+                  </button>
+                )}
               </div>
               <div className={styles.sectionBody}>
 

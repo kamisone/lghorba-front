@@ -20,6 +20,7 @@ export interface CartItem {
   id: string;
   variantId: string;
   productId: string;
+  productSlug: string | null;
   titleSnapshot: string;
   skuSnapshot: string | null;
   imageUrl: string | null;

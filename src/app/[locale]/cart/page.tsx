@@ -41,15 +41,31 @@ export default function CartPage({ params }: { params: { locale: string } }) {
       <h1 className={styles.heading}>{t.cartPageTitle}</h1>
       <div className={styles.layout}>
         <div className={styles.items}>
-          {cart.items.map(item => (
+          {cart.items.map(item => {
+            const productHref = item.productSlug ? `/${locale}/shop/${item.productSlug}` : null;
+            return (
             <div key={item.id} className={styles.item}>
-              <div className={styles.itemImage}>
-                {item.imageUrl ? (
-                  <Image src={item.imageUrl} alt={item.titleSnapshot} fill sizes="80px" style={{ objectFit: "cover" }} />
-                ) : <div className={styles.imagePlaceholder} />}
-              </div>
+              {productHref ? (
+                <Link href={productHref} className={styles.itemImage}>
+                  {item.imageUrl ? (
+                    <Image src={item.imageUrl} alt={item.titleSnapshot} fill sizes="80px" style={{ objectFit: "cover" }} />
+                  ) : <div className={styles.imagePlaceholder} />}
+                </Link>
+              ) : (
+                <div className={styles.itemImage}>
+                  {item.imageUrl ? (
+                    <Image src={item.imageUrl} alt={item.titleSnapshot} fill sizes="80px" style={{ objectFit: "cover" }} />
+                  ) : <div className={styles.imagePlaceholder} />}
+                </div>
+              )}
               <div className={styles.itemDetails}>
-                <p className={styles.itemTitle}>{item.titleSnapshot}</p>
+                {productHref ? (
+                  <Link href={productHref} className={styles.itemTitleLink}>
+                    <p className={styles.itemTitle}>{item.titleSnapshot}</p>
+                  </Link>
+                ) : (
+                  <p className={styles.itemTitle}>{item.titleSnapshot}</p>
+                )}
                 {item.optionsSnapshot && item.optionsSnapshot.length > 0 && (
                   <p className={styles.itemOptions}>
                     {item.optionsSnapshot.map(o => `${o.attributeName}: ${o.displayValue ?? o.value}`).join(" · ")}
@@ -66,7 +82,8 @@ export default function CartPage({ params }: { params: { locale: string } }) {
               <div className={styles.itemTotal}>€{centsToEuros(item.lineTotalCents)}</div>
               <button onClick={() => removeItem(item.id)} className={styles.removeBtn} disabled={mutating}>✕</button>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className={styles.summary}>

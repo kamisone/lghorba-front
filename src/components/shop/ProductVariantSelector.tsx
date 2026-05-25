@@ -75,6 +75,10 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
       if (preferred) defaultSel[attr.id] = preferred;
     }
 
+    // For legacy variants (optionValueIds empty), skip matrix matching — just use defaults.
+    const isStructured = matrix.variants.some(v => v.optionValueIds.length > 0);
+    if (!isStructured) return defaultSel;
+
     // Verify a variant exists for this combination; if not, fall back to first available variant.
     if (Object.keys(defaultSel).length === matrix.attributes.length) {
       const defaultValues = Object.values(defaultSel);
@@ -96,13 +100,26 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
 
   const [sel, setSel] = useState<Record<string, string>>(initialSel);
 
+  // Legacy variants created before the structured option system have optionValueId = null,
+  // which causes optionValueIds to be [] after filter(Boolean). In that case skip
+  // availability filtering — treat every option as selectable.
+  const hasStructuredOptions = useMemo(
+    () => matrix.variants.some(v => v.optionValueIds.length > 0),
+    [matrix],
+  );
+
   const currentVariant = useMemo((): AvailabilityVariant | null => {
+    if (!hasStructuredOptions) {
+      // Legacy: can't match by optionValueIds — emit default/first variant so the
+      // add-to-cart button has a valid variantId.
+      return matrix.variants.find(v => v.inStock) ?? matrix.variants[0] ?? null;
+    }
     const selValues = Object.values(sel);
     if (selValues.length !== matrix.attributes.length) return null;
     return matrix.variants.find(v =>
       selValues.every(sId => v.optionValueIds.includes(sId))
     ) ?? null;
-  }, [sel, matrix]);
+  }, [sel, matrix, hasStructuredOptions]);
 
   useEffect(() => {
     onVariantChange?.(currentVariant);
@@ -110,6 +127,7 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
 
   function optionState(attrId: string, ovId: string): OptionState {
     if (sel[attrId] === ovId) return "selected";
+    if (!hasStructuredOptions) return "available";
     const hypothetical = { ...sel, [attrId]: ovId };
     const hvValues = Object.values(hypothetical);
     const matches = matrix.variants.filter(v =>

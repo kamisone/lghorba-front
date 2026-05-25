@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/shop/CartContext";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
-import type { AvailabilityMatrix } from "@/components/shop/ProductVariantSelector";
+import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVariant } from "@/components/shop/ProductVariantSelector";
 import ProductGallery from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
@@ -38,6 +38,20 @@ interface Product {
 
 interface ReviewStats { average: number; count: number }
 
+interface ResolvedVariant {
+  id: string;
+  sku: string;
+  title: string;
+  priceCents: number;
+  compareAtPriceCents: number | null;
+  variantSlug: string | null;
+  featuredMediaUrl: string | null;
+  available: number;
+  optionValueIds: string[];
+}
+
+type ResolveStatus = 'idle' | 'loading' | 'available' | 'out_of_stock' | 'unavailable';
+
 interface Props {
   product: Product;
   reviewStats: ReviewStats;
@@ -62,7 +76,7 @@ function buildProductGallery(product: Product): string[] {
 
 export default function ShopProductDetail({
   product, reviewStats, locale, activePromotion,
-  availabilityMatrix,
+  availabilityMatrix, initialVariantSlug,
 }: Props) {
   const { addItem, mutating, cart } = useCart();
   const { toggle, isWishlisted } = useWishlist();
@@ -71,36 +85,65 @@ export default function ShopProductDetail({
 
   const productGallery = buildProductGallery(product);
 
-  // Always use the default variant — variations are cosmetic
   const defaultVariant = product.variants.find(v => v.isDefault) ?? product.variants[0];
-  const activeId         = defaultVariant?.id ?? "";
-  const activePriceCents = defaultVariant?.priceCents ?? 0;
-  const activeCompare    = defaultVariant?.compareAtPriceCents ?? null;
-  const activeSku        = defaultVariant?.sku ?? null;
 
-  // Selected cosmetic options (attributeId → optionValueId), seeded from admin defaults
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() => {
-    const defaults: Record<string, string> = {};
-    for (const attr of availabilityMatrix?.attributes ?? []) {
-      if (attr.defaultOptionValueId) defaults[attr.id] = attr.defaultOptionValueId;
+  const [selectedVariant, setSelectedVariant] = useState<AvailabilityVariant | null>(null);
+  const [resolveStatus, setResolveStatus] = useState<ResolveStatus>('idle');
+  const [resolvedVariant, setResolvedVariant] = useState<ResolvedVariant | null>(null);
+
+  // Real-time SKU resolution: call backend on every full combination change.
+  // Structured option system only — legacy variants (empty optionValueIds) skip this.
+  const selKey = selectedVariant?.optionValueIds?.join(',') ?? '';
+  useEffect(() => {
+    if (!selKey) { setResolveStatus('idle'); setResolvedVariant(null); return; }
+    let cancelled = false;
+    setResolveStatus('loading');
+    fetch(`/next-api/public/shop/products/${product.slug}/variants/resolve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ optionValueIds: selKey.split(',') }),
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((data: { status: ResolveStatus; variant: ResolvedVariant | null }) => {
+        if (!cancelled) {
+          setResolveStatus(data.status ?? 'unavailable');
+          setResolvedVariant(data.variant ?? null);
+        }
+      })
+      .catch(() => { if (!cancelled) setResolveStatus('idle'); });
+    return () => { cancelled = true; };
+  }, [selKey, product.slug]);
+
+  // Prefer resolved (real-time) data; fall back to matrix data, then product default.
+  const activeId         = resolvedVariant?.id         ?? selectedVariant?.id         ?? defaultVariant?.id         ?? "";
+  const activePriceCents = resolvedVariant?.priceCents ?? selectedVariant?.priceCents ?? defaultVariant?.priceCents ?? 0;
+  const activeCompare    = resolvedVariant?.compareAtPriceCents ?? selectedVariant?.compareAtPriceCents ?? defaultVariant?.compareAtPriceCents ?? null;
+  const activeSku        = resolvedVariant?.sku ?? defaultVariant?.sku ?? null;
+
+  const selectedOptionValueIds = selectedVariant?.optionValueIds ?? [];
+
+  // Prepend variant-specific hero image to gallery when resolved.
+  const activeGallery = useMemo(() => {
+    const variantUrl = resolvedVariant?.featuredMediaUrl ?? selectedVariant?.featuredMediaUrl ?? null;
+    if (variantUrl && !productGallery.includes(variantUrl)) {
+      return [variantUrl, ...productGallery];
     }
-    return defaults;
-  });
-  const selectedOptionValueIds = Object.values(selectedOptions).filter(Boolean);
+    return productGallery;
+  }, [resolvedVariant, selectedVariant, productGallery]);
+
+  const wishlisted = isWishlisted(product.id);
+  const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
 
   const [qty, setQty]             = useState(1);
   const [buyingNow, setBuyingNow] = useState(false);
   const [buyError, setBuyError]   = useState("");
 
-  const wishlisted = isWishlisted(product.id);
-  const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
-
-  function selectOption(attributeId: string, optionValueId: string) {
-    setSelectedOptions(s => ({ ...s, [attributeId]: optionValueId }));
-  }
+  const isOos         = resolveStatus === 'out_of_stock';
+  const isUnavailable = resolveStatus === 'unavailable';
+  const isBlocked     = isOos || isUnavailable;
 
   async function handleBuyNow() {
-    if (!activeId) return;
+    if (!activeId || isBlocked) return;
     setBuyError("");
     setBuyingNow(true);
     const result = await addItem(activeId, qty, selectedOptionValueIds.length ? selectedOptionValueIds : undefined);
@@ -116,14 +159,11 @@ export default function ShopProductDetail({
     ? Math.round((1 - activePriceCents / activeCompare) * 100)
     : null;
 
-  // Linked variation attributes from the matrix
-  const attributes = availabilityMatrix?.attributes ?? [];
-
   return (
     <div className={styles.container}>
       {/* Gallery */}
       <div className={styles.galleryCol}>
-        <ProductGallery images={productGallery} title={product.title} />
+        <ProductGallery images={activeGallery} title={product.title} />
       </div>
 
       {/* Details */}
@@ -163,33 +203,27 @@ export default function ShopProductDetail({
         )}
 
         {/* ── Variation option pickers ── */}
-        {attributes.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
-            {attributes.map(attr => (
-              <div key={attr.id}>
-                <p className={styles.variantLabel}>
-                  {attr.name}
-                  {selectedOptions[attr.id] && (
-                    <>: <strong>
-                      {attr.optionValues.find(ov => ov.id === selectedOptions[attr.id])?.displayValue
-                        ?? attr.optionValues.find(ov => ov.id === selectedOptions[attr.id])?.value}
-                    </strong></>
-                  )}
-                </p>
-                <div className={styles.variantButtons}>
-                  {attr.optionValues.map(ov => (
-                    <button
-                      key={ov.id}
-                      type="button"
-                      onClick={() => selectOption(attr.id, ov.id)}
-                      className={`${styles.variantBtn} ${selectedOptions[attr.id] === ov.id ? styles.variantActive : ""}`}
-                    >
-                      {ov.displayValue ?? ov.value}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+        {availabilityMatrix && (
+          <ProductVariantSelector
+            matrix={availabilityMatrix}
+            initialVariantSlug={initialVariantSlug}
+            onVariantChange={setSelectedVariant}
+          />
+        )}
+
+        {/* Real-time stock status */}
+        {resolveStatus !== 'idle' && (
+          <div className={[
+            styles.stockBadge,
+            resolveStatus === 'available'    ? styles.stockAvailable    : '',
+            resolveStatus === 'out_of_stock' ? styles.stockOutOfStock   : '',
+            resolveStatus === 'unavailable'  ? styles.stockUnavailable  : '',
+            resolveStatus === 'loading'      ? styles.stockLoading      : '',
+          ].filter(Boolean).join(' ')}>
+            {resolveStatus === 'available'    && t.stockAvailable}
+            {resolveStatus === 'out_of_stock' && t.stockOutOfStock}
+            {resolveStatus === 'unavailable'  && t.stockUnavailable}
+            {resolveStatus === 'loading'      && t.stockChecking}
           </div>
         )}
 
@@ -201,7 +235,7 @@ export default function ShopProductDetail({
         )}
 
         {/* Quantity row */}
-        {!inCart && (
+        {!inCart && !isBlocked && (
           <div className={styles.qtyRow}>
             <span className={styles.qtyLabel}>{t.quantity}</span>
             <div className={styles.qtyControl}>
@@ -214,7 +248,15 @@ export default function ShopProductDetail({
 
         {/* CTA buttons */}
         <div className={styles.actions}>
-          {activeId ? (
+          {isUnavailable ? (
+            <button className={`${styles.addToCartBtn} ${styles.addToCartWrap}`} disabled>
+              {t.stockUnavailable}
+            </button>
+          ) : isOos ? (
+            <button className={`${styles.addToCartBtn} ${styles.addToCartWrap}`} disabled>
+              {t.stockOutOfStock}
+            </button>
+          ) : activeId ? (
             <AddToCartButton
               variantId={activeId}
               initialQty={qty}
@@ -223,7 +265,7 @@ export default function ShopProductDetail({
               selectedOptionValueIds={selectedOptionValueIds.length ? selectedOptionValueIds : undefined}
             />
           ) : (
-            <button className={`${styles.addToCartBtn} ${styles.lg}`} disabled>
+            <button className={`${styles.addToCartBtn} ${styles.addToCartWrap}`} disabled>
               {t.addToCart}
             </button>
           )}
@@ -238,7 +280,7 @@ export default function ShopProductDetail({
 
         <button
           onClick={handleBuyNow}
-          disabled={mutating || buyingNow || !activeId}
+          disabled={mutating || buyingNow || !activeId || isBlocked || resolveStatus === 'loading'}
           className={styles.buyNowBtn}
         >
           {buyingNow ? t.redirecting : t.buyNow}

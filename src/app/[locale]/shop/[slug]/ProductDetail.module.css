@@ -65,6 +65,32 @@
   border: 1px solid #fecaca;
 }
 
+/* ── Stock status badge ── */
+.stockBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+  border: 1px solid currentColor;
+}
+.stockBadge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.stockAvailable    { color: #16a34a; background: #f0fdf4; border-color: #bbf7d0; }
+.stockOutOfStock   { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
+.stockUnavailable  { color: #6b7280; background: #f9fafb; border-color: #e5e7eb; }
+.stockLoading      { color: #6b7280; background: #f9fafb; border-color: #e5e7eb; opacity: .7; animation: stockPulse 1.2s ease-in-out infinite; }
+@keyframes stockPulse { 0%,100%{opacity:.7} 50%{opacity:.35} }
+
 /* ── Short description ── */
 .shortDesc {
   font-size: 15px;
