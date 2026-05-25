@@ -50,6 +50,11 @@ export default function CartPage({ params }: { params: { locale: string } }) {
               </div>
               <div className={styles.itemDetails}>
                 <p className={styles.itemTitle}>{item.titleSnapshot}</p>
+                {item.optionsSnapshot && item.optionsSnapshot.length > 0 && (
+                  <p className={styles.itemOptions}>
+                    {item.optionsSnapshot.map(o => `${o.attributeName}: ${o.displayValue ?? o.value}`).join(" · ")}
+                  </p>
+                )}
                 {item.skuSnapshot && <p className={styles.itemSku}>{t.skuLabel} {item.skuSnapshot}</p>}
                 <p className={styles.itemPrice}>€{centsToEuros(item.unitPriceCents)}</p>
               </div>

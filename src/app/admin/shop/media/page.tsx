@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import shopStyles from "@/components/admin/shop/ShopAdmin.module.css";
-import styles from "@/components/admin/media/MediaLibrary.module.css";
+import styles from "./Media.module.css";
 
 interface Asset {
   id:               string;
@@ -20,11 +19,7 @@ interface Asset {
 }
 
 interface UsageRecord {
-  id:         string;
-  entityType: string;
-  entityId:   string;
-  field:      string;
-  createdAt:  string;
+  id: string; entityType: string; entityId: string; field: string; createdAt: string;
 }
 
 function fmt(bytes: number): string {
@@ -32,6 +27,8 @@ function fmt(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
+
+const LIMIT = 48;
 
 export default function MediaLibraryPage() {
   const [assets, setAssets]         = useState<Asset[]>([]);
@@ -48,12 +45,11 @@ export default function MediaLibraryPage() {
   const [dragOver, setDragOver]     = useState(false);
   const [uploadPct, setUploadPct]   = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const limit = 48;
 
   const load = useCallback(() => {
     setLoading(true);
-    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-    if (search)     params.set("search",   search);
+    const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
+    if (search)     params.set("search", search);
     if (mimeFilter) params.set("mimeType", mimeFilter);
     fetch(`/next-api/admin/media?${params}`)
       .then(r => r.json())
@@ -79,7 +75,7 @@ export default function MediaLibraryPage() {
       body: JSON.stringify({ altText }),
     }).then(r => r.json());
     setSelected({ ...selected, ...updated });
-    setAssets(prev => prev.map(a => (a.id === selected.id ? { ...a, altText } : a)));
+    setAssets(prev => prev.map(a => a.id === selected.id ? { ...a, altText } : a));
     setSaving(false);
   }
 
@@ -94,7 +90,7 @@ export default function MediaLibraryPage() {
     setUploading(true);
     const all = Array.from(files);
     for (let i = 0; i < all.length; i++) {
-      setUploadPct(Math.round(((i) / all.length) * 100));
+      setUploadPct(Math.round((i / all.length) * 100));
       const form = new FormData();
       form.append("file", all[i]);
       await fetch("/next-api/admin/media/upload", { method: "POST", body: form });
@@ -117,17 +113,15 @@ export default function MediaLibraryPage() {
   }
 
   return (
-    <div className={shopStyles.container} style={{ maxWidth: 1400 }}>
-      <div className={shopStyles.header}>
-        <div>
-          <h1 className={shopStyles.title}>Media Library</h1>
-          <span className={shopStyles.subtitle}>{total} assets</span>
+    <div className={styles.page}>
+      {/* ── Header ── */}
+      <div className={styles.header}>
+        <div className={styles.titleGroup}>
+          <h1 className={styles.title}>Media Library</h1>
+          <span className={styles.subtitle}>{total} assets</span>
         </div>
-        <button
-          className={`${shopStyles.btn} ${shopStyles.btnPrimary}`}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          Upload Images
+        <button className={styles.uploadBtn} onClick={() => fileInputRef.current?.click()}>
+          ↑ Upload Images
         </button>
         <input
           ref={fileInputRef}
@@ -139,10 +133,9 @@ export default function MediaLibraryPage() {
         />
       </div>
 
-      {/* Upload zone */}
+      {/* ── Upload zone ── */}
       <div
         className={`${styles.uploadZone} ${dragOver ? styles.uploadZoneActive : ""}`}
-        style={{ padding: "28px 24px" }}
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
@@ -160,16 +153,24 @@ export default function MediaLibraryPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className={shopStyles.filters}>
-        <input
-          className={shopStyles.filterInput}
-          style={{ flex: 1 }}
-          placeholder="Search by filename…"
-          value={search}
-          onChange={e => { setSearch(e.target.value); setOffset(0); }}
-        />
-        <select className={shopStyles.filterSelect} value={mimeFilter} onChange={e => { setMimeFilter(e.target.value); setOffset(0); }}>
+      {/* ── Toolbar ── */}
+      <div className={styles.toolbar}>
+        <div className={styles.searchWrap}>
+          <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            className={styles.searchInput}
+            placeholder="Search by filename…"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setOffset(0); }}
+          />
+        </div>
+        <select
+          className={styles.filterSelect}
+          value={mimeFilter}
+          onChange={e => { setMimeFilter(e.target.value); setOffset(0); }}
+        >
           <option value="">All types</option>
           <option value="image/jpeg">JPEG</option>
           <option value="image/png">PNG</option>
@@ -178,18 +179,19 @@ export default function MediaLibraryPage() {
           <option value="image/gif">GIF</option>
           <option value="image/svg+xml">SVG</option>
         </select>
+        <div className={styles.toolbarRight}>{total} assets</div>
       </div>
 
-      {/* Asset grid */}
+      {/* ── Asset grid ── */}
       <div className={styles.grid}>
         {loading
-          ? Array.from({ length: 24 }, (_, i) => (
-              <div key={i} className={`${styles.gridItem} ${styles.skeleton}`} style={{ minHeight: 180 }} />
-            ))
+          ? Array.from({ length: 24 }, (_, i) => <div key={i} className={styles.skeleton} />)
           : assets.length === 0
           ? (
-              <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "64px 0", color: "#9ca3af" }}>
-                No assets found. Upload your first image above.
+              <div className={styles.empty}>
+                <span className={styles.emptyIcon}>🖼</span>
+                <span className={styles.emptyText}>No assets found</span>
+                <span className={styles.emptyHint}>Upload your first image using the button above</span>
               </div>
             )
           : assets.map(a => (
@@ -204,36 +206,40 @@ export default function MediaLibraryPage() {
                 <div className={styles.gridItemMeta}>
                   <div className={styles.gridItemName}>{a.originalFilename}</div>
                   <div className={styles.gridItemSize}>
-                    {fmt(a.sizeBytes)}
-                    {a.width ? ` · ${a.width}×${a.height}` : ""}
+                    {fmt(a.sizeBytes)}{a.width ? ` · ${a.width}×${a.height}` : ""}
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+        }
       </div>
 
-      {/* Pagination */}
-      {!loading && total > limit && (
-        <div className={shopStyles.pagination}>
-          <button className={shopStyles.btn} disabled={offset === 0} onClick={() => setOffset(o => Math.max(0, o - limit))}>Previous</button>
-          <span>{Math.floor(offset / limit) + 1} / {Math.ceil(total / limit)}</span>
-          <button className={shopStyles.btn} disabled={offset + limit >= total} onClick={() => setOffset(o => o + limit)}>Next</button>
+      {/* ── Pagination ── */}
+      {!loading && total > LIMIT && (
+        <div className={styles.pagination}>
+          <button className={styles.pageBtn} disabled={offset === 0} onClick={() => setOffset(o => Math.max(0, o - LIMIT))}>
+            ← Previous
+          </button>
+          <span className={styles.pageInfo}>
+            {Math.floor(offset / LIMIT) + 1} / {Math.ceil(total / LIMIT)}
+          </span>
+          <button className={styles.pageBtn} disabled={offset + LIMIT >= total} onClick={() => setOffset(o => o + LIMIT)}>
+            Next →
+          </button>
         </div>
       )}
 
-      {/* Detail panel */}
+      {/* ── Detail panel ── */}
       {selected && (
         <div className={styles.detailPanel}>
-          <div className={styles.detailPanelHeader}>
-            <span>Asset Details</span>
-            <button
-              onClick={() => setSelected(null)}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#9ca3af" }}
-            >✕</button>
+          <div className={styles.detailHead}>
+            <span className={styles.detailHeadTitle}>Asset Details</span>
+            <button className={styles.detailClose} onClick={() => setSelected(null)}>×</button>
           </div>
-          <div className={styles.detailPanelBody}>
+
+          <div className={styles.detailBody}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={selected.url} alt={selected.altText ?? ""} className={styles.detailPanelImg} />
+            <img src={selected.url} alt={selected.altText ?? ""} className={styles.detailImg} />
 
             <div className={styles.detailRow}>
               <div className={styles.detailLabel}>Filename</div>
@@ -254,58 +260,49 @@ export default function MediaLibraryPage() {
               </div>
             )}
             <div className={styles.detailRow}>
-              <div className={styles.detailLabel}>Storage key</div>
-              <div className={styles.detailValue} style={{ fontSize: 11, fontFamily: "monospace", wordBreak: "break-all" }}>
-                {selected.storageKey}
-                <button
-                  onClick={copyKey}
-                  style={{ marginLeft: 6, padding: "1px 6px", fontSize: 10, borderRadius: 4, border: "1px solid #d1d5db", cursor: "pointer", background: "#f9fafb" }}
-                >Copy</button>
-              </div>
-            </div>
-            <div className={styles.detailRow}>
               <div className={styles.detailLabel}>Uploaded</div>
               <div className={styles.detailValue}>{new Date(selected.createdAt).toLocaleDateString("en-GB")}</div>
+            </div>
+            <div className={styles.detailRow}>
+              <div className={styles.detailLabel}>Storage key</div>
+              <div className={`${styles.detailValue} ${styles.detailValueMono}`}>
+                {selected.storageKey}
+                <button className={styles.copyBtn} onClick={copyKey}>Copy</button>
+              </div>
             </div>
 
             {/* Alt text editor */}
             <div className={styles.detailRow} style={{ marginTop: 16 }}>
               <div className={styles.detailLabel}>Alt Text</div>
               <textarea
+                className={styles.altTextarea}
                 value={altText}
                 onChange={e => setAltText(e.target.value)}
                 rows={2}
-                style={{ width: "100%", padding: "6px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, resize: "vertical", boxSizing: "border-box" }}
                 placeholder="Describe the image for accessibility and SEO"
               />
-              <button
-                className={`${shopStyles.btn} ${shopStyles.btnPrimary}`}
-                style={{ marginTop: 6, width: "100%" }}
-                onClick={saveAlt}
-                disabled={saving}
-              >{saving ? "Saving…" : "Save Alt Text"}</button>
+              <button className={styles.saveAltBtn} onClick={saveAlt} disabled={saving}>
+                {saving ? "Saving…" : "Save Alt Text"}
+              </button>
             </div>
 
             {/* Usage */}
             {usage.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div className={styles.detailLabel} style={{ marginBottom: 8 }}>Used by ({usage.length})</div>
+              <>
+                <div className={styles.usageTitle}>Used by ({usage.length})</div>
                 {usage.map(u => (
-                  <div key={u.id} style={{ fontSize: 12, color: "#6b7280", padding: "4px 0", borderBottom: "1px solid #f3f4f6" }}>
-                    <span style={{ fontWeight: 500, color: "#374151" }}>{u.entityType}</span>
+                  <div key={u.id} className={styles.usageItem}>
+                    <span className={styles.usageEntity}>{u.entityType}</span>
                     {" · "}{u.field}
-                    <span style={{ color: "#9ca3af", marginLeft: 4, fontFamily: "monospace", fontSize: 10 }}>{u.entityId.slice(0, 8)}</span>
+                    <span className={styles.usageId}>{u.entityId.slice(0, 8)}</span>
                   </div>
                 ))}
-              </div>
+              </>
             )}
           </div>
 
-          <div className={styles.detailActions}>
-            <button
-              className={`${shopStyles.btn} ${shopStyles.btnDanger}`}
-              onClick={deleteAsset}
-            >Delete Asset</button>
+          <div className={styles.detailFoot}>
+            <button className={styles.deleteBtn} onClick={deleteAsset}>Delete Asset</button>
           </div>
         </div>
       )}

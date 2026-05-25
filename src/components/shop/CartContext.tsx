@@ -8,6 +8,14 @@ export interface AppliedCoupon {
   type: string;
 }
 
+export interface CartItemOption {
+  attributeId: string;
+  attributeName: string;
+  optionValueId: string | null;
+  value: string;
+  displayValue: string | null;
+}
+
 export interface CartItem {
   id: string;
   variantId: string;
@@ -18,6 +26,7 @@ export interface CartItem {
   quantity: number;
   unitPriceCents: number;
   lineTotalCents: number;
+  optionsSnapshot: CartItemOption[] | null;
 }
 
 export interface Cart {
@@ -32,7 +41,7 @@ interface CartContextValue {
   cart: Cart | null;
   loading: boolean;
   mutating: boolean;
-  addItem: (variantId: string, quantity?: number) => Promise<{ ok: boolean; message?: string }>;
+  addItem: (variantId: string, quantity?: number, selectedOptionValueIds?: string[]) => Promise<{ ok: boolean; message?: string }>;
   updateItem: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   validateCoupon: (code: string) => Promise<{ valid: boolean; discountCents: number; type: string; message?: string }>;
@@ -57,7 +66,7 @@ function getOrCreateToken(): string {
   return token;
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children, locale = "fr" }: { children: React.ReactNode; locale?: string }) {
   const [token, setToken] = useState<string>(() => {
     if (typeof window === "undefined") return "";
     return getOrCreateToken();
@@ -80,29 +89,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart(data);
   }
 
+  const langParam = locale !== "fr" ? `?lang=${locale}` : "";
+
   const fetchCart = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch(`/next-api/public/shop/cart/${token}`);
+      const res = await fetch(`/next-api/public/shop/cart/${token}${langParam}`);
       if (res.ok) applyCart(await res.json());
     } finally {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, langParam]);
 
   useEffect(() => {
     if (token) fetchCart();
   }, [token, fetchCart]);
 
-  const addItem = useCallback(async (variantId: string, quantity = 1): Promise<{ ok: boolean; message?: string }> => {
+  const addItem = useCallback(async (variantId: string, quantity = 1, selectedOptionValueIds?: string[]): Promise<{ ok: boolean; message?: string }> => {
     setMutating(true);
     try {
       const res = await fetch(`/next-api/public/shop/cart/${token}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId, quantity }),
+        body: JSON.stringify({ variantId, quantity, selectedOptionValueIds }),
       });
       if (res.ok) {
         applyCart(await res.json());

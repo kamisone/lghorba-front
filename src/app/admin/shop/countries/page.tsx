@@ -10,37 +10,123 @@ interface Country {
   nativeName: string | null;
   phonePrefix: string | null;
   currencyCode: string | null;
+  isoCode3: string | null;
   continentCode: string | null;
   isActive: boolean;
   isShippingEnabled: boolean;
   isEuVat: boolean;
 }
 
+interface CountryForm {
+  isoCode: string;
+  name: string;
+  nativeName: string;
+  phonePrefix: string;
+  currencyCode: string;
+  isoCode3: string;
+  continentCode: string;
+  isActive: boolean;
+  isShippingEnabled: boolean;
+  isEuVat: boolean;
+}
+
+const EMPTY_FORM: CountryForm = {
+  isoCode: "", name: "", nativeName: "", phonePrefix: "",
+  currencyCode: "", isoCode3: "", continentCode: "",
+  isActive: true, isShippingEnabled: false, isEuVat: false,
+};
+
 function flagEmoji(isoCode: string) {
-  return isoCode
-    .toUpperCase()
-    .split("")
-    .map(c => String.fromCodePoint(0x1f1e0 + c.charCodeAt(0) - 65))
-    .join("");
+  return isoCode.toUpperCase().split("").map(c =>
+    String.fromCodePoint(0x1f1e0 + c.charCodeAt(0) - 65)
+  ).join("");
 }
 
 export default function CountriesPage() {
   const { toast } = useToast();
   const [countries, setCountries] = useState<Country[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [updating, setUpdating]   = useState<string | null>(null);
+
+  const [modal, setModal]   = useState<"create" | "edit" | null>(null);
+  const [form, setForm]     = useState<CountryForm>(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     setLoading(true);
     try {
       const res = await fetch("/next-api/admin/shop/countries");
       if (res.ok) setCountries(await res.json());
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
+  }
+  useEffect(() => { load(); }, []);
+
+  function openCreate() { setForm(EMPTY_FORM); setModal("create"); }
+  function openEdit(c: Country) {
+    setForm({
+      isoCode:          c.isoCode,
+      name:             c.name,
+      nativeName:       c.nativeName ?? "",
+      phonePrefix:      c.phonePrefix ?? "",
+      currencyCode:     c.currencyCode ?? "",
+      isoCode3:         c.isoCode3 ?? "",
+      continentCode:    c.continentCode ?? "",
+      isActive:         c.isActive,
+      isShippingEnabled: c.isShippingEnabled,
+      isEuVat:          c.isEuVat,
+    });
+    setModal("edit");
   }
 
-  useEffect(() => { load(); }, []);
+  async function handleSave() {
+    if (!form.isoCode.trim() || !form.name.trim()) {
+      toast.error("ISO code and name are required");
+      return;
+    }
+    setSaving(true);
+    const body = {
+      ...form,
+      isoCode:       form.isoCode.toUpperCase().trim(),
+      nativeName:    form.nativeName    || null,
+      phonePrefix:   form.phonePrefix   || null,
+      currencyCode:  form.currencyCode.toUpperCase().trim() || null,
+      isoCode3:      form.isoCode3.toUpperCase().trim()     || null,
+      continentCode: form.continentCode.toUpperCase().trim() || null,
+    };
+
+    const isCreate = modal === "create";
+    const url    = isCreate ? "/next-api/admin/shop/countries" : `/next-api/admin/shop/countries/${form.isoCode}`;
+    const method = isCreate ? "POST" : "PATCH";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      toast.success(isCreate ? "Country added" : "Country updated");
+      setModal(null);
+      load();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      toast.error((err as any).message ?? "Failed to save country");
+    }
+    setSaving(false);
+  }
+
+  async function handleDelete(c: Country) {
+    if (!confirm(`Delete "${c.name}" (${c.isoCode})? This cannot be undone.`)) return;
+    setUpdating(c.isoCode + "delete");
+    const res = await fetch(`/next-api/admin/shop/countries/${c.isoCode}`, { method: "DELETE" });
+    if (res.ok) {
+      setCountries(prev => prev.filter(x => x.isoCode !== c.isoCode));
+      toast.success("Country deleted");
+    } else {
+      toast.error("Failed to delete country");
+    }
+    setUpdating(null);
+  }
 
   async function toggle(isoCode: string, field: "isActive" | "isShippingEnabled", current: boolean) {
     setUpdating(isoCode + field);
@@ -52,17 +138,51 @@ export default function CountriesPage() {
     if (res.ok) {
       const updated: Country = await res.json();
       setCountries(prev => prev.map(c => c.isoCode === isoCode ? updated : c));
-      toast.success("Country updated");
     } else {
       toast.error("Failed to update country");
     }
     setUpdating(null);
   }
 
+  const field = (label: string, key: keyof CountryForm, opts?: { placeholder?: string; maxLength?: number; upper?: boolean }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: ".04em" }}>
+        {label}
+      </label>
+      <input
+        style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--color-border)", fontSize: 13, background: "var(--color-surface)" }}
+        value={form[key] as string}
+        maxLength={opts?.maxLength}
+        placeholder={opts?.placeholder}
+        onChange={e => setForm(f => ({ ...f, [key]: opts?.upper ? e.target.value.toUpperCase() : e.target.value }))}
+      />
+    </div>
+  );
+
+  const toggle2 = (label: string, key: "isActive" | "isShippingEnabled" | "isEuVat") => (
+    <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontSize: 13 }}>
+      <input
+        type="checkbox"
+        checked={form[key]}
+        onChange={e => setForm(f => ({ ...f, [key]: e.target.checked }))}
+        style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
+      />
+      {label}
+    </label>
+  );
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Countries</h1>
+        <div>
+          <h1 className={styles.title}>Countries</h1>
+          <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginTop: 4 }}>
+            {countries.length} countries · shown in checkout address form
+          </p>
+        </div>
+        <button className={styles.btn} style={{ background: "var(--color-admin-secondary)", color: "#fff", padding: "10px 20px", borderRadius: 10, fontWeight: 600, border: "none", cursor: "pointer" }} onClick={openCreate}>
+          + Add Country
+        </button>
       </div>
 
       <table className={styles.table}>
@@ -73,15 +193,16 @@ export default function CountriesPage() {
             <th>ISO</th>
             <th>Currency</th>
             <th>EU VAT</th>
-            <th>Shipping enabled</th>
+            <th>Shipping</th>
             <th>Active</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {loading
             ? Array.from({ length: 8 }, (_, i) => (
                 <tr key={i}>
-                  {[24, 120, 40, 50, 50, 80, 60].map((w, j) => (
+                  {[24, 120, 40, 50, 50, 80, 60, 100].map((w, j) => (
                     <td key={j}><span className={styles.skeleton} style={{ height: 14, width: w }} /></td>
                   ))}
                 </tr>
@@ -89,17 +210,22 @@ export default function CountriesPage() {
             : countries.map(c => (
                 <tr key={c.isoCode}>
                   <td style={{ fontSize: 22 }}>{flagEmoji(c.isoCode)}</td>
-                  <td><strong>{c.name}</strong>{c.nativeName && c.nativeName !== c.name && <span style={{ color: "#9ca3af", fontSize: 12, marginLeft: 6 }}>({c.nativeName})</span>}</td>
-                  <td style={{ color: "#6b7280", fontSize: 13, fontFamily: "monospace" }}>{c.isoCode}</td>
-                  <td style={{ color: "#6b7280", fontSize: 13 }}>{c.currencyCode ?? "—"}</td>
+                  <td>
+                    <strong>{c.name}</strong>
+                    {c.nativeName && c.nativeName !== c.name && (
+                      <span style={{ color: "var(--color-text-muted)", fontSize: 12, marginLeft: 6 }}>({c.nativeName})</span>
+                    )}
+                  </td>
+                  <td style={{ color: "var(--color-text-muted)", fontSize: 13, fontFamily: "monospace" }}>{c.isoCode}</td>
+                  <td style={{ color: "var(--color-text-muted)", fontSize: 13 }}>{c.currencyCode ?? "—"}</td>
                   <td>
                     {c.isEuVat
                       ? <span className={`${styles.badge} ${styles.badgePublished}`}>EU VAT</span>
-                      : <span style={{ color: "#9ca3af", fontSize: 13 }}>—</span>}
+                      : <span style={{ color: "var(--color-text-muted)", fontSize: 13 }}>—</span>}
                   </td>
                   <td>
                     <button
-                      disabled={updating === c.isoCode + "isShippingEnabled"}
+                      disabled={!!updating}
                       className={`${styles.btn} ${c.isShippingEnabled ? styles.btnSuccess : styles.btnSecondary}`}
                       style={{ fontSize: 12, padding: "4px 12px" }}
                       onClick={() => toggle(c.isoCode, "isShippingEnabled", c.isShippingEnabled)}
@@ -109,7 +235,7 @@ export default function CountriesPage() {
                   </td>
                   <td>
                     <button
-                      disabled={updating === c.isoCode + "isActive"}
+                      disabled={!!updating}
                       className={`${styles.btn} ${c.isActive ? styles.btnSuccess : styles.btnSecondary}`}
                       style={{ fontSize: 12, padding: "4px 12px" }}
                       onClick={() => toggle(c.isoCode, "isActive", c.isActive)}
@@ -117,14 +243,105 @@ export default function CountriesPage() {
                       {c.isActive ? "Active" : "Hidden"}
                     </button>
                   </td>
+                  <td>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        className={`${styles.btn} ${styles.btnSecondary}`}
+                        style={{ fontSize: 12, padding: "4px 10px" }}
+                        onClick={() => openEdit(c)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        disabled={!!updating}
+                        className={`${styles.btn}`}
+                        style={{ fontSize: 12, padding: "4px 10px", background: "#fee2e2", color: "#dc2626", border: "1px solid #fca5a5" }}
+                        onClick={() => handleDelete(c)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
           }
           {!loading && countries.length === 0 && (
-            <tr><td colSpan={7} style={{ textAlign: "center", color: "#9ca3af", padding: 32 }}>No countries seeded yet</td></tr>
+            <tr>
+              <td colSpan={8} style={{ textAlign: "center", color: "var(--color-text-muted)", padding: 32 }}>
+                No countries yet. Click "Add Country" to get started.
+              </td>
+            </tr>
           )}
         </tbody>
       </table>
+
+      {/* ── Modal ── */}
+      {modal && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.45)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          onClick={e => { if (e.target === e.currentTarget) setModal(null); }}
+        >
+          <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 540, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,.25)" }}>
+            {/* Head */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--color-border)" }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+                {modal === "create" ? "Add Country" : `Edit — ${form.name}`}
+              </h2>
+              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "var(--color-text-muted)", lineHeight: 1 }}>×</button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                {field("ISO Code (2-letter) *", "isoCode", { maxLength: 2, placeholder: "FR", upper: true })}
+                {field("ISO Code 3-letter", "isoCode3", { maxLength: 3, placeholder: "FRA", upper: true })}
+              </div>
+              {field("Name (English) *", "name", { placeholder: "France" })}
+              {field("Native name", "nativeName", { placeholder: "France" })}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                {field("Phone prefix", "phonePrefix", { placeholder: "+33", maxLength: 10 })}
+                {field("Currency (ISO 4217)", "currencyCode", { placeholder: "EUR", maxLength: 3, upper: true })}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: ".04em" }}>Continent</label>
+                <select
+                  value={form.continentCode}
+                  onChange={e => setForm(f => ({ ...f, continentCode: e.target.value }))}
+                  style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--color-border)", fontSize: 13, background: "var(--color-surface)" }}
+                >
+                  <option value="">— Select —</option>
+                  <option value="EU">Europe (EU)</option>
+                  <option value="AF">Africa (AF)</option>
+                  <option value="AS">Asia (AS)</option>
+                  <option value="NA">North America (NA)</option>
+                  <option value="SA">South America (SA)</option>
+                  <option value="OC">Oceania (OC)</option>
+                  <option value="AN">Antarctica (AN)</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px", background: "var(--color-surface)", borderRadius: 10, border: "1px solid var(--color-border)" }}>
+                {toggle2("Active (shown in checkout)", "isActive")}
+                {toggle2("Shipping enabled", "isShippingEnabled")}
+                {toggle2("EU VAT zone", "isEuVat")}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "16px 24px", borderTop: "1px solid var(--color-border)" }}>
+              <button onClick={() => setModal(null)} style={{ padding: "9px 20px", borderRadius: 9, border: "1px solid var(--color-border)", background: "none", cursor: "pointer", fontSize: 14 }}>
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !form.isoCode.trim() || !form.name.trim()}
+                style={{ padding: "9px 24px", borderRadius: 9, border: "none", background: "var(--color-admin-secondary)", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 14, opacity: saving ? .6 : 1 }}
+              >
+                {saving ? "Saving…" : modal === "create" ? "Add Country" : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

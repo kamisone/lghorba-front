@@ -7,3 +7,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   const { isoCode } = await ctx.params;
   return proxyRequest(req, "PATCH", `/admin/shop/countries/${isoCode}`);
 }
+
+export async function DELETE(req: NextRequest, ctx: Ctx) {
+  const { isoCode } = await ctx.params;
+  return proxyRequest(req, "DELETE", `/admin/shop/countries/${isoCode}`);
+}

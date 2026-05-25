@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/shop/CartContext";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
+import type { AvailabilityMatrix } from "@/components/shop/ProductVariantSelector";
 import ProductGallery from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./ProductDetail.module.css";
 
-interface Variant {
+interface FlatVariant {
   id: string;
   sku: string;
   title: string;
@@ -31,7 +32,7 @@ interface Product {
   featuredImageUrl: string | null;
   galleryImageUrls: string[];
   galleryImageKeys: string[];
-  variants: Variant[];
+  variants: FlatVariant[];
   categories: Array<{ name: string }>;
 }
 
@@ -42,6 +43,8 @@ interface Props {
   reviewStats: ReviewStats;
   locale: string;
   activePromotion?: PromotionInfo | null;
+  availabilityMatrix?: AvailabilityMatrix | null;
+  initialVariantSlug?: string | null;
 }
 
 function centsToEuros(cents: number) { return (cents / 100).toFixed(2); }
@@ -57,36 +60,50 @@ function buildProductGallery(product: Product): string[] {
   return out;
 }
 
-export default function ShopProductDetail({ product, reviewStats, locale, activePromotion }: Props) {
+export default function ShopProductDetail({
+  product, reviewStats, locale, activePromotion,
+  availabilityMatrix,
+}: Props) {
   const { addItem, mutating, cart } = useCart();
   const { toggle, isWishlisted } = useWishlist();
   const t = getTranslations(locale).shop;
   const router = useRouter();
 
   const productGallery = buildProductGallery(product);
-  const defaultVariant = product.variants.find(v => v.isDefault) ?? product.variants[0];
 
-  const [selectedVariant, setSelectedVariant] = useState<Variant>(defaultVariant);
-  const [activeGallery, setActiveGallery]     = useState<string[]>(
-    defaultVariant?.mediaUrls?.length ? defaultVariant.mediaUrls : productGallery
-  );
-  const [qty, setQty]           = useState(1);
+  // Always use the default variant — variations are cosmetic
+  const defaultVariant = product.variants.find(v => v.isDefault) ?? product.variants[0];
+  const activeId         = defaultVariant?.id ?? "";
+  const activePriceCents = defaultVariant?.priceCents ?? 0;
+  const activeCompare    = defaultVariant?.compareAtPriceCents ?? null;
+  const activeSku        = defaultVariant?.sku ?? null;
+
+  // Selected cosmetic options (attributeId → optionValueId), seeded from admin defaults
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() => {
+    const defaults: Record<string, string> = {};
+    for (const attr of availabilityMatrix?.attributes ?? []) {
+      if (attr.defaultOptionValueId) defaults[attr.id] = attr.defaultOptionValueId;
+    }
+    return defaults;
+  });
+  const selectedOptionValueIds = Object.values(selectedOptions).filter(Boolean);
+
+  const [qty, setQty]             = useState(1);
   const [buyingNow, setBuyingNow] = useState(false);
   const [buyError, setBuyError]   = useState("");
+
   const wishlisted = isWishlisted(product.id);
+  const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
 
-  const inCart = cart?.items.some(item => item.variantId === selectedVariant.id) ?? false;
-  const hasVariantChoice = product.variants.length > 1;
-
-  function handleVariantSelect(v: Variant) {
-    setSelectedVariant(v);
-    setActiveGallery(v.mediaUrls?.length ? v.mediaUrls : productGallery);
+  function selectOption(attributeId: string, optionValueId: string) {
+    setSelectedOptions(s => ({ ...s, [attributeId]: optionValueId }));
   }
 
   async function handleBuyNow() {
+    if (!activeId) return;
     setBuyError("");
     setBuyingNow(true);
-    const result = await addItem(selectedVariant.id, qty);
+    const result = await addItem(activeId, qty, selectedOptionValueIds.length ? selectedOptionValueIds : undefined);
     if (result.ok) {
       router.push(`/${locale}/checkout`);
     } else {
@@ -95,16 +112,18 @@ export default function ShopProductDetail({ product, reviewStats, locale, active
     }
   }
 
-  const discount = selectedVariant.compareAtPriceCents &&
-    selectedVariant.compareAtPriceCents > selectedVariant.priceCents
-    ? Math.round((1 - selectedVariant.priceCents / selectedVariant.compareAtPriceCents) * 100)
+  const discount = activeCompare && activeCompare > activePriceCents
+    ? Math.round((1 - activePriceCents / activeCompare) * 100)
     : null;
+
+  // Linked variation attributes from the matrix
+  const attributes = availabilityMatrix?.attributes ?? [];
 
   return (
     <div className={styles.container}>
       {/* Gallery */}
       <div className={styles.galleryCol}>
-        <ProductGallery images={activeGallery} title={product.title} />
+        <ProductGallery images={productGallery} title={product.title} />
       </div>
 
       {/* Details */}
@@ -122,9 +141,9 @@ export default function ShopProductDetail({ product, reviewStats, locale, active
         )}
 
         <div className={styles.priceRow}>
-          <span className={styles.price}>€{centsToEuros(selectedVariant.priceCents)}</span>
-          {selectedVariant.compareAtPriceCents && selectedVariant.compareAtPriceCents > selectedVariant.priceCents && (
-            <span className={styles.comparePrice}>€{centsToEuros(selectedVariant.compareAtPriceCents)}</span>
+          <span className={styles.price}>€{centsToEuros(activePriceCents)}</span>
+          {activeCompare && activeCompare > activePriceCents && (
+            <span className={styles.comparePrice}>€{centsToEuros(activeCompare)}</span>
           )}
           {activePromotion ? (
             <PromotionBadge promotion={activePromotion} size="md" />
@@ -132,6 +151,7 @@ export default function ShopProductDetail({ product, reviewStats, locale, active
             <span className={styles.discountBadge}>−{discount}%</span>
           ) : null}
         </div>
+
         {activePromotion && (
           <p style={{ fontSize: 13, color: "#16a34a", fontWeight: 500, marginBottom: 12 }}>
             {activePromotion.name} automatically applied at checkout
@@ -142,27 +162,45 @@ export default function ShopProductDetail({ product, reviewStats, locale, active
           <p className={styles.shortDesc}>{product.shortDescription}</p>
         )}
 
-        {/* Variant selector */}
-        {hasVariantChoice && (
-          <div className={styles.variantSection}>
-            <p className={styles.variantLabel}>
-              Option: <strong>{selectedVariant.title}</strong>
-            </p>
-            <div className={styles.variantButtons}>
-              {product.variants.map(v => (
-                <button
-                  key={v.id}
-                  onClick={() => handleVariantSelect(v)}
-                  className={`${styles.variantBtn} ${v.id === selectedVariant.id ? styles.variantActive : ""}`}
-                >
-                  {v.title}
-                </button>
-              ))}
-            </div>
+        {/* ── Variation option pickers ── */}
+        {attributes.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
+            {attributes.map(attr => (
+              <div key={attr.id}>
+                <p className={styles.variantLabel}>
+                  {attr.name}
+                  {selectedOptions[attr.id] && (
+                    <>: <strong>
+                      {attr.optionValues.find(ov => ov.id === selectedOptions[attr.id])?.displayValue
+                        ?? attr.optionValues.find(ov => ov.id === selectedOptions[attr.id])?.value}
+                    </strong></>
+                  )}
+                </p>
+                <div className={styles.variantButtons}>
+                  {attr.optionValues.map(ov => (
+                    <button
+                      key={ov.id}
+                      type="button"
+                      onClick={() => selectOption(attr.id, ov.id)}
+                      className={`${styles.variantBtn} ${selectedOptions[attr.id] === ov.id ? styles.variantActive : ""}`}
+                    >
+                      {ov.displayValue ?? ov.value}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Pre-add quantity row — hidden once the variant is in the cart */}
+        {/* SKU */}
+        {activeSku && (
+          <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginBottom: 16 }}>
+            {t.skuLabel} {activeSku}
+          </p>
+        )}
+
+        {/* Quantity row */}
         {!inCart && (
           <div className={styles.qtyRow}>
             <span className={styles.qtyLabel}>{t.quantity}</span>
@@ -176,12 +214,19 @@ export default function ShopProductDetail({ product, reviewStats, locale, active
 
         {/* CTA buttons */}
         <div className={styles.actions}>
-          <AddToCartButton
-            variantId={selectedVariant.id}
-            initialQty={qty}
-            size="lg"
-            className={styles.addToCartWrap}
-          />
+          {activeId ? (
+            <AddToCartButton
+              variantId={activeId}
+              initialQty={qty}
+              size="lg"
+              className={styles.addToCartWrap}
+              selectedOptionValueIds={selectedOptionValueIds.length ? selectedOptionValueIds : undefined}
+            />
+          ) : (
+            <button className={`${styles.addToCartBtn} ${styles.lg}`} disabled>
+              {t.addToCart}
+            </button>
+          )}
           <button
             onClick={() => toggle(product.id)}
             className={`${styles.wishlistBtn} ${wishlisted ? styles.wishlisted : ""}`}
@@ -191,7 +236,11 @@ export default function ShopProductDetail({ product, reviewStats, locale, active
           </button>
         </div>
 
-        <button onClick={handleBuyNow} disabled={mutating || buyingNow} className={styles.buyNowBtn}>
+        <button
+          onClick={handleBuyNow}
+          disabled={mutating || buyingNow || !activeId}
+          className={styles.buyNowBtn}
+        >
           {buyingNow ? t.redirecting : t.buyNow}
         </button>
 

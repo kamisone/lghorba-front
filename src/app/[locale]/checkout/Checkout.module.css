@@ -150,11 +150,15 @@
 
 .lineItems { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .summaryItem {
-  display: flex; justify-content: space-between; align-items: baseline;
+  display: flex; justify-content: space-between; align-items: flex-start;
   gap: 8px; font-size: 13px; color: var(--color-text-secondary);
 }
-.summaryItemName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.summaryItemName { min-width: 0; }
 .summaryItemQty  { color: var(--color-text-muted); font-style: normal; font-weight: 400; }
+.summaryItemOptions {
+  display: block; font-size: 11px; color: var(--color-text-muted);
+  margin-top: 2px; white-space: normal;
+}
 .summaryItemPrice { font-weight: 600; white-space: nowrap; color: var(--color-text-heading); }
 
 .summaryPromo {

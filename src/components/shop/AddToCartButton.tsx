@@ -11,9 +11,10 @@ interface Props {
   initialQty?: number;
   size?: "sm" | "lg";
   className?: string;
+  selectedOptionValueIds?: string[];
 }
 
-export default function AddToCartButton({ variantId, initialQty = 1, size = "lg", className }: Props) {
+export default function AddToCartButton({ variantId, initialQty = 1, size = "lg", className, selectedOptionValueIds }: Props) {
   const { cart, addItem, updateItem, removeItem, mutating, openDrawer } = useCart();
   const locale = useLocale();
   const t = getTranslations(locale).shop;
@@ -26,7 +27,7 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
   const handleAdd = useCallback(async () => {
     setAdding(true);
     setAddError("");
-    const result = await addItem(variantId, initialQty);
+    const result = await addItem(variantId, initialQty, selectedOptionValueIds);
     setAdding(false);
     if (result.ok) {
       setJustAdded(true);
@@ -35,7 +36,7 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
     } else {
       setAddError(result.message ?? "Could not add to cart");
     }
-  }, [variantId, initialQty, addItem, openDrawer]);
+  }, [variantId, initialQty, selectedOptionValueIds, addItem, openDrawer]);
 
   const handleDecrement = useCallback(async () => {
     if (!cartItem) return;

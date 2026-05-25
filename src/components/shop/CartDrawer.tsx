@@ -109,6 +109,11 @@ export default function CartDrawer({ locale }: Props) {
                   <div className={styles.itemTop}>
                     <div className={styles.itemInfo}>
                       <p className={styles.itemTitle}>{item.titleSnapshot}</p>
+                      {item.optionsSnapshot && item.optionsSnapshot.length > 0 && (
+                        <p className={styles.itemOptions}>
+                          {item.optionsSnapshot.map(o => `${o.attributeName}: ${o.displayValue ?? o.value}`).join(" · ")}
+                        </p>
+                      )}
                       {item.skuSnapshot && (
                         <p className={styles.itemSku}>{item.skuSnapshot}</p>
                       )}

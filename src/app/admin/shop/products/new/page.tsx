@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import ImageGalleryEditor from "@/components/admin/shop/ImageGalleryEditor";
 import MediaPicker, { MediaAsset } from "@/components/admin/media/MediaPicker";
 import BilingualField from "@/components/admin/fleet/BilingualField";
-import styles from "@/components/admin/shop/ShopAdmin.module.css";
+import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 
@@ -16,8 +17,10 @@ export default function NewProductPage() {
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState({
-    title: "", slug: "", sku: "", brand: "", shortDescription: "", description: "",
-    priceCents: "", initialStock: "0", featured: false,
+    title: "", slug: "", sku: "", brand: "",
+    shortDescription: "", description: "",
+    priceCents: "", initialStock: "0",
+    featured: false,
     primaryCategoryId: "",
     categoryIds: [] as string[],
   });
@@ -93,133 +96,249 @@ export default function NewProductPage() {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>New Product</h1>
+    <div className={styles.page}>
+      {/* ── Sticky topbar ── */}
+      <div className={styles.topbar}>
+        <div className={styles.topbarLeft}>
+          <Link href="/admin/shop/products" className={styles.backBtn}>
+            ← Products
+          </Link>
+          <span className={styles.topbarTitle}>New Product</span>
+        </div>
+        <div className={styles.topbarActions}>
+          <button
+            form="product-form"
+            type="submit"
+            className={styles.saveBtn}
+            disabled={submitting}
+          >
+            {submitting ? "Creating…" : "Create Product"}
+          </button>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        {/* ── Core fields ── */}
-        <BilingualField
-          label="Title"
-          frRequired
-          frValue={form.title}
-          frOnChange={v => setForm(f => ({ ...f, title: v }))}
-          frPlaceholder="Titre du produit"
-          enValue={enValues.title ?? ""}
-          enOnChange={v => setEn('title', v)}
-          enPlaceholder="Product title"
-        />
-        <div className={styles.formGrid}>
-          <div className={styles.formField}>
-            <label>Slug (optional)</label>
-            <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} placeholder="auto-generated" />
-          </div>
-          <div className={styles.formField}>
-            <label>SKU</label>
-            <input value={form.sku} onChange={e => setForm(f => ({ ...f, sku: e.target.value }))} />
-          </div>
-          <div className={styles.formField}>
-            <label>Price (€) *</label>
-            <input required type="number" step="0.01" min="0" value={form.priceCents} onChange={e => setForm(f => ({ ...f, priceCents: e.target.value }))} placeholder="0.00" />
-          </div>
-          <div className={styles.formField}>
-            <label>Initial stock</label>
-            <input type="number" min="0" value={form.initialStock} onChange={e => setForm(f => ({ ...f, initialStock: e.target.value }))} />
-          </div>
-          <div className={styles.formField}>
-            <label>Brand</label>
-            <input value={form.brand} onChange={e => setForm(f => ({ ...f, brand: e.target.value }))} />
-          </div>
-          <div className={styles.formField}>
-            <label>Featured</label>
-            <select value={String(form.featured)} onChange={e => setForm(f => ({ ...f, featured: e.target.value === "true" }))}>
-              <option value="false">No</option>
-              <option value="true">Yes</option>
-            </select>
-          </div>
-        </div>
+      <form id="product-form" onSubmit={handleSubmit}>
+        <div className={styles.body}>
 
-        {/* ── Categories ── */}
-        {categories.length > 0 && (
-          <>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af", margin: "24px 0 10px" }}>Categories</p>
-            <div className={styles.formGrid}>
-              <div className={styles.formField}>
-                <label>Primary category</label>
-                <select value={form.primaryCategoryId} onChange={e => setForm(f => ({ ...f, primaryCategoryId: e.target.value }))}>
-                  <option value="">— None —</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+          {/* ── Left main column ── */}
+          <div>
+
+            {/* Content section */}
+            <div className={styles.section}>
+              <div className={styles.sectionHead}>
+                <span className={styles.sectionIcon}>✏️</span>
+                <span className={styles.sectionTitle}>Content</span>
               </div>
-              <div className={`${styles.formField} ${styles.formSpan2}`}>
-                <label>Additional categories</label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
-                  {categories.map(c => (
-                    <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, cursor: "pointer" }}>
-                      <input type="checkbox" checked={form.categoryIds.includes(c.id)} onChange={() => toggleCategory(c.id)} />
-                      {c.name}
-                    </label>
-                  ))}
+              <div className={styles.sectionBody}>
+                <BilingualField
+                  label="Title"
+                  frRequired
+                  frValue={form.title}
+                  frOnChange={v => setForm(f => ({ ...f, title: v }))}
+                  frPlaceholder="Titre du produit"
+                  enValue={enValues.title ?? ""}
+                  enOnChange={v => setEn('title', v)}
+                  enPlaceholder="Product title"
+                />
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Slug <span className={styles.hint} style={{ fontWeight: 400 }}>(auto-generated)</span></label>
+                    <input
+                      className={styles.input}
+                      value={form.slug}
+                      onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
+                      placeholder="auto-generated"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Brand</label>
+                    <input
+                      className={styles.input}
+                      value={form.brand}
+                      onChange={e => setForm(f => ({ ...f, brand: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <BilingualField
+                  label="Short description"
+                  frValue={form.shortDescription}
+                  frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))}
+                  enValue={enValues.shortDescription ?? ""}
+                  enOnChange={v => setEn('shortDescription', v)}
+                  multiline rows={2}
+                />
+                <BilingualField
+                  label="Description"
+                  frValue={form.description}
+                  frOnChange={v => setForm(f => ({ ...f, description: v }))}
+                  enValue={enValues.description ?? ""}
+                  enOnChange={v => setEn('description', v)}
+                  multiline rows={5}
+                />
+              </div>
+            </div>
+
+            {/* Media section */}
+            <div className={`${styles.section} ${styles.sectionLast}`}>
+              <div className={styles.sectionHead}>
+                <span className={styles.sectionIcon}>🖼</span>
+                <span className={styles.sectionTitle}>Media</span>
+              </div>
+              <div className={styles.sectionBody}>
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Featured image</label>
+                    <div className={styles.featuredImgWrap} onClick={() => setFeaturedOpen(true)}>
+                      {featuredUrl ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={featuredUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                          <div className={styles.featuredImgOverlay}>
+                            <span className={styles.featuredImgOverlayBtn}>Change image</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className={styles.featuredImgPlaceholder}>
+                          <span className={styles.featuredImgIcon}>🖼</span>
+                          <span className={styles.featuredImgHint}>Click to choose image</span>
+                        </div>
+                      )}
+                    </div>
+                    {featuredKey && (
+                      <button
+                        type="button"
+                        onClick={() => { setFeaturedKey(null); setFeaturedUrl(null); }}
+                        style={{ fontSize: 12, color: "var(--color-error)", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
+                      >
+                        Remove image
+                      </button>
+                    )}
+                    <MediaPicker
+                      open={featuredOpen}
+                      onClose={() => setFeaturedOpen(false)}
+                      onSelect={handleFeaturedSelect}
+                      title="Select featured image"
+                      currentKey={featuredKey ?? undefined}
+                    />
+                  </div>
+                  <div>
+                    <ImageGalleryEditor
+                      initialKeys={[]}
+                      initialUrls={[]}
+                      onChange={setGalleryKeys}
+                      label="Gallery images"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </>
-        )}
+          </div>
 
-        {/* ── Content ── */}
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af", margin: "24px 0 10px" }}>Content</p>
-        <BilingualField
-          label="Short description"
-          frValue={form.shortDescription}
-          frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))}
-          enValue={enValues.shortDescription ?? ""}
-          enOnChange={v => setEn('shortDescription', v)}
-          multiline rows={2}
-        />
-        <BilingualField
-          label="Description"
-          frValue={form.description}
-          frOnChange={v => setForm(f => ({ ...f, description: v }))}
-          enValue={enValues.description ?? ""}
-          enOnChange={v => setEn('description', v)}
-          multiline rows={5}
-        />
+          {/* ── Right sidebar ── */}
+          <div>
 
-        {/* ── Media ── */}
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af", margin: "24px 0 10px" }}>Media</p>
-        <div className={styles.formGrid}>
-          <div className={styles.formField}>
-            <label>Featured image</label>
-            {featuredUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={featuredUrl} alt="" style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 10, border: "1px solid #e5e7eb", marginBottom: 8, display: "block" }} />
-            )}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" className={`${styles.btn} ${styles.btnSecondary}`} onClick={() => setFeaturedOpen(true)}>
-                {featuredKey ? "Change image" : "Choose from Library"}
-              </button>
-              {featuredKey && (
-                <button type="button" className={styles.btn} onClick={() => { setFeaturedKey(null); setFeaturedUrl(null); }}>Remove</button>
-              )}
+            {/* Pricing & Stock card */}
+            <div className={styles.sidebarCard}>
+              <div className={styles.sidebarCardHead}>
+                <span className={styles.sidebarCardTitle}>Pricing & Stock</span>
+              </div>
+              <div className={styles.sidebarCardBody}>
+                <div className={styles.field}>
+                  <label className={styles.label}>
+                    Price (€)<span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className={styles.input}
+                    value={form.priceCents}
+                    onChange={e => setForm(f => ({ ...f, priceCents: e.target.value }))}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Initial stock</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className={styles.input}
+                    value={form.initialStock}
+                    onChange={e => setForm(f => ({ ...f, initialStock: e.target.value }))}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>SKU</label>
+                  <input
+                    className={styles.input}
+                    value={form.sku}
+                    onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
+                  />
+                </div>
+              </div>
             </div>
-            <MediaPicker open={featuredOpen} onClose={() => setFeaturedOpen(false)} onSelect={handleFeaturedSelect} title="Select featured image" currentKey={featuredKey ?? undefined} />
-          </div>
-          <div className={`${styles.formField} ${styles.formSpan2}`}>
-            <ImageGalleryEditor
-              initialKeys={[]}
-              initialUrls={[]}
-              onChange={setGalleryKeys}
-              label="Gallery images"
-            />
-          </div>
-        </div>
 
-        <div style={{ marginTop: 20, display: "flex", gap: 12 }}>
-          <button type="submit" disabled={submitting} className={`${styles.btn} ${styles.btnPrimary}`}>
-            {submitting ? "Creating..." : "Create Product"}
-          </button>
-          <button type="button" onClick={() => router.back()} className={`${styles.btn} ${styles.btnSecondary}`}>Cancel</button>
+            {/* Settings card */}
+            <div className={styles.sidebarCard}>
+              <div className={styles.sidebarCardHead}>
+                <span className={styles.sidebarCardTitle}>Settings</span>
+              </div>
+              <div className={styles.sidebarCardBody}>
+                <div className={styles.toggleRow}>
+                  <div>
+                    <div className={styles.toggleLabel}>Featured</div>
+                    <div className={styles.toggleNote}>Show in featured sections</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.featured}
+                    onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Categories card */}
+            {categories.length > 0 && (
+              <div className={styles.sidebarCard}>
+                <div className={styles.sidebarCardHead}>
+                  <span className={styles.sidebarCardTitle}>Categories</span>
+                </div>
+                <div className={styles.sidebarCardBody}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Primary category</label>
+                    <select
+                      className={styles.select}
+                      value={form.primaryCategoryId}
+                      onChange={e => setForm(f => ({ ...f, primaryCategoryId: e.target.value }))}
+                    >
+                      <option value="">— None —</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className={styles.divider} />
+                  <label className={styles.label} style={{ display: "block", marginBottom: 8 }}>
+                    Additional categories
+                  </label>
+                  <div className={styles.categoryList}>
+                    {categories.map(c => (
+                      <label key={c.id} className={styles.categoryItem}>
+                        <input
+                          type="checkbox"
+                          checked={form.categoryIds.includes(c.id)}
+                          onChange={() => toggleCategory(c.id)}
+                        />
+                        {c.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
         </div>
       </form>
     </div>

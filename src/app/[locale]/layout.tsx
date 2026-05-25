@@ -25,7 +25,7 @@ export default function LocaleLayout({
 
   return (
     <CookieConsentProvider locale={params.locale}>
-      <CartProvider>
+      <CartProvider locale={params.locale}>
         <WishlistProvider>
           <ClientHeader locale={params.locale} />
           <main>{children}</main>

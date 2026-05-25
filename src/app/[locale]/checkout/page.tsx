@@ -13,21 +13,6 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 
 function centsToEuros(c: number) { return (c / 100).toFixed(2); }
 
-const FALLBACK_COUNTRIES = [
-  { isoCode: "MA", name: "Morocco" },
-  { isoCode: "FR", name: "France" },
-  { isoCode: "ES", name: "Spain" },
-  { isoCode: "DE", name: "Germany" },
-  { isoCode: "IT", name: "Italy" },
-  { isoCode: "GB", name: "United Kingdom" },
-  { isoCode: "BE", name: "Belgium" },
-  { isoCode: "NL", name: "Netherlands" },
-  { isoCode: "PT", name: "Portugal" },
-  { isoCode: "CH", name: "Switzerland" },
-  { isoCode: "US", name: "United States" },
-  { isoCode: "CA", name: "Canada" },
-];
-
 interface CountryOption { isoCode: string; name: string; }
 interface ShippingMethod { id: string; name: string; priceCents: number; estimatedDaysMin: number; estimatedDaysMax: number; }
 interface CheckoutSnapshot {
@@ -147,7 +132,8 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   const { locale } = params;
   const t = getTranslations(locale).shop;
 
-  const [countries, setCountries] = useState<CountryOption[]>(FALLBACK_COUNTRIES);
+  const [countries, setCountries]         = useState<CountryOption[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(true);
   const [step, setStep]           = useState<Step>("address");
   const [snapshot, setSnapshot]   = useState<CheckoutSnapshot | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -165,9 +151,10 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
 
   useEffect(() => {
     fetch("/next-api/shop/countries")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (Array.isArray(data) && data.length > 0) setCountries(data); })
-      .catch(() => {});
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { if (Array.isArray(data)) setCountries(data); })
+      .catch(() => {})
+      .finally(() => setCountriesLoading(false));
   }, []);
 
   async function handleApplyCoupon(code: string) {
@@ -319,8 +306,19 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
               <h2 className={styles.sectionTitle}>{t.shippingAddressTitle}</h2>
               <div className={styles.field}>
                 <label>{t.countryLabel}</label>
-                <select required value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
-                  {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
+                <select
+                  required
+                  disabled={countriesLoading}
+                  value={form.country}
+                  onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
+                >
+                  {countriesLoading
+                    ? <option value="">{t.loading}</option>
+                    : <>
+                        <option value="">{t.selectCountryPlaceholder}</option>
+                        {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
+                      </>
+                  }
                 </select>
               </div>
               <div className={styles.field}>
@@ -425,6 +423,11 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                 <span className={styles.summaryItemName}>
                   {item.titleSnapshot}
                   <em className={styles.summaryItemQty}> ×{item.quantity}</em>
+                  {item.optionsSnapshot && item.optionsSnapshot.length > 0 && (
+                    <span className={styles.summaryItemOptions}>
+                      {item.optionsSnapshot.map(o => `${o.attributeName}: ${o.displayValue ?? o.value}`).join(" · ")}
+                    </span>
+                  )}
                 </span>
                 <span className={styles.summaryItemPrice}>€{centsToEuros(item.lineTotalCents)}</span>
               </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import BilingualField from "@/components/admin/fleet/BilingualField";
-import styles from "@/components/admin/shop/ShopAdmin.module.css";
+import styles from "./Categories.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 
 interface Translations {
@@ -22,6 +22,8 @@ interface Category {
   createdAt: string;
   translations?: Translations;
 }
+
+interface CategoryRow extends Category { depth: number }
 
 interface FormState {
   name: string;
@@ -83,6 +85,26 @@ function categoryToForm(c: Category): FormState {
   };
 }
 
+function buildTree(cats: Category[]): CategoryRow[] {
+  const idSet = new Set(cats.map(c => c.id));
+  const rows: CategoryRow[] = [];
+
+  function traverse(cat: Category, depth: number) {
+    rows.push({ ...cat, depth });
+    cats.filter(c => c.parentId === cat.id).sort((a, b) => a.sortOrder - b.sortOrder)
+      .forEach(child => traverse(child, depth + 1));
+  }
+
+  cats.filter(c => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder)
+    .forEach(c => traverse(c, 0));
+
+  // Orphans (parent deleted)
+  cats.filter(c => c.parentId && !idSet.has(c.parentId))
+    .forEach(c => rows.push({ ...c, depth: 0 }));
+
+  return rows;
+}
+
 export default function CategoriesPage() {
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -135,132 +157,244 @@ export default function CategoriesPage() {
     load();
   }
 
+  const treeRows = buildTree(categories);
   const parentMap = Object.fromEntries(categories.map(c => [c.id, c.name]));
 
   return (
-    <div className={styles.container}>
+    <div className={styles.page}>
+      {/* ── Header ── */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Categories</h1>
-        <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={openCreate}>+ New category</button>
+        <div className={styles.titleGroup}>
+          <h1 className={styles.title}>Categories</h1>
+          <span className={styles.subtitle}>{categories.length} categories</span>
+        </div>
+        <button className={styles.newBtn} onClick={openCreate}>
+          + New Category
+        </button>
       </div>
 
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Slug</th>
-            <th>FR / EN</th>
-            <th>Parent</th>
-            <th>Order</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? Array.from({ length: 4 }, (_, i) => (
-            <tr key={i}>
-              {[120, 100, 120, 70, 40, 60, 90].map((w, j) => (
-                <td key={j}><span className={styles.skeleton} style={{ height: 14, width: w }} /></td>
+      {/* ── Table card ── */}
+      <div className={styles.tableCard}>
+        <div className={styles.tableCardHead}>
+          <span className={styles.tableCardIcon}>🗂</span>
+          <span className={styles.tableCardTitle}>Category Tree</span>
+        </div>
+
+        {loading ? (
+          <div style={{ padding: 20 }}>
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} style={{ display: "flex", gap: 16, alignItems: "center", padding: "12px 0", borderBottom: i < 3 ? "1px solid var(--color-border)" : "none" }}>
+                <span className={styles.skeleton} style={{ height: 14, width: 140 }} />
+                <span className={styles.skeleton} style={{ height: 12, width: 100 }} />
+                <span className={styles.skeleton} style={{ height: 12, width: 60 }} />
+                <span className={styles.skeleton} style={{ height: 20, width: 55, marginLeft: "auto" }} />
+                <span className={styles.skeleton} style={{ height: 28, width: 90 }} />
+              </div>
+            ))}
+          </div>
+        ) : treeRows.length === 0 ? (
+          <div className={styles.empty}>
+            <span className={styles.emptyIcon}>🗂</span>
+            <span className={styles.emptyText}>No categories yet</span>
+            <span className={styles.emptyHint}>Create your first category to organise your products</span>
+          </div>
+        ) : (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Translations</th>
+                <th>Parent</th>
+                <th>Order</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {treeRows.map(c => (
+                <tr key={c.id}>
+                  <td>
+                    <div className={styles.depthIndent} style={{ paddingLeft: c.depth * 20 }}>
+                      {c.depth > 0 && <span className={styles.depthLine} />}
+                      <div>
+                        <div className={styles.catName}>{c.name}</div>
+                        <div className={styles.catSlug}>{c.slug}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--color-text-muted)" }}>
+                      {c.slug}
+                    </span>
+                  </td>
+                  <td>
+                    <div className={styles.langChips}>
+                      {c.translations?.name?.fr && (
+                        <span className={styles.chipFr}>FR</span>
+                      )}
+                      {c.translations?.name?.en && (
+                        <span className={styles.chipEn}>EN</span>
+                      )}
+                      {!c.translations?.name?.fr && !c.translations?.name?.en && (
+                        <span className={styles.chipNone}>—</span>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <span className={styles.catParent}>
+                      {c.parentId ? parentMap[c.parentId] ?? "—" : "—"}
+                    </span>
+                  </td>
+                  <td>
+                    <span style={{ fontSize: 13, color: "var(--color-text-muted)", fontVariantNumeric: "tabular-nums" }}>
+                      {c.sortOrder}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`${styles.badge} ${c.isActive ? styles.badgeActive : styles.badgeHidden}`}>
+                      {c.isActive ? "Active" : "Hidden"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className={styles.rowActions}>
+                      <button className={`${styles.actionBtn} ${styles.actionEdit}`} onClick={() => openEdit(c)}>
+                        Edit
+                      </button>
+                      <button className={`${styles.actionBtn} ${styles.actionDelete}`} onClick={() => handleDelete(c.id)}>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </tr>
-          )) : categories.map(c => (
-            <tr key={c.id}>
-              <td><strong>{c.name}</strong></td>
-              <td style={{ color: "#6b7280", fontSize: 13 }}>{c.slug}</td>
-              <td style={{ fontSize: 12, color: "#6b7280" }}>
-                {c.translations?.name?.fr && <span title="FR">{c.translations.name.fr}</span>}
-                {c.translations?.name?.fr && c.translations?.name?.en && " / "}
-                {c.translations?.name?.en && <span title="EN">{c.translations.name.en}</span>}
-                {!c.translations?.name?.fr && !c.translations?.name?.en && "—"}
-              </td>
-              <td>{c.parentId ? parentMap[c.parentId] ?? c.parentId : "—"}</td>
-              <td>{c.sortOrder}</td>
-              <td>
-                <span className={`${styles.badge} ${c.isActive ? styles.badgeActive : styles.badgeDraft}`}>
-                  {c.isActive ? "Active" : "Hidden"}
-                </span>
-              </td>
-              <td>
-                <button className={`${styles.btn} ${styles.btnSecondary}`} style={{ marginRight: 8 }} onClick={() => openEdit(c)}>Edit</button>
-                <button className={`${styles.btn} ${styles.btnDanger}`} onClick={() => handleDelete(c.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-          {!loading && categories.length === 0 && (
-            <tr><td colSpan={7} style={{ textAlign: "center", color: "#9ca3af", padding: 32 }}>No categories yet</td></tr>
-          )}
-        </tbody>
-      </table>
+            </tbody>
+          </table>
+        )}
+      </div>
 
-      {/* Modal */}
+      {/* ── Create / Edit Modal ── */}
       {modal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div style={{ background: "#fff", borderRadius: 12, padding: 32, width: 580, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto" }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24 }}>
-              {modal === "create" ? "New Category" : "Edit Category"}
-            </h2>
+        <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) setModal(null); }}>
+          <div className={styles.modal}>
+            {/* Head */}
+            <div className={styles.modalHead}>
+              <span className={styles.modalTitle}>
+                {modal === "create" ? "New Category" : "Edit Category"}
+              </span>
+              <button className={styles.modalClose} onClick={() => setModal(null)}>×</button>
+            </div>
 
-            {/* ── Core fields ── */}
-            <BilingualField
-              label="Name"
-              frRequired
-              frValue={form.name}
-              frOnChange={v => setForm(f => ({ ...f, name: v, slug: modal === "create" ? slugify(v) : f.slug, nameFr: v }))}
-              frPlaceholder="Nom de la catégorie"
-              enValue={form.nameEn}
-              enOnChange={v => setForm(f => ({ ...f, nameEn: v }))}
-              enPlaceholder="Category name"
-            />
-            <div className={styles.formGrid}>
-              <div className={styles.formField}>
-                <label>Slug *</label>
-                <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} />
-              </div>
-              <div className={styles.formField}>
-                <label>Slug EN</label>
-                <input value={form.slugEn} onChange={e => setForm(f => ({ ...f, slugEn: e.target.value }))} placeholder="slug-in-english" />
-              </div>
-              <div className={`${styles.formField} ${styles.formSpan2}`}>
-                <label>Description</label>
-                <textarea
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  rows={2}
+            {/* Body */}
+            <div className={styles.modalBody}>
+
+              {/* Content section */}
+              <div className={styles.modalSection}>
+                <p className={styles.modalSectionTitle}>Content</p>
+                <BilingualField
+                  label="Name"
+                  frRequired
+                  frValue={form.name}
+                  frOnChange={v => setForm(f => ({
+                    ...f,
+                    name:  v,
+                    slug:  modal === "create" ? slugify(v) : f.slug,
+                    nameFr: v,
+                  }))}
+                  frPlaceholder="Nom de la catégorie"
+                  enValue={form.nameEn}
+                  enOnChange={v => setForm(f => ({ ...f, nameEn: v }))}
+                  enPlaceholder="Category name"
                 />
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>
+                      Slug (FR)<span className={styles.required}>*</span>
+                    </label>
+                    <input
+                      className={styles.input}
+                      value={form.slug}
+                      onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
+                      placeholder="slug-en-francais"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Slug (EN)</label>
+                    <input
+                      className={styles.input}
+                      value={form.slugEn}
+                      onChange={e => setForm(f => ({ ...f, slugEn: e.target.value }))}
+                      placeholder="slug-in-english"
+                    />
+                  </div>
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Description</label>
+                  <textarea
+                    className={styles.textarea}
+                    value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    rows={2}
+                    placeholder="Optional description…"
+                  />
+                </div>
               </div>
+
+              {/* Settings section */}
+              <div className={styles.modalSection}>
+                <p className={styles.modalSectionTitle}>Settings</p>
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Parent category</label>
+                    <select
+                      className={styles.select}
+                      value={form.parentId}
+                      onChange={e => setForm(f => ({ ...f, parentId: e.target.value }))}
+                    >
+                      <option value="">— None (top-level) —</option>
+                      {categories.filter(c => c.id !== editId).map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Sort order</label>
+                    <input
+                      type="number"
+                      className={styles.input}
+                      value={form.sortOrder}
+                      onChange={e => setForm(f => ({ ...f, sortOrder: Number(e.target.value) }))}
+                    />
+                    <span className={styles.hint}>Lower numbers appear first</span>
+                  </div>
+                </div>
+                <div className={styles.toggleRow}>
+                  <div>
+                    <div className={styles.toggleLabel}>Active</div>
+                    <div className={styles.toggleNote}>Visible to customers in the shop</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
+                  />
+                </div>
+              </div>
+
             </div>
 
-            {/* ── Settings ── */}
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af", margin: "20px 0 10px" }}>
-              Settings
-            </p>
-            <div className={styles.formGrid}>
-              <div className={styles.formField}>
-                <label>Parent category</label>
-                <select value={form.parentId} onChange={e => setForm(f => ({ ...f, parentId: e.target.value }))}>
-                  <option value="">— None —</option>
-                  {categories.filter(c => c.id !== editId).map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className={styles.formField}>
-                <label>Sort order</label>
-                <input type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: Number(e.target.value) }))} />
-              </div>
-              <div className={styles.formField}>
-                <label>Status</label>
-                <select value={form.isActive ? "active" : "hidden"} onChange={e => setForm(f => ({ ...f, isActive: e.target.value === "active" }))}>
-                  <option value="active">Active</option>
-                  <option value="hidden">Hidden</option>
-                </select>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 12, marginTop: 24, justifyContent: "flex-end" }}>
-              <button className={`${styles.btn} ${styles.btnSecondary}`} onClick={() => setModal(null)}>Cancel</button>
-              <button className={`${styles.btn} ${styles.btnPrimary}`} disabled={saving || !form.name} onClick={save}>
-                {saving ? "Saving…" : "Save"}
+            {/* Footer */}
+            <div className={styles.modalFoot}>
+              <button className={styles.cancelBtn} onClick={() => setModal(null)}>
+                Cancel
+              </button>
+              <button
+                className={styles.saveBtn}
+                disabled={saving || !form.name}
+                onClick={save}
+              >
+                {saving ? "Saving…" : modal === "create" ? "Create Category" : "Save Changes"}
               </button>
             </div>
           </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import styles from "@/components/admin/shop/ShopAdmin.module.css";
+import styles from "./Products.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 
 interface Product {
@@ -20,20 +20,25 @@ interface Product {
 
 type Tab = "active" | "trash";
 
-function statusBadge(status: string) {
-  const cls: Record<string, string> = { active: styles.badgeActive, draft: styles.badgeDraft, archived: styles.badgeCancelled };
-  return <span className={`${styles.badge} ${cls[status] ?? styles.badgeDraft}`}>{status}</span>;
+function statusBadgeCls(status: string): string {
+  const map: Record<string, string> = {
+    active:   styles.badgeActive,
+    draft:    styles.badgeDraft,
+    archived: styles.badgeArchived,
+    hidden:   styles.badgeHidden,
+  };
+  return map[status] ?? styles.badgeDraft;
 }
 
 export default function AdminProductsPage() {
   const { toast } = useToast();
-  const [tab, setTab]         = useState<Tab>("active");
+  const [tab, setTab]           = useState<Tab>("active");
   const [products, setProducts] = useState<Product[]>([]);
-  const [total, setTotal]     = useState(0);
-  const [search, setSearch]   = useState("");
-  const [status, setStatus]   = useState("");
-  const [page, setPage]       = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [total, setTotal]       = useState(0);
+  const [search, setSearch]     = useState("");
+  const [status, setStatus]     = useState("");
+  const [page, setPage]         = useState(1);
+  const [loading, setLoading]   = useState(true);
   const limit = 20;
 
   async function load() {
@@ -55,7 +60,7 @@ export default function AdminProductsPage() {
     }
   }
 
-  useEffect(() => { load(); }, [tab, page, status]);
+  useEffect(() => { load(); }, [tab, page, status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function switchTab(next: Tab) {
     setTab(next);
@@ -109,157 +114,198 @@ export default function AdminProductsPage() {
   const pages = Math.ceil(total / limit);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.page}>
+      {/* ── Header ── */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Products</h1>
+        <div className={styles.titleGroup}>
+          <h1 className={styles.title}>Products</h1>
+          <span className={styles.subtitle}>{total} {tab === "trash" ? "deleted" : "total"} products</span>
+        </div>
         {tab === "active" && (
-          <Link href="/admin/shop/products/new" className={`${styles.btn} ${styles.btnPrimary}`}>
+          <Link href="/admin/shop/products/new" className={styles.newBtn}>
             + New Product
           </Link>
         )}
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #e5e7eb", marginBottom: 20 }}>
-        {(["active", "trash"] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => switchTab(t)}
-            style={{
-              padding: "8px 20px",
-              fontSize: 14,
-              fontWeight: tab === t ? 700 : 400,
-              color: tab === t ? "#111827" : "#6b7280",
-              background: "none",
-              border: "none",
-              borderBottom: tab === t ? "2px solid #111827" : "2px solid transparent",
-              cursor: "pointer",
-              marginBottom: -1,
-              transition: "color .15s",
-              textTransform: "capitalize",
-            }}
-          >
-            {t === "trash" ? "🗑 Trash" : "Products"}
-          </button>
-        ))}
+      {/* ── Tabs ── */}
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${tab === "active" ? styles.tabActive : ""}`}
+          onClick={() => switchTab("active")}
+        >
+          Products
+        </button>
+        <button
+          className={`${styles.tab} ${tab === "trash" ? styles.tabActive : ""}`}
+          onClick={() => switchTab("trash")}
+        >
+          Trash
+        </button>
       </div>
 
-      {tab === "active" && (
-        <div className={styles.filters}>
+      {/* ── Toolbar ── */}
+      <div className={styles.toolbar}>
+        <div className={styles.searchWrap}>
+          <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+          </svg>
           <input
-            className={styles.filterInput}
-            placeholder="Search products..."
+            className={styles.searchInput}
+            placeholder={tab === "trash" ? "Search deleted products…" : "Search products…"}
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") { setPage(1); load(); } }}
           />
-          <select className={styles.filterSelect} value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>
+        </div>
+        {tab === "active" && (
+          <select
+            className={styles.filterSelect}
+            value={status}
+            onChange={e => { setStatus(e.target.value); setPage(1); }}
+          >
             <option value="">All statuses</option>
             <option value="draft">Draft</option>
             <option value="active">Active</option>
             <option value="archived">Archived</option>
+            <option value="hidden">Hidden</option>
           </select>
-        </div>
-      )}
+        )}
+        <div className={styles.toolbarRight}>{total} products</div>
+      </div>
 
-      {tab === "trash" && (
-        <div className={styles.filters}>
-          <input
-            className={styles.filterInput}
-            placeholder="Search deleted products..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") { setPage(1); load(); } }}
-          />
-        </div>
-      )}
-
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>Title</th>
-            <th>SKU</th>
-            {tab === "active" && <><th>Price</th><th>Status</th></>}
-            {tab === "trash" && <th>Deleted</th>}
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? Array.from({ length: 6 }, (_, i) => (
-            <tr key={i}>
-              <td><span className={styles.skeleton} style={{ height: 48, width: 48, borderRadius: 6 }} /></td>
-              {[160, 70, 70, 60, 100].map((w, j) => (
-                <td key={j}><span className={styles.skeleton} style={{ height: 14, width: w }} /></td>
-              ))}
-            </tr>
-          )) : products.map(p => {
+      {/* ── Grid ── */}
+      <div className={styles.grid}>
+        {loading ? (
+          Array.from({ length: 8 }, (_, i) => (
+            <div key={i} className={styles.skeletonCard}>
+              <span className={styles.skeleton} style={{ display: "block", height: 160 }} />
+              <div style={{ padding: "14px 16px 16px" }}>
+                <span className={styles.skeleton} style={{ height: 14, width: "70%", display: "block", marginBottom: 8 }} />
+                <span className={styles.skeleton} style={{ height: 12, width: "40%", display: "block" }} />
+              </div>
+            </div>
+          ))
+        ) : products.length === 0 ? (
+          <div className={styles.empty}>
+            <span className={styles.emptyIcon}>📦</span>
+            <span className={styles.emptyText}>
+              {tab === "trash" ? "Trash is empty" : "No products found"}
+            </span>
+            {tab === "active" && (
+              <span className={styles.emptyHint}>Create your first product to get started</span>
+            )}
+          </div>
+        ) : (
+          products.map(p => {
             const defVariant = p.variants?.find(v => v.isDefault) ?? p.variants?.[0];
             return (
-              <tr key={p.id}>
-                <td>
+              <div key={p.id} className={styles.card}>
+                <div className={styles.cardImage}>
                   {p.featuredImageUrl ? (
-                    <Image src={p.featuredImageUrl} alt={p.title} width={48} height={48} style={{ borderRadius: 6, objectFit: "cover" }} />
+                    <Image
+                      src={p.featuredImageUrl}
+                      alt={p.title}
+                      fill
+                      sizes="260px"
+                      style={{ objectFit: "cover" }}
+                    />
                   ) : (
-                    <div style={{ width: 48, height: 48, background: "#f3f4f6", borderRadius: 6 }} />
+                    <div className={styles.cardImagePlaceholder}>🖼</div>
                   )}
-                </td>
-                <td>
-                  {tab === "active"
-                    ? <Link href={`/admin/shop/products/${p.id}`}>{p.title}</Link>
-                    : <span style={{ color: "#6b7280" }}>{p.title}</span>
-                  }
-                </td>
-                <td style={{ color: "#9ca3af" }}>{p.sku ?? "—"}</td>
-                {tab === "active" && (
-                  <>
-                    <td>{defVariant ? `€${(defVariant.priceCents / 100).toFixed(2)}` : "—"}</td>
-                    <td>{statusBadge(p.status)}</td>
-                  </>
-                )}
-                {tab === "trash" && (
-                  <td style={{ fontSize: 12, color: "#9ca3af" }}>
-                    {p.deletedAt ? new Date(p.deletedAt).toLocaleDateString() : "—"}
-                  </td>
-                )}
-                <td style={{ display: "flex", gap: 8 }}>
-                  {tab === "active" && (
-                    <>
-                      <Link href={`/admin/shop/products/${p.id}`} className={`${styles.btn} ${styles.btnSecondary}`} style={{ fontSize: 12, padding: "4px 10px" }}>Edit</Link>
-                      {p.status === "draft" && (
-                        <button onClick={() => handlePublish(p.id)} className={`${styles.btn} ${styles.btnSuccess}`} style={{ fontSize: 12, padding: "4px 10px" }}>Publish</button>
-                      )}
-                      <button onClick={() => handleDelete(p.id)} className={`${styles.btn} ${styles.btnDanger}`} style={{ fontSize: 12, padding: "4px 10px" }}>Delete</button>
-                    </>
+                  {p.featured && (
+                    <span className={styles.cardFeaturedBadge}>Featured</span>
                   )}
-                  {tab === "trash" && (
-                    <>
-                      <button onClick={() => handleRestore(p.id)} className={`${styles.btn} ${styles.btnSuccess}`} style={{ fontSize: 12, padding: "4px 10px" }}>Restore</button>
-                      <button onClick={() => handleHardDelete(p.id)} className={`${styles.btn} ${styles.btnDanger}`} style={{ fontSize: 12, padding: "4px 10px" }}>Delete Permanently</button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-          {!loading && products.length === 0 && (
-            <tr>
-              <td colSpan={tab === "active" ? 6 : 5} style={{ textAlign: "center", color: "#9ca3af", padding: 32 }}>
-                {tab === "trash" ? "Trash is empty" : "No products found"}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                </div>
 
-      <div className={styles.pagination}>
-        <span className={styles.pageInfo}>{total} {tab === "trash" ? "deleted" : ""} products</span>
-        {Array.from({ length: pages }, (_, i) => (
-          <button key={i} onClick={() => setPage(i + 1)} className={`${styles.btn} ${page === i + 1 ? styles.btnPrimary : styles.btnSecondary}`} style={{ padding: "4px 10px", minWidth: 36 }}>
-            {i + 1}
-          </button>
-        ))}
+                <div className={styles.cardBody}>
+                  <h3 className={styles.cardTitle}>{p.title}</h3>
+                  <div className={styles.cardMeta}>
+                    <span className={styles.cardSku}>{p.sku ?? "—"}</span>
+                    {defVariant && (
+                      <span className={styles.cardPrice}>
+                        €{(defVariant.priceCents / 100).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.cardFooter}>
+                  {tab === "active" && (
+                    <span className={`${styles.badge} ${statusBadgeCls(p.status)}`}>
+                      {p.status}
+                    </span>
+                  )}
+                  {tab === "trash" && p.deletedAt && (
+                    <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
+                      {new Date(p.deletedAt).toLocaleDateString()}
+                    </span>
+                  )}
+
+                  <div className={styles.actions}>
+                    {tab === "active" && (
+                      <>
+                        <Link
+                          href={`/admin/shop/products/${p.id}`}
+                          className={`${styles.actionBtn} ${styles.actionEdit}`}
+                        >
+                          Edit
+                        </Link>
+                        {p.status === "draft" && (
+                          <button
+                            onClick={() => handlePublish(p.id)}
+                            className={`${styles.actionBtn} ${styles.actionPublish}`}
+                          >
+                            Publish
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          className={`${styles.actionBtn} ${styles.actionTrash}`}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                    {tab === "trash" && (
+                      <>
+                        <button
+                          onClick={() => handleRestore(p.id)}
+                          className={`${styles.actionBtn} ${styles.actionRestore}`}
+                        >
+                          Restore
+                        </button>
+                        <button
+                          onClick={() => handleHardDelete(p.id)}
+                          className={`${styles.actionBtn} ${styles.actionDelete}`}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
+
+      {/* ── Pagination ── */}
+      {pages > 1 && (
+        <div className={styles.pagination}>
+          <span className={styles.pageCount}>{total} products</span>
+          {Array.from({ length: pages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i + 1)}
+              className={`${styles.pageBtn} ${page === i + 1 ? styles.pageBtnActive : ""}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
