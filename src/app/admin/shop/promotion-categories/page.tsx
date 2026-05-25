@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import { useToast } from "@/components/toast/ToastContext";
+import { slugify } from "@/lib/slugify";
 
 interface PromotionCategory {
   id: string;
@@ -25,9 +26,6 @@ interface FormState {
 
 const EMPTY: FormState = { name: "", slug: "", description: "", color: "#6366f1", isActive: true, sortOrder: 0 };
 
-function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
 
 export default function PromotionCategoriesPage() {
   const { toast } = useToast();

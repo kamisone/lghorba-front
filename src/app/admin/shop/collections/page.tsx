@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import BilingualField from "@/components/admin/fleet/BilingualField";
+import BilingualField from "@/components/admin/BilingualField";
 import styles from "./Collections.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import { slugify } from "@/lib/slugify";
 
 interface Collection {
   id: string;
@@ -18,9 +19,6 @@ interface Collection {
 
 const EMPTY: Partial<Collection> = { name: "", slug: "", description: "", isActive: true, isFeatured: false, sortOrder: 0 };
 
-function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
 
 export default function CollectionsPage() {
   const { toast } = useToast();

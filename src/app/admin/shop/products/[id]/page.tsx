@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ImageGalleryEditor from "@/components/admin/shop/ImageGalleryEditor";
 import MediaPicker, { MediaAsset } from "@/components/admin/media/MediaPicker";
-import BilingualField from "@/components/admin/fleet/BilingualField";
+import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import styles from "./BlogPostEditor.module.css";
+import { slugify } from "@/lib/slugify";
 
 const BlogRichEditor = dynamic(() => import("./BlogRichEditor"), { ssr: false });
 
@@ -40,12 +41,6 @@ export interface BlogPost {
 
 interface Props {
   postId?: string;
-}
-
-function slugify(str: string): string {
-  return str.normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .toLowerCase().trim()
-    .replace(/[^\w\s-]/g, "").replace(/[\s_]+/g, "-").replace(/-+/g, "-");
 }
 
 // ── Picker modal ──────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import BilingualField from "@/components/admin/fleet/BilingualField";
+import BilingualField from "@/components/admin/BilingualField";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";

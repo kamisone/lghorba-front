@@ -2,14 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import styles from "./BlogCategoryManager.module.css"; // reuse same styles
+import { slugify } from "@/lib/slugify";
 
 interface Tag { id: string; slug: string; name: string; }
-
-function slugify(str: string): string {
-  return str.normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .toLowerCase().trim()
-    .replace(/[^\w\s-]/g, "").replace(/[\s_]+/g, "-").replace(/-+/g, "-");
-}
 
 export default function BlogTagManager() {
   const [items,   setItems]   = useState<Tag[]>([]);

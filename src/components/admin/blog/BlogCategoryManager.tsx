@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import styles from "./BlogCategoryManager.module.css";
+import { slugify } from "@/lib/slugify";
 
 interface Category {
   id: string;
@@ -11,12 +12,6 @@ interface Category {
   description: string | null;
   isActive: boolean;
   sortOrder: number;
-}
-
-function slugify(str: string): string {
-  return str.normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .toLowerCase().trim()
-    .replace(/[^\w\s-]/g, "").replace(/[\s_]+/g, "-").replace(/-+/g, "-");
 }
 
 export default function BlogCategoryManager() {

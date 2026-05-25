@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import styles from "./VariantAttributes.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import { slugify } from "@/lib/slugify";
 
 interface OptionValue {
   id: string;
@@ -40,7 +41,6 @@ interface ValueForm {
 const ATTR_EMPTY: AttrForm  = { name: "", nameEn: "", slug: "", displayType: "button", sortOrder: 0, isActive: true };
 const VALUE_EMPTY: ValueForm = { value: "", displayValue: "", displayValueEn: "", swatchValue: "", swatchType: "", sortOrder: 0, isActive: true };
 
-function slugify(s: string) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
 
 const DISPLAY_LABEL: Record<string, string> = { button: "Button", swatch: "Swatch", dropdown: "Dropdown" };
 const DISPLAY_CLS:   Record<string, string> = {

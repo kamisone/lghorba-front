@@ -1,0 +1,167 @@
+.bilingualField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bilingualLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-label);
+}
+
+/* Card — two columns side by side */
+.bilingualCard {
+  display: flex;
+  flex-direction: row;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-white);
+  box-shadow: 0 1px 4px rgba(var(--rgb-admin-primary), 0.06);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.bilingualCard:focus-within {
+  border-color: #c7d7ff;
+  box-shadow: 0 0 0 3px rgba(var(--rgb-admin-secondary), 0.08);
+}
+
+/* Each language column */
+.langRow {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+/* Vertical divider between FR and EN columns */
+.langSep {
+  width: 1px;
+  flex-shrink: 0;
+  background: var(--color-surface-raised);
+  align-self: stretch;
+}
+
+/* Colored left accent bar */
+.langAccent {
+  width: 4px;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.fr .langAccent {
+  background: linear-gradient(180deg, var(--color-admin-primary) 0%, var(--color-admin-secondary) 100%);
+}
+
+.en .langAccent {
+  background: var(--color-border-subtle);
+}
+
+.en:hover .langAccent {
+  background: var(--color-text-placeholder);
+}
+
+/* Content area */
+.langBody {
+  flex: 1;
+  padding: 0.6rem 0.75rem 0.65rem 0.62rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+  min-width: 0;
+}
+
+/* Language header row: flag + name + badge */
+.langMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.langFlag {
+  font-size: 0.78rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.langName {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-text-label);
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.langBadge {
+  margin-left: auto;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.badgeOptional {
+  background: var(--color-surface);
+  color: var(--color-text-placeholder);
+  border: 1px solid var(--color-border);
+}
+
+.badgeRequired {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error-border);
+}
+
+.requiredStar {
+  color: var(--color-error);
+}
+
+/* Input / textarea */
+.langInput {
+  width: 100%;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 0.84rem;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  line-height: 1.45;
+}
+
+.langInput::placeholder {
+  color: #b6c3d6;
+}
+
+.fr .langInput:focus {
+  border-color: var(--color-admin-primary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-admin-primary), 0.09);
+}
+
+.en .langInput:focus {
+  border-color: var(--color-admin-secondary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-admin-secondary), 0.1);
+}
+
+/* phone (640px) */
+@media (max-width: 640px) {
+  .bilingualCard {
+    flex-direction: column;
+  }
+
+  .langSep {
+    width: auto;
+    height: 1px;
+    align-self: auto;
+  }
+}

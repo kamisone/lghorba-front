@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import BilingualField from "@/components/admin/fleet/BilingualField";
+import BilingualField from "@/components/admin/BilingualField";
 import styles from "./Categories.module.css";
 import { useToast } from "@/components/toast/ToastContext";
+import { slugify } from "@/lib/slugify";
 
 interface Translations {
   name?: { fr?: string; en?: string };
@@ -43,9 +44,6 @@ const EMPTY: FormState = {
   nameFr: "", nameEn: "", slugFr: "", slugEn: "",
 };
 
-function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
 
 function formToBody(form: FormState) {
   const translations: Translations = {};
