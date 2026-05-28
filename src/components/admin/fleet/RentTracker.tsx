@@ -7,6 +7,8 @@ import RentMap, { type RentPosition } from "./RentMap";
 import BookingAdminModal from "../bookings/BookingAdminModal";
 import { useToast } from "@/components/toast/ToastContext";
 import { useModalUrl } from "@/hooks/useModalUrl";
+import { useBusinessTz } from "@/contexts/TzContext";
+import { fmtDateTime } from "@/lib/dateUtils";
 import styles from "./RentTracker.module.css";
 
 interface RentSession {
@@ -64,6 +66,7 @@ interface Props {
 export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onUsedBookingIdsChange, onEndedBookingIdsChange }: Props) {
   const { toast } = useToast();
   const { openModal, closeModal } = useModalUrl();
+  const tz = useBusinessTz();
 
   const [tracking,          setTracking]          = useState(false);
   const [sessionId,         setSessionId]         = useState<string | null>(null);
@@ -432,8 +435,8 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
   // ── Formatters ────────────────────────────────────────────────────────────
 
   const fmt      = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-  const fmtShort = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
-  const fmtDT    = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  const fmtShort = (d: string) => new Date(d).toLocaleDateString('en-GB', { timeZone: tz, day: "2-digit", month: "short", year: "numeric" });
+  const fmtDT    = (d: string) => fmtDateTime(d, tz);
 
   const hasSession   = !!sessionId;
   const pastSessions = sessions.filter(s => s.id !== sessionId);
