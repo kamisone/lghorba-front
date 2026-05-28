@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./user.module.css";
+import { Star } from "lucide-react";
 
 interface RentSession {
   id: string;
@@ -158,7 +159,7 @@ export default function UserDetailPage() {
               )}
               {scoreNum != null && (
                 <span className={`${styles.scoreBadge} ${scoreNum >= 8 ? styles.scoreHigh : scoreNum >= 5 ? styles.scoreMid : styles.scoreLow}`}>
-                  ★ {scoreNum}/10
+                  <Star size={14} strokeWidth={1.75} /> {scoreNum}/10
                 </span>
               )}
             </div>
@@ -233,7 +234,7 @@ export default function UserDetailPage() {
             <dt>Score</dt>
             <dd>
               {scoreNum != null
-                ? <span className={`${styles.scoreBadge} ${scoreNum >= 8 ? styles.scoreHigh : scoreNum >= 5 ? styles.scoreMid : styles.scoreLow}`}>★ {scoreNum}/10</span>
+                ? <span className={`${styles.scoreBadge} ${scoreNum >= 8 ? styles.scoreHigh : scoreNum >= 5 ? styles.scoreMid : styles.scoreLow}`}><Star size={14} strokeWidth={1.75} /> {scoreNum}/10</span>
                 : <span className={styles.na}>Not rated</span>
               }
             </dd>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { X, ArrowRight, AlertTriangle } from "lucide-react";
 import styles from "./PricingModal.module.css";
 
 export interface CarPricing {
@@ -104,7 +105,7 @@ export default function PricingModal({
             </h2>
             <p className={styles.sub}>{carName}</p>
           </div>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} strokeWidth={1.75} /></button>
         </div>
 
         {/* Date row */}
@@ -114,7 +115,7 @@ export default function PricingModal({
             <input type="date" className={styles.input} value={startDate}
               onChange={(e) => setStartDate(e.target.value)} />
           </label>
-          <span className={styles.dateSep}>→</span>
+          <span className={styles.dateSep}><ArrowRight size={14} strokeWidth={1.75} /></span>
           <label className={styles.field}>
             <span className={styles.fieldLabel}>To (inclusive)</span>
             <input type="date" className={styles.input} value={endDate}
@@ -165,7 +166,7 @@ export default function PricingModal({
         {/* Overlap warning */}
         {overlaps.length > 0 && (
           <div className={styles.overlapWarn}>
-            <span className={styles.warnIcon}>⚠</span>
+            <span className={styles.warnIcon}><AlertTriangle size={14} strokeWidth={1.75} /></span>
             <span>
               Overlaps with {overlaps.length} existing rule{overlaps.length > 1 ? "s" : ""}{": "}
               {overlaps.map((o, i) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import CarFormModal from "@/components/admin/fleet/CarFormModal";
@@ -8,6 +8,7 @@ import type { Car } from "@/components/admin/fleet/data";
 import styles from "@/components/admin/fleet/VehicleWorkspace.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useModalUrl } from "@/hooks/useModalUrl";
+import { Car as CarIcon, AlertTriangle } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -35,14 +36,14 @@ const HEALTH_LABEL: Record<HealthStatus, string> = {
   needs_service:"Needs Service",
 };
 
-const TABS = [
+const TABS: { segment: string; label: string; icon: React.ReactNode }[] = [
   { segment: "management",  label: "Management",  icon: "⚙" },
   { segment: "rent",        label: "Rent",        icon: "📅" },
   { segment: "maintenance", label: "Maintenance", icon: "🔧" },
   { segment: "inspections", label: "Inspections", icon: "🔍" },
-  { segment: "incidents",   label: "Incidents",   icon: "⚠" },
+  { segment: "incidents",   label: "Incidents",   icon: <AlertTriangle size={16} strokeWidth={1.75} /> },
   { segment: "faq",         label: "FAQ",         icon: "❓" },
-] as const;
+];
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 
@@ -134,7 +135,7 @@ export default function VehicleWorkspaceLayout({ children }: { children: React.R
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className={styles.vehiclePhotoPlaceholder}>🚗</div>
+            <div className={styles.vehiclePhotoPlaceholder}><CarIcon size={16} strokeWidth={1.75} /></div>
           )}
 
           {/* Name + meta */}

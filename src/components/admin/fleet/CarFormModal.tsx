@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from "react";
 import type { Car, MileageRange, VehicleType, EnergyType, GearboxType } from "./data";
+import { X, MapPin } from "lucide-react";
 import styles from "./CarFormModal.module.css";
 import BilingualField from "./BilingualField";
 import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
@@ -274,7 +275,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>{isEdit ? "Edit Car" : "Add Car"}</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} strokeWidth={1.75} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -496,7 +497,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
                   {/* Existing locations */}
                   {deliveryLocations.map((loc, i) => (
                     <div key={i} className={styles.locationRow}>
-                      <span className={styles.locationPin}>📍</span>
+                      <span className={styles.locationPin}><MapPin size={16} strokeWidth={1.75} /></span>
                       <div className={styles.locationInfo}>
                         <span className={styles.locationLabel}>{loc.label}</span>
                         <span className={styles.locationAddress}>{loc.address}</span>
@@ -511,7 +512,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
                         onClick={() => removeLocation(i)}
                         aria-label="Remove location"
                       >
-                        ✕
+                        <X size={14} strokeWidth={1.75} />
                       </button>
                     </div>
                   ))}

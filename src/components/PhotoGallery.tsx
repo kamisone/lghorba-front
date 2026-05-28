@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { X } from "lucide-react";
 import styles from "./PhotoGallery.module.css";
 
 interface Props {
@@ -53,7 +54,7 @@ export default function PhotoGallery({
           </span>
         </div>
         <button className={styles.closeBtn} onClick={onClose} aria-label="Close gallery">
-          <span className="material-symbols-outlined">close</span>
+          <X size={18} strokeWidth={1.75} />
           <span className={styles.closeBtnLabel}>Close</span>
         </button>
       </div>

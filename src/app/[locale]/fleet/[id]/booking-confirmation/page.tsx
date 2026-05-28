@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check, ArrowRight } from "lucide-react";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import PaymentWaitingState from "./PaymentWaitingState";
 import styles from "./booking-confirmation.module.css";
@@ -72,7 +73,7 @@ export default async function BookingConfirmationPage({
         ) : (
           <>
             <div className={styles.iconWrap} aria-hidden="true">
-              <span className={styles.checkIcon}>✓</span>
+              <span className={styles.checkIcon}><Check size={14} strokeWidth={2} /></span>
             </div>
             <h1 className={styles.title}>{t.booking.confirmTitle}</h1>
             <p className={styles.sub}>{t.booking.confirmSub}</p>
@@ -90,7 +91,7 @@ export default async function BookingConfirmationPage({
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>{t.booking.confirmDates}</span>
             <span className={styles.detailValue}>
-              {fmtDT(booking.startDateTime)} → {fmtDT(booking.endDateTime)}
+              {fmtDT(booking.startDateTime)} <ArrowRight size={14} strokeWidth={1.75} /> {fmtDT(booking.endDateTime)}
             </span>
           </div>
           <div className={styles.detailRow}>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./MediaLibrary.module.css";
+import { X, Check } from "lucide-react";
 
 export interface MediaAsset {
   id:               string;
@@ -95,7 +96,7 @@ export default function MediaPicker({ open, onClose, onSelect, title = "Select M
             onClick={onClose}
             style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#9ca3af", lineHeight: 1 }}
             aria-label="Close"
-          >✕</button>
+          ><X size={14} strokeWidth={2} /></button>
         </div>
 
         <div className={styles.modalBody}>
@@ -149,9 +150,9 @@ export default function MediaPicker({ open, onClose, onSelect, title = "Select M
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={a.url} alt={a.altText ?? a.originalFilename} className={styles.gridItemImg} loading="lazy" />
                       {a.usageCount > 0 && <div className={styles.gridItemUsage}>{a.usageCount} uses</div>}
-                      {isSelected && <div className={styles.gridItemCheck}>✓</div>}
+                      {isSelected && <div className={styles.gridItemCheck}><Check size={14} strokeWidth={2} /></div>}
                       {isCurrent && !isSelected && (
-                        <div className={styles.gridItemCheck} style={{ background: "#059669" }}>✓</div>
+                        <div className={styles.gridItemCheck} style={{ background: "#059669" }}><Check size={14} strokeWidth={2} /></div>
                       )}
                       <div className={styles.gridItemMeta}>
                         <div className={styles.gridItemName}>{a.originalFilename}</div>

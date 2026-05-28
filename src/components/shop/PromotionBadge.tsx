@@ -1,3 +1,4 @@
+import { Truck, Tag } from "lucide-react";
 import styles from "./PromotionBadge.module.css";
 
 export type PromotionDiscountType = "percentage" | "fixed_amount" | "free_shipping";
@@ -27,7 +28,9 @@ function colorClass(type: PromotionDiscountType): string {
 export default function PromotionBadge({ promotion, size = "md" }: Props) {
   const sizeClass  = styles[size];
   const color      = colorClass(promotion.discountType);
-  const icon       = promotion.discountType === "free_shipping" ? "🚚" : "🏷";
+  const icon       = promotion.discountType === "free_shipping"
+    ? <Truck size={14} strokeWidth={1.75} />
+    : <Tag size={14} strokeWidth={1.75} />;
 
   return (
     <span className={`${styles.badge} ${sizeClass} ${color}`} title={promotion.name}>

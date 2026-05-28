@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "./CreateGuestTokenModal.module.css";
+import { X, AlertTriangle, Key } from "lucide-react";
 
 type GuestAction = "open" | "close" | "parking";
 type Lang = "fr" | "en";
@@ -146,7 +147,7 @@ export default function CreateGuestTokenModal({ onClose, onCreated }: Props) {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>
-              <span className="material-symbols-outlined" style={{ fontSize: "1.2rem" }}>key</span>
+              <Key size={18} strokeWidth={1.75} />
             </div>
             <div>
               <p className={styles.title}>{createdLink ? "Link created" : "New guest link"}</p>
@@ -157,7 +158,7 @@ export default function CreateGuestTokenModal({ onClose, onCreated }: Props) {
               </p>
             </div>
           </div>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={14} strokeWidth={2} /></button>
         </div>
 
         {/* ── Success screen ── */}
@@ -333,7 +334,7 @@ export default function CreateGuestTokenModal({ onClose, onCreated }: Props) {
 
               {error && (
                 <div className={styles.errorBanner}>
-                  <span>⚠</span> {error}
+                  <AlertTriangle size={16} strokeWidth={1.75} /> {error}
                 </div>
               )}
             </div>

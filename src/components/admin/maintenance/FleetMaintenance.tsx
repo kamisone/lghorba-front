@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./FleetMaintenance.module.css";
+import { AlertTriangle } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ export default function FleetMaintenance() {
       {/* ── Overdue alerts ── */}
       {overdue.length > 0 && (
         <div className={styles.overdueBox}>
-          <p className={styles.overdueTitle}>⚠ {overdue.length} overdue record{overdue.length > 1 ? "s" : ""}</p>
+          <p className={styles.overdueTitle}><AlertTriangle size={16} strokeWidth={1.75} /> {overdue.length} overdue record{overdue.length > 1 ? "s" : ""}</p>
           <div className={styles.overdueList}>
             {overdue.slice(0, 5).map(r => (
               <div key={r.id} className={styles.overdueItem}>

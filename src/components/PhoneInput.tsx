@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Search } from "lucide-react";
 import styles from "./PhoneInput.module.css";
 
 // ── Country data ──────────────────────────────────────────────────────────────
@@ -170,12 +171,12 @@ export default function PhoneInput({
         >
           <span className={styles.flag}    aria-hidden="true">{country.flag}</span>
           <span className={styles.dialCode}>{country.dial}</span>
-          <span
-            className={`material-symbols-outlined ${styles.caret} ${open ? styles.caretOpen : ""}`}
+          <ChevronDown
+            size={14}
+            strokeWidth={1.75}
+            className={`${styles.caret} ${open ? styles.caretOpen : ""}`}
             aria-hidden="true"
-          >
-            expand_more
-          </span>
+          />
         </button>
 
         {/* Vertical rule */}
@@ -202,9 +203,7 @@ export default function PhoneInput({
 
           {/* Search */}
           <div className={styles.searchRow}>
-            <span className={`material-symbols-outlined ${styles.searchIcon}`} aria-hidden="true">
-              search
-            </span>
+            <Search size={14} strokeWidth={1.75} className={styles.searchIcon} aria-hidden="true" />
             <input
               ref={searchRef}
               type="text"

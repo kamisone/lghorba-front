@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Check } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { getTranslations } from "@/lib/i18n";
@@ -77,7 +78,7 @@ export default function ContactPage() {
         <div className={styles.formCard}>
           {status === "success" ? (
             <div className={styles.success}>
-              <div className={styles.successIcon}>✓</div>
+              <div className={styles.successIcon}><Check size={14} strokeWidth={2} /></div>
               <h2 className={styles.successTitle}>{t.successTitle}</h2>
               <p className={styles.successSub}>{t.successSub}</p>
               <Link href={`/${locale}`} className={styles.backBtn}>{t.backHome}</Link>

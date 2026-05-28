@@ -6,6 +6,7 @@ import type { Car } from "@/components/admin/fleet/data";
 import CarFormModal from "@/components/admin/fleet/CarFormModal";
 import { api } from "@/lib/api";
 import styles from "./cars.module.css";
+import { Car as CarIcon } from "lucide-react";
 
 interface SmsMessage {
   id: number;
@@ -105,7 +106,7 @@ export default function CarsPage() {
                     />
                   ) : (
                     <div className={styles.photoPlaceholder}>
-                      <span>🚗</span>
+                      <span><CarIcon size={16} strokeWidth={1.75} /></span>
                     </div>
                   )}
                 </div>

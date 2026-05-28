@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./DestinationDetail.module.css";
+import { ArrowLeft } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -172,7 +173,7 @@ export default function DestinationDetail({ id }: { id: string }) {
       {/* ── Back + title ── */}
       <div className={styles.backRow}>
         <Link href="/admin/insights/destinations" className={styles.backLink}>
-          <span className="material-symbols-outlined">arrow_back</span> Destinations
+          <ArrowLeft size={16} strokeWidth={1.75} /> Destinations
         </Link>
       </div>
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import styles from "./users.module.css";
 import CreateUserModal from "@/components/admin/users/CreateUserModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
+import { UserPlus, Search, X, SlidersHorizontal, ChevronDown, UserSearch } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -246,7 +247,7 @@ export default function UsersPage() {
           className={styles.addBtn}
           onClick={() => { setShowCreate(true); openModal("user-create"); }}
         >
-          <span className="material-symbols-outlined">person_add</span>
+          <UserPlus size={16} strokeWidth={1.75} />
           Add User
         </button>
       </div>
@@ -254,7 +255,7 @@ export default function UsersPage() {
       {/* ── Filter toolbar ── */}
       <div className={styles.filterToolbar}>
         <div className={styles.searchWrap}>
-          <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
+          <Search size={16} strokeWidth={1.75} className={styles.searchIcon} />
           <input
             type="text"
             className={styles.searchInput}
@@ -264,7 +265,7 @@ export default function UsersPage() {
           />
           {filters.search && (
             <button className={styles.searchClear} onClick={() => set("search", "")} aria-label="Clear search">
-              <span className="material-symbols-outlined">close</span>
+              <X size={16} strokeWidth={1.75} />
             </button>
           )}
         </div>
@@ -273,12 +274,10 @@ export default function UsersPage() {
           className={`${styles.filterToggle}${filtersOpen ? ` ${styles.filterToggleActive}` : ""}`}
           onClick={() => setFiltersOpen(v => !v)}
         >
-          <span className="material-symbols-outlined">tune</span>
+          <SlidersHorizontal size={16} strokeWidth={1.75} />
           Filters
           {nActive > 0 && <span className={styles.filterBadge}>{nActive}</span>}
-          <span className={`material-symbols-outlined ${styles.filterChevron}${filtersOpen ? ` ${styles.filterChevronOpen}` : ""}`}>
-            expand_more
-          </span>
+          <ChevronDown size={16} strokeWidth={1.75} className={`${styles.filterChevron}${filtersOpen ? ` ${styles.filterChevronOpen}` : ""}`} />
         </button>
 
         {nActive > 0 && (
@@ -339,7 +338,7 @@ export default function UsersPage() {
             <span key={c.key} className={styles.chip}>
               {c.label}
               <button className={styles.chipX} onClick={c.clear} aria-label={`Remove ${c.label}`}>
-                <span className="material-symbols-outlined">close</span>
+                <X size={14} strokeWidth={1.75} />
               </button>
             </span>
           ))}
@@ -351,7 +350,7 @@ export default function UsersPage() {
         <div className={styles.loadingRow}><span className={styles.spinner} /></div>
       ) : users.length === 0 ? (
         <div className={styles.emptyState}>
-          <span className={`material-symbols-outlined ${styles.emptyIcon}`}>person_search</span>
+          <UserSearch size={48} strokeWidth={1.75} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>
             {nActive > 0 ? "No users match these filters" : "No users yet"}
           </p>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import styles from "./BlogPostEditor.module.css";
 import { slugify } from "@/lib/slugify";
+import { X } from "lucide-react";
 
 const BlogRichEditor = dynamic(() => import("./BlogRichEditor"), { ssr: false });
 
@@ -503,7 +504,7 @@ export default function BlogPostEditor({ postId }: Props) {
                     type="button"
                     className={styles.pillRemove}
                     onClick={() => setCategoryIds(ids => ids.filter(id => id !== c.id))}
-                  >×</button>
+                  ><X size={14} strokeWidth={2} /></button>
                 </span>
               ))}
               <button
@@ -527,7 +528,7 @@ export default function BlogPostEditor({ postId }: Props) {
                     type="button"
                     className={styles.pillRemove}
                     onClick={() => setTagIds(ids => ids.filter(id => id !== t.id))}
-                  >×</button>
+                  ><X size={14} strokeWidth={2} /></button>
                 </span>
               ))}
               <button

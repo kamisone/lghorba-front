@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./admins.module.css";
+import { X } from "lucide-react";
 
 interface Admin {
   id: string;
@@ -105,7 +106,7 @@ export default function AdminsPage() {
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2 className={styles.modalTitle}>New admin</h2>
-              <button className={styles.closeBtn} onClick={() => setShowCreate(false)}>✕</button>
+              <button className={styles.closeBtn} onClick={() => setShowCreate(false)}><X size={14} strokeWidth={2} /></button>
             </div>
             <form onSubmit={handleCreate} className={styles.form}>
               <div className={styles.formRow}>

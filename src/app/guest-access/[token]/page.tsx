@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getTranslations, type Locale, LOCALES } from "@/lib/i18n";
 import type { Translations } from "@/lib/i18n/translations";
 import styles from "./page.module.css";
+import { Car, ClipboardList } from "lucide-react";
 
 type GuestT = Translations["guestAccess"];
 type GuestAction = "open" | "close" | "parking";
@@ -307,11 +308,11 @@ function GuestPage() {
         <div className={styles.hero}>
           <div className={styles.heroIcon}>
             <div className={styles.heroIconGlow} />
-            <div className={styles.heroIconBg}>🚗</div>
+            <div className={styles.heroIconBg}><Car size={16} strokeWidth={1.75} /></div>
           </div>
           <div className={styles.heroLabel}>
             {info?.label
-              ? <><span>📋</span><span>{info.label}</span></>
+              ? <><ClipboardList size={16} strokeWidth={1.75} /><span>{info.label}</span></>
               : <><span>🔑</span><span>{t.carAccess}</span></>
             }
           </div>

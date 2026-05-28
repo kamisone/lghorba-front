@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { X } from "lucide-react";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import SearchAutocomplete from "@/components/shop/SearchAutocomplete";
@@ -218,7 +219,7 @@ export default function ShopListing({
             {activeLabel && (
               <div className={styles.filterBar}>
                 <Link href={buildUrl({ category: undefined, page: "1" })} className={styles.filterChip}>
-                  {activeLabel} <em className={styles.filterChipX}>×</em>
+                  {activeLabel} <em className={styles.filterChipX}><X size={14} strokeWidth={2} /></em>
                 </Link>
               </div>
             )}

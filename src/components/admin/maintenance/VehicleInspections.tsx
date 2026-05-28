@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import styles from "./VehicleInspections.module.css";
+import { Check, Circle, AlertTriangle, ChevronUp, ChevronDown, User } from "lucide-react";
 
 type InspectionType = "pre_rental" | "post_rental" | "periodic";
 type OverallCondition = "good" | "fair" | "poor";
@@ -18,7 +19,11 @@ interface Inspection {
 const TYPE_LABEL: Record<InspectionType, string> = { pre_rental: "Pre-rental", post_rental: "Post-rental", periodic: "Periodic" };
 const TYPE_COLOR: Record<InspectionType, string> = { pre_rental: "#3b82f6", post_rental: "#f97316", periodic: "#8b5cf6" };
 const COND_COLOR: Record<OverallCondition, string> = { good: "#22c55e", fair: "#f59e0b", poor: "#ef4444" };
-const ITEM_ICON: Record<ChecklistStatus, string> = { ok: "✓", issue: "✗", not_checked: "○" };
+function ItemIcon({ status }: { status: ChecklistStatus }) {
+  if (status === "ok")          return <Check  size={14} strokeWidth={2} />;
+  if (status === "not_checked") return <Circle size={14} strokeWidth={1.75} />;
+  return <span>✗</span>;
+}
 const ITEM_COLOR: Record<ChecklistStatus, string> = { ok: "#22c55e", issue: "#ef4444", not_checked: "#94a3b8" };
 
 const DEFAULT_CHECKLIST = [
@@ -119,9 +124,9 @@ export default function VehicleInspections({ carId }: { carId: string }) {
                         {ins.overallCondition}
                       </span>
                     )}
-                    {issues > 0 && <span className={styles.issueCount}>⚠ {issues} issue{issues > 1 ? "s" : ""}</span>}
+                    {issues > 0 && <span className={styles.issueCount}><AlertTriangle size={16} strokeWidth={1.75} /> {issues} issue{issues > 1 ? "s" : ""}</span>}
                   </div>
-                  <span className={styles.chevron}>{isOpen ? "▲" : "▼"}</span>
+                  <span className={styles.chevron}>{isOpen ? <ChevronUp size={14} strokeWidth={1.75} /> : <ChevronDown size={14} strokeWidth={1.75} />}</span>
                 </div>
 
                 {isOpen && (
@@ -129,7 +134,7 @@ export default function VehicleInspections({ carId }: { carId: string }) {
                     <div className={styles.metaRow}>
                       {ins.odometerKm != null && <span>🛣 {ins.odometerKm.toLocaleString()} km</span>}
                       {ins.fuelLevelPct != null && <span>⛽ {ins.fuelLevelPct}%</span>}
-                      {ins.conductedBy && <span>👤 {ins.conductedBy}</span>}
+                      {ins.conductedBy && <span><User size={16} strokeWidth={1.75} /> {ins.conductedBy}</span>}
                     </div>
                     {ins.notes && <p className={styles.notes}>{ins.notes}</p>}
                     {Object.entries(grouped).map(([cat, items]) => (
@@ -137,7 +142,7 @@ export default function VehicleInspections({ carId }: { carId: string }) {
                         <p className={styles.checklistCat}>{cat}</p>
                         {items.map(item => (
                           <div key={item.id} className={styles.checklistItem}>
-                            <span style={{ color: ITEM_COLOR[item.status], fontWeight: 700, width: 16 }}>{ITEM_ICON[item.status]}</span>
+                            <span style={{ color: ITEM_COLOR[item.status], fontWeight: 700, width: 16 }}><ItemIcon status={item.status} /></span>
                             <span className={styles.checklistLabel}>{item.itemLabel}</span>
                             {item.note && <span className={styles.checklistNote}>{item.note}</span>}
                           </div>

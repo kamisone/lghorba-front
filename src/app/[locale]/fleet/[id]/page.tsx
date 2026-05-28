@@ -1,5 +1,6 @@
 import type { JSX } from "react";
 import type { Metadata } from "next";
+import { MapPin, Truck } from "lucide-react";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getTranslations, type Locale } from "@/lib/i18n";
@@ -376,7 +377,7 @@ export default async function CarDetailPage({
               {car.parkingAddress && (
                 <div className={styles.locationCard}>
                   <div className={styles.locationCardHeader}>
-                    <span className={styles.locationCardIconWrap}>📍</span>
+                    <span className={styles.locationCardIconWrap}><MapPin size={16} strokeWidth={1.75} /></span>
                     <div className={styles.locationCardMeta}>
                       <span className={styles.locationCardLabel}>
                         {t.carDetail.delivery.pickupLocation}
@@ -396,7 +397,7 @@ export default async function CarDetailPage({
               {car.deliveryEnabled && car.deliveryType === "radius" && car.deliveryRadiusKm != null && (
                 <div className={`${styles.locationCard} ${styles.locationCardDelivery}`}>
                   <div className={styles.locationCardHeader}>
-                    <span className={styles.locationCardIconWrap}>🚚</span>
+                    <span className={styles.locationCardIconWrap}><Truck size={16} strokeWidth={1.75} /></span>
                     <div className={styles.locationCardMeta}>
                       <span className={styles.locationCardLabel}>
                         {t.carDetail.delivery.title}
@@ -421,7 +422,7 @@ export default async function CarDetailPage({
               {car.deliveryEnabled && car.deliveryType === "location" && car.deliveryLocations?.length ? (
                 <div className={`${styles.locationCard} ${styles.locationCardDelivery}`}>
                   <div className={styles.locationCardHeader}>
-                    <span className={styles.locationCardIconWrap}>🚚</span>
+                    <span className={styles.locationCardIconWrap}><Truck size={16} strokeWidth={1.75} /></span>
                     <div className={styles.locationCardMeta}>
                       <span className={styles.locationCardLabel}>
                         {t.carDetail.delivery.locationTitle}

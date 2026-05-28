@@ -58,8 +58,7 @@
 }
 
 .fieldIcon {
-  font-size: 13px;
-  line-height: 1;
+  flex-shrink: 0;
 }
 
 /* ── Optional badge ── */
@@ -157,7 +156,7 @@
 }
 
 .searchBtnIcon {
-  font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 /* ── Responsive ── */

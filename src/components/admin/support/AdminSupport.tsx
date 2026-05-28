@@ -6,6 +6,7 @@ import { io, Socket } from "socket.io-client";
 import { getTranslations } from "@/lib/i18n";
 import { WS_HOST, WS_PATH } from "@/lib/wsConfig";
 import styles from "./AdminSupport.module.css";
+import { X, Headphones, SlidersHorizontal, Search, Menu, MessageCircle, CheckCircle2, RotateCcw, Trash2, Send } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -525,13 +526,13 @@ export default function AdminSupport() {
       <aside className={`${styles.sidebar} ${drawerOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarHeader}>
           <h1 className={styles.sidebarTitle}>
-            <span className="material-symbols-outlined">support_agent</span>
+            <Headphones size={16} strokeWidth={1.75} />
             {t.title}
           </h1>
           <div className={styles.sidebarActions}>
             <span className={`${styles.wsIndicator} ${wsStatus === "connected" ? styles.wsGreen : styles.wsRed}`} title={wsStatus} />
             <button className={styles.settingsBtn} onClick={() => setShowSettings(true)} title={t.notifTitle}>
-              <span className="material-symbols-outlined">tune</span>
+              <SlidersHorizontal size={16} strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -544,7 +545,7 @@ export default function AdminSupport() {
 
         {tab === "conversations" && <>
           <div className={styles.searchWrap}>
-            <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
+            <Search size={16} strokeWidth={1.75} className={styles.searchIcon} />
             <input className={styles.searchInput} placeholder={t.search} value={search} onChange={e => setSearch(e.target.value)} />
           </div>
 
@@ -625,16 +626,16 @@ export default function AdminSupport() {
         {!selected ? (
           <div className={styles.emptyChat}>
             <button className={styles.drawerToggle} onClick={() => setDrawerOpen(true)} aria-label="Open conversations">
-              <span className="material-symbols-outlined">menu</span>
+              <Menu size={16} strokeWidth={1.75} />
             </button>
-            <span className={`material-symbols-outlined ${styles.emptyChatIcon}`}>forum</span>
+            <MessageCircle size={48} strokeWidth={1.75} className={styles.emptyChatIcon} />
             <p>{t.selectPrompt}</p>
           </div>
         ) : (
           <>
             <div className={styles.chatHeader}>
               <button className={styles.drawerToggle} onClick={() => setDrawerOpen(true)} aria-label="Open conversations">
-                <span className="material-symbols-outlined">menu</span>
+                <Menu size={16} strokeWidth={1.75} />
               </button>
               <div>
                 <p className={styles.chatGuestName}>{selected.guestName ?? selected.guestToken.slice(0,8).toUpperCase()}</p>
@@ -647,15 +648,15 @@ export default function AdminSupport() {
               <div className={styles.chatActions}>
                 {selected.status !== "closed" ? (
                   <button className={styles.actionBtn} onClick={() => setStatus(selected.id, "closed")}>
-                    <span className="material-symbols-outlined">check_circle</span>{t.actions.close}
+                    <CheckCircle2 size={16} strokeWidth={1.75} />{t.actions.close}
                   </button>
                 ) : (
                   <button className={styles.actionBtn} onClick={() => setStatus(selected.id, "open")}>
-                    <span className="material-symbols-outlined">restart_alt</span>{t.actions.reopen}
+                    <RotateCcw size={16} strokeWidth={1.75} />{t.actions.reopen}
                   </button>
                 )}
                 <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} onClick={() => setDeleteConfirmId(selected.id)}>
-                  <span className="material-symbols-outlined">delete</span>{t.actions.delete}
+                  <Trash2 size={16} strokeWidth={1.75} />{t.actions.delete}
                 </button>
               </div>
             </div>
@@ -714,7 +715,7 @@ export default function AdminSupport() {
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                 />
                 <button className={styles.sendBtn} onClick={sendMessage} disabled={!input.trim() || wsStatus !== "connected"}>
-                  <span className="material-symbols-outlined">send</span>
+                  <Send size={16} strokeWidth={1.75} />
                 </button>
               </div>
             ) : (
@@ -767,7 +768,7 @@ export default function AdminSupport() {
                   {settings.smsPhones.map(p => (
                     <div key={p} className={styles.phoneChip}>
                       {p}
-                      <button onClick={() => setSettings(s => s ? { ...s, smsPhones: s.smsPhones.filter(x => x !== p) } : s)}>×</button>
+                      <button onClick={() => setSettings(s => s ? { ...s, smsPhones: s.smsPhones.filter(x => x !== p) } : s)}><X size={14} strokeWidth={2} /></button>
                     </div>
                   ))}
                   <div className={styles.phoneAddRow}>

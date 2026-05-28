@@ -5,6 +5,7 @@ import BilingualField from "@/components/admin/BilingualField";
 import styles from "./Categories.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { slugify } from "@/lib/slugify";
+import { X } from "lucide-react";
 
 interface Translations {
   name?: { fr?: string; en?: string };
@@ -280,7 +281,7 @@ export default function CategoriesPage() {
               <span className={styles.modalTitle}>
                 {modal === "create" ? "New Category" : "Edit Category"}
               </span>
-              <button className={styles.modalClose} onClick={() => setModal(null)}>×</button>
+              <button className={styles.modalClose} onClick={() => setModal(null)}><X size={14} strokeWidth={2} /></button>
             </div>
 
             {/* Body */}

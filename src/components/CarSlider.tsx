@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Car, Images, ChevronLeft, ChevronRight } from "lucide-react";
 import styles from "@/app/[locale]/fleet/[id]/car-public.module.css";
 import PhotoGallery from "./PhotoGallery";
 
@@ -57,7 +58,7 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
   if (total === 0) {
     return (
       <div className={styles.sliderEmpty}>
-        <span className={styles.sliderEmptyIcon}>🚗</span>
+        <Car size={40} strokeWidth={1.5} className={styles.sliderEmptyIcon} />
       </div>
     );
   }
@@ -99,7 +100,7 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
           aria-label={`${aria.viewAllPrefix} ${total} ${aria.viewAllSuffix}`}
           tabIndex={-1} // track handles keyboard; this is a visual affordance
         >
-          <span className="material-symbols-outlined">photo_library</span>
+          <Images size={16} strokeWidth={1.75} />
           {total === 1 ? viewPhotoLabel : `${total} ${photosLabel}`}
         </button>
       </div>
@@ -112,14 +113,14 @@ export default function CarSlider({ carId, photoIds, carName, viewPhotoLabel = "
             onClick={e => { e.stopPropagation(); prev(); }}
             aria-label={aria.prevPhoto}
           >
-            ‹
+            <ChevronLeft size={20} strokeWidth={1.75} />
           </button>
           <button
             className={`${styles.sliderArrow} ${styles.sliderArrowNext}`}
             onClick={e => { e.stopPropagation(); next(); }}
             aria-label={aria.nextPhoto}
           >
-            ›
+            <ChevronRight size={20} strokeWidth={1.75} />
           </button>
         </>
       )}

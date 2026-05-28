@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import styles from "./EmailIngestion.module.css";
+import { AlertTriangle, Inbox } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -176,7 +177,7 @@ export default function EmailIngestion() {
           >
             {polling
               ? <><span className={styles.loadingSpinner} /> Polling…</>
-              : <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>inbox</span> Poll now</>
+              : <><Inbox size={16} strokeWidth={1.75} /> Poll now</>
             }
           </button>
         </div>
@@ -327,7 +328,7 @@ function ExpandedDetail({
       {/* Error message */}
       {email.errorMessage && (
         <div className={styles.errorBox}>
-          ⚠ {email.errorMessage}
+          <AlertTriangle size={16} strokeWidth={1.75} /> {email.errorMessage}
         </div>
       )}
 

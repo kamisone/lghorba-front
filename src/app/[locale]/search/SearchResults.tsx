@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Car, Truck, MapPin, Search, AlertTriangle, Info, Check } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import { saveSearchContext } from "@/lib/searchContext";
 import { api } from "@/lib/api";
@@ -131,7 +132,7 @@ export default function SearchResults({
     return (
       <div className={styles.main}>
         <div className={styles.errorState}>
-          <span className={styles.errorIcon}>⚠️</span>
+          <span className={styles.errorIcon}><AlertTriangle size={16} strokeWidth={1.75} /></span>
           <p>{t.search.invalidParams}</p>
         </div>
       </div>
@@ -180,7 +181,7 @@ export default function SearchResults({
           </p>
           {hasAddress && (
             <span className={styles.radiusChip}>
-              📍 {t.search.distRadius}
+              <MapPin size={16} strokeWidth={1.75} /> {t.search.distRadius}
               {excludedCount > 0 && (
                 <span className={styles.radiusChipCount}>{` · ${excludedCount} ${t.search.hidden}`}</span>
               )}
@@ -207,7 +208,7 @@ export default function SearchResults({
       {/* ── Empty state ── */}
       {sorted.length === 0 ? (
         <div className={styles.emptyState}>
-          <span className={styles.emptyIcon}>🔍</span>
+          <span className={styles.emptyIcon}><Search size={16} strokeWidth={1.75} /></span>
           <h2 className={styles.emptyTitle}>{t.search.noResults}</h2>
           <p className={styles.emptySub}>{t.search.noResultsSub}</p>
         </div>
@@ -250,7 +251,7 @@ export default function SearchResults({
                         sizes="(max-width: 640px) 100vw, 380px"
                       />
                     ) : (
-                      <div className={styles.cardPhotoPlaceholder}>🚗</div>
+                      <div className={styles.cardPhotoPlaceholder}><Car size={16} strokeWidth={1.75} /></div>
                     )}
                     {badge && (
                       <span className={`${styles.distanceBadge} ${badge.cls}`}>
@@ -259,7 +260,7 @@ export default function SearchResults({
                     )}
                     {car.deliveryEnabled && (
                       <span className={`${styles.deliveryBadge} ${car.deliveryAvailable ? styles.deliveryYes : styles.deliveryNo}`}>
-                        {car.deliveryAvailable ? "🚚 " + t.search.deliveryAvail : "📍 " + t.search.pickupOnly}
+                        {car.deliveryAvailable ? <><Truck size={16} strokeWidth={1.75} /> {t.search.deliveryAvail}</> : <><MapPin size={16} strokeWidth={1.75} /> {t.search.pickupOnly}</>}
                       </span>
                     )}
                   </div>
@@ -298,12 +299,12 @@ export default function SearchResults({
                     <div className={styles.cardMeta}>
                       {car.distanceKm != null && (
                         <span className={styles.cardMetaItem}>
-                          📍 {fmtDist(car.distanceKm)}
+                          <MapPin size={16} strokeWidth={1.75} /> {fmtDist(car.distanceKm)}
                           {car.parkingAddress && ` · ${car.parkingAddress}`}
                         </span>
                       )}
                       {!hasAddress && car.parkingAddress && car.distanceKm == null && (
-                        <span className={styles.cardMetaItem}>📍 {car.parkingAddress}</span>
+                        <span className={styles.cardMetaItem}><MapPin size={16} strokeWidth={1.75} /> {car.parkingAddress}</span>
                       )}
                       {car.deliveryEnabled && hasAddress && (() => {
                         let note: string;
@@ -319,7 +320,7 @@ export default function SearchResults({
                         }
                         return (
                           <span className={`${styles.cardMetaItem} ${car.deliveryAvailable ? styles.cardMetaGreen : styles.cardMetaOrange}`}>
-                            {car.deliveryAvailable ? "✓" : "ℹ"} {note}
+                            {car.deliveryAvailable ? <Check size={14} strokeWidth={2} /> : <Info size={16} strokeWidth={1.75} />} {note}
                           </span>
                         );
                       })()}

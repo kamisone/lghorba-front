@@ -13,6 +13,7 @@ import {
   isToday as isTodayUtil,
   dayLabel as dayLabelUtil,
 } from "@/lib/dateUtils";
+import { Car as CarIcon, User, Plane, Pencil, Search, CalendarDays, AlertTriangle, Check, X } from "lucide-react";
 import styles from "./AdminBookings.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -186,7 +187,7 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
           </div>
           <div className={styles.modalHeaderRight}>
             <StatusBadge status={booking.status} />
-            <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+            <button className={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} strokeWidth={1.75} /></button>
           </div>
         </div>
 
@@ -202,7 +203,7 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={`/next-api/cars/${booking.car.id}/photo`} alt="" className={styles.modalCarImg} />
               ) : (
-                <span className={styles.modalCarFallback}>🚗</span>
+                <span className={styles.modalCarFallback}><CarIcon size={20} strokeWidth={1.75} /></span>
               )}
             </div>
             <div>
@@ -263,7 +264,7 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
                     onClick={onClose}
                   >
                     <span className={styles.customerSectionIcon} aria-hidden="true">
-                      {isPrivate ? "👤" : "✈️"}
+                      {isPrivate ? <User size={16} strokeWidth={1.75} /> : <Plane size={16} strokeWidth={1.75} />}
                     </span>
                     <span className={styles.sectionLabel}>
                       {isPrivate ? "Customer" : "Guest"}
@@ -273,7 +274,7 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
                 ) : (
                   <div className={styles.customerSectionHead}>
                     <span className={styles.customerSectionIcon} aria-hidden="true">
-                      {isPrivate ? "👤" : "✈️"}
+                      {isPrivate ? <User size={16} strokeWidth={1.75} /> : <Plane size={16} strokeWidth={1.75} />}
                     </span>
                     <span className={styles.sectionLabel}>
                       {isPrivate ? "Customer" : "Guest"}
@@ -346,7 +347,7 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
               onClick={() => { onClose(); onEdit(booking); }}
               disabled={actionLoading}
             >
-              ✏️ Edit
+              <Pencil size={14} strokeWidth={1.75} /> Edit
             </button>
           )}
           {booking.status === "pending" && (
@@ -388,7 +389,7 @@ function EventCard({ event, onOpen, tz }: { event: TimelineEvent; onOpen: (b: Ad
           // eslint-disable-next-line @next/next/no-img-element
           <img src={`/next-api/cars/${booking.car.id}/photo`} alt="" className={styles.carImg} loading="lazy" />
         ) : (
-          <span className={styles.carFallback}>🚗</span>
+          <span className={styles.carFallback}><CarIcon size={18} strokeWidth={1.75} /></span>
         )}
       </div>
 
@@ -721,7 +722,7 @@ export default function AdminBookings() {
       )}
       {error && !loading && (
         <div className={styles.stateError}>
-          ⚠ {error}
+          <AlertTriangle size={16} strokeWidth={1.75} /> {error}
           <button className={styles.retryBtn} onClick={fetchBookings}>Retry</button>
         </div>
       )}
@@ -732,7 +733,7 @@ export default function AdminBookings() {
           {/* Search + source + car filter */}
           <div className={styles.filters}>
             <div className={styles.searchWrap}>
-              <span className={styles.searchIcon}>🔍</span>
+              <span className={styles.searchIcon}><Search size={16} strokeWidth={1.75} /></span>
               <input
                 className={styles.searchInput}
                 placeholder="Car, plate or customer…"
@@ -759,7 +760,7 @@ export default function AdminBookings() {
 
           {timeline.length === 0 ? (
             <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>🗓</span>
+              <span className={styles.emptyIcon}><CalendarDays size={20} strokeWidth={1.75} /></span>
               <p className={styles.emptyMsg}>No upcoming activity</p>
               <p className={styles.emptyHint}>All active bookings will appear here</p>
             </div>
@@ -794,7 +795,7 @@ export default function AdminBookings() {
           {/* Full filter bar */}
           <div className={styles.filters}>
             <div className={styles.searchWrap}>
-              <span className={styles.searchIcon}>🔍</span>
+              <span className={styles.searchIcon}><Search size={16} strokeWidth={1.75} /></span>
               <input
                 className={styles.searchInput}
                 placeholder="Car, plate or customer…"
@@ -833,7 +834,7 @@ export default function AdminBookings() {
 
           {history.length === 0 ? (
             <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>📅</span>
+              <span className={styles.emptyIcon}><CalendarDays size={20} strokeWidth={1.75} /></span>
               <p className={styles.emptyMsg}>No bookings found</p>
               {hasHistoryFilters && <p className={styles.emptyHint}>Try adjusting your filters</p>}
             </div>
@@ -869,7 +870,7 @@ export default function AdminBookings() {
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={`/next-api/cars/${b.car.id}/photo`} alt="" className={styles.carImg} loading="lazy" />
                             ) : (
-                              <span className={styles.carFallback}>🚗</span>
+                              <span className={styles.carFallback}><CarIcon size={18} strokeWidth={1.75} /></span>
                             )}
                           </div>
                           <span className={styles.carName}>{b.car?.name ?? "—"}</span>
@@ -885,7 +886,7 @@ export default function AdminBookings() {
                       <td onClick={e => e.stopPropagation()}>
                         <div className={styles.rowActions}>
                           {b.status === "pending" && (
-                            <button className={styles.iconConfirm} title="Confirm" disabled={actionLoading} onClick={() => updateStatus(b.id, "confirmed")}>✓</button>
+                            <button className={styles.iconConfirm} title="Confirm" disabled={actionLoading} onClick={() => updateStatus(b.id, "confirmed")}><Check size={14} strokeWidth={1.75} /></button>
                           )}
                           {!isCancelledStatus(b.status) && (
                             <button className={styles.iconCancel} title="Cancel" disabled={actionLoading} onClick={() => updateStatus(b.id, "cancelled")}>✗</button>
@@ -922,7 +923,7 @@ export default function AdminBookings() {
           <div className={styles.modal} onMouseDown={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2 className={styles.modalTitle}>Select a vehicle</h2>
-              <button className={styles.closeBtn} onClick={() => setShowCarPicker(false)} aria-label="Close">✕</button>
+              <button className={styles.closeBtn} onClick={() => setShowCarPicker(false)} aria-label="Close"><X size={16} strokeWidth={1.75} /></button>
             </div>
             <div className={styles.modalBody}>
               {pickerLoading ? (
@@ -938,7 +939,7 @@ export default function AdminBookings() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={`/next-api/cars/${car.id}/photo`} alt="" className={styles.carImg} />
                         ) : (
-                          <span className={styles.carFallback}>🚗</span>
+                          <span className={styles.carFallback}><CarIcon size={18} strokeWidth={1.75} /></span>
                         )}
                       </div>
                       <div>

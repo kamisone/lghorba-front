@@ -9,6 +9,7 @@ import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import { Pencil } from "lucide-react";
 
 interface Category { id: string; name: string; parentId: string | null }
 
@@ -126,7 +127,7 @@ export default function NewProductPage() {
             {/* Content section */}
             <div className={styles.section}>
               <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>✏️</span>
+                <span className={styles.sectionIcon}><Pencil size={14} strokeWidth={1.75} /></span>
                 <span className={styles.sectionTitle}>Content</span>
               </div>
               <div className={styles.sectionBody}>

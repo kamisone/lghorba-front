@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import type { Car } from "../fleet/data";
 import styles from "./OperationsAnalytics.module.css";
+import { Car as CarIcon, Navigation, Gauge, Zap, Clock, CreditCard, Warehouse, MapPin, BarChart2 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -193,21 +194,21 @@ export default function OperationsAnalytics() {
       {/* ── KPI Grid ── */}
       <div className={styles.kpiGrid}>
         <KPICard
-          icon="directions_car"
+          icon={<CarIcon size={18} strokeWidth={1.75} />}
           label="Total Fleet"
           value={String(kpis.totalFleet)}
           accent="#00466E"
           sub={`${kpis.activeNow} currently rented`}
         />
         <KPICard
-          icon="trip_origin"
+          icon={<Navigation size={18} strokeWidth={1.75} />}
           label="Total Trips"
           value={String(kpis.totalTrips)}
           accent="#8DC220"
           sub={`Last ${PERIOD_LABELS[period]}`}
         />
         <KPICard
-          icon="speed"
+          icon={<Gauge size={18} strokeWidth={1.75} />}
           label="Fleet Utilization"
           value={`${kpis.utilizationRate.toFixed(0)}%`}
           accent={
@@ -220,21 +221,21 @@ export default function OperationsAnalytics() {
           sub="Vehicles active this period"
         />
         <KPICard
-          icon="electric_bolt"
+          icon={<Zap size={18} strokeWidth={1.75} />}
           label="Active Right Now"
           value={String(kpis.activeNow)}
           accent="#3b82f6"
           sub={`${kpis.totalFleet - kpis.activeNow} idle`}
         />
         <KPICard
-          icon="schedule"
+          icon={<Clock size={18} strokeWidth={1.75} />}
           label="Avg Trip Duration"
           value={kpis.avgDurationMs > 0 ? fmtDuration(kpis.avgDurationMs) : "—"}
           accent="#8b5cf6"
           sub="Per completed session"
         />
         <KPICard
-          icon="payments"
+          icon={<CreditCard size={18} strokeWidth={1.75} />}
           label="Period Revenue"
           value={fmtEur(kpis.revenue)}
           accent="#f59e0b"
@@ -344,21 +345,21 @@ export default function OperationsAnalytics() {
       <div className={styles.navCardGrid}>
         <NavCard
           href="/admin/analytics/fleet"
-          icon="garage"
+          icon={<Warehouse size={18} strokeWidth={1.75} />}
           title="Fleet Performance"
           desc="Vehicle rankings, utilization rates, idle detection, maintenance cost impact"
           color="#00466E"
         />
         <NavCard
           href="/admin/analytics/telemetry"
-          icon="location_on"
+          icon={<MapPin size={18} strokeWidth={1.75} />}
           title="Telemetry & Routes"
           desc="Trip routes, geographic patterns, session positions, coverage zones"
           color="#8DC220"
         />
         <NavCard
           href="/admin/analytics/utilization"
-          icon="bar_chart"
+          icon={<BarChart2 size={18} strokeWidth={1.75} />}
           title="Utilization Trends"
           desc="Booking trends, source breakdown, occupancy rates, daily activity"
           color="#3b82f6"
@@ -377,7 +378,7 @@ function KPICard({
   accent,
   sub,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   value: string;
   accent: string;
@@ -386,10 +387,7 @@ function KPICard({
   return (
     <div className={styles.kpiCard} style={{ borderTopColor: accent }}>
       <div className={styles.kpiHeader}>
-        <span
-          className={`material-symbols-outlined ${styles.kpiIcon}`}
-          style={{ color: accent }}
-        >
+        <span className={styles.kpiIcon} style={{ color: accent }}>
           {icon}
         </span>
         <span className={styles.kpiLabel}>{label}</span>
@@ -408,17 +406,14 @@ function NavCard({
   color,
 }: {
   href: string;
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   desc: string;
   color: string;
 }) {
   return (
     <Link href={href} className={styles.navCard}>
-      <span
-        className={`material-symbols-outlined ${styles.navCardIcon}`}
-        style={{ color }}
-      >
+      <span className={styles.navCardIcon} style={{ color }}>
         {icon}
       </span>
       <div>

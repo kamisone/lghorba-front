@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./Media.module.css";
+import { X } from "lucide-react";
 
 interface Asset {
   id:               string;
@@ -234,7 +235,7 @@ export default function MediaLibraryPage() {
         <div className={styles.detailPanel}>
           <div className={styles.detailHead}>
             <span className={styles.detailHeadTitle}>Asset Details</span>
-            <button className={styles.detailClose} onClick={() => setSelected(null)}>×</button>
+            <button className={styles.detailClose} onClick={() => setSelected(null)}><X size={14} strokeWidth={2} /></button>
           </div>
 
           <div className={styles.detailBody}>

@@ -1,10 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { Car } from "@/components/admin/fleet/data";
 import styles from "../car-detail.module.css";
 import { extractMapsUrl, extractLatLng } from "@/components/admin/fleet/mapUtils";
+import { MapPin, X } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,11 +28,11 @@ type ActionKey = "open" | "close" | "parking" | "location" | "sleep" | "wake" | 
 
 interface SendableAction { key: ActionKey; message: string; }
 
-const ACTIONS: { key: ActionKey; label: string; icon: string; message: string }[] = [
+const ACTIONS: { key: ActionKey; label: string; icon: React.ReactNode; message: string }[] = [
   { key: "open",         label: "Open Car",      icon: "🔓", message: "open" },
   { key: "close",        label: "Close Car",     icon: "🔒", message: "close" },
   { key: "parking",      label: "Parking",       icon: "🅿️", message: "parking" },
-  { key: "location",     label: "Location",      icon: "📍", message: "location" },
+  { key: "location",     label: "Location",      icon: <MapPin size={16} strokeWidth={1.75} />, message: "location" },
   { key: "sleep",        label: "Sleep",         icon: "🌙", message: "sleep" },
   { key: "wake",         label: "Wake",          icon: "⚡", message: "wake" },
   { key: "stoplocation", label: "Stop Location", icon: "🛑", message: "stoplocation" },
@@ -222,7 +223,7 @@ export default function ManagementPage() {
                 disabled={deletingPhotoId === p.id}
                 aria-label="Delete photo"
               >
-                {deletingPhotoId === p.id ? <span className={styles.photoDeleteSpinner} /> : "×"}
+                {deletingPhotoId === p.id ? <span className={styles.photoDeleteSpinner} /> : <X size={14} strokeWidth={2} />}
               </button>
             </div>
           ))}

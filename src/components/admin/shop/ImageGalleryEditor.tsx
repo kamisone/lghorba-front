@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MediaPicker, { MediaAsset } from "@/components/admin/media/MediaPicker";
+import { X } from "lucide-react";
 
 interface GalleryItem {
   key: string;
@@ -80,7 +81,7 @@ export default function ImageGalleryEditor({
                 fontSize: 12, fontWeight: 700, lineHeight: 1,
               }}
             >
-              ×
+              <X size={14} strokeWidth={2} />
             </button>
           </div>
         ))}

@@ -28,8 +28,7 @@
   margin-bottom: 1.25rem;
 }
 
-.iconWrap .material-symbols-outlined {
-  font-size: 28px;
+.iconWrap svg {
   color: #dc2626;
 }
 

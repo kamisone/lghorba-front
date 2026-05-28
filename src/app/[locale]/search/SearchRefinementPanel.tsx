@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useId, useState } from "react";
+import { CalendarDays, MapPin, Search, ArrowRight } from "lucide-react";
 import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
 import { isoToLocalParts, localPartsToUTC } from "@/lib/dateUtils";
 import styles from "./SearchRefinementPanel.module.css";
@@ -110,7 +111,7 @@ export default function SearchRefinementPanel({
 
           {/* ── Pick-up ── */}
           <div className={styles.fieldGroup}>
-            <span className={styles.fieldLabel}>📅 {labels.fromLabel}</span>
+            <span className={styles.fieldLabel}><CalendarDays size={16} strokeWidth={1.75} /> {labels.fromLabel}</span>
             <div className={styles.datetimeRow}>
               <input
                 type="date"
@@ -129,7 +130,7 @@ export default function SearchRefinementPanel({
             </div>
           </div>
 
-          <span className={styles.arrow} aria-hidden>→</span>
+          <span className={styles.arrow} aria-hidden><ArrowRight size={14} strokeWidth={1.75} /></span>
 
           {/* ── Return ── */}
           <div className={styles.fieldGroup}>
@@ -156,7 +157,7 @@ export default function SearchRefinementPanel({
           {/* ── Address ── */}
           <div className={`${styles.fieldGroup} ${styles.addressField}`}>
             <span className={styles.fieldLabel}>
-              📍 {labels.addressLabel}
+              <MapPin size={16} strokeWidth={1.75} /> {labels.addressLabel}
               <span className={styles.optionalBadge}>{labels.addressOptional}</span>
             </span>
             <AddressAutocomplete
@@ -176,7 +177,7 @@ export default function SearchRefinementPanel({
           >
             {loading
               ? <span className={styles.spinner} aria-hidden />
-              : <span aria-hidden>🔍</span>}
+              : <span aria-hidden><Search size={16} strokeWidth={1.75} /></span>}
             <span className={styles.searchBtnLabel}>
               {loading ? labels.searching : labels.searchBtn}
             </span>

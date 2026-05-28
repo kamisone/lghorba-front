@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 
 interface Props {
@@ -18,7 +19,7 @@ export default function CheckoutSuccessPage({ params, searchParams }: Props) {
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 36,
       }}>
-        ✓
+        <Check size={14} strokeWidth={2} />
       </div>
       <h1 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 12px", color: "var(--color-text-heading)" }}>
         {t.orderConfirmed}

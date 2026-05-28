@@ -76,9 +76,6 @@
   transform: scale(1.03);
 }
 
-.closeBtn span.material-symbols-outlined {
-  font-size: 17px;
-}
 
 .closeBtnLabel {
   /* hidden on small screens */

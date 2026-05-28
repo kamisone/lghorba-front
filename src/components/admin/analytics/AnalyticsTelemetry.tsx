@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import "leaflet/dist/leaflet.css";
 import styles from "./AnalyticsTelemetry.module.css";
+import { Map as MapIcon, MapPinOff } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -338,14 +339,12 @@ export default function AnalyticsTelemetry() {
 
           {loading ? (
             <div className={styles.mapPlaceholder}>
-              <span className={`material-symbols-outlined ${styles.mapPlaceholderIcon}`}>map</span>
+              <MapIcon size={18} strokeWidth={1.75} className={styles.mapPlaceholderIcon} />
               <span className={styles.mapPlaceholderText}>Loading sessions…</span>
             </div>
           ) : !hasMap ? (
             <div className={styles.mapPlaceholder}>
-              <span className={`material-symbols-outlined ${styles.mapPlaceholderIcon}`}>
-                location_off
-              </span>
+              <MapPinOff size={18} strokeWidth={1.75} className={styles.mapPlaceholderIcon} />
               <span className={styles.mapPlaceholderText}>
                 {positionsLoading ? "Fetching GPS positions…" : "No GPS route data available"}
               </span>

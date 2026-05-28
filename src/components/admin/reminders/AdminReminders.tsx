@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useBusinessTz } from "@/contexts/TzContext";
 import { fmtDateTime } from "@/lib/dateUtils";
 import styles from "./AdminReminders.module.css";
+import { Check, MessageSquare, Phone, X, Mail } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -147,7 +148,7 @@ function SaveBtn({
       type="button"
     >
       {status === "saving" && <span className={styles.spinner} />}
-      {status === "saved"  && <span>✓</span>}
+      {status === "saved"  && <Check size={14} strokeWidth={2} />}
       {status === "error"  ? "Retry" :
        status === "saving" ? "Saving…" :
        status === "saved"  ? "Saved"  :
@@ -425,7 +426,7 @@ export default function AdminReminders() {
               <div className={`${styles.channelCard} ${local.enabled ? styles.channelCardOn : styles.channelCardOff}`}>
                 <div className={styles.channelCardHeader}>
                   <div className={styles.channelCardMeta}>
-                    <span className={`material-symbols-outlined ${styles.channelIcon}`}>sms</span>
+                    <MessageSquare size={16} strokeWidth={1.75} className={styles.channelIcon} />
                     <div>
                       <div className={styles.channelName}>SMS Reminders</div>
                       <div className={styles.channelDesc}>Queue an outgoing SMS before each booking starts</div>
@@ -439,10 +440,10 @@ export default function AdminReminders() {
                   <div className={styles.chipList}>
                     {local.recipientPhones.map(p => (
                       <span key={p} className={styles.chip}>
-                        <span className="material-symbols-outlined" style={{ fontSize: "0.8rem", opacity: 0.55 }}>phone</span>
+                        <Phone size={14} strokeWidth={1.75} style={{ opacity: 0.55 }} />
                         {p}
                         <button className={styles.chipX} onClick={() => removePhone(p)} disabled={!local.enabled}>
-                          <span className="material-symbols-outlined" style={{ fontSize: "0.8rem" }}>close</span>
+                          <X size={14} strokeWidth={1.75} />
                         </button>
                       </span>
                     ))}
@@ -469,7 +470,7 @@ export default function AdminReminders() {
               <div className={`${styles.channelCard} ${local.emailEnabled ? styles.channelCardOn : styles.channelCardOff}`}>
                 <div className={styles.channelCardHeader}>
                   <div className={styles.channelCardMeta}>
-                    <span className={`material-symbols-outlined ${styles.channelIcon}`}>mail</span>
+                    <Mail size={16} strokeWidth={1.75} className={styles.channelIcon} />
                     <div>
                       <div className={styles.channelName}>Email Reminders</div>
                       <div className={styles.channelDesc}>Send an email before each booking starts (requires SMTP)</div>
@@ -483,10 +484,10 @@ export default function AdminReminders() {
                   <div className={styles.chipList}>
                     {local.recipientEmails.map(e => (
                       <span key={e} className={styles.chip}>
-                        <span className="material-symbols-outlined" style={{ fontSize: "0.8rem", opacity: 0.55 }}>mail</span>
+                        <Mail size={14} strokeWidth={1.75} style={{ opacity: 0.55 }} />
                         {e}
                         <button className={styles.chipX} onClick={() => removeEmail(e)} disabled={!local.emailEnabled}>
-                          <span className="material-symbols-outlined" style={{ fontSize: "0.8rem" }}>close</span>
+                          <X size={14} strokeWidth={1.75} />
                         </button>
                       </span>
                     ))}
@@ -532,13 +533,13 @@ export default function AdminReminders() {
                 className={`${styles.channelSwitchBtn} ${channel === "sms" ? styles.channelSwitchActive : ""}`}
                 onClick={() => setChannel("sms")}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>sms</span>SMS
+                <MessageSquare size={16} strokeWidth={1.75} />SMS
               </button>
               <button
                 className={`${styles.channelSwitchBtn} ${channel === "email" ? styles.channelSwitchActive : ""}`}
                 onClick={() => setChannel("email")}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>mail</span>Email
+                <Mail size={16} strokeWidth={1.75} />Email
               </button>
             </div>
           </div>

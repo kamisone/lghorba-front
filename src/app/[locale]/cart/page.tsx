@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { X } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
 import PromoCodeInput from "@/components/shop/PromoCodeInput";
 import PriceBreakdown from "@/components/shop/PriceBreakdown";
@@ -80,7 +81,7 @@ export default function CartPage({ params }: { params: { locale: string } }) {
                 <button onClick={() => updateItem(item.id, item.quantity + 1)} disabled={mutating}>+</button>
               </div>
               <div className={styles.itemTotal}>€{centsToEuros(item.lineTotalCents)}</div>
-              <button onClick={() => removeItem(item.id)} className={styles.removeBtn} disabled={mutating}>✕</button>
+              <button onClick={() => removeItem(item.id)} className={styles.removeBtn} disabled={mutating}><X size={14} strokeWidth={2} /></button>
             </div>
             );
           })}

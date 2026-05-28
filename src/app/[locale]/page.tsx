@@ -3,11 +3,19 @@ import { getTranslations } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import CarSearchForm from "@/components/CarSearchForm";
+import {
+  Key,
+  Smartphone,
+  ShieldCheck,
+  Car,
+  Truck,
+  Package,
+  Search,
+  CalendarDays,
+  Navigation,
+  CheckCircle2,
+} from "lucide-react";
 import styles from "../page.module.css";
-
-// Data is cached indefinitely via force-cache + tags.
-// Invalidated explicitly via revalidateTag("cars") / revalidateTag(`car-photos-*`).
-// generateStaticParams for [locale] is already declared in [locale]/layout.tsx.
 
 const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
@@ -53,10 +61,7 @@ export async function generateMetadata({
   return {
     title: siteTitle,
     description: t.hero.sub,
-    openGraph: {
-      title: siteTitle,
-      description: t.hero.sub,
-    },
+    openGraph: { title: siteTitle, description: t.hero.sub },
   };
 }
 
@@ -66,12 +71,12 @@ export default async function LandingPage({ params }: { params: { locale: string
   const cars = await getPublicCars(locale);
 
   const fleetItems = [
-    { icon: "🚗", variantClass: "fleetCardCity", ...t.fleet.city },
-    { icon: "🚙", variantClass: "fleetCardSuv",  ...t.fleet.suv },
-    { icon: "🚐", variantClass: "fleetCardVan",  ...t.fleet.van },
+    { Icon: Car,   variantClass: "fleetCardCity", ...t.fleet.city },
+    { Icon: Truck, variantClass: "fleetCardSuv",  ...t.fleet.suv },
+    { Icon: Package, variantClass: "fleetCardVan", ...t.fleet.van },
   ];
 
-  const HOW_ICONS = ["🔍", "📅", "🚗"];
+  const howIcons = [Search, CalendarDays, Navigation];
 
   return (
     <div className={styles.root}>
@@ -170,12 +175,13 @@ export default async function LandingPage({ params }: { params: { locale: string
             <p className={styles.sectionSub}>{t.platforms.sub}</p>
           </div>
           <div className={styles.platformGrid}>
+
             <div className={`${styles.platformCard} ${styles.platformCardTuro}`}>
               <div className={styles.platformTop}>
-                <div className={styles.platformIconWrap}>🚘</div>
-                <div className={styles.platformTopMeta}>
-                  <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
+                <div className={styles.platformIconWrap}>
+                  <Key size={20} strokeWidth={1.75} />
                 </div>
+                <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
               </div>
               <div className={styles.platformBody}>
                 <div className={styles.platformTags}>
@@ -192,10 +198,10 @@ export default async function LandingPage({ params }: { params: { locale: string
 
             <div className={`${styles.platformCard} ${styles.platformCardGetaround}`}>
               <div className={styles.platformTop}>
-                <div className={styles.platformIconWrap}>🚙</div>
-                <div className={styles.platformTopMeta}>
-                  <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
+                <div className={styles.platformIconWrap}>
+                  <Smartphone size={20} strokeWidth={1.75} />
                 </div>
+                <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
               </div>
               <div className={styles.platformBody}>
                 <div className={styles.platformTags}>
@@ -212,10 +218,10 @@ export default async function LandingPage({ params }: { params: { locale: string
 
             <div className={`${styles.platformCard} ${styles.platformCardPrivate}`}>
               <div className={styles.platformTop}>
-                <div className={styles.platformIconWrap}>🤝</div>
-                <div className={styles.platformTopMeta}>
-                  <h3 className={styles.platformName}>{t.platforms.private.name}</h3>
+                <div className={styles.platformIconWrap}>
+                  <ShieldCheck size={20} strokeWidth={1.75} />
                 </div>
+                <h3 className={styles.platformName}>{t.platforms.private.name}</h3>
               </div>
               <div className={styles.platformBody}>
                 <div className={styles.platformTags}>
@@ -227,6 +233,7 @@ export default async function LandingPage({ params }: { params: { locale: string
                 <a href={`/${locale}/fleet`} className={styles.platformCta}>{t.platforms.private.link}</a>
               </div>
             </div>
+
           </div>
         </div>
       </section>
@@ -239,10 +246,12 @@ export default async function LandingPage({ params }: { params: { locale: string
             <h2 className={styles.sectionTitle}>{t.fleet.title}</h2>
           </div>
           <div className={styles.fleetGrid}>
-            {fleetItems.map(({ icon, variantClass, type, desc, uses }) => (
+            {fleetItems.map(({ Icon, variantClass, type, desc, uses }) => (
               <div key={type} className={`${styles.fleetCard} ${styles[variantClass]}`}>
-                <div className={styles.fleetCardVisual}>
-                  <span className={styles.fleetCardEmoji}>{icon}</span>
+                <div className={styles.fleetCardIconRow}>
+                  <div className={styles.fleetCardIconWrap}>
+                    <Icon size={22} strokeWidth={1.5} />
+                  </div>
                 </div>
                 <div className={styles.fleetCardBody}>
                   <h3 className={styles.fleetCardType}>{type}</h3>
@@ -268,16 +277,19 @@ export default async function LandingPage({ params }: { params: { locale: string
             <h2 className={styles.sectionTitle}>{t.how.title}</h2>
           </div>
           <div className={styles.howSteps}>
-            {t.how.steps.map(({ n, title, desc }, i) => (
-              <div key={n} className={styles.howStep}>
-                <div className={styles.howStepBadge}>
+            {t.how.steps.map(({ n, title, desc }, i) => {
+              const StepIcon = howIcons[i];
+              return (
+                <div key={n} className={styles.howStep}>
+                  <div className={styles.howStepBadge}>
+                    <StepIcon size={22} strokeWidth={1.5} />
+                  </div>
                   <span className={styles.howStepN}>{n}</span>
-                  <span className={styles.howStepIcon}>{HOW_ICONS[i]}</span>
+                  <h3 className={styles.howStepTitle}>{title}</h3>
+                  <p className={styles.howStepDesc}>{desc}</p>
                 </div>
-                <h3 className={styles.howStepTitle}>{title}</h3>
-                <p className={styles.howStepDesc}>{desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -294,7 +306,7 @@ export default async function LandingPage({ params }: { params: { locale: string
             <div className={styles.whyFeatures}>
               {t.why.features.map((label) => (
                 <div key={label} className={styles.whyFeature}>
-                  <span className={styles.whyFeatureIcon}>✓</span>
+                  <CheckCircle2 size={18} strokeWidth={1.75} className={styles.whyFeatureIcon} />
                   <span>{label}</span>
                 </div>
               ))}

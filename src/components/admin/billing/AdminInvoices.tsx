@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Check } from "lucide-react";
 
 type InvoiceStatus = "draft" | "issued" | "paid" | "void";
 
@@ -143,14 +144,14 @@ export default function AdminInvoices() {
                   <td style={{ padding: "10px 12px", color: "#475569" }}>{fmtDate(inv.issuedAt)}</td>
                   <td style={{ padding: "10px 12px" }}>
                     {inv.pdfGeneratedAt ? (
-                      <span style={{ color: "#22c55e" }}>✓</span>
+                      <span style={{ color: "#22c55e" }}><Check size={14} strokeWidth={2} /></span>
                     ) : (
                       <span style={{ color: "#94a3b8" }}>—</span>
                     )}
                   </td>
                   <td style={{ padding: "10px 12px" }}>
                     {inv.emailSentAt ? (
-                      <span style={{ color: "#22c55e" }}>✓</span>
+                      <span style={{ color: "#22c55e" }}><Check size={14} strokeWidth={2} /></span>
                     ) : (
                       <span style={{ color: "#94a3b8" }}>—</span>
                     )}

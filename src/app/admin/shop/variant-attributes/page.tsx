@@ -5,6 +5,7 @@ import styles from "./VariantAttributes.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 import { slugify } from "@/lib/slugify";
+import { X, ChevronDown } from "lucide-react";
 
 interface OptionValue {
   id: string;
@@ -239,7 +240,7 @@ export default function VariantAttributesPage() {
                         onClick={() => setExpanded(e => e === a.id ? null : a.id)}
                         title={expanded === a.id ? "Collapse" : "Expand values"}
                       >
-                        {expanded === a.id ? "▾" : "▸"}
+                        {expanded === a.id ? <ChevronDown size={14} strokeWidth={1.75} /> : "▸"}
                       </button>
                     </td>
                     <td>
@@ -342,7 +343,7 @@ export default function VariantAttributesPage() {
               <h2 className={styles.modalTitle}>
                 {attrModal === "create" ? "New Variant Attribute" : "Edit Attribute"}
               </h2>
-              <button className={styles.modalClose} onClick={() => setAttrModal(null)}>×</button>
+              <button className={styles.modalClose} onClick={() => setAttrModal(null)}><X size={14} strokeWidth={2} /></button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>
@@ -405,7 +406,7 @@ export default function VariantAttributesPage() {
               <h2 className={styles.modalTitle}>
                 {valModal === "create" ? "Add Option Value" : "Edit Option Value"}
               </h2>
-              <button className={styles.modalClose} onClick={() => setValModal(null)}>×</button>
+              <button className={styles.modalClose} onClick={() => setValModal(null)}><X size={14} strokeWidth={2} /></button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>

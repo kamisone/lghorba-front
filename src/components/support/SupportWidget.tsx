@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Headphones, X, MessageCircle, Send } from "lucide-react";
 import { useSupportChat, type SupportMessage } from "@/hooks/useSupportChat";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./SupportWidget.module.css";
@@ -144,7 +145,7 @@ export default function SupportWidget({ locale }: Props) {
           {/* Header */}
           <div className={styles.header}>
             <div className={styles.headerLeft}>
-              <span className={`material-symbols-outlined ${styles.headerIcon}`}>support_agent</span>
+              <Headphones size={18} strokeWidth={1.75} className={styles.headerIcon} />
               <div>
                 <p className={styles.headerTitle}>{t.title}</p>
                 <p className={styles.headerSub}>{t.subtitle}</p>
@@ -153,7 +154,7 @@ export default function SupportWidget({ locale }: Props) {
             <div className={styles.headerRight}>
               <span className={`${styles.statusDot} ${dotClass}`} title={status} />
               <button className={styles.closeBtn} onClick={() => setOpen(false)} aria-label={t.close}>
-                <span className="material-symbols-outlined">close</span>
+                <X size={16} strokeWidth={1.75} />
               </button>
             </div>
           </div>
@@ -162,7 +163,7 @@ export default function SupportWidget({ locale }: Props) {
           <div className={styles.messages}>
             {messages.length === 0 && (
               <div className={styles.emptyState}>
-                <span className={`material-symbols-outlined ${styles.emptyIcon}`}>chat</span>
+                <MessageCircle size={32} strokeWidth={1.5} className={styles.emptyIcon} />
                 <p>{t.emptyState}</p>
               </div>
             )}
@@ -250,7 +251,7 @@ export default function SupportWidget({ locale }: Props) {
               disabled={!input.trim() || status !== "connected"}
               aria-label={t.send}
             >
-              <span className="material-symbols-outlined">send</span>
+              <Send size={16} strokeWidth={1.75} />
             </button>
           </div>
           <p className={styles.charCount}>{input.length}/{MAX_LEN}</p>
@@ -273,9 +274,10 @@ export default function SupportWidget({ locale }: Props) {
           aria-label={open ? t.close : t.openChat}
           aria-expanded={open}
         >
-          <span className="material-symbols-outlined" aria-hidden="true">
-            {open ? "close" : "chat"}
-          </span>
+          {open
+            ? <X size={20} strokeWidth={1.75} aria-hidden="true" />
+            : <MessageCircle size={20} strokeWidth={1.75} aria-hidden="true" />
+          }
           {!open && unreadCount > 0 && (
             <span key={unreadCount} className={styles.unreadBadge} aria-label={`${unreadCount} unread`}>
               {unreadCount > 9 ? "9+" : unreadCount}

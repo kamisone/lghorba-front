@@ -9,6 +9,7 @@ import { useToast } from "@/components/toast/ToastContext";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import { useBusinessTz } from "@/contexts/TzContext";
 import { fmtDateTime } from "@/lib/dateUtils";
+import { Car as CarIcon, User, ClipboardList, MapPin, Banknote, Ruler, ExternalLink, Pencil, X, Radio, ChevronUp, ChevronDown, ArrowRight } from "lucide-react";
 import styles from "./RentTracker.module.css";
 
 interface RentSession {
@@ -447,7 +448,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
       {/* ── Header row ── */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.icon}>🚗</span>
+          <span className={styles.icon}><CarIcon size={20} strokeWidth={1.75} /></span>
           <div>
             <p className={styles.label}>Rent Tracking</p>
             {tracking && (
@@ -492,7 +493,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
           <div className={styles.scheduleCardHeader}>
             <div className={styles.scheduleCardDates}>
               <span>{fmtDT(activeBooking.startDateTime)}</span>
-              <span className={styles.scheduleCardArrow}>→</span>
+              <span className={styles.scheduleCardArrow}><ArrowRight size={14} strokeWidth={1.75} /></span>
               <span>{fmtDT(activeBooking.endDateTime)}</span>
             </div>
             <div className={styles.scheduleCardActions}>
@@ -500,15 +501,15 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                 href={`/admin/bookings?modal=booking&id=${activeBooking.id}`}
                 className={styles.sessionLinkBtn}
                 title="View booking details"
-              >↗</Link>
-              <button className={styles.sessionEditBtn} onClick={() => openEditBooking(activeBooking)} aria-label="Edit">✏</button>
+              ><ExternalLink size={14} strokeWidth={1.75} /></Link>
+              <button className={styles.sessionEditBtn} onClick={() => openEditBooking(activeBooking)} aria-label="Edit"><Pencil size={14} strokeWidth={1.75} /></button>
               <button
                 className={styles.sessionDeleteBtn}
                 onClick={() => handleBookingDelete(activeBooking)}
                 disabled={deletingBookingId === activeBooking.id}
                 aria-label="Delete"
               >
-                {deletingBookingId === activeBooking.id ? "…" : "×"}
+                {deletingBookingId === activeBooking.id ? "…" : <X size={14} strokeWidth={1.75} />}
               </button>
             </div>
           </div>
@@ -518,12 +519,12 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                 href={`/admin/users/${activeBooking.user.id}`}
                 className={`${styles.scheduleCardPill} ${styles.scheduleCardPillUser}`}
               >
-                👤 {activeBooking.user.name}
+                <User size={14} strokeWidth={1.75} /> {activeBooking.user.name}
               </Link>
             )}
-            {activeBooking.reservationNumber && <span className={styles.scheduleCardPill}>📋 {activeBooking.reservationNumber}</span>}
-            <span className={styles.scheduleCardPill}>📏 {computeForfaitKm(activeBooking.startDateTime, activeBooking.endDateTime).toLocaleString()} km</span>
-            {activeBooking.totalEarning != null && <span className={`${styles.scheduleCardPill} ${styles.scheduleCardPillEarning}`}>💶 {activeBooking.totalEarning.toLocaleString()} €</span>}
+            {activeBooking.reservationNumber && <span className={styles.scheduleCardPill}><ClipboardList size={14} strokeWidth={1.75} /> {activeBooking.reservationNumber}</span>}
+            <span className={styles.scheduleCardPill}><Ruler size={14} strokeWidth={1.75} /> {computeForfaitKm(activeBooking.startDateTime, activeBooking.endDateTime).toLocaleString()} km</span>
+            {activeBooking.totalEarning != null && <span className={`${styles.scheduleCardPill} ${styles.scheduleCardPillEarning}`}><Banknote size={14} strokeWidth={1.75} /> {activeBooking.totalEarning.toLocaleString()} €</span>}
           </div>
         </div>
       )}
@@ -558,7 +559,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
             <div className={styles.mapFullscreenOverlay}>
               <div className={styles.mapFullscreenBar}>
                 <span className={styles.mapFullscreenLabel}>{positions.length} position{positions.length !== 1 ? "s" : ""}</span>
-                <button className={styles.mapFullscreenClose} onClick={() => setMapFullscreen(false)}>✕ Close</button>
+                <button className={styles.mapFullscreenClose} onClick={() => setMapFullscreen(false)}><X size={14} strokeWidth={1.75} /> Close</button>
               </div>
               <div className={styles.mapFullscreenBody}>
                 <RentMap positions={positions} fill />
@@ -586,7 +587,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                   >
                     <div className={styles.sessionInfo}>
                       <span className={styles.sessionDate}>
-                        {fmtShort(session.startedAt)} → {session.endedAt ? fmtShort(session.endedAt) : "…"}
+                        {fmtShort(session.startedAt)} <ArrowRight size={14} strokeWidth={1.75} /> {session.endedAt ? fmtShort(session.endedAt) : "…"}
                       </span>
                       {linked?.user?.name && (
                         <Link
@@ -594,12 +595,12 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                           className={styles.sessionGuestLink}
                           title={`View profile: ${linked.user.name}`}
                         >
-                          👤 {linked.user.name}
+                          <User size={14} strokeWidth={1.75} /> {linked.user.name}
                         </Link>
                       )}
                       {linked?.reservationNumber && <span className={styles.sessionRes}>#{linked.reservationNumber}</span>}
                     </div>
-                    <span className={styles.sessionChevron}>{isOpen ? "▲" : "▼"}</span>
+                    <span className={styles.sessionChevron}>{isOpen ? <ChevronUp size={16} strokeWidth={1.75} /> : <ChevronDown size={16} strokeWidth={1.75} />}</span>
                   </div>
                   <div className={styles.sessionRowActions}>
                     {linked && (
@@ -607,7 +608,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                         href={`/admin/bookings?modal=booking&id=${linked.id}`}
                         className={styles.sessionLinkBtn}
                         title="View booking details"
-                      >↗</Link>
+                      ><ExternalLink size={14} strokeWidth={1.75} /></Link>
                     )}
                     <button
                       className={styles.sessionDeleteBtn}
@@ -615,14 +616,14 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                       disabled={deletingSessionId === session.id}
                       aria-label="Delete"
                     >
-                      {deletingSessionId === session.id ? "…" : "×"}
+                      {deletingSessionId === session.id ? "…" : <X size={14} strokeWidth={1.75} />}
                     </button>
                   </div>
                 </div>
                 {!session.trackingPaused && session.booking?.gpsStopMode === "manual" && (
                   <div className={styles.manualTrackingBanner}>
                     <span className={styles.manualTrackingLabel}>
-                      📡 GPS tracking still active
+                      <Radio size={14} strokeWidth={1.75} /> GPS tracking still active
                     </span>
                     <button
                       className={styles.stopTrackingBtn}
@@ -639,16 +640,16 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                     <div className={styles.sessionDetailPills}>
                       {linked && (
                         <span className={styles.scheduleCardPill}>
-                          📏 {computeForfaitKm(linked.startDateTime, linked.endDateTime).toLocaleString()} km
+                          <Ruler size={14} strokeWidth={1.75} /> {computeForfaitKm(linked.startDateTime, linked.endDateTime).toLocaleString()} km
                         </span>
                       )}
                       {linked?.totalEarning != null && (
                         <span className={`${styles.scheduleCardPill} ${styles.scheduleCardPillEarning}`}>
-                          💶 {linked.totalEarning.toLocaleString()} €
+                          <Banknote size={14} strokeWidth={1.75} /> {linked.totalEarning.toLocaleString()} €
                         </span>
                       )}
                       <span className={styles.scheduleCardPill}>
-                        📍 {session.positions !== undefined ? `${session.positions.length} positions` : "Loading…"}
+                        <MapPin size={14} strokeWidth={1.75} /> {session.positions !== undefined ? `${session.positions.length} positions` : "Loading…"}
                       </span>
                     </div>
                     {session.positions && session.positions.length > 0 ? (
@@ -672,7 +673,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                           <div className={styles.mapFullscreenOverlay}>
                             <div className={styles.mapFullscreenBar}>
                               <span className={styles.mapFullscreenLabel}>{session.positions.length} position{session.positions.length !== 1 ? "s" : ""}</span>
-                              <button className={styles.mapFullscreenClose} onClick={() => setFullscreenSessionId(null)}>✕ Close</button>
+                              <button className={styles.mapFullscreenClose} onClick={() => setFullscreenSessionId(null)}><X size={14} strokeWidth={1.75} /> Close</button>
                             </div>
                             <div className={styles.mapFullscreenBody}>
                               <RentMap positions={session.positions} fill />

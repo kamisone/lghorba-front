@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./Inventory.module.css";
 import { useToast } from "@/components/toast/ToastContext";
+import { X } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -290,7 +291,7 @@ export default function AdminInventoryPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          {search && <button className={styles.searchClear} onClick={() => setSearch("")}>×</button>}
+          {search && <button className={styles.searchClear} onClick={() => setSearch("")}><X size={14} strokeWidth={2} /></button>}
         </div>
 
         <select className={styles.filterSelect} value={statusFilt} onChange={e => setStatusFilt(e.target.value as typeof statusFilt)}>
@@ -477,7 +478,7 @@ export default function AdminInventoryPage() {
                 <h2 className={styles.modalTitle}>Adjust Stock</h2>
                 <p className={styles.modalSub}>SKU: {adjusting.sku}</p>
               </div>
-              <button className={styles.modalClose} onClick={() => setAdjusting(null)}>×</button>
+              <button className={styles.modalClose} onClick={() => setAdjusting(null)}><X size={14} strokeWidth={2} /></button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formField}>
@@ -524,7 +525,7 @@ export default function AdminInventoryPage() {
                 <h2 className={styles.modalTitle}>Low Stock Threshold</h2>
                 <p className={styles.modalSub}>SKU: {threshold.sku}</p>
               </div>
-              <button className={styles.modalClose} onClick={() => setThreshold(null)}>×</button>
+              <button className={styles.modalClose} onClick={() => setThreshold(null)}><X size={14} strokeWidth={2} /></button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formField}>
@@ -556,7 +557,7 @@ export default function AdminInventoryPage() {
                 <h2 className={styles.modalTitle}>Stock History</h2>
                 <p className={styles.modalSub}>SKU: {movements.sku}</p>
               </div>
-              <button className={styles.modalClose} onClick={() => setMovements(null)}>×</button>
+              <button className={styles.modalClose} onClick={() => setMovements(null)}><X size={14} strokeWidth={2} /></button>
             </div>
             <div className={styles.modalBody} style={{ padding: 0 }}>
               {movements.data.length === 0 ? (
@@ -596,7 +597,7 @@ export default function AdminInventoryPage() {
                 <h2 className={styles.modalTitle}>Generate Combinations</h2>
                 <p className={styles.modalSub}>Auto-create all SKUs from linked attributes</p>
               </div>
-              <button className={styles.modalClose} onClick={() => setGenerating(null)}>×</button>
+              <button className={styles.modalClose} onClick={() => setGenerating(null)}><X size={14} strokeWidth={2} /></button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formField}>

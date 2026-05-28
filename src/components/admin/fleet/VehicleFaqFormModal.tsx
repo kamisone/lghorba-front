@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import BilingualField from "./BilingualField";
 import styles from "./VehicleFaqFormModal.module.css";
+import { X } from "lucide-react";
 
 export interface VehicleFaq {
   id: string;
@@ -99,7 +100,7 @@ export default function VehicleFaqFormModal({ carId, faq, onClose, onSaved }: Pr
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>{isEdit ? "Edit FAQ" : "Add FAQ"}</h2>
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={14} strokeWidth={2} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.formBody}>

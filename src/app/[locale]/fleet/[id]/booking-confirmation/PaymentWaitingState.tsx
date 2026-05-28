@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import styles from "./booking-confirmation.module.css";
@@ -89,7 +90,7 @@ export default function PaymentWaitingState({ bookingId, locale }: Props) {
 
       {/* Persistent warning */}
       <div className={styles.waitingWarning} role="status">
-        <span className={styles.waitingWarningIcon} aria-hidden="true">⚠</span>
+        <span className={styles.waitingWarningIcon} aria-hidden="true"><AlertTriangle size={16} strokeWidth={1.75} /></span>
         <span>{t.booking.paymentWarning}</span>
       </div>
     </div>

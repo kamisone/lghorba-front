@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import styles from "./GuestAutocomplete.module.css";
+import { X } from "lucide-react";
 
 export interface GuestUser {
   id: string;
@@ -83,7 +84,7 @@ export default function GuestAutocomplete({ value, onChange, onSelect, selectedU
             )}
             {selectedUser.score != null && <ScoreDot score={selectedUser.score} />}
           </div>
-          <button type="button" className={styles.clearBtn} onClick={() => onSelect(null)} title="Change guest">✕</button>
+          <button type="button" className={styles.clearBtn} onClick={() => onSelect(null)} title="Change guest"><X size={14} strokeWidth={2} /></button>
         </div>
       ) : (
         <div className={styles.inputWrap}>

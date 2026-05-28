@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Car } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import type { FleetCar } from "./FleetGrid";
 import CarPriceSlot from "./CarPriceSlot";
@@ -33,7 +34,7 @@ export default function CarCard({ car, locale }: Props) {
             sizes="(max-width: 768px) 100vw, 340px"
           />
         ) : (
-          <div className={styles.photoPlaceholder}>🚗</div>
+          <div className={styles.photoPlaceholder}><Car size={16} strokeWidth={1.75} /></div>
         )}
         {car.isAvailable ? (
           <span className={`${styles.badge} ${styles.badgeAvail}`}>{t.fleet.availableToday}</span>

@@ -2,13 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+import {
+  Car, CalendarDays, CalendarCheck, ParkingCircle,
+  Receipt, Tag, User, Mail, Key,
+  Headphones, Bell, MailOpen,
+  MapPin, Layers, Package, FolderOpen, LayoutGrid,
+  SlidersHorizontal, Warehouse, Star, Images,
+  ShoppingBag, FileText, Undo2, GitBranch, ShoppingCart,
+  Users, Wallet, History, Percent, Ticket, BarChart3,
+  Truck, ClipboardCheck, Box, CreditCard, ArrowLeftRight,
+  Zap, AlertCircle, TrendingUp, LineChart, BarChart2,
+  BookOpen, Search, Store, ThumbsUp, Trophy,
+  Flag, FileEdit, Hash, Wrench, Activity, ShieldCheck,
+  Settings, ChevronRight, ChevronLeft,
+} from "lucide-react";
 import styles from "./AdminSidebar.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface NavItem {
   href?:   string;
-  icon:    string;
+  icon:    LucideIcon;
   label:   string;
   badge?:  "pendingBookings" | "reminderFailures" | "waitingAdmin";
   future?: boolean;
@@ -16,7 +31,7 @@ interface NavItem {
 
 interface NavSubGroup {
   label: string;
-  icon:  string;
+  icon:  LucideIcon;
   items: NavItem[];
 }
 
@@ -32,39 +47,39 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Operations",
     items: [
-      { href: "/admin/fleet",     icon: "directions_car",  label: "Fleet"    },
-      { href: "/admin/calendar",  icon: "calendar_month",  label: "Calendar" },
-      { href: "/admin/bookings",  icon: "event_available", label: "Bookings", badge: "pendingBookings" },
-      { href: "/admin/parkings",  icon: "local_parking",   label: "Parkings" },
+      { href: "/admin/fleet",     icon: Car,           label: "Fleet"    },
+      { href: "/admin/calendar",  icon: CalendarDays,  label: "Calendar" },
+      { href: "/admin/bookings",  icon: CalendarCheck, label: "Bookings", badge: "pendingBookings" },
+      { href: "/admin/parkings",  icon: ParkingCircle, label: "Parkings" },
     ],
   },
   {
     label: "Finance",
     items: [
-      { href: "/admin/invoices",   icon: "receipt_long", label: "Invoices"   },
-      { href: "/admin/promotions", icon: "sell",         label: "Promotions" },
+      { href: "/admin/invoices",   icon: Receipt, label: "Invoices"   },
+      { href: "/admin/promotions", icon: Tag,     label: "Promotions" },
     ],
   },
   {
     label: "Customers",
     items: [
-      { href: "/admin/users",        icon: "person", label: "Users"        },
-      { href: "/admin/contacts",     icon: "mail",   label: "Contacts"     },
-      { href: "/admin/guest-access", icon: "key",    label: "Guest Access" },
+      { href: "/admin/users",        icon: User,    label: "Users"        },
+      { href: "/admin/contacts",     icon: Mail,    label: "Contacts"     },
+      { href: "/admin/guest-access", icon: Key,     label: "Guest Access" },
     ],
   },
   {
     label: "Communication",
     items: [
-      { href: "/admin/support",                 icon: "support_agent",     label: "Support",     badge: "waitingAdmin"     },
-      { href: "/admin/notifications/reminders", icon: "notifications",     label: "Reminders",   badge: "reminderFailures" },
-      { href: "/admin/email-ingestion",         icon: "mark_email_unread", label: "Email Import" },
+      { href: "/admin/support",                 icon: Headphones, label: "Support",     badge: "waitingAdmin"     },
+      { href: "/admin/notifications/reminders", icon: Bell,       label: "Reminders",   badge: "reminderFailures" },
+      { href: "/admin/email-ingestion",         icon: MailOpen,   label: "Email Import" },
     ],
   },
   {
     label: "Trip Insights",
     items: [
-      { href: "/admin/insights/destinations", icon: "location_on", label: "Destinations" },
+      { href: "/admin/insights/destinations", icon: MapPin, label: "Destinations" },
     ],
   },
   {
@@ -72,111 +87,111 @@ const NAV_GROUPS: NavGroup[] = [
     subGroups: [
       {
         label: "Catalog",
-        icon:  "category",
+        icon:  Layers,
         items: [
-          { href: "/admin/shop/products",           icon: "inventory_2",  label: "Products"               },
-          { href: "/admin/shop/categories",         icon: "folder_open",  label: "Categories"             },
-          { href: "/admin/shop/collections",        icon: "collections",  label: "Collections"            },
-          { href: "/admin/shop/variant-attributes", icon: "tune",         label: "Variations & Attributes" },
-          { href: "/admin/shop/inventory",          icon: "warehouse",    label: "Inventory"              },
-          { href: "/admin/shop/reviews",            icon: "star",         label: "Product Reviews"        },
-          { href: "/admin/shop/media",              icon: "photo_library", label: "Media Library"         },
+          { href: "/admin/shop/products",           icon: Package,          label: "Products"                },
+          { href: "/admin/shop/categories",         icon: FolderOpen,       label: "Categories"              },
+          { href: "/admin/shop/collections",        icon: LayoutGrid,       label: "Collections"             },
+          { href: "/admin/shop/variant-attributes", icon: SlidersHorizontal,label: "Variations & Attributes" },
+          { href: "/admin/shop/inventory",          icon: Warehouse,        label: "Inventory"               },
+          { href: "/admin/shop/reviews",            icon: Star,             label: "Product Reviews"         },
+          { href: "/admin/shop/media",              icon: Images,           label: "Media Library"           },
         ],
       },
       {
         label: "Orders",
-        icon:  "shopping_bag",
+        icon:  ShoppingBag,
         items: [
-          { href: "/admin/shop/orders",             icon: "shopping_bag",      label: "All Orders"       },
-          { href: "/admin/shop/orders/drafts",      icon: "draft",             label: "Draft Orders"     },
-          { href: "/admin/shop/returns",            icon: "assignment_return", label: "Returns & Refunds" },
-          { href: "/admin/shop/order-status-refs",  icon: "timeline",          label: "Order Statuses"   },
-          { href: "/admin/shop/carts",              icon: "shopping_cart",     label: "Abandoned Carts"  },
+          { href: "/admin/shop/orders",            icon: ShoppingBag,  label: "All Orders"        },
+          { href: "/admin/shop/orders/drafts",     icon: FileText,     label: "Draft Orders"      },
+          { href: "/admin/shop/returns",           icon: Undo2,        label: "Returns & Refunds" },
+          { href: "/admin/shop/order-status-refs", icon: GitBranch,    label: "Order Statuses"    },
+          { href: "/admin/shop/carts",             icon: ShoppingCart, label: "Abandoned Carts"   },
         ],
       },
       {
         label: "Customers",
-        icon:  "group",
+        icon:  Users,
         items: [
-          { href: "/admin/shop/customers",            icon: "person",              label: "Customers"             },
-          { href: "/admin/shop/customers/groups",     icon: "group",               label: "Customer Groups"       },
-          { href: "/admin/shop/customers/addresses",  icon: "location_on",         label: "Addresses"             },
-          { href: "/admin/shop/payment-methods",      icon: "account_balance_wallet", label: "Saved Payment Methods" },
-          { href: "/admin/shop/customers/activity",   icon: "history",             label: "Customer Activity"     },
+          { href: "/admin/shop/customers",           icon: User,    label: "Customers"              },
+          { href: "/admin/shop/customers/groups",    icon: Users,   label: "Customer Groups"        },
+          { href: "/admin/shop/customers/addresses", icon: MapPin,  label: "Addresses"              },
+          { href: "/admin/shop/payment-methods",     icon: Wallet,  label: "Saved Payment Methods"  },
+          { href: "/admin/shop/customers/activity",  icon: History, label: "Customer Activity"      },
         ],
       },
       {
         label: "Promotions",
-        icon:  "sell",
+        icon:  Tag,
         items: [
-          { href: "/admin/shop/promotions",           icon: "percent",             label: "Promotions"        },
-          { href: "/admin/shop/coupons",              icon: "confirmation_number", label: "Coupons"           },
-          { href: "/admin/shop/analytics/promotions", icon: "bar_chart",           label: "Discount Analytics" },
+          { href: "/admin/shop/promotions",           icon: Percent,   label: "Promotions"          },
+          { href: "/admin/shop/coupons",              icon: Ticket,    label: "Coupons"             },
+          { href: "/admin/shop/analytics/promotions", icon: BarChart3, label: "Discount Analytics"  },
         ],
       },
       {
         label: "Shipping",
-        icon:  "local_shipping",
+        icon:  Truck,
         items: [
-          { href: "/admin/shop/shipping",                    icon: "local_shipping", label: "Shipping Config"      },
-          { href: "/admin/shop/shipping/delivery-rules",     icon: "rule",           label: "Delivery Rules"       },
-          { href: "/admin/shop/fulfillment",                 icon: "package_2",      label: "Fulfillment Tracking" },
+          { href: "/admin/shop/shipping",                icon: Truck,         label: "Shipping Config"      },
+          { href: "/admin/shop/shipping/delivery-rules", icon: ClipboardCheck,label: "Delivery Rules"       },
+          { href: "/admin/shop/fulfillment",             icon: Box,           label: "Fulfillment Tracking" },
         ],
       },
       {
         label: "Payments",
-        icon:  "payments",
+        icon:  CreditCard,
         items: [
-          { href: "/admin/shop/transactions",                icon: "receipt",         label: "Transactions"     },
-          { href: "/admin/shop/payment-types",               icon: "credit_card",     label: "Payment Types"    },
-          { href: "/admin/shop/transactions/refunds",        icon: "currency_exchange", label: "Refunds"        },
-          { href: "/admin/shop/transactions/stripe-events",  icon: "bolt",            label: "Stripe Events"    },
-          { href: "/admin/shop/transactions/failures",       icon: "error",           label: "Payment Failures" },
+          { href: "/admin/shop/transactions",               icon: Receipt,        label: "Transactions"     },
+          { href: "/admin/shop/payment-types",              icon: CreditCard,     label: "Payment Types"    },
+          { href: "/admin/shop/transactions/refunds",       icon: ArrowLeftRight, label: "Refunds"          },
+          { href: "/admin/shop/transactions/stripe-events", icon: Zap,            label: "Stripe Events"    },
+          { href: "/admin/shop/transactions/failures",      icon: AlertCircle,    label: "Payment Failures" },
         ],
       },
       {
         label: "Analytics",
-        icon:  "insights",
+        icon:  BarChart2,
         items: [
-          { href: "/admin/shop/analytics/revenue",     icon: "trending_up",  label: "Revenue Analytics"   },
-          { href: "/admin/shop/analytics/products",    icon: "auto_graph",   label: "Product Performance" },
-          { href: "/admin/shop/analytics/conversion",  icon: "conversion",   label: "Conversion Metrics"  },
-          { href: "/admin/shop/analytics/customers",   icon: "group",        label: "Customer Insights"   },
-          { href: "/admin/shop/analytics/promotions",  icon: "percent",      label: "Promotion Performance" },
-          { href: "/admin/shop/analytics/inventory",   icon: "warehouse",    label: "Inventory Analytics" },
+          { href: "/admin/shop/analytics/revenue",    icon: TrendingUp, label: "Revenue Analytics"    },
+          { href: "/admin/shop/analytics/products",   icon: LineChart,  label: "Product Performance"  },
+          { href: "/admin/shop/analytics/conversion", icon: BarChart3,  label: "Conversion Metrics"   },
+          { href: "/admin/shop/analytics/customers",  icon: Users,      label: "Customer Insights"    },
+          { href: "/admin/shop/analytics/promotions", icon: Percent,    label: "Promotion Performance"},
+          { href: "/admin/shop/analytics/inventory",  icon: Warehouse,  label: "Inventory Analytics"  },
         ],
       },
       {
         label: "Content & Merchandising",
-        icon:  "web_stories",
+        icon:  BookOpen,
         items: [
-          { href: "/admin/blog",                         icon: "edit_note",     label: "Blog Posts"              },
-          { href: "/admin/shop/collections/seo",         icon: "search",        label: "SEO Landing Pages"       },
-          { href: "/admin/shop/collections/featured",    icon: "star",          label: "Featured Collections"    },
-          { href: "/admin/shop/merchandising",           icon: "storefront",    label: "Homepage Merchandising"  },
-          { href: "/admin/shop/recommendations",         icon: "recommend",     label: "Product Recommendations" },
+          { href: "/admin/blog",                      icon: FileEdit, label: "Blog Posts"               },
+          { href: "/admin/shop/collections/seo",      icon: Search,   label: "SEO Landing Pages"        },
+          { href: "/admin/shop/collections/featured", icon: Star,     label: "Featured Collections"     },
+          { href: "/admin/shop/merchandising",        icon: Store,    label: "Homepage Merchandising"   },
+          { href: "/admin/shop/recommendations",      icon: ThumbsUp, label: "Product Recommendations"  },
         ],
       },
       {
         label: "Marketplace",
-        icon:  "store",
+        icon:  Store,
         items: [
-          { href: "/admin/shop/vendors",             icon: "store",    label: "Vendors"            },
-          { href: "/admin/shop/payouts",             icon: "payments", label: "Vendor Payouts"     },
-          { href: "/admin/shop/vendors/products",    icon: "inventory_2", label: "Vendor Products" },
-          { href: "/admin/shop/vendors/performance", icon: "leaderboard", label: "Vendor Performance" },
+          { href: "/admin/shop/vendors",             icon: Store,    label: "Vendors"             },
+          { href: "/admin/shop/payouts",             icon: CreditCard,label: "Vendor Payouts"     },
+          { href: "/admin/shop/vendors/products",    icon: Package,  label: "Vendor Products"     },
+          { href: "/admin/shop/vendors/performance", icon: Trophy,   label: "Vendor Performance"  },
         ],
       },
       {
         label: "Settings",
-        icon:  "settings",
+        icon:  Settings,
         items: [
-          { href: "/admin/shop/countries",           icon: "flag",         label: "Countries"              },
-          { href: "/admin/shop/settings/taxes",      icon: "receipt_long", label: "Taxes & VAT"            },
-          { href: "/admin/shop/settings/currency",   icon: "currency_exchange", label: "Currency Settings" },
-          { href: "/admin/shop/settings/config",     icon: "tune",         label: "Commerce Configuration" },
-          { href: "/admin/shop/settings/notifications", icon: "mail",      label: "Notification Templates" },
-          { href: "/admin/shop/settings/checkout",   icon: "shopping_cart_checkout", label: "Checkout Settings" },
+          { href: "/admin/shop/countries",              icon: Flag,           label: "Countries"               },
+          { href: "/admin/shop/settings/taxes",         icon: Receipt,        label: "Taxes & VAT"             },
+          { href: "/admin/shop/settings/currency",      icon: ArrowLeftRight, label: "Currency Settings"       },
+          { href: "/admin/shop/settings/config",        icon: SlidersHorizontal,label: "Commerce Configuration"},
+          { href: "/admin/shop/settings/notifications", icon: Mail,           label: "Notification Templates"  },
+          { href: "/admin/shop/settings/checkout",      icon: ShoppingCart,   label: "Checkout Settings"       },
         ],
       },
     ],
@@ -184,18 +199,18 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Content",
     items: [
-      { href: "/admin/blog",            icon: "edit_note",   label: "Articles"   },
-      { href: "/admin/blog/categories", icon: "label",       label: "Categories" },
-      { href: "/admin/blog/tags",       icon: "tag",         label: "Tags"       },
-      { href: "/admin/content",         icon: "web_stories", label: "Policies"   },
+      { href: "/admin/blog",            icon: FileEdit,  label: "Articles"   },
+      { href: "/admin/blog/categories", icon: Tag,       label: "Categories" },
+      { href: "/admin/blog/tags",       icon: Hash,      label: "Tags"       },
+      { href: "/admin/content",         icon: BookOpen,  label: "Policies"   },
     ],
   },
   {
     label: "Tools",
     items: [
-      { href: "/admin/maintenance", icon: "build",                label: "Maintenance" },
-      { href: "/admin/analytics",   icon: "monitoring",           label: "Analytics"   },
-      { href: "/admin/admins",      icon: "admin_panel_settings", label: "Admins"      },
+      { href: "/admin/maintenance", icon: Wrench,      label: "Maintenance" },
+      { href: "/admin/analytics",   icon: Activity,    label: "Analytics"   },
+      { href: "/admin/admins",      icon: ShieldCheck, label: "Admins"      },
     ],
   },
 ];
@@ -212,10 +227,10 @@ interface Props {
   waitingAdmin?:     number;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Icon renderer ─────────────────────────────────────────────────────────────
 
-function Icon({ name, className }: { name: string; className?: string }) {
-  return <span className={`material-symbols-outlined ${styles.icon} ${className ?? ""}`}>{name}</span>;
+function Icon({ icon: I, className }: { icon: LucideIcon; className?: string }) {
+  return <I size={16} strokeWidth={1.75} className={className} />;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -248,7 +263,7 @@ export default function AdminSidebar({
     if (item.future) {
       return (
         <div key={item.label} className={styles.futureItem} title={collapsed ? item.label : undefined}>
-          <Icon name={item.icon} className={styles.navIcon} />
+          <Icon icon={item.icon} className={styles.navIcon} />
           <span className={styles.navLabel}>{item.label}</span>
           <span className={styles.futureBadge}>soon</span>
         </div>
@@ -266,7 +281,7 @@ export default function AdminSidebar({
         title={collapsed ? item.label : undefined}
         onClick={onMobileClose}
       >
-        <Icon name={item.icon} className={styles.navIcon} />
+        <Icon icon={item.icon} className={styles.navIcon} />
         <span className={styles.navLabel}>{item.label}</span>
         {count > 0 && (
           <span className={`${styles.navBadge} ${active ? styles.navBadgeActive : ""}`}>
@@ -293,7 +308,10 @@ export default function AdminSidebar({
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand" : "Collapse"}
         >
-          <Icon name={collapsed ? "chevron_right" : "chevron_left"} />
+          {collapsed
+            ? <ChevronRight size={16} strokeWidth={1.75} />
+            : <ChevronLeft  size={16} strokeWidth={1.75} />
+          }
         </button>
       </div>
 
@@ -307,7 +325,7 @@ export default function AdminSidebar({
               group.subGroups.map(subGroup => (
                 <div key={subGroup.label} className={styles.subGroup}>
                   <div className={styles.subGroupHeader}>
-                    <Icon name={subGroup.icon} className={styles.subGroupIcon} />
+                    <Icon icon={subGroup.icon} className={styles.subGroupIcon} />
                     <span className={styles.subGroupLabel}>{subGroup.label}</span>
                   </div>
                   {subGroup.items.map(item => renderItem(item))}
@@ -331,7 +349,7 @@ export default function AdminSidebar({
               title={collapsed ? "Settings" : undefined}
               onClick={onMobileClose}
             >
-              <Icon name="settings" className={styles.navIcon} />
+              <Icon icon={Settings} className={styles.navIcon} />
               <span className={styles.navLabel}>Settings</span>
               {active && <span className={styles.navActiveBar} />}
             </Link>

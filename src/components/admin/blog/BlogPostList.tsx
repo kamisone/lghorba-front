@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./BlogPostList.module.css";
+import { Star } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -138,7 +139,7 @@ export default function BlogPostList() {
                 <td className={styles.td}>
                   <div className={styles.titleCell}>
                     <span className={styles.postTitle}>
-                      {post.featured && <span className={styles.featuredStar}>★</span>}
+                      {post.featured && <span className={styles.featuredStar}><Star size={14} strokeWidth={1.75} /></span>}
                       {post.title}
                     </span>
                     <span className={styles.postSlug}>/{post.slug}</span>

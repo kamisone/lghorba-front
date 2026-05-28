@@ -1,4 +1,4 @@
-/* ── Reset for landing page ── */
+/* ── Root ── */
 .root {
   font-family: inherit;
   color: var(--color-text-heading);
@@ -71,14 +71,15 @@
 
 .heroPill {
   display: inline-block;
-  padding: 0.4rem 1rem;
-  background: rgba(var(--rgb-brand-accent),0.15);
-  border: 1px solid rgba(var(--rgb-brand-accent),0.4);
+  padding: 0.4rem 1.1rem;
+  background: rgba(var(--rgb-brand-accent),0.12);
+  border: 1px solid rgba(var(--rgb-brand-accent),0.35);
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-brand-accent);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .heroTitle {
@@ -155,7 +156,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
   background: rgba(var(--rgb-white),0.05);
   border: 1px solid rgba(var(--rgb-white),0.1);
   border-radius: 16px;
@@ -191,6 +191,7 @@
   height: 40px;
   background: rgba(var(--rgb-white),0.1);
 }
+
 
 /* ── Search section ── */
 .searchSection {
@@ -228,7 +229,6 @@
   margin: 0 0 0.5rem;
 }
 
-/* Title sits on dark background → must be white */
 .searchTitle {
   font-size: clamp(1.7rem, 3.5vw, 2.4rem);
   font-weight: 900;
@@ -238,7 +238,6 @@
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.18);
 }
 
-/* Card floats above the gradient — needs stronger shadow */
 .searchCard {
   background: var(--color-white);
   border: 1.5px solid var(--color-border);
@@ -259,6 +258,7 @@
   .searchInner { padding: 2rem 1rem 0; }
 }
 
+
 /* ── Shared section styles ── */
 .sectionInner {
   max-width: 1120px;
@@ -267,7 +267,7 @@
 }
 
 .sectionEyebrow {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -284,7 +284,6 @@
   line-height: 1.15;
 }
 
-/* ── Shared section head ── */
 .sectionHead {
   margin-bottom: 2.75rem;
 }
@@ -297,12 +296,12 @@
   margin: -1.5rem 0 0;
 }
 
+
 /* ── Platforms ── */
 .platforms {
   padding: 6rem 0;
   position: relative;
   z-index: 3;
-  /* Caps over the dark bottom of the FleetCarousel */
   border-radius: 32px 32px 0 0;
   margin-top: -32px;
   background: transparent;
@@ -326,41 +325,33 @@
 .platformCard:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(var(--rgb-black), 0.1);
-  border-color: rgba(var(--rgb-brand-accent), 0.55);
+  border-color: rgba(var(--rgb-brand-accent), 0.5);
 }
 
 /* Per-platform accent colors */
-.platformCardTuro     { --plat-top-bg: #f0faf9; --plat-icon-bg: rgba(0, 150, 136, 0.12); }
-.platformCardGetaround{ --plat-top-bg: #fffbf0; --plat-icon-bg: rgba(249, 115, 22, 0.12); }
-.platformCardPrivate  { --plat-top-bg: #f4f6f9; --plat-icon-bg: rgba(0, 42, 74, 0.09); }
-
+.platformCardTuro      { --plat-top-bg: #f0faf9; --plat-icon-bg: rgba(0, 150, 136, 0.1); --plat-icon-color: rgb(0, 120, 110); }
+.platformCardGetaround { --plat-top-bg: #fffbf0; --plat-icon-bg: rgba(234, 88, 12, 0.1); --plat-icon-color: rgb(194, 65, 12); }
+.platformCardPrivate   { --plat-top-bg: #f4f6f9; --plat-icon-bg: rgba(0, 42, 74, 0.08); --plat-icon-color: var(--color-brand-primary); }
 
 .platformTop {
   background: var(--plat-top-bg, var(--color-surface));
   border-bottom: 1.5px solid var(--color-border);
-  padding: 1.2rem 1.5rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.9rem;
 }
 
 .platformIconWrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  background: var(--plat-icon-bg, rgba(0, 0, 0, 0.06));
+  background: var(--plat-icon-bg, rgba(0,0,0,0.06));
+  color: var(--plat-icon-color, var(--color-text-secondary));
   flex-shrink: 0;
-}
-
-.platformTopMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
 }
 
 .platformName {
@@ -368,19 +359,6 @@
   font-weight: 800;
   color: var(--color-text-heading);
   margin: 0;
-}
-
-.platformBadge {
-  display: inline-block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.18rem 0.55rem;
-  border-radius: 999px;
-  background: var(--color-brand-accent);
-  color: var(--color-brand-darkest);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  align-self: flex-start;
 }
 
 .platformBody {
@@ -400,7 +378,7 @@
 .platformTag {
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.22rem 0.6rem;
+  padding: 0.22rem 0.65rem;
   border-radius: 6px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -422,15 +400,13 @@
   font-weight: 700;
   color: var(--color-brand-primary);
   text-decoration: none;
-  transition: color 0.15s, letter-spacing 0.15s;
-  padding-top: 0.1rem;
+  transition: color 0.15s, gap 0.15s;
+  gap: 0.25rem;
 }
-.platformCta:hover {
-  color: var(--color-brand-dark);
-  letter-spacing: 0.01em;
-}
+.platformCta:hover { color: var(--color-brand-dark); }
 
-/* ── Fleet ── */
+
+/* ── Fleet types ── */
 .fleet {
   padding: 6rem 0;
   position: relative;
@@ -446,41 +422,43 @@
   gap: 1.25rem;
 }
 
-/* Per-type accent colors */
-.fleetCardCity { --fleet-bg: rgba(14, 165, 233, 0.09);  --fleet-emoji-filter: none; }
-.fleetCardSuv  { --fleet-bg: rgba(34, 197, 94, 0.09);   --fleet-emoji-filter: none; }
-.fleetCardVan  { --fleet-bg: rgba(251, 146, 60, 0.1);   --fleet-emoji-filter: none; }
+/* Per-type accent colors applied to icon wrap */
+.fleetCardCity { --fleet-icon-bg: rgba(14, 165, 233, 0.1);  --fleet-icon-color: rgb(3, 105, 161);  --fleet-accent: #0ea5e9; }
+.fleetCardSuv  { --fleet-icon-bg: rgba(34, 197, 94, 0.1);   --fleet-icon-color: rgb(21, 128, 61);  --fleet-accent: #22c55e; }
+.fleetCardVan  { --fleet-icon-bg: rgba(251, 146, 60, 0.12); --fleet-icon-color: rgb(194, 65, 12);  --fleet-accent: #f97316; }
 
 .fleetCard {
   background: var(--color-white);
   border: 1.5px solid var(--color-border);
+  border-top: 3px solid var(--fleet-accent, var(--color-border));
   border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 .fleetCard:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(var(--rgb-black), 0.1);
-  border-color: rgba(var(--rgb-brand-accent), 0.45);
+  box-shadow: 0 10px 30px rgba(var(--rgb-black), 0.1);
 }
 
-.fleetCardVisual {
-  height: 110px;
+.fleetCardIconRow {
+  padding: 1.4rem 1.4rem 0;
+}
+
+.fleetCardIconWrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--fleet-bg, var(--color-surface));
-}
-
-.fleetCardEmoji {
-  font-size: 3.5rem;
-  line-height: 1;
+  background: var(--fleet-icon-bg, var(--color-surface));
+  color: var(--fleet-icon-color, var(--color-text-secondary));
 }
 
 .fleetCardBody {
-  padding: 1.25rem 1.4rem 1.4rem;
+  padding: 1rem 1.4rem 1.4rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -542,6 +520,7 @@
   transform: translateY(-1px);
 }
 
+
 /* ── How it works ── */
 .how {
   padding: 6rem 0;
@@ -558,18 +537,18 @@
   position: relative;
 }
 
-/* Connector line between step badges */
+/* Connector line */
 .howSteps::before {
   content: "";
   position: absolute;
-  top: 27px;
-  left: 28px;
-  right: 28px;
+  top: 30px;
+  left: calc(23px + 2rem);
+  right: calc(23px + 2rem);
   height: 1.5px;
   background: linear-gradient(
     90deg,
     var(--color-border) 0%,
-    rgba(var(--rgb-brand-accent), 0.45) 50%,
+    rgba(var(--rgb-brand-accent), 0.4) 50%,
     var(--color-border) 100%
   );
   z-index: 0;
@@ -581,37 +560,31 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 1.1rem;
+  gap: 0.85rem;
   position: relative;
   z-index: 1;
 }
 
 .howStepBadge {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  border: 2px solid var(--color-brand-accent);
+  border: 1.5px solid var(--color-border);
   background: var(--color-white);
-  box-shadow: 0 0 0 5px rgba(var(--rgb-brand-accent), 0.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  color: var(--color-brand-primary);
   flex-shrink: 0;
 }
 
 .howStepN {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--color-brand-accent);
+  letter-spacing: 0.12em;
+  color: var(--color-text-placeholder);
   text-transform: uppercase;
-  line-height: 1;
-}
-
-.howStepIcon {
-  font-size: 1.05rem;
   line-height: 1;
 }
 
@@ -629,6 +602,7 @@
   margin: 0;
 }
 
+
 /* ── Why us ── */
 .why {
   padding: 6rem 0;
@@ -643,7 +617,6 @@
   background-size: 60px 60px;
 }
 
-/* Content above pseudo-element overlays for all decorated sections */
 .platforms > .sectionInner,
 .fleet     > .sectionInner,
 .how       > .sectionInner,
@@ -652,13 +625,8 @@
   z-index: 1;
 }
 
-.why .sectionEyebrow {
-  color: var(--color-brand-light);
-}
-
-.why .sectionTitle {
-  color: var(--color-surface);
-}
+.why .sectionEyebrow { color: var(--color-brand-light); }
+.why .sectionTitle   { color: var(--color-surface); }
 
 .whyGrid {
   display: grid;
@@ -683,7 +651,7 @@
 .whyFeatures {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem 1.5rem;
+  gap: 0.9rem 1.5rem;
 }
 
 .whyFeature {
@@ -693,121 +661,23 @@
   font-size: 0.875rem;
   color: var(--color-border-subtle);
   font-weight: 500;
+  line-height: 1.4;
 }
 
 .whyFeatureIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  background: rgba(var(--rgb-brand-accent),0.2);
-  color: var(--color-brand-light);
-  border-radius: 50%;
-  font-size: 0.7rem;
-  font-weight: 800;
+  color: var(--color-brand-accent);
   flex-shrink: 0;
   margin-top: 1px;
 }
 
-/* ── CTA ── */
-.cta {
-  padding: 7rem 0;
-  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-dark) 100%);
-  text-align: center;
-}
-
-.ctaInner {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.ctaTitle {
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  font-weight: 900;
-  color: var(--color-white);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.ctaSub {
-  font-size: 1rem;
-  color: rgba(var(--rgb-white),0.8);
-  margin: 0;
-}
-
-.ctaBtns {
-  margin-top: 0.5rem;
-}
-
-.cta .btnPrimary {
-  background: var(--color-white);
-  color: var(--color-brand-primary);
-}
-.cta .btnPrimary:hover {
-  opacity: 0.95;
-}
-
-/* ── Footer ── */
-.footer {
-  background: var(--color-brand-darkest);
-  padding: 2rem 0;
-}
-
-.footerInner {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.footerLogo {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.footerLogo .logoText {
-  color: var(--color-surface);
-}
-
-.footerCopy {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
-.footerLinks {
-  display: flex;
-  gap: 1rem;
-}
-
-.footerLink {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-.footerLink:hover { color: var(--color-text-placeholder); }
 
 /* ── Responsive ── */
-/* tablet (1024px) */
 @media (max-width: 1024px) {
   .hero { padding: 5rem 1.5rem 3rem; }
 
   .platformGrid,
   .fleetGrid { grid-template-columns: 1fr; }
 
-  /* How steps: stack vertically and hide connector line */
   .howSteps {
     flex-direction: column;
     gap: 1.5rem;
@@ -823,11 +693,8 @@
 
   .whyGrid { grid-template-columns: 1fr; gap: 2rem; }
   .whyFeatures { grid-template-columns: 1fr; }
-
-  .footerInner { flex-direction: column; text-align: center; }
 }
 
-/* phone (640px) */
 @media (max-width: 640px) {
   .heroBtns { flex-direction: column; align-items: stretch; }
   .btnPrimary, .btnOutline { text-align: center; }

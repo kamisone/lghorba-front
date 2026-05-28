@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import styles from "./CreateUserModal.module.css";
+import { X, Check, Search } from "lucide-react";
 
 interface UnlinkedSession {
   id: string;
@@ -96,7 +97,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>Add user</h2>
-          <button className={styles.closeBtn} onClick={onClose}>✕</button>
+          <button className={styles.closeBtn} onClick={onClose}><X size={14} strokeWidth={2} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -197,7 +198,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
             ) : (
               <>
                 <div className={styles.sessionSearchWrap}>
-                  <span className={`material-symbols-outlined ${styles.sessionSearchIcon}`}>search</span>
+                  <Search size={16} strokeWidth={1.75} className={styles.sessionSearchIcon} />
                   <input
                     type="text"
                     className={styles.sessionSearchInput}
@@ -228,7 +229,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
                           {fmtDate(s.startedAt)}
                           {s.endedAt ? ` → ${fmtDate(s.endedAt)}` : " → ongoing"}
                         </div>
-                        {selected && <span className={styles.sessionCheck}>✓</span>}
+                        {selected && <span className={styles.sessionCheck}><Check size={14} strokeWidth={2} /></span>}
                       </button>
                     );
                   })}

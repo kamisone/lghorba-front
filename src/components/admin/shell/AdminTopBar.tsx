@@ -7,6 +7,10 @@ import { useBusinessTz } from "@/contexts/TzContext";
 import { useErrorStore } from "@/lib/errorReporter";
 import CommandPalette from "./CommandPalette";
 import ErrorsPanel from "@/components/admin/monitoring/ErrorsPanel";
+import {
+  Search, Clock, AlertTriangle, Bell, AlertCircle,
+  Info, ChevronRight, ChevronDown, Settings, LogOut,
+} from "lucide-react";
 import styles from "./AdminTopBar.module.css";
 
 // ── Breadcrumb ────────────────────────────────────────────────────────────────
@@ -202,14 +206,14 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
 
           {/* Search */}
           <button className={styles.searchBtn} onClick={() => setPaletteOpen(true)} aria-label="Search (⌘K)">
-            <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
+            <Search size={15} strokeWidth={1.75} className={styles.searchIcon} />
             <span className={styles.searchLabel}>Search</span>
             <kbd className={styles.searchKbd}>⌘K</kbd>
           </button>
 
           {/* Timezone chip */}
           <Link href="/admin/settings" className={styles.tzChip} title="Timezone settings">
-            <span className={`material-symbols-outlined ${styles.tzIcon}`}>schedule</span>
+            <Clock size={13} strokeWidth={1.75} className={styles.tzIcon} />
             <span className={styles.tzLabel}>{tz}</span>
           </Link>
 
@@ -220,7 +224,7 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
               onClick={() => setErrorsOpen(o => !o)}
               aria-label={`Client errors${errors.length > 0 ? ` (${errors.length})` : ""}`}
             >
-              <span className="material-symbols-outlined">warning</span>
+              <AlertTriangle size={18} strokeWidth={1.75} />
               {errors.length > 0 && (
                 <span className={`${styles.badge} ${styles.badgeError}`}>{errors.length > 9 ? "9+" : errors.length}</span>
               )}
@@ -235,7 +239,7 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
               onClick={() => setNotifOpen(o => !o)}
               aria-label={`Notifications${totalNotifs > 0 ? ` (${totalNotifs})` : ""}`}
             >
-              <span className="material-symbols-outlined">notifications</span>
+              <Bell size={18} strokeWidth={1.75} />
               {totalNotifs > 0 && (
                 <span className={styles.badge}>{totalNotifs > 9 ? "9+" : totalNotifs}</span>
               )}
@@ -255,14 +259,15 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
                           className={`${styles.notifItem} ${item.urgent ? styles.notifItemUrgent : ""}`}
                           onClick={() => setNotifOpen(false)}
                         >
-                          <span className={`material-symbols-outlined ${styles.notifItemIcon}`}>
-                            {item.urgent ? "error" : "info"}
-                          </span>
+                          {item.urgent
+                            ? <AlertCircle size={16} strokeWidth={1.75} className={styles.notifItemIcon} />
+                            : <Info        size={16} strokeWidth={1.75} className={styles.notifItemIcon} />
+                          }
                           <div className={styles.notifItemText}>
                             <span className={styles.notifItemLabel}>{item.label}</span>
                             <span className={styles.notifItemSub}>{item.sub}</span>
                           </div>
-                          <span className={`material-symbols-outlined ${styles.notifItemArrow}`}>chevron_right</span>
+                          <ChevronRight size={14} strokeWidth={1.75} className={styles.notifItemArrow} />
                         </Link>
                       </li>
                     ))}
@@ -283,7 +288,7 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
                 {profile ? initials(profile.name) : "…"}
               </span>
               <span className={styles.profileName}>{profile?.name ?? ""}</span>
-              <span className={`material-symbols-outlined ${styles.chevron}`}>expand_more</span>
+              <ChevronDown size={14} strokeWidth={1.75} className={styles.chevron} />
             </button>
 
             {profileOpen && (
@@ -302,11 +307,11 @@ export default function AdminTopBar({ pendingBookings, reminderFailures, onMobil
                 )}
                 <div className={styles.dropdownDivider} />
                 <Link href="/admin/settings" className={styles.dropdownItem} onClick={() => setProfileOpen(false)}>
-                  <span className="material-symbols-outlined">settings</span>
+                  <Settings size={15} strokeWidth={1.75} />
                   Settings
                 </Link>
                 <button className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`} onClick={handleLogout}>
-                  <span className="material-symbols-outlined">logout</span>
+                  <LogOut size={15} strokeWidth={1.75} />
                   Sign out
                 </button>
               </div>

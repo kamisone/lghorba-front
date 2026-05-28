@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "./AddressAutocomplete.module.css";
+import { MapPin, X } from "lucide-react";
 
 export interface SelectedAddress {
   label: string;
@@ -132,7 +133,7 @@ export default function AddressAutocomplete({
   return (
     <div className={styles.wrap}>
       <div className={`${styles.inputWrap} ${error ? styles.inputError : ""} ${value ? styles.inputValid : ""}`}>
-        <span className={styles.inputIcon}>📍</span>
+        <span className={styles.inputIcon}><MapPin size={16} strokeWidth={1.75} /></span>
         <input
           ref={inputRef}
           id={id}
@@ -158,7 +159,7 @@ export default function AddressAutocomplete({
             onClick={() => { onChange(null); setQuery(""); inputRef.current?.focus(); }}
             aria-label="Clear address"
           >
-            ✕
+            <X size={14} strokeWidth={2} />
           </button>
         )}
       </div>
@@ -176,7 +177,7 @@ export default function AddressAutocomplete({
               className={`${styles.option} ${i === activeIdx ? styles.optionActive : ""}`}
               onMouseDown={(e) => { e.preventDefault(); select(s); }}
             >
-              <span className={styles.optionIcon}>📍</span>
+              <span className={styles.optionIcon}><MapPin size={16} strokeWidth={1.75} /></span>
               <span className={styles.optionText}>
                 <span className={styles.optionLabel}>{s.label}</span>
                 <span className={styles.optionCity}>{s.city} {s.postcode}</span>

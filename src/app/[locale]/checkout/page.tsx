@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Check } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useCart } from "@/components/shop/CartContext";
@@ -112,7 +113,7 @@ function StepIndicator({ current, locale }: { current: Step; locale: string }) {
         return (
           <div key={s} className={styles.stepItem}>
             <div className={`${styles.stepDot} ${active ? styles.stepDotActive : done ? styles.stepDotDone : ""}`}>
-              {done ? "✓" : i + 1}
+              {done ? <Check size={14} strokeWidth={2} /> : i + 1}
             </div>
             <span className={`${styles.stepLabel} ${active ? styles.stepLabelActive : done ? styles.stepLabelDone : ""}`}>
               {STEP_LABELS[s]}

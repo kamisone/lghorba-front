@@ -6,6 +6,7 @@ import AddressAutocomplete, { type SelectedAddress } from "./AddressAutocomplete
 import { isoToLocalParts, localPartsToUTC } from "@/lib/dateUtils";
 import { loadSearchContext } from "@/lib/searchContext";
 import styles from "./CarSearchForm.module.css";
+import { MapPin, ArrowRight, CalendarDays, Flag, Search } from "lucide-react";
 
 function nowPlusHours(h: number): { date: string; time: string } {
   const d = new Date(Date.now() + h * 3_600_000);
@@ -87,7 +88,7 @@ export default function CarSearchForm({ locale, labels }: Props) {
       <div className={styles.datesRow}>
         <div className={styles.fieldGroup}>
           <label className={styles.fieldLabel}>
-            <span className={styles.fieldIcon}>📅</span>
+            <CalendarDays size={16} strokeWidth={1.75} className={styles.fieldIcon} />
             {labels.fromLabel}
           </label>
           <div className={styles.datetimeRow}>
@@ -109,12 +110,12 @@ export default function CarSearchForm({ locale, labels }: Props) {
         </div>
 
         <div className={styles.arrowWrap} aria-hidden="true">
-          <span className={styles.arrow}>→</span>
+          <span className={styles.arrow}><ArrowRight size={14} strokeWidth={1.75} /></span>
         </div>
 
         <div className={styles.fieldGroup}>
           <label className={styles.fieldLabel}>
-            <span className={styles.fieldIcon}>🏁</span>
+            <Flag size={16} strokeWidth={1.75} className={styles.fieldIcon} />
             {labels.toLabel}
           </label>
           <div className={styles.datetimeRow}>
@@ -141,7 +142,7 @@ export default function CarSearchForm({ locale, labels }: Props) {
       <div className={styles.addressRow}>
         <div className={styles.fieldGroup}>
           <label className={styles.fieldLabel} htmlFor="search-address">
-            <span className={styles.fieldIcon}>📍</span>
+            <span className={styles.fieldIcon}><MapPin size={16} strokeWidth={1.75} /></span>
             <span className={styles.fieldLabelText}>{labels.addressLabel}</span>
             <span className={styles.optionalBadge}>{labels.addressOptional}</span>
           </label>
@@ -158,7 +159,7 @@ export default function CarSearchForm({ locale, labels }: Props) {
 
       {/* ── Submit ── */}
       <button type="submit" className={styles.searchBtn}>
-        <span className={styles.searchBtnIcon}>🔍</span>
+        <Search size={16} strokeWidth={1.75} className={styles.searchBtnIcon} />
         {labels.searchBtn}
       </button>
 

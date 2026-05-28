@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import RichTextEditor from "./RichTextEditor";
 import styles from "./ContentEditor.module.css";
+import { ChevronUp, ChevronDown, X } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -258,20 +259,20 @@ export default function ContentEditor() {
                     disabled={i === 0}
                     onClick={() => moveSection(i, -1)}
                     title="Move up"
-                  >▲</button>
+                  ><ChevronUp size={14} strokeWidth={1.75} /></button>
                   <button
                     type="button"
                     className={styles.sectionMoveBtn}
                     disabled={i === data.sections.length - 1}
                     onClick={() => moveSection(i, 1)}
                     title="Move down"
-                  >▼</button>
+                  ><ChevronDown size={14} strokeWidth={1.75} /></button>
                   <button
                     type="button"
                     className={styles.sectionRemoveBtn}
                     onClick={() => removeSection(i)}
                     title="Remove section"
-                  >✕</button>
+                  ><X size={14} strokeWidth={2} /></button>
                 </div>
               </div>
               <RichTextEditor

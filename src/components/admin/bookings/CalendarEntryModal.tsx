@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CarPricing } from "../fleet/PricingModal";
+import { X, ArrowRight, AlertTriangle } from "lucide-react";
 import styles from "./CalendarEntryModal.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -104,7 +105,7 @@ function PricingForm({
           <span className={styles.fieldLabel}>From</span>
           <input type="date" className={styles.input} value={startDate} onChange={e => setStartDate(e.target.value)} />
         </label>
-        <span className={styles.dateSep}>→</span>
+        <span className={styles.dateSep}><ArrowRight size={14} strokeWidth={1.75} /></span>
         <label className={styles.field}>
           <span className={styles.fieldLabel}>To (inclusive)</span>
           <input type="date" className={styles.input} value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} />
@@ -134,7 +135,7 @@ function PricingForm({
 
       {overlaps.length > 0 && (
         <div className={styles.overlapWarn}>
-          <span className={styles.warnIcon}>⚠</span>
+          <span className={styles.warnIcon}><AlertTriangle size={14} strokeWidth={1.75} /></span>
           <span>Overlaps with {overlaps.length} existing rule{overlaps.length > 1 ? "s" : ""}. They will coexist.</span>
         </div>
       )}
@@ -202,7 +203,7 @@ function AvailForm({
           <span className={styles.fieldLabel}>From</span>
           <input type="date" className={styles.input} value={startDate} onChange={e => setStartDate(e.target.value)} />
         </label>
-        <span className={styles.dateSep}>→</span>
+        <span className={styles.dateSep}><ArrowRight size={14} strokeWidth={1.75} /></span>
         <label className={styles.field}>
           <span className={styles.fieldLabel}>To (inclusive)</span>
           <input type="date" className={styles.input} value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} />
@@ -284,9 +285,9 @@ export default function CalendarEntryModal({
           <div>
             <h2 className={styles.title}>{title}</h2>
             <p className={styles.sub}>{carName}</p>
-            {isCreate && <p className={styles.subDates}>{fmt(initStart)} → {fmt(initEnd)}</p>}
+            {isCreate && <p className={styles.subDates}>{fmt(initStart)} <ArrowRight size={14} strokeWidth={1.75} /> {fmt(initEnd)}</p>}
           </div>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} strokeWidth={1.75} /></button>
         </div>
 
         {/* Tabs (only in create mode) */}

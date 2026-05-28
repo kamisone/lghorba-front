@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "./Reviews.module.css";
 import { useToast } from "@/components/toast/ToastContext";
+import { Star } from "lucide-react";
 
 interface Review {
   id: string;
@@ -35,7 +36,7 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className={styles.stars}>
       {[1, 2, 3, 4, 5].map(n => (
-        <span key={n} className={`${styles.star} ${n <= rating ? styles.starFilled : styles.starEmpty}`}>★</span>
+        <span key={n} className={`${styles.star} ${n <= rating ? styles.starFilled : styles.starEmpty}`}><Star size={14} strokeWidth={1.75} /></span>
       ))}
       <span className={styles.ratingNum}>{rating}/5</span>
     </div>

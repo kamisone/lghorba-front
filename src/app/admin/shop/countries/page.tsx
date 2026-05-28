@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import { useToast } from "@/components/toast/ToastContext";
+import { X } from "lucide-react";
 
 interface Country {
   isoCode: string;
@@ -287,7 +288,7 @@ export default function CountriesPage() {
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
                 {modal === "create" ? "Add Country" : `Edit — ${form.name}`}
               </h2>
-              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "var(--color-text-muted)", lineHeight: 1 }}>×</button>
+              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "var(--color-text-muted)", lineHeight: 1 }}><X size={14} strokeWidth={2} /></button>
             </div>
 
             {/* Body */}

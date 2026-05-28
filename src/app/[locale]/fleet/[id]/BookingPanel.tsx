@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { MapPin, Truck, Search, Check, X } from "lucide-react";
 import DateTimePicker from "@/components/DateTimePicker";
 import PhoneInput from "@/components/PhoneInput";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
@@ -150,7 +151,7 @@ export default function BookingPanel({
           ].filter(Boolean).join(" ")}>
             <span className={styles.dateRangeStepBadge}>
               {startDone
-                ? <span className="material-symbols-outlined">check</span>
+                ? <Check size={14} strokeWidth={1.75} />
                 : "1"}
             </span>
             {labels.startDate}
@@ -188,7 +189,7 @@ export default function BookingPanel({
           ].filter(Boolean).join(" ")}>
             <span className={styles.dateRangeStepBadge}>
               {endDone
-                ? <span className="material-symbols-outlined">check</span>
+                ? <Check size={14} strokeWidth={1.75} />
                 : "2"}
             </span>
             {labels.endDate}
@@ -212,7 +213,7 @@ export default function BookingPanel({
       {prefillSource && (
         <div className={styles.prefillBanner}>
           <span className={styles.prefillBannerIcon}>
-            {prefillSource === "url" ? "🔍" : "🕐"}
+            {prefillSource === "url" ? <Search size={16} strokeWidth={1.75} /> : "🕐"}
           </span>
           <span className={styles.prefillBannerText}>
             {prefillSource === "url" ? labels.prefillFromSearch : labels.prefillLastSearch}
@@ -222,7 +223,7 @@ export default function BookingPanel({
             onClick={() => setPrefillSource(null)}
             aria-label={labels.dismiss}
           >
-            ×
+            <X size={14} strokeWidth={2} />
           </button>
         </div>
       )}
@@ -316,7 +317,7 @@ export default function BookingPanel({
                   onChange={() => { setDeliveryMode("pickup"); setSelectedLocationId(null); }}
                   className={styles.deliveryOptionRadio}
                 />
-                <span className={styles.deliveryOptionIcon}>📍</span>
+                <span className={styles.deliveryOptionIcon}><MapPin size={16} strokeWidth={1.75} /></span>
                 <span className={styles.deliveryOptionInfo}>
                   <span className={styles.deliveryOptionLabel}>{t.booking.delivery.pickup}</span>
                 </span>
@@ -329,7 +330,7 @@ export default function BookingPanel({
                     onChange={() => { setDeliveryMode("delivery"); setSelectedLocationId(loc.id); }}
                     className={styles.deliveryOptionRadio}
                   />
-                  <span className={styles.deliveryOptionIcon}>🚚</span>
+                  <span className={styles.deliveryOptionIcon}><Truck size={16} strokeWidth={1.75} /></span>
                   <span className={styles.deliveryOptionInfo}>
                     <span className={styles.deliveryOptionLabel}>{loc.label}</span>
                     <span className={styles.deliveryOptionAddr}>{loc.address}</span>
@@ -351,14 +352,14 @@ export default function BookingPanel({
                   className={`${styles.deliveryToggleBtn} ${deliveryMode === "pickup" ? styles.deliveryToggleBtnActive : ""}`}
                   onClick={() => { setDeliveryMode("pickup"); setDeliveryAddress(null); setDeliveryValidation(null); }}
                 >
-                  📍 {t.booking.delivery.pickup}
+                  <MapPin size={16} strokeWidth={1.75} /> {t.booking.delivery.pickup}
                 </button>
                 <button
                   type="button"
                   className={`${styles.deliveryToggleBtn} ${deliveryMode === "delivery" ? styles.deliveryToggleBtnActive : ""}`}
                   onClick={() => setDeliveryMode("delivery")}
                 >
-                  🚚 {t.booking.delivery.deliver}
+                  <Truck size={16} strokeWidth={1.75} /> {t.booking.delivery.deliver}
                 </button>
               </div>
               {deliveryMode === "delivery" && (
@@ -490,7 +491,7 @@ export default function BookingPanel({
             {couponChecking && <span className={styles.couponSpinner} />}
             {!couponChecking && couponResult && (
               couponResult.valid
-                ? <span className={styles.couponOk}>✓ −€{couponResult.discountAmount.toFixed(2)}</span>
+                ? <span className={styles.couponOk}><Check size={14} strokeWidth={2} /> −€{couponResult.discountAmount.toFixed(2)}</span>
                 : <span className={styles.couponErr}>{couponResult.error}</span>
             )}
           </div>

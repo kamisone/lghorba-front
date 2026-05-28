@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { X } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import shopStyles from "../Shop.module.css";
 import styles from "./Search.module.css";
@@ -98,7 +99,7 @@ export default function ShopSearchPage({ params }: { params: { locale: string } 
           <div className={shopStyles.filterBar}>
             {brand && (
               <button onClick={() => pushQuery({ brand: "" })} className={shopStyles.filterChip}>
-                {t.filterBrandLabel} {brand} <em className={shopStyles.filterChipX}>×</em>
+                {t.filterBrandLabel} {brand} <em className={shopStyles.filterChipX}><X size={14} strokeWidth={2} /></em>
               </button>
             )}
             {(minPrice || maxPrice) && (
@@ -106,7 +107,7 @@ export default function ShopSearchPage({ params }: { params: { locale: string } 
                 {t.filterPriceLabel} {minPrice ? `€${parseInt(minPrice) / 100}` : ""}
                 {minPrice && maxPrice ? " – " : ""}
                 {maxPrice ? `€${parseInt(maxPrice) / 100}` : ""}
-                <em className={shopStyles.filterChipX}>×</em>
+                <em className={shopStyles.filterChipX}><X size={14} strokeWidth={2} /></em>
               </button>
             )}
           </div>

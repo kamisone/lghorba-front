@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, X } from "lucide-react";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./PromoCodeInput.module.css";
@@ -79,7 +80,7 @@ export default function PromoCodeInput({
         </div>
         {appliedDiscountCents !== undefined && appliedDiscountCents > 0 && (
           <div className={`${styles.feedback} ${styles.feedbackValid}`}>
-            <em className={styles.feedbackIcon}>✓</em>
+            <em className={styles.feedbackIcon}><Check size={14} strokeWidth={2} /></em>
             {t.promoAppliedPrefix}€{centsToEuros(appliedDiscountCents)}
           </div>
         )}
@@ -111,7 +112,7 @@ export default function PromoCodeInput({
       </div>
       {result && !result.valid && (
         <div className={`${styles.feedback} ${styles.feedbackInvalid}`}>
-          <em className={styles.feedbackIcon}>✕</em>
+          <em className={styles.feedbackIcon}><X size={14} strokeWidth={2} /></em>
           {result.message ?? t.promoInvalidCode}
         </div>
       )}

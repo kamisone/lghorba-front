@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CalendarDays, ArrowRight } from "lucide-react";
 import { useResolvedBookingDates } from "@/hooks/useResolvedBookingDates";
 import styles from "./car-public.module.css";
 
@@ -67,7 +68,7 @@ export default function SearchContextBar({
         ← {backLabel}
       </Link>
       <span className={styles.searchContextDates}>
-        📅 {fmtDate(ctx.start, locale)} → {fmtDate(ctx.end, locale)}
+        <CalendarDays size={16} strokeWidth={1.75} /> {fmtDate(ctx.start, locale)} <ArrowRight size={14} strokeWidth={1.75} /> {fmtDate(ctx.end, locale)}
       </span>
     </div>
   );

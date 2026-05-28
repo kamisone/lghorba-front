@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Car } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./ArticlePage.module.css";
 
@@ -134,7 +135,7 @@ export default function ArticlePage({ post, locale, related = [] }: Props) {
         {/* ── Featured image ── */}
         {imgUrl
           ? <img src={imgUrl} alt={post.featuredImageAlt ?? post.title} className={styles.featuredImage} />
-          : <div className={styles.featuredImagePlaceholder}>🚗</div>
+          : <div className={styles.featuredImagePlaceholder}><Car size={16} strokeWidth={1.75} /></div>
         }
 
         {/* ── Content ── */}
@@ -184,7 +185,7 @@ export default function ArticlePage({ post, locale, related = [] }: Props) {
                 <Link key={rel.id} href={`/${locale}/blog/${rel.slug}`} className={styles.relatedCard}>
                   {rel.featuredImageUrl
                     ? <img src={rel.featuredImageUrl} alt={rel.title} className={styles.relatedImage} />
-                    : <div className={styles.relatedImagePlaceholder}>🚗</div>
+                    : <div className={styles.relatedImagePlaceholder}><Car size={16} strokeWidth={1.75} /></div>
                   }
                   <div className={styles.relatedCardMeta}>
                     {rel.categories[0]?.name}

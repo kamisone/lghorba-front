@@ -24,7 +24,7 @@ export const en = {
     logoAriaLabel:      "vitecamion — home",
   },
   hero: {
-    pill: "🚗 Car rental · Turo · Getaround · Private",
+    pill: "Car rental · Turo · Getaround · Private",
     title1: "Drive fast,",
     title2: "book smarter",
     sub: "Premium vehicles available on Turo, Getaround, and direct private rental. Transparent pricing, recent models, flexible bookings.",
@@ -893,7 +893,7 @@ export const fr: Translations = {
     logoAriaLabel:      "vitecamion — accueil",
   },
   hero: {
-    pill: "🚗 Location · Turo · Getaround · Privé",
+    pill: "Location · Turo · Getaround · Privé",
     title1: "Roulez vite,",
     title2: "réservez mieux",
     sub: "Véhicules premium disponibles sur Turo, Getaround et en location privée directe. Tarifs transparents, modèles récents, réservations flexibles.",

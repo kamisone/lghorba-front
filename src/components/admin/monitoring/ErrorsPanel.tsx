@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useErrorStore, type ErrorEntry } from "@/lib/errorReporter";
 import styles from "./ErrorsPanel.module.css";
+import { ChevronUp, ChevronDown, Copy, X, AlertTriangle } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -94,14 +95,14 @@ function ErrorRow({ entry, onDismiss }: { entry: DisplayEntry; onDismiss: (id: s
         <div className={styles.rowActions}>
           {entry.stack && (
             <button className={styles.actionBtn} onClick={() => setExpanded(v => !v)} title="Toggle stack trace">
-              <span className="material-symbols-outlined">{expanded ? "expand_less" : "expand_more"}</span>
+              {expanded ? <ChevronUp size={16} strokeWidth={1.75} /> : <ChevronDown size={16} strokeWidth={1.75} />}
             </button>
           )}
           <button className={styles.actionBtn} onClick={handleCopy} title="Copy to clipboard">
-            <span className="material-symbols-outlined">content_copy</span>
+            <Copy size={16} strokeWidth={1.75} />
           </button>
           <button className={`${styles.actionBtn} ${styles.dismissBtn}`} onClick={() => onDismiss(entry.id)} title="Dismiss">
-            <span className="material-symbols-outlined">close</span>
+            <X size={16} strokeWidth={1.75} />
           </button>
         </div>
       </div>
@@ -156,11 +157,11 @@ export default function ErrorsPanel({ onClose }: Props) {
     <div className={styles.panel}>
       <div className={styles.header}>
         <span className={styles.headerTitle}>
-          <span className="material-symbols-outlined">warning</span>
+          <AlertTriangle size={16} strokeWidth={1.75} />
           Errors
         </span>
         <button className={styles.closeBtn} onClick={onClose} aria-label="Close error panel">
-          <span className="material-symbols-outlined">close</span>
+          <X size={16} strokeWidth={1.75} />
         </button>
       </div>
 

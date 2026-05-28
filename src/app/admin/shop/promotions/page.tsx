@@ -5,6 +5,7 @@ import BilingualField from "@/components/admin/BilingualField";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import { X } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -524,13 +525,13 @@ export default function PromotionsPage() {
                   {currentScope === "category" && categoryLinks.map(l => (
                     <span key={l.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#eff6ff", border: "1px solid #bfdbfe", padding: "4px 10px", borderRadius: 20, fontSize: 13 }}>
                       {l.category.name}
-                      <button onClick={() => removeLink(l.id, "category")} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: 0, fontSize: 15, lineHeight: 1 }}>×</button>
+                      <button onClick={() => removeLink(l.id, "category")} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: 0, fontSize: 15, lineHeight: 1 }}><X size={14} strokeWidth={2} /></button>
                     </span>
                   ))}
                   {currentScope === "product" && productLinks.map(l => (
                     <span key={l.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "4px 10px", borderRadius: 20, fontSize: 13 }}>
                       {l.product.title}{l.product.sku ? ` (${l.product.sku})` : ""}
-                      <button onClick={() => removeLink(l.id, "product")} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: 0, fontSize: 15, lineHeight: 1 }}>×</button>
+                      <button onClick={() => removeLink(l.id, "product")} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: 0, fontSize: 15, lineHeight: 1 }}><X size={14} strokeWidth={2} /></button>
                     </span>
                   ))}
                   {((currentScope === "category" && categoryLinks.length === 0) ||

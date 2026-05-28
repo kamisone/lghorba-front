@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { Car } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./FleetCarousel.module.css";
 
@@ -81,7 +82,7 @@ function CardSlider({
         // eslint-disable-next-line @next/next/no-img-element
         <img key={src} src={src} alt={carName} className={styles.photo} />
       ) : (
-        <div className={styles.photoFallback}>🚗</div>
+        <div className={styles.photoFallback}><Car size={16} strokeWidth={1.75} /></div>
       )}
       <div className={styles.photoGradient} />
       {total > 1 && (

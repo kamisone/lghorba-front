@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "./ParkingDetailPanel.module.css";
 import type { Parking } from "./ParkingList";
+import { Check, Copy, Pencil, X, Phone, Car, ExternalLink } from "lucide-react";
 
 interface Props {
   parkingId: string;
@@ -35,7 +36,7 @@ function CopyButton({ value }: { value: string }) {
   };
   return (
     <button className={styles.copyBtn} onClick={copy} title="Copy">
-      <span className="material-symbols-outlined">{copied ? "check" : "content_copy"}</span>
+      {copied ? <Check size={16} strokeWidth={1.75} /> : <Copy size={16} strokeWidth={1.75} />}
     </button>
   );
 }
@@ -69,11 +70,11 @@ export default function ParkingDetailPanel({ parkingId, onClose, onEdit }: Props
           <div className={styles.panelHeaderActions}>
             {parking && (
               <button className={styles.editBtn} onClick={() => onEdit(parking)}>
-                <span className="material-symbols-outlined">edit</span> Edit
+                <Pencil size={16} strokeWidth={1.75} /> Edit
               </button>
             )}
             <button className={styles.closeBtn} onClick={onClose}>
-              <span className="material-symbols-outlined">close</span>
+              <X size={16} strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -119,7 +120,7 @@ export default function ParkingDetailPanel({ parkingId, onClose, onEdit }: Props
                 <div className={styles.phoneList}>
                   {parking.ownerPhones.map(ph => (
                     <div key={ph.id} className={styles.phoneItem}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 16, color: "#64748b" }}>phone</span>
+                      <Phone size={16} strokeWidth={1.75} style={{ color: "#64748b" }} />
                       <a href={`tel:${ph.phoneNumber}`} className={styles.phoneLink}>{ph.phoneNumber}</a>
                       {ph.label && <span className={styles.phoneLabel}>{ph.label}</span>}
                     </div>
@@ -186,7 +187,7 @@ export default function ParkingDetailPanel({ parkingId, onClose, onEdit }: Props
                 <div className={styles.carList}>
                   {parking.cars.map(car => (
                     <div key={car.id} className={styles.carItem}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 18, color: "#64748b" }}>directions_car</span>
+                      <Car size={18} strokeWidth={1.75} style={{ color: "#64748b" }} />
                       <div>
                         <div className={styles.carName}>{car.name}</div>
                         <div className={styles.carPlate}>{car.immatriculation}</div>
@@ -214,7 +215,7 @@ export default function ParkingDetailPanel({ parkingId, onClose, onEdit }: Props
                     rel="noopener noreferrer"
                     className={styles.mapsLink}
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>
+                    <ExternalLink size={15} strokeWidth={1.75} />
                     Google Maps
                   </a>
                 </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getTranslations } from "@/lib/i18n";
@@ -72,7 +73,7 @@ function CheckoutForm({
 
       {errorMsg && (
         <p className={styles.errorMsg} role="alert">
-          <span className={styles.errorIcon} aria-hidden="true">⚠</span>
+          <span className={styles.errorIcon} aria-hidden="true"><AlertTriangle size={16} strokeWidth={1.75} /></span>
           {errorMsg}
         </p>
       )}

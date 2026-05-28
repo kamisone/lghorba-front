@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -81,7 +82,7 @@ export default function HamburgerMenu({ links, ctaHref, ctaLabel, locale }: Prop
             onClick={() => setOpen(false)}
             aria-label={t.nav.closeDrawer}
           >
-            ✕
+            <X size={14} strokeWidth={2} />
           </button>
         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { AlertCircle } from "lucide-react";
 import styles from "./error.module.css";
 
 interface Props {
@@ -18,7 +19,7 @@ export default function AdminError({ error, reset }: Props) {
     <div className={styles.wrap}>
       <div className={styles.card}>
         <div className={styles.iconWrap} aria-hidden="true">
-          <span className="material-symbols-outlined">error</span>
+          <AlertCircle size={40} strokeWidth={1.5} />
         </div>
         <h1 className={styles.title}>Something went wrong</h1>
         <p className={styles.body}>

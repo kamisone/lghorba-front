@@ -6,6 +6,7 @@ import styles from "./Collections.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 import { slugify } from "@/lib/slugify";
+import { X } from "lucide-react";
 
 interface Collection {
   id: string;
@@ -226,7 +227,7 @@ export default function CollectionsPage() {
               <h2 className={styles.modalTitle}>
                 {modal === "create" ? "New Collection" : "Edit Collection"}
               </h2>
-              <button className={styles.modalClose} onClick={closeModal}>×</button>
+              <button className={styles.modalClose} onClick={closeModal}><X size={14} strokeWidth={2} /></button>
             </div>
 
             <BilingualField

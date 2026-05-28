@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import { useToast } from "@/components/toast/ToastContext";
+import { Check } from "lucide-react";
 
 interface PaymentMethod {
   id: string;
@@ -128,7 +129,7 @@ export default function PaymentMethodsPage() {
                   </td>
                   <td><code style={{ fontSize: 11, color: "#6b7280" }}>{m.providerMethodId}</code></td>
                   <td style={{ textAlign: "center" }}>
-                    {m.isDefault ? <span style={{ color: "#059669", fontSize: 18 }}>✓</span> : "—"}
+                    {m.isDefault ? <span style={{ color: "#059669", fontSize: 18 }}><Check size={14} strokeWidth={2} /></span> : "—"}
                   </td>
                   <td>
                     <span className={`${styles.badge} ${STATUS_CLASS[m.status] ?? styles.badgeDraft}`}>

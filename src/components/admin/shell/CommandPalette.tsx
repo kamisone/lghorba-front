@@ -2,56 +2,57 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+import {
+  Car, CalendarDays, CalendarCheck, Receipt, Tag, Activity,
+  User, Mail, Key, Bell, MailOpen, Wrench, ShieldCheck,
+  Package, Warehouse, FileText, Settings, Search, X, ArrowRight,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import styles from "./CommandPalette.module.css";
 
 // ── Static nav entries ────────────────────────────────────────────────────────
 
 interface NavEntry {
-  type: "nav";
-  label: string;
+  type:        "nav";
+  label:       string;
   description: string;
-  icon: string;
-  href: string;
+  icon:        LucideIcon;
+  href:        string;
 }
 
 const NAV_ENTRIES: NavEntry[] = [
-  { type: "nav", label: "Fleet",        description: "Manage vehicles",           icon: "directions_car",       href: "/admin/fleet"                      },
-  { type: "nav", label: "Calendar",     description: "Booking calendar",          icon: "calendar_month",       href: "/admin/calendar"                   },
-  { type: "nav", label: "Bookings",     description: "All bookings",              icon: "event_available",      href: "/admin/bookings"                   },
-  { type: "nav", label: "Invoices",     description: "Billing & invoices",        icon: "receipt_long",         href: "/admin/invoices"                   },
-  { type: "nav", label: "Promotions",   description: "Coupon codes",              icon: "sell",                 href: "/admin/promotions"                 },
-  { type: "nav", label: "Analytics",    description: "Reports & statistics",      icon: "monitoring",           href: "/admin/analytics"                  },
-  { type: "nav", label: "Users",        description: "Customer accounts",         icon: "person",               href: "/admin/users"                      },
-  { type: "nav", label: "Contacts",     description: "Contact form submissions",  icon: "mail",                 href: "/admin/contacts"                   },
-  { type: "nav", label: "Guest Access", description: "Temporary access tokens",   icon: "key",                  href: "/admin/guest-access"               },
-  { type: "nav", label: "Reminders",    description: "SMS & email reminders",     icon: "notifications",        href: "/admin/notifications/reminders"    },
-  { type: "nav", label: "Email Import", description: "IMAP booking ingestion",    icon: "mark_email_unread",    href: "/admin/email-ingestion"            },
-  { type: "nav", label: "Maintenance",  description: "Maintenance scheduling",    icon: "build",                href: "/admin/maintenance"                },
-  { type: "nav", label: "Admins",       description: "Administrator accounts",    icon: "admin_panel_settings", href: "/admin/admins"                     },
-  { type: "nav", label: "Shop Products",  description: "Product catalog",           icon: "inventory_2",          href: "/admin/shop/products"              },
-  { type: "nav", label: "Shop Orders",   description: "Customer orders",           icon: "shopping_bag",         href: "/admin/shop/orders"                },
-  { type: "nav", label: "Shop Inventory",description: "Stock management",          icon: "warehouse",            href: "/admin/shop/inventory"             },
-  { type: "nav", label: "Price Rules",   description: "Flash sales & discounts",   icon: "local_offer",          href: "/admin/shop/price-rules"           },
-  { type: "nav", label: "Reviews",       description: "Product review moderation", icon: "star",                 href: "/admin/shop/reviews"               },
-  { type: "nav", label: "Content",       description: "Site content management",   icon: "article",              href: "/admin/content"                    },
-  { type: "nav", label: "Settings",      description: "Platform configuration",    icon: "settings",             href: "/admin/settings"                   },
+  { type: "nav", label: "Fleet",         description: "Manage vehicles",           icon: Car,         href: "/admin/fleet"                   },
+  { type: "nav", label: "Calendar",      description: "Booking calendar",          icon: CalendarDays,href: "/admin/calendar"                },
+  { type: "nav", label: "Bookings",      description: "All bookings",              icon: CalendarCheck,href: "/admin/bookings"               },
+  { type: "nav", label: "Invoices",      description: "Billing & invoices",        icon: Receipt,     href: "/admin/invoices"                },
+  { type: "nav", label: "Promotions",    description: "Coupon codes",              icon: Tag,         href: "/admin/promotions"              },
+  { type: "nav", label: "Analytics",     description: "Reports & statistics",      icon: Activity,    href: "/admin/analytics"               },
+  { type: "nav", label: "Users",         description: "Customer accounts",         icon: User,        href: "/admin/users"                   },
+  { type: "nav", label: "Contacts",      description: "Contact form submissions",  icon: Mail,        href: "/admin/contacts"                },
+  { type: "nav", label: "Guest Access",  description: "Temporary access tokens",   icon: Key,         href: "/admin/guest-access"            },
+  { type: "nav", label: "Reminders",     description: "SMS & email reminders",     icon: Bell,        href: "/admin/notifications/reminders" },
+  { type: "nav", label: "Email Import",  description: "IMAP booking ingestion",    icon: MailOpen,    href: "/admin/email-ingestion"         },
+  { type: "nav", label: "Maintenance",   description: "Maintenance scheduling",    icon: Wrench,      href: "/admin/maintenance"             },
+  { type: "nav", label: "Admins",        description: "Administrator accounts",    icon: ShieldCheck, href: "/admin/admins"                  },
+  { type: "nav", label: "Shop Products", description: "Product catalog",           icon: Package,     href: "/admin/shop/products"           },
+  { type: "nav", label: "Shop Orders",   description: "Customer orders",           icon: CalendarCheck,href:"/admin/shop/orders"             },
+  { type: "nav", label: "Shop Inventory",description: "Stock management",          icon: Warehouse,   href: "/admin/shop/inventory"          },
+  { type: "nav", label: "Price Rules",   description: "Flash sales & discounts",   icon: Tag,         href: "/admin/shop/price-rules"        },
+  { type: "nav", label: "Content",       description: "Site content management",   icon: FileText,    href: "/admin/content"                 },
+  { type: "nav", label: "Settings",      description: "Platform configuration",    icon: Settings,    href: "/admin/settings"                },
 ];
 
 // ── Car result type ───────────────────────────────────────────────────────────
 
 interface CarResult {
-  type: "car";
-  id: string;
-  label: string;
+  type:        "car";
+  id:          string;
+  label:       string;
   description: string;
 }
 
-// ── Combined result ───────────────────────────────────────────────────────────
-
 type Result = NavEntry | CarResult;
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function matchesQuery(text: string, q: string): boolean {
   return text.toLowerCase().includes(q.toLowerCase());
@@ -60,7 +61,7 @@ function matchesQuery(text: string, q: string): boolean {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props {
-  open: boolean;
+  open:    boolean;
   onClose: () => void;
 }
 
@@ -72,7 +73,6 @@ export default function CommandPalette({ open, onClose }: Props) {
   const [cars,      setCars]      = useState<CarResult[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
 
-  // Fetch cars once when palette opens
   useEffect(() => {
     if (!open) return;
     api.admin.cars.list()
@@ -90,7 +90,6 @@ export default function CommandPalette({ open, onClose }: Props) {
     setActiveIdx(0);
   }, [open]);
 
-  // Keyboard shortcut to open (handled by parent, but also close on Escape here)
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) => {
@@ -104,17 +103,13 @@ export default function CommandPalette({ open, onClose }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, activeIdx]);
 
-  // Build filtered results
   const q = query.trim();
-
   const navResults: Result[] = q
     ? NAV_ENTRIES.filter(n => matchesQuery(n.label, q) || matchesQuery(n.description, q))
     : NAV_ENTRIES;
-
   const carResults: Result[] = cars.filter(c =>
     !q || matchesQuery(c.label, q) || matchesQuery(c.description, q),
   );
-
   const results: Result[] = [
     ...navResults,
     ...(q || carResults.length > 0 ? carResults : []),
@@ -127,7 +122,6 @@ export default function CommandPalette({ open, onClose }: Props) {
     onClose();
   }, [router, onClose]);
 
-  // Scroll active item into view
   useEffect(() => {
     const el = listRef.current?.children[activeIdx] as HTMLElement | undefined;
     el?.scrollIntoView({ block: "nearest" });
@@ -139,9 +133,8 @@ export default function CommandPalette({ open, onClose }: Props) {
     <div className={styles.overlay} onMouseDown={onClose}>
       <div className={styles.panel} onMouseDown={e => e.stopPropagation()}>
 
-        {/* Search input */}
         <div className={styles.inputRow}>
-          <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
+          <Search size={16} strokeWidth={1.75} className={styles.searchIcon} />
           <input
             ref={inputRef}
             className={styles.input}
@@ -152,44 +145,43 @@ export default function CommandPalette({ open, onClose }: Props) {
             spellCheck={false}
           />
           {query && (
-            <button className={styles.clearBtn} onMouseDown={e => { e.preventDefault(); setQuery(""); setActiveIdx(0); inputRef.current?.focus(); }}>
-              <span className="material-symbols-outlined">close</span>
+            <button
+              className={styles.clearBtn}
+              onMouseDown={e => { e.preventDefault(); setQuery(""); setActiveIdx(0); inputRef.current?.focus(); }}
+            >
+              <X size={14} strokeWidth={2} />
             </button>
           )}
           <kbd className={styles.escHint}>esc</kbd>
         </div>
 
-        {/* Results */}
         <ul className={styles.list} ref={listRef}>
           {results.length === 0 && (
             <li className={styles.empty}>No results for &ldquo;{query}&rdquo;</li>
           )}
 
-          {/* Section header: Pages */}
           {navResults.length > 0 && (
-            <li className={styles.sectionLabel}>
-              {q ? "Pages" : "Navigation"}
-            </li>
+            <li className={styles.sectionLabel}>{q ? "Pages" : "Navigation"}</li>
           )}
-          {navResults.map((r, i) => (
-            <li
-              key={r.type === "nav" ? r.href : r.id}
-              className={`${styles.item} ${activeIdx === i ? styles.itemActive : ""}`}
-              onMouseEnter={() => setActiveIdx(i)}
-              onMouseDown={() => handleSelect(r)}
-            >
-              <span className={`material-symbols-outlined ${styles.itemIcon}`}>
-                {r.type === "nav" ? r.icon : "directions_car"}
-              </span>
-              <div className={styles.itemText}>
-                <span className={styles.itemLabel}>{r.label}</span>
-                <span className={styles.itemDesc}>{r.type === "nav" ? r.description : r.description}</span>
-              </div>
-              <span className={`material-symbols-outlined ${styles.itemArrow}`}>arrow_forward</span>
-            </li>
-          ))}
+          {navResults.map((r, i) => {
+            const nav = r as NavEntry;
+            return (
+              <li
+                key={nav.href}
+                className={`${styles.item} ${activeIdx === i ? styles.itemActive : ""}`}
+                onMouseEnter={() => setActiveIdx(i)}
+                onMouseDown={() => handleSelect(r)}
+              >
+                <nav.icon size={16} strokeWidth={1.75} className={styles.itemIcon} />
+                <div className={styles.itemText}>
+                  <span className={styles.itemLabel}>{nav.label}</span>
+                  <span className={styles.itemDesc}>{nav.description}</span>
+                </div>
+                <ArrowRight size={14} strokeWidth={1.75} className={styles.itemArrow} />
+              </li>
+            );
+          })}
 
-          {/* Section header: Vehicles */}
           {carResults.length > 0 && (
             <li className={styles.sectionLabel}>Vehicles</li>
           )}
@@ -203,18 +195,17 @@ export default function CommandPalette({ open, onClose }: Props) {
                 onMouseEnter={() => setActiveIdx(idx)}
                 onMouseDown={() => handleSelect(r)}
               >
-                <span className={`material-symbols-outlined ${styles.itemIcon}`}>directions_car</span>
+                <Car size={16} strokeWidth={1.75} className={styles.itemIcon} />
                 <div className={styles.itemText}>
-                  <span className={styles.itemLabel}>{r.label}</span>
-                  <span className={styles.itemDesc}>{r.description}</span>
+                  <span className={styles.itemLabel}>{car.label}</span>
+                  <span className={styles.itemDesc}>{car.description}</span>
                 </div>
-                <span className={`material-symbols-outlined ${styles.itemArrow}`}>arrow_forward</span>
+                <ArrowRight size={14} strokeWidth={1.75} className={styles.itemArrow} />
               </li>
             );
           })}
         </ul>
 
-        {/* Footer hints */}
         <div className={styles.footer}>
           <span className={styles.footerHint}><kbd>↑↓</kbd> navigate</span>
           <span className={styles.footerHint}><kbd>↵</kbd> open</span>

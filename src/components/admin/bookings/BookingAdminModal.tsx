@@ -5,6 +5,7 @@ import type { BookingSource, CalendarBooking, Car, GpsStopMode } from "../fleet/
 import GuestAutocomplete, { type GuestUser } from "./GuestAutocomplete";
 import { useBusinessTz } from "@/contexts/TzContext";
 import { isoToLocalDT } from "@/lib/dateUtils";
+import { X, Ruler, Star, ArrowRight } from "lucide-react";
 import styles from "./RentScheduleModal.module.css";
 
 interface Props {
@@ -214,7 +215,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>{isEdit ? "Edit booking" : "Add booking"}</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} strokeWidth={1.75} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -248,7 +249,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
 
           {forfaitKm > 0 && (
             <div className={styles.forfaitBadge}>
-              📏 Forfait: <strong>{forfaitKm.toLocaleString()} km</strong>
+              <Ruler size={14} strokeWidth={1.75} /> Forfait: <strong>{forfaitKm.toLocaleString()} km</strong>
             </div>
           )}
 
@@ -268,7 +269,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
                       <span className={styles.overlapRef}>#{b.reservationNumber}</span>
                     )}
                     <span className={styles.overlapDates}>
-                      {fmtCompact(b.startDateTime, tz)} → {fmtCompact(b.endDateTime, tz)}
+                      {fmtCompact(b.startDateTime, tz)} <ArrowRight size={14} strokeWidth={1.75} /> {fmtCompact(b.endDateTime, tz)}
                     </span>
                   </div>
                 ))}
@@ -328,7 +329,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
               {score != null && (
                 <div className={styles.userInfoRow}>
                   <span className={`${styles.infoBadge} ${score >= 8 ? styles.infoHigh : score >= 5 ? styles.infoMid : styles.infoLow}`}>
-                    ★ {score}/10
+                    <Star size={14} strokeWidth={1.75} /> {score}/10
                   </span>
                 </div>
               )}
@@ -400,7 +401,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
                     className={styles.colorClear}
                     onClick={() => setForm(prev => ({ ...prev, color: "" }))}
                     title="Remove color"
-                  >✕</button>
+                  ><X size={14} strokeWidth={1.75} /></button>
                 )}
               </div>
             </div>

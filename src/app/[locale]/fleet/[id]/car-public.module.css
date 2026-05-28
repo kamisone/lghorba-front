@@ -167,7 +167,8 @@
 }
 
 .sliderEmptyIcon {
-  font-size: 6rem;
+  width: 72px;
+  height: 72px;
   opacity: 0.3;
 }
 

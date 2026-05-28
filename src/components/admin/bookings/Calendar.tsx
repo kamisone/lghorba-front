@@ -6,6 +6,7 @@ import type { CarPricing } from "../fleet/PricingModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import { useBusinessTz } from "@/contexts/TzContext";
 import { todayStr as todayStrUtil, fmtDateTime } from "@/lib/dateUtils";
+import { Car as CarIcon, X, AlertTriangle } from "lucide-react";
 import styles from "./Calendar.module.css";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -319,7 +320,7 @@ const CarRow = React.memo(function CarRow({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={`/next-api/cars/${car.id}/photo`} alt="" className={styles.carThumbImg} loading="lazy" />
           ) : (
-            <span className={styles.carThumbPlaceholder}>🚗</span>
+            <span className={styles.carThumbPlaceholder}><CarIcon size={18} strokeWidth={1.75} /></span>
           )}
         </div>
         <div className={`${styles.carInfo} ${collapsed ? styles.carInfoHidden : ""}`}>
@@ -695,7 +696,7 @@ export default function Calendar() {
       )}
       {error && !loading && (
         <div className={styles.stateError}>
-          <span>⚠ {error}</span>
+          <span><AlertTriangle size={16} strokeWidth={1.75} /> {error}</span>
           <button onClick={() => window.location.reload()} className={styles.retryBtn}>Retry</button>
         </div>
       )}
@@ -808,7 +809,7 @@ export default function Calendar() {
             >
               {bookingLabel(bookingPopover.booking.status)}
             </span>
-            <button className={styles.popoverClose} onClick={() => setBookingPopover(null)} aria-label="Close">×</button>
+            <button className={styles.popoverClose} onClick={() => setBookingPopover(null)} aria-label="Close"><X size={14} strokeWidth={1.75} /></button>
           </div>
           <p className={styles.popoverCustomer}>{bookingPopover.booking.user?.name ?? "Unknown guest"}</p>
           <div className={styles.popoverDates}>

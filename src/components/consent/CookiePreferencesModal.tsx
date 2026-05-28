@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { X } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./CookiePreferencesModal.module.css";
 
@@ -47,7 +48,7 @@ export default function CookiePreferencesModal({
             onClick={onClose}
             aria-label="Close"
           >
-            ×
+            <X size={14} strokeWidth={2} />
           </button>
         </div>
 

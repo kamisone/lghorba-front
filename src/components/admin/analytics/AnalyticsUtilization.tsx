@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import styles from "./AnalyticsUtilization.module.css";
+import { CalendarCheck, CreditCard, Clock, TrendingUp } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -295,30 +296,22 @@ export default function AnalyticsUtilization() {
       {/* ── Summary Cards ── */}
       <div className={styles.summaryRow}>
         <div className={styles.summaryCard}>
-          <span className={`material-symbols-outlined ${styles.summaryIcon}`} style={{ color: "#8DC220" }}>
-            event_available
-          </span>
+          <CalendarCheck size={18} strokeWidth={1.75} className={styles.summaryIcon} style={{ color: "#8DC220" }} />
           <div className={styles.summaryValue}>{kpis.total}</div>
           <div className={styles.summaryLabel}>Total Bookings</div>
         </div>
         <div className={styles.summaryCard}>
-          <span className={`material-symbols-outlined ${styles.summaryIcon}`} style={{ color: "#00466E" }}>
-            payments
-          </span>
+          <CreditCard size={18} strokeWidth={1.75} className={styles.summaryIcon} style={{ color: "#00466E" }} />
           <div className={styles.summaryValue}>{fmtEur(kpis.revenue)}</div>
           <div className={styles.summaryLabel}>Total Revenue</div>
         </div>
         <div className={styles.summaryCard}>
-          <span className={`material-symbols-outlined ${styles.summaryIcon}`} style={{ color: "#3b82f6" }}>
-            schedule
-          </span>
+          <Clock size={18} strokeWidth={1.75} className={styles.summaryIcon} style={{ color: "#3b82f6" }} />
           <div className={styles.summaryValue}>{kpis.avgDays.toFixed(1)}d</div>
           <div className={styles.summaryLabel}>Avg Booking Length</div>
         </div>
         <div className={styles.summaryCard}>
-          <span className={`material-symbols-outlined ${styles.summaryIcon}`} style={{ color: "#f59e0b" }}>
-            trending_up
-          </span>
+          <TrendingUp size={18} strokeWidth={1.75} className={styles.summaryIcon} style={{ color: "#f59e0b" }} />
           <div className={styles.summaryValue}>
             {kpis.total > 0 ? fmtEur(kpis.revenue / kpis.total) : "—"}
           </div>

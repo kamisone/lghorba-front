@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { type SelectedAddress } from "@/components/AddressAutocomplete";
 import { saveSearchContext } from "@/lib/searchContext";
 import { getTranslations } from "@/lib/i18n";
@@ -249,7 +250,7 @@ export default function SearchClient({
             onClick={() => setMapVisible(false)}
             aria-label={t.search.hideMap}
           >
-            ✕ {t.search.hideMap}
+            <X size={14} strokeWidth={2} /> {t.search.hideMap}
           </button>
 
           {/* Map count badge */}

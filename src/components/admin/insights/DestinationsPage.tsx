@@ -3,6 +3,12 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import styles from "./DestinationsPage.module.css";
+import {
+  RefreshCw, MapPin, Globe, Star, EyeOff, List, Map, Search,
+  ChevronLeft, ChevronRight, ExternalLink, ChevronDown, ChevronUp, ArrowUpDown,
+  Utensils, ShoppingBag, Waves, Trees, PlaneTakeoff, TrainFront, Hospital, Hotel,
+  Wrench, Landmark, type LucideIcon,
+} from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -68,18 +74,18 @@ const CATEGORY_LABELS: Record<DestinationCategory, string> = {
   other:         "Other",
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
-  tourism:       "museum",
-  shopping:      "shopping_bag",
-  dining:        "restaurant",
-  beach:         "beach_access",
-  nature:        "park",
-  airport:       "flight",
-  transport:     "train",
-  healthcare:    "local_hospital",
-  accommodation: "hotel",
-  services:      "build",
-  other:         "place",
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  tourism:       Landmark,
+  shopping:      ShoppingBag,
+  dining:        Utensils,
+  beach:         Waves,
+  nature:        Trees,
+  airport:       PlaneTakeoff,
+  transport:     TrainFront,
+  healthcare:    Hospital,
+  accommodation: Hotel,
+  services:      Wrench,
+  other:         MapPin,
 };
 
 const STATUS_COLORS: Record<DestinationStatus, string> = {
@@ -189,8 +195,10 @@ export default function DestinationsPage() {
   }
 
   function sortIcon(col: string) {
-    if (sort !== col) return "unfold_more";
-    return order === "asc" ? "arrow_upward" : "arrow_downward";
+    if (sort !== col) return <ArrowUpDown size={14} strokeWidth={1.75} />;
+    return order === "asc"
+      ? <ChevronUp size={14} strokeWidth={1.75} />
+      : <ChevronDown size={14} strokeWidth={1.75} />;
   }
 
   // ── Aggregation trigger ──────────────────────────────────────────────────────
@@ -227,7 +235,7 @@ export default function DestinationsPage() {
             onClick={triggerAggregation}
             disabled={aggLoading}
           >
-            <span className="material-symbols-outlined">sync</span>
+            <RefreshCw size={16} strokeWidth={1.75} />
             {aggLoading ? "Processing…" : "Run Aggregation"}
           </button>
         </div>
@@ -243,27 +251,27 @@ export default function DestinationsPage() {
       {stats && (
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
-            <span className={`material-symbols-outlined ${styles.statIcon}`} style={{ color: "#3b82f6" }}>location_on</span>
+            <MapPin size={18} strokeWidth={1.75} className={styles.statIcon} style={{ color: "#3b82f6" }} />
             <div className={styles.statValue}>{stats.total}</div>
             <div className={styles.statLabel}>Total Destinations</div>
           </div>
           <div className={styles.statCard}>
-            <span className={`material-symbols-outlined ${styles.statIcon}`} style={{ color: "#22c55e" }}>public</span>
+            <Globe size={18} strokeWidth={1.75} className={styles.statIcon} style={{ color: "#22c55e" }} />
             <div className={styles.statValue}>{stats.published}</div>
             <div className={styles.statLabel}>Published</div>
           </div>
           <div className={styles.statCard}>
-            <span className={`material-symbols-outlined ${styles.statIcon}`} style={{ color: "#f59e0b" }}>star</span>
+            <Star size={18} strokeWidth={1.75} className={styles.statIcon} style={{ color: "#f59e0b" }} />
             <div className={styles.statValue}>{stats.featured}</div>
             <div className={styles.statLabel}>Featured</div>
           </div>
           <div className={styles.statCard}>
-            <span className={`material-symbols-outlined ${styles.statIcon}`} style={{ color: "#8b5cf6" }}>pin_drop</span>
+            <MapPin size={18} strokeWidth={1.75} className={styles.statIcon} style={{ color: "#8b5cf6" }} />
             <div className={styles.statValue}>{stats.totalVisits.toLocaleString("fr-FR")}</div>
             <div className={styles.statLabel}>Total Visits</div>
           </div>
           <div className={styles.statCard}>
-            <span className={`material-symbols-outlined ${styles.statIcon}`} style={{ color: "#ef4444" }}>visibility_off</span>
+            <EyeOff size={18} strokeWidth={1.75} className={styles.statIcon} style={{ color: "#ef4444" }} />
             <div className={styles.statValue}>{stats.ignored}</div>
             <div className={styles.statLabel}>Ignored</div>
           </div>
@@ -273,17 +281,17 @@ export default function DestinationsPage() {
       {/* ── View toggle ── */}
       <div className={styles.viewToggle}>
         <button className={`${styles.viewBtn} ${view === "list" ? styles.viewBtnActive : ""}`} onClick={() => setView("list")}>
-          <span className="material-symbols-outlined">table_rows</span> List
+          <List size={16} strokeWidth={1.75} /> List
         </button>
         <button className={`${styles.viewBtn} ${view === "map" ? styles.viewBtnActive : ""}`} onClick={() => setView("map")}>
-          <span className="material-symbols-outlined">map</span> Map
+          <Map size={16} strokeWidth={1.75} /> Map
         </button>
       </div>
 
       {/* ── Filters ── */}
       <div className={styles.filters}>
         <div className={styles.searchWrap}>
-          <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
+          <Search size={16} strokeWidth={1.75} className={styles.searchIcon} />
           <input
             className={styles.searchInput}
             placeholder="Search name, city, region…"
@@ -349,29 +357,29 @@ export default function DestinationsPage() {
                   <th className={styles.th}>Name / City</th>
                   <th className={styles.th}>
                     <button className={styles.sortBtn} onClick={() => handleSort("visitCount")}>
-                      Visits <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{sortIcon("visitCount")}</span>
+                      Visits {sortIcon("visitCount")}
                     </button>
                   </th>
                   <th className={styles.th}>
                     <button className={styles.sortBtn} onClick={() => handleSort("uniqueRentalCount")}>
-                      Rentals <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{sortIcon("uniqueRentalCount")}</span>
+                      Rentals {sortIcon("uniqueRentalCount")}
                     </button>
                   </th>
                   <th className={styles.th}>
                     <button className={styles.sortBtn} onClick={() => handleSort("confidenceScore")}>
-                      Confidence <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{sortIcon("confidenceScore")}</span>
+                      Confidence {sortIcon("confidenceScore")}
                     </button>
                   </th>
                   <th className={styles.th}>
                     <button className={styles.sortBtn} onClick={() => handleSort("avgDwellMinutes")}>
-                      Avg Dwell <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{sortIcon("avgDwellMinutes")}</span>
+                      Avg Dwell {sortIcon("avgDwellMinutes")}
                     </button>
                   </th>
                   <th className={styles.th}>Category</th>
                   <th className={styles.th}>Status</th>
                   <th className={styles.th}>
                     <button className={styles.sortBtn} onClick={() => handleSort("lastDetectedAt")}>
-                      Last Detected <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{sortIcon("lastDetectedAt")}</span>
+                      Last Detected {sortIcon("lastDetectedAt")}
                     </button>
                   </th>
                   <th className={styles.th}></th>
@@ -403,7 +411,7 @@ export default function DestinationsPage() {
                     <td className={styles.td}>
                       {d.category ? (
                         <span className={styles.categoryBadge}>
-                          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>{CATEGORY_ICONS[d.category] ?? "place"}</span>
+                          {(() => { const Icon = CATEGORY_ICONS[d.category] ?? MapPin; return <Icon size={13} strokeWidth={1.75} />; })()}
                           {CATEGORY_LABELS[d.category as DestinationCategory] ?? d.category}
                         </span>
                       ) : <span className={styles.noName}>—</span>}
@@ -415,7 +423,7 @@ export default function DestinationsPage() {
                     <td className={styles.td}>{fmtDate(d.lastDetectedAt)}</td>
                     <td className={styles.td}>
                       <Link href={`/admin/insights/destinations/${d.id}`} className={styles.viewLink}>
-                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>open_in_new</span>
+                        <ExternalLink size={18} strokeWidth={1.75} />
                       </Link>
                     </td>
                   </tr>
@@ -428,11 +436,11 @@ export default function DestinationsPage() {
           {totalPages > 1 && (
             <div className={styles.pagination}>
               <button className={styles.pageBtn} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
-                <span className="material-symbols-outlined">chevron_left</span>
+                <ChevronLeft size={16} strokeWidth={1.75} />
               </button>
               <span className={styles.pageInfo}>{page} / {totalPages} &nbsp;·&nbsp; {total} destinations</span>
               <button className={styles.pageBtn} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
-                <span className="material-symbols-outlined">chevron_right</span>
+                <ChevronRight size={16} strokeWidth={1.75} />
               </button>
             </div>
           )}

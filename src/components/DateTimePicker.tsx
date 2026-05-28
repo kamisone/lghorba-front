@@ -4,6 +4,7 @@ import {
   forwardRef, useCallback, useEffect,
   useImperativeHandle, useRef, useState,
 } from "react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { todayStr } from "@/lib/dateUtils";
 import styles from "./DateTimePicker.module.css";
 
@@ -201,7 +202,7 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
           aria-haspopup="dialog"
           aria-expanded={open}
         >
-          <span className={`material-symbols-outlined ${styles.calIcon}`}>calendar_month</span>
+          <CalendarDays size={16} strokeWidth={1.75} className={styles.calIcon} />
 
           {value ? (
             <span className={styles.triggerValue}>
@@ -212,9 +213,7 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
           ) : (
             <span className={styles.triggerPlaceholder}>{placeholder}</span>
           )}
-          <span className={`material-symbols-outlined ${styles.chevron} ${open ? styles.chevronOpen : ""}`}>
-            expand_more
-          </span>
+          <ChevronDown size={14} strokeWidth={1.75} className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`} />
         </button>
 
         {/* Popup – absolutely anchored below the trigger */}
@@ -229,11 +228,11 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
               <>
                 <div className={styles.calNav}>
                   <button type="button" className={styles.navBtn} onClick={prevMonth} aria-label="Previous month">
-                    <span className="material-symbols-outlined">chevron_left</span>
+                    <ChevronLeft size={16} strokeWidth={1.75} />
                   </button>
                   <span className={styles.monthYear}>{MONTH_NAMES[viewMonth]} {viewYear}</span>
                   <button type="button" className={styles.navBtn} onClick={nextMonth} aria-label="Next month">
-                    <span className="material-symbols-outlined">chevron_right</span>
+                    <ChevronRight size={16} strokeWidth={1.75} />
                   </button>
                 </div>
 
@@ -291,7 +290,7 @@ const DateTimePicker = forwardRef<DateTimePickerHandle, Props>(function DateTime
                     onClick={() => setStep("date")}
                     aria-label="Back to calendar"
                   >
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <ArrowLeft size={16} strokeWidth={1.75} />
                   </button>
                   <span className={styles.pendingLabel}>{pendingLabel}</span>
                 </div>

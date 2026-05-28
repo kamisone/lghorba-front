@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import styles from "./ParkingList.module.css";
 import ParkingFormModal from "./ParkingFormModal";
 import ParkingDetailPanel from "./ParkingDetailPanel";
+import { List, Map, Plus, AlertTriangle, ParkingCircle, Pencil, Trash2 } from "lucide-react";
 
 const ParkingMap = dynamic(() => import("./ParkingMap"), { ssr: false });
 
@@ -207,17 +208,17 @@ export default function ParkingList() {
               className={`${styles.viewBtn} ${view === "table" ? styles.viewBtnActive : ""}`}
               onClick={() => setView("table")}
             >
-              <span className="material-symbols-outlined">table_rows</span> List
+              <List size={16} strokeWidth={1.75} /> List
             </button>
             <button
               className={`${styles.viewBtn} ${view === "map" ? styles.viewBtnActive : ""}`}
               onClick={() => setView("map")}
             >
-              <span className="material-symbols-outlined">map</span> Map
+              <Map size={16} strokeWidth={1.75} /> Map
             </button>
           </div>
           <button className={styles.primaryBtn} onClick={openCreate}>
-            <span className="material-symbols-outlined">add</span> New parking
+            <Plus size={16} strokeWidth={1.75} /> New parking
           </button>
         </div>
       </div>
@@ -228,7 +229,7 @@ export default function ParkingList() {
       {/* ── Unused parking alert ── */}
       {analytics && analytics.unusedParkings.length > 0 && (
         <div className={styles.alertBox}>
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>warning</span>
+          <AlertTriangle size={16} strokeWidth={1.75} />
           <span>
             {analytics.unusedParkings.length} parking slot{analytics.unusedParkings.length > 1 ? "s" : ""} with no assigned vehicle — idle monthly cost:{" "}
             <strong>{fmtEur(analytics.unusedParkings.reduce((s, p) => s + (p.monthlyRentEur ? Number(p.monthlyRentEur) : 0), 0))}</strong>
@@ -270,7 +271,7 @@ export default function ParkingList() {
         <div className={styles.empty}>Loading…</div>
       ) : parkings.length === 0 ? (
         <div className={styles.empty}>
-          <span className="material-symbols-outlined" style={{ fontSize: 48, color: "#cbd5e1" }}>local_parking</span>
+          <ParkingCircle size={48} strokeWidth={1.75} style={{ color: "#cbd5e1" }} />
           <p>No parkings found. Import your data from Excel to get started.</p>
           <button className={styles.primaryBtn} onClick={openCreate}>Add your first parking</button>
         </div>
@@ -333,10 +334,10 @@ export default function ParkingList() {
                   <td>
                     <div className={styles.rowActions} onClick={e => e.stopPropagation()}>
                       <button className={styles.iconBtn} title="Edit" onClick={() => openEdit(p)}>
-                        <span className="material-symbols-outlined">edit</span>
+                        <Pencil size={16} strokeWidth={1.75} />
                       </button>
                       <button className={styles.iconBtn} title="Delete" onClick={() => handleDelete(p.id)}>
-                        <span className="material-symbols-outlined" style={{ color: "#ef4444" }}>delete</span>
+                        <Trash2 size={16} strokeWidth={1.75} style={{ color: "#ef4444" }} />
                       </button>
                     </div>
                   </td>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { Car } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./BlogListing.module.css";
 
@@ -144,7 +145,7 @@ export default function BlogListing({ locale }: Props) {
             <Link href={`/${locale}/blog/${heroPost.slug}`} className={styles.featuredCard}>
               {heroPost.featuredImageUrl
                 ? <img src={heroPost.featuredImageUrl} alt={heroPost.title} className={styles.featuredImage} />
-                : <div className={styles.featuredImagePlaceholder}>🚗</div>
+                : <div className={styles.featuredImagePlaceholder}><Car size={16} strokeWidth={1.75} /></div>
               }
               <div className={styles.featuredBody}>
                 <div className={styles.featuredMeta}>
@@ -194,7 +195,7 @@ export default function BlogListing({ locale }: Props) {
                 <Link key={post.id} href={`/${locale}/blog/${post.slug}`} className={styles.card}>
                   {post.featuredImageUrl
                     ? <img src={post.featuredImageUrl} alt={post.title} className={styles.cardImage} />
-                    : <div className={styles.cardImagePlaceholder}>🚗</div>
+                    : <div className={styles.cardImagePlaceholder}><Car size={16} strokeWidth={1.75} /></div>
                   }
                   <div className={styles.cardBody}>
                     <div className={styles.cardMeta}>

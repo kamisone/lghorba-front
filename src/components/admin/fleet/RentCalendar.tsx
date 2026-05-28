@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import type { CalendarBooking, Car } from "./data";
 import BookingAdminModal from "../bookings/BookingAdminModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
+import { CalendarDays } from "lucide-react";
 import styles from "./RentCalendar.module.css";
 
 // Re-export so RentTracker can still import without changes to its type alias
@@ -116,7 +117,7 @@ export default function RentCalendar({ car, bookings, excludeBookingIds, endedBo
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionIcon}>📅</span>
+        <span className={styles.sectionIcon}><CalendarDays size={18} strokeWidth={1.75} /></span>
         <span className={styles.sectionLabel}>Rent Schedule</span>
       </div>
 

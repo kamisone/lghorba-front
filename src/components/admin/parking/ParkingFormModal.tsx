@@ -4,6 +4,7 @@ import { useState } from "react";
 import styles from "./ParkingFormModal.module.css";
 import type { Parking } from "./ParkingList";
 import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
+import { X, Plus, Trash2, Copy } from "lucide-react";
 
 interface Props {
   parking: Parking | null;
@@ -141,7 +142,7 @@ export default function ParkingFormModal({ parking, onClose, onSaved }: Props) {
             {isEdit ? `Edit — ${parking.label}` : "New parking"}
           </h2>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            <span className="material-symbols-outlined">close</span>
+            <X size={16} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -254,7 +255,7 @@ export default function ParkingFormModal({ parking, onClose, onSaved }: Props) {
                   <div className={styles.phonesSectionHeader}>
                     <span className={styles.label}>Phone numbers</span>
                     <button type="button" className={styles.addPhoneBtn} onClick={addPhone}>
-                      <span className="material-symbols-outlined">add</span> Add
+                      <Plus size={16} strokeWidth={1.75} /> Add
                     </button>
                   </div>
                   {form.ownerPhones.map((ph, i) => (
@@ -266,7 +267,7 @@ export default function ParkingFormModal({ parking, onClose, onSaved }: Props) {
                         onChange={e => updatePhone(i, "label", e.target.value)}
                         placeholder="Label (e.g. Mobile)" style={{ flex: 1 }} />
                       <button type="button" className={styles.removePhoneBtn} onClick={() => removePhone(i)}>
-                        <span className="material-symbols-outlined">delete</span>
+                        <Trash2 size={16} strokeWidth={1.75} />
                       </button>
                     </div>
                   ))}
@@ -288,7 +289,7 @@ export default function ParkingFormModal({ parking, onClose, onSaved }: Props) {
                         onChange={e => set("pedestrianCode", e.target.value)} placeholder="e.g. 1234" />
                       <button type="button" className={styles.copyBtn} title="Copy"
                         onClick={() => navigator.clipboard.writeText(form.pedestrianCode ?? "")}>
-                        <span className="material-symbols-outlined">content_copy</span>
+                        <Copy size={16} strokeWidth={1.75} />
                       </button>
                     </div>
                   </div>
@@ -299,7 +300,7 @@ export default function ParkingFormModal({ parking, onClose, onSaved }: Props) {
                         onChange={e => set("gateCode", e.target.value)} placeholder="e.g. A4512" />
                       <button type="button" className={styles.copyBtn} title="Copy"
                         onClick={() => navigator.clipboard.writeText(form.gateCode ?? "")}>
-                        <span className="material-symbols-outlined">content_copy</span>
+                        <Copy size={16} strokeWidth={1.75} />
                       </button>
                     </div>
                   </div>
