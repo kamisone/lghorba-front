@@ -44,6 +44,7 @@ export interface AdminBooking {
   source: "private" | "turo" | "getaround";
   reservationNumber: string | null;
   totalEarning: number | string | null;
+  autoStartTracking: boolean;
   gpsStopMode: "auto" | "manual";
   hasSession: boolean;
   cancellationReason: string | null;
@@ -108,7 +109,7 @@ function toCalendarBooking(b: AdminBooking): CalendarBooking {
       : (b.status as "pending" | "confirmed" | "cancelled"),
     reservationNumber: b.reservationNumber,
     totalEarning: b.totalEarning != null ? Number(b.totalEarning) : null,
-    autoStartTracking: false,
+    autoStartTracking: b.autoStartTracking ?? false,
     gpsStopMode: b.gpsStopMode ?? "auto",
     color: null,
     hasSession: b.hasSession,
