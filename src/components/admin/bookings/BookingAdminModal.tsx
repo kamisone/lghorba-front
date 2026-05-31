@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type { BookingSource, CalendarBooking, Car, GpsStopMode } from "../fleet/data";
 import GuestAutocomplete, { type GuestUser } from "./GuestAutocomplete";
 import { useBusinessTz } from "@/contexts/TzContext";
-import { isoToLocalDT } from "@/lib/dateUtils";
+import { isoToLocalDT, localDTToISO } from "@/lib/dateUtils";
 import { X, Ruler, Star, ArrowRight } from "lucide-react";
 import styles from "./RentScheduleModal.module.css";
 
@@ -46,10 +46,10 @@ const COLORS = [
   "#64748b", "#1e293b",
 ];
 
-function getOverlaps(from: string, to: string, bookings: CalendarBooking[], excludeId?: string): CalendarBooking[] {
+function getOverlaps(from: string, to: string, tz: string, bookings: CalendarBooking[], excludeId?: string): CalendarBooking[] {
   if (!from || !to) return [];
-  const newFrom = new Date(from).getTime();
-  const newTo   = new Date(to).getTime();
+  const newFrom = new Date(localDTToISO(from, tz)).getTime();
+  const newTo   = new Date(localDTToISO(to, tz)).getTime();
   if (newTo <= newFrom) return [];
   return bookings.filter(b => {
     if (excludeId && b.id === excludeId) return false;
@@ -147,7 +147,7 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
     form.to   !== isoToLocalDT(booking.endDateTime, tz)
   );
   const overlaps = datesChanged && existingBookings
-    ? getOverlaps(form.from, form.to, existingBookings, booking?.id)
+    ? getOverlaps(form.from, form.to, tz, existingBookings, booking?.id)
     : [];
   const overlapDetected = overlaps.length > 0;
 
@@ -158,8 +158,8 @@ export default function BookingAdminModal({ car, booking, existingBookings, sess
     setSaving(true);
     try {
       const body: Record<string, unknown> = {
-        startDateTime: new Date(form.from).toISOString(),
-        endDateTime: new Date(form.to).toISOString(),
+        startDateTime: localDTToISO(form.from, tz),
+        endDateTime: localDTToISO(form.to, tz),
         source: form.source,
         reservationNumber: form.reservationNumber.trim() || null,
         totalEarning: form.totalEarning !== "" ? Number(form.totalEarning) : null,

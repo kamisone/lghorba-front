@@ -30,6 +30,33 @@ export function localPartsToUTC(date: string, time: string): string {
 // ── Core converter ────────────────────────────────────────────────────────────
 
 /**
+ * Interpret a "YYYY-MM-DDTHH:mm" string as a wall-clock time in `tz` and
+ * return the equivalent UTC ISO string.  Inverse of isoToLocalDT.
+ *
+ * Algorithm: treat the input as UTC (utcGuess), format it in `tz` to get the
+ * offset the tz adds at that instant, then subtract that offset.
+ */
+export function localDTToISO(localDT: string, tz: string): string {
+  const [datePart, timePart = '00:00'] = localDT.split('T');
+  const [year, month, day]  = datePart.split('-').map(Number);
+  const [hour, minute]      = timePart.split(':').map(Number);
+
+  const utcGuess = Date.UTC(year, month - 1, day, hour, minute);
+
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(utcGuess));
+
+  const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value ?? '0', 10);
+  const gotMs = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'));
+
+  return new Date(utcGuess + (utcGuess - gotMs)).toISOString();
+}
+
+/**
  * Convert a UTC ISO timestamp to a "local datetime string" in `tz`.
  * Returns "YYYY-MM-DDTHH:mm" — compatible with DateTimePicker value/minValue
  * and HTML datetime-local inputs.
