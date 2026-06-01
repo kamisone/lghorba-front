@@ -12,6 +12,8 @@ import {
   dayKey as dayKeyUtil,
   isToday as isTodayUtil,
   dayLabel as dayLabelUtil,
+  localDTToISO,
+  nowLocalDT,
 } from "@/lib/dateUtils";
 import { Car as CarIcon, User, Plane, Pencil, Search, CalendarDays, AlertTriangle, Check, X } from "lucide-react";
 import styles from "./AdminBookings.module.css";
@@ -162,15 +164,45 @@ interface ModalProps {
   actionLoading: boolean;
   tz: string;
   onClose: () => void;
-  onConfirm: (id: string) => void;
-  onCancel:  (id: string) => void;
-  onDelete:  (id: string) => void;
-  onEdit:    (b: AdminBooking) => void;
+  onConfirm:    (id: string) => void;
+  onCancel:     (id: string) => void;
+  onDelete:     (id: string) => void;
+  onEdit:       (b: AdminBooking) => void;
+  onReactivated: (b: AdminBooking) => void;
 }
 
-function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel, onDelete, onEdit }: ModalProps) {
+function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel, onDelete, onEdit, onReactivated }: ModalProps) {
   const duration    = daysDiff(booking.startDateTime, booking.endDateTime);
   const pricePerDay = Number(booking.totalPrice) / duration;
+
+  const [reactivating,    setReactivating]    = useState(false);
+  const [reactivateEnd,   setReactivateEnd]   = useState("");
+  const [reactivateError, setReactivateError] = useState<string | null>(null);
+  const [reactivateSaving, setReactivateSaving] = useState(false);
+
+  const isPastBooking = new Date(booking.endDateTime) <= new Date();
+  const canReactivate = isPastBooking && !isCancelledStatus(booking.status) && booking.status !== "pending_payment";
+
+  const handleReactivate = async () => {
+    if (!reactivateEnd) return;
+    setReactivateError(null);
+    setReactivateSaving(true);
+    try {
+      const res = await fetch(`/next-api/bookings/${booking.id}/reactivate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endDateTime: localDTToISO(reactivateEnd, tz) }),
+      });
+      if (res.ok) {
+        onReactivated(await res.json());
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setReactivateError(err?.message ?? "Failed to reactivate booking.");
+      }
+    } finally {
+      setReactivateSaving(false);
+    }
+  };
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -334,6 +366,39 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
           </div>
         </div>
 
+        {canReactivate && (
+          reactivating ? (
+            <div className={styles.reactivateSection}>
+              <span className={styles.reactivateLabel}>Set new return time</span>
+              <div className={styles.reactivateRow}>
+                <input
+                  type="datetime-local"
+                  className={styles.reactivateDtInput}
+                  value={reactivateEnd}
+                  min={nowLocalDT(tz)}
+                  onChange={e => setReactivateEnd(e.target.value)}
+                  autoFocus
+                />
+                <button
+                  className={styles.actionReactivate}
+                  onClick={handleReactivate}
+                  disabled={!reactivateEnd || reactivateSaving}
+                >
+                  {reactivateSaving ? "Saving…" : "Confirm"}
+                </button>
+                <button
+                  className={styles.actionEdit}
+                  onClick={() => { setReactivating(false); setReactivateEnd(""); setReactivateError(null); }}
+                  disabled={reactivateSaving}
+                >
+                  Cancel
+                </button>
+              </div>
+              {reactivateError && <span className={styles.reactivateError}>{reactivateError}</span>}
+            </div>
+          ) : null
+        )}
+
         <div className={styles.modalActions}>
           <Link
             href={`/admin/fleet/${booking.carId}/rent`}
@@ -349,6 +414,15 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
               disabled={actionLoading}
             >
               <Pencil size={14} strokeWidth={1.75} /> Edit
+            </button>
+          )}
+          {canReactivate && !reactivating && (
+            <button
+              className={styles.actionReactivateTrigger}
+              onClick={() => setReactivating(true)}
+              disabled={actionLoading}
+            >
+              Reactivate
             </button>
           )}
           {booking.status === "pending" && (
@@ -662,6 +736,12 @@ export default function AdminBookings() {
     }
   }, [closeModal]);
 
+  const handleReactivated = useCallback((updated: AdminBooking) => {
+    setBookings(prev => prev.map(b => b.id === updated.id ? { ...b, ...updated } : b));
+    setSelected(null);
+    closeModal();
+  }, [closeModal]);
+
   const openCarPicker = async () => {
     setShowCarPicker(true);
     if (pickerCars.length > 0) return;
@@ -915,6 +995,7 @@ export default function AdminBookings() {
           onCancel={id  => updateStatus(id, "cancelled")}
           onDelete={deleteBooking}
           onEdit={openBookingEdit}
+          onReactivated={handleReactivated}
         />
       )}
 
