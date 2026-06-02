@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { Translations } from "@/lib/i18n/translations";
 import styles from "@/app/login/login.module.css";
 import MfaForm from "./MfaForm";
@@ -16,7 +16,6 @@ interface MfaState {
 }
 
 export default function LoginForm({ t }: { t: T }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
@@ -44,7 +43,7 @@ export default function LoginForm({ t }: { t: T }) {
             maskedDestination: data.maskedDestination,
           });
         } else {
-          router.replace(searchParams.get("from") || "/admin");
+          window.location.replace(searchParams.get("from") || "/admin");
         }
       } else if (res.status === 429) {
         setError(t.errorRateLimit);
@@ -63,7 +62,7 @@ export default function LoginForm({ t }: { t: T }) {
       <MfaForm
         {...mfa}
         t={t.mfa}
-        onSuccess={() => router.replace(searchParams.get("from") || "/admin")}
+        onSuccess={() => window.location.replace(searchParams.get("from") || "/admin")}
         onBack={() => { setMfa(null); setPassword(""); setError(""); }}
       />
     );
