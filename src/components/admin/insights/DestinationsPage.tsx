@@ -153,7 +153,7 @@ export default function DestinationsPage() {
 
   useEffect(() => {
     fetch("/next-api/insights/destinations/stats")
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setStats)
       .catch(() => null);
   }, []);
@@ -267,7 +267,7 @@ export default function DestinationsPage() {
           </div>
           <div className={styles.statCard}>
             <MapPin size={18} strokeWidth={1.75} className={styles.statIcon} style={{ color: "#8b5cf6" }} />
-            <div className={styles.statValue}>{stats.totalVisits.toLocaleString("fr-FR")}</div>
+            <div className={styles.statValue}>{(stats.totalVisits ?? 0).toLocaleString("fr-FR")}</div>
             <div className={styles.statLabel}>Total Visits</div>
           </div>
           <div className={styles.statCard}>
@@ -400,7 +400,7 @@ export default function DestinationsPage() {
                         <span className={styles.destCity}>{[d.city, d.region].filter(Boolean).join(", ") || d.country}</span>
                       </div>
                     </td>
-                    <td className={styles.td}>{d.visitCount.toLocaleString("fr-FR")}</td>
+                    <td className={styles.td}>{(d.visitCount ?? 0).toLocaleString("fr-FR")}</td>
                     <td className={styles.td}>{d.uniqueRentalCount}</td>
                     <td className={styles.td}>
                       <span className={styles.badge} style={{ color: confidenceColor(+d.confidenceScore), background: confidenceColor(+d.confidenceScore) + "18" }}>

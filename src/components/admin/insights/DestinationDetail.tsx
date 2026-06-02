@@ -194,7 +194,7 @@ export default function DestinationDetail({ id }: { id: string }) {
       {/* ── KPI row ── */}
       <div className={styles.kpiGrid}>
         <div className={styles.kpi}>
-          <span className={styles.kpiValue}>{dest.visitCount.toLocaleString("fr-FR")}</span>
+          <span className={styles.kpiValue}>{(dest.visitCount ?? 0).toLocaleString("fr-FR")}</span>
           <span className={styles.kpiLabel}>Total visits</span>
         </div>
         <div className={styles.kpi}>
