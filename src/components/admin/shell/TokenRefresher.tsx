@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 export default function TokenRefresher() {
-  const router = useRouter();
-
   useEffect(() => {
     const originalFetch = window.fetch.bind(window);
     let isRefreshing = false;
@@ -55,7 +52,8 @@ export default function TokenRefresher() {
         // Refresh token also expired → force re-login
         drainQueue(false, res);
         await originalFetch("/next-api/auth", { method: "DELETE" });
-        router.replace("/login");
+        // Hard navigation bypasses the client-side router cache
+        window.location.replace("/login");
         return res;
       } catch {
         drainQueue(false, res);
@@ -66,7 +64,7 @@ export default function TokenRefresher() {
     return () => {
       window.fetch = originalFetch;
     };
-  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   return null;
 }
