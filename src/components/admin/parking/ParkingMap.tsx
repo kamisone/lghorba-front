@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import styles from "./ParkingMap.module.css";
 import type { Parking } from "./ParkingList";
@@ -23,6 +23,7 @@ export default function ParkingMap({ parkings, onSelect }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef       = useRef<any>(null);
   const markersRef   = useRef<any[]>([]);
+  const [mapReady,   setMapReady] = useState(false);
 
   // ── Init map ───────────────────────────────────────────────────────────────
 
@@ -41,6 +42,8 @@ export default function ParkingMap({ parkings, onSelect }: Props) {
         attribution: '© <a href="https://openstreetmap.org">OSM</a>',
         maxZoom: 18,
       }).addTo(map);
+
+      setMapReady(true);
     });
 
     return () => {
@@ -51,10 +54,10 @@ export default function ParkingMap({ parkings, onSelect }: Props) {
   // ── Render markers ─────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapReady) return;
     const timer = setTimeout(() => renderMarkers(), 100);
     return () => clearTimeout(timer);
-  }, [parkings, onSelect]);
+  }, [mapReady, parkings, onSelect]);
 
   const renderMarkers = () => {
     import("leaflet").then(({ default: L }) => {
