@@ -1066,6 +1066,7 @@ export default function AdminBookings() {
                     source:            updated.source,
                     reservationNumber: updated.reservationNumber ?? null,
                     totalEarning:      updated.totalEarning ?? null,
+                    autoStartTracking: updated.autoStartTracking ?? b.autoStartTracking,
                     gpsStopMode:       updated.gpsStopMode ?? b.gpsStopMode,
                     user: updated.user
                       ? { id: updated.user.id, name: updated.user.name, phone: updated.user.phone, email: updated.user.email ?? null }
