@@ -36,12 +36,12 @@ export async function GET(request: NextRequest) {
       body:    JSON.stringify({ refresh_token: refreshToken }),
     });
   } catch {
-    const r = NextResponse.redirect(new URL("/login", request.url));
-    r.cookies.delete(REFRESH_COOKIE);
-    return r;
+    // Backend unreachable — don't delete the refresh token, it may still be valid
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (!res.ok) {
+    // Token rejected by the backend — clear it so login page doesn't loop
     const r = NextResponse.redirect(new URL("/login", request.url));
     r.cookies.delete(REFRESH_COOKIE);
     return r;
@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
   let res: Response;
   try {
     res = await fetch(`${BACKEND_URL}/auth/refresh`, {
-      method: "POST",
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
+      body:    JSON.stringify({ refresh_token: refreshToken }),
     });
   } catch {
     return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });

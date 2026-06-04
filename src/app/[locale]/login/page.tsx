@@ -13,14 +13,17 @@ export default async function LoginPage({ params }: { params: { locale: string }
   const refreshToken = jar.get("vitecamion_refresh")?.value;
 
   // 1. Validate existing access token
+  // NOTE: redirect() throws NEXT_REDIRECT internally — must NOT be inside try/catch
   if (accessToken) {
+    let isValid = false;
     try {
       const res = await fetch(`${API}/auth/me`, {
         headers: { Authorization: `Bearer ${accessToken}` },
         cache: "no-store",
       });
-      if (res.ok) redirect("/admin");
+      isValid = res.ok;
     } catch { /* backend unreachable — fall through */ }
+    if (isValid) redirect("/admin");
   }
 
   // 2. Access token missing or expired — try refreshing via the route handler
