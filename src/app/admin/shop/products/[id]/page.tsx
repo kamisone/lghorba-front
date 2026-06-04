@@ -133,9 +133,13 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   async function generateCombinations(silent = false): Promise<void> {
     const res = await fetch(`/next-api/shop/products/${params.id}/variants/generate-combinations`, { method: "POST" });
     if (res.ok) {
-      const data = await res.json();
-      if (!silent || data.created > 0) {
-        toast.success(`${data.created} new SKU(s) created, ${data.skipped} already existed`);
+      const data: { created: number; skipped: number; deleted: number } = await res.json();
+      const hasActivity = data.created > 0 || data.deleted > 0;
+      if (!silent || hasActivity) {
+        const parts = [`${data.created} SKU${data.created !== 1 ? "s" : ""} created`];
+        if (data.skipped > 0) parts.push(`${data.skipped} already existed`);
+        if (data.deleted > 0) parts.push(`${data.deleted} stale SKU${data.deleted !== 1 ? "s" : ""} removed`);
+        toast.success(parts.join(", "));
       }
     } else {
       const err = await res.json().catch(() => ({}));
@@ -192,11 +196,16 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   }
 
   async function unlinkAttribute(attributeId: string, attrName: string) {
-    if (!confirm(`Remove "${attrName}" from this product?`)) return;
+    if (!confirm(`Remove "${attrName}" from this product? All generated SKUs and inventory entries for this variation will be deleted.`)) return;
     const res = await fetch(`/next-api/shop/products/${params.id}/attributes/${attributeId}`, { method: "DELETE" });
     if (res.ok) {
+      const data: { deletedVariants: number } = await res.json().catch(() => ({ deletedVariants: 0 }));
       setProductAttrs(prev => prev.filter(pa => pa.attributeId !== attributeId));
-      toast.success(`Removed "${attrName}"`);
+      toast.success(
+        data.deletedVariants > 0
+          ? `Removed "${attrName}" — ${data.deletedVariants} SKU${data.deletedVariants !== 1 ? "s" : ""} and their inventory deleted`
+          : `Removed "${attrName}"`,
+      );
     } else {
       toast.error("Failed to remove variation");
     }
