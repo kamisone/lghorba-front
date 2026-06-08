@@ -15,6 +15,7 @@ export interface AvailabilityAttribute {
     value: string;
     displayValue: string | null;
     swatchValue: string | null;
+    swatchUrl: string | null;
     swatchType: "color" | "image" | null;
     sortOrder: number;
   }>;
@@ -181,8 +182,12 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
               <div className={styles.optionRow}>
                 {attr.optionValues.map(ov => {
                   const state = optionState(attr.id, ov.id);
-                  const bgStyle = ov.swatchValue
-                    ? { background: ov.swatchType === "color" ? ov.swatchValue : `url(${ov.swatchValue}) center/cover` }
+                  const isImage = ov.swatchType === "image";
+                  const displayValue = isImage ? (ov.swatchUrl ?? ov.swatchValue) : ov.swatchValue;
+                  const bgStyle = displayValue
+                    ? { background: isImage
+                          ? `url(${displayValue}) center/cover`
+                          : displayValue }
                     : undefined;
                   return (
                     <button
@@ -193,13 +198,19 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
                       aria-label={ov.displayValue ?? ov.value}
                       aria-pressed={state === "selected"}
                       className={[
-                        styles.swatchBtn,
-                        state === "selected"   ? styles.optionSelected   : "",
-                        state === "oos"        ? styles.optionOos        : "",
-                        state === "unavailable"? styles.optionUnavailable: "",
+                        isImage ? styles.swatchBtnImage : styles.swatchBtn,
+                        state === "selected"    ? styles.optionSelected    : "",
+                        state === "oos"         ? styles.optionOos         : "",
+                        state === "unavailable" ? styles.optionUnavailable : "",
                       ].join(" ")}
                     >
-                      <span className={styles.swatchBtnInner} style={bgStyle} />
+                      <span
+                        className={[
+                          isImage ? styles.swatchBtnImageInner : styles.swatchBtnInner,
+                          isImage && state === "selected" ? styles.selectedCheck : "",
+                        ].join(" ")}
+                        style={bgStyle}
+                      />
                     </button>
                   );
                 })}

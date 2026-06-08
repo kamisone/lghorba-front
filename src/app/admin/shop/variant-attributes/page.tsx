@@ -1,11 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import styles from "./VariantAttributes.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 import { slugify } from "@/lib/slugify";
 import { X, ChevronDown } from "lucide-react";
+
+interface ProductImage {
+  key: string;
+  url: string;
+  productId: string;
+  productTitle: string;
+}
 
 interface OptionValue {
   id: string;
@@ -68,6 +76,11 @@ export default function VariantAttributesPage() {
   const [valAttrId, setValAttrId]   = useState<string | null>(null);
   const [valSaving, setValSaving]   = useState(false);
 
+  const [imgPickerOpen, setImgPickerOpen]   = useState(false);
+  const [productImages, setProductImages]   = useState<ProductImage[]>([]);
+  const [imgPickerLoading, setImgPickerLoading] = useState(false);
+  const [imgPickerSearch, setImgPickerSearch]   = useState("");
+
   const attrTranslations = useEntityTranslations("shop_variant_attribute", attrEditId);
   const valTranslations  = useEntityTranslations("shop_variation_option",  valEditId);
 
@@ -79,6 +92,18 @@ export default function VariantAttributesPage() {
     } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
+
+  async function openImagePicker() {
+    setImgPickerOpen(true);
+    if (productImages.length) return;
+    setImgPickerLoading(true);
+    try {
+      const res = await fetch("/next-api/shop/products/images");
+      if (res.ok) setProductImages(await res.json());
+    } finally {
+      setImgPickerLoading(false);
+    }
+  }
 
   // Sync EN translations into form fields once the hook loads them
   useEffect(() => {
@@ -139,11 +164,25 @@ export default function VariantAttributesPage() {
     load();
   }
 
+  async function prefetchImages() {
+    if (productImages.length) return;
+    setImgPickerLoading(true);
+    try {
+      const res = await fetch("/next-api/shop/products/images");
+      if (res.ok) setProductImages(await res.json());
+    } finally {
+      setImgPickerLoading(false);
+    }
+  }
+
   function openValCreate(attributeId: string) { setValForm(VALUE_EMPTY); setValEditId(null); setValAttrId(attributeId); setValModal("create"); }
   function openValEdit(v: OptionValue, attributeId: string) {
     setValEditId(v.id);
-    setValForm({ value: v.value, displayValue: v.displayValue ?? "", displayValueEn: "", swatchValue: v.swatchValue ?? "", swatchType: v.swatchType ?? "", sortOrder: v.sortOrder, isActive: v.isActive });
+    const form: ValueForm = { value: v.value, displayValue: v.displayValue ?? "", displayValueEn: "", swatchValue: v.swatchValue ?? "", swatchType: (v.swatchType ?? "") as ValueForm["swatchType"], sortOrder: v.sortOrder, isActive: v.isActive };
+    setValForm(form);
     setValAttrId(attributeId); setValModal("edit");
+    // Pre-load images so the preview works immediately when swatchType is image
+    if (v.swatchType === "image") prefetchImages();
   }
 
   async function saveVal() {
@@ -300,7 +339,9 @@ export default function VariantAttributesPage() {
                                     <td>
                                       {v.swatchType === "color" && v.swatchValue
                                         ? <span className={styles.swatchDot} style={{ background: v.swatchValue }} />
-                                        : <span className={styles.swatchNone}>—</span>
+                                        : v.swatchType === "image" && v.swatchValue
+                                          ? <span className={styles.swatchImgThumb} style={{ backgroundImage: `url(${v.swatchValue})` }} title="Image swatch" />
+                                          : <span className={styles.swatchNone}>—</span>
                                       }
                                     </td>
                                     <td><span className={styles.valValue}>{v.value}</span></td>
@@ -398,6 +439,56 @@ export default function VariantAttributesPage() {
         </div>
       )}
 
+      {/* ── Image picker modal ── */}
+      {imgPickerOpen && (
+        <div className={styles.imgPickerOverlay} onClick={e => { if (e.target === e.currentTarget) setImgPickerOpen(false); }}>
+          <div className={`${styles.modal} ${styles.imgPickerModal}`}>
+            <div className={styles.modalHead}>
+              <h2 className={styles.modalTitle}>Pick a product image</h2>
+              <button className={styles.modalClose} onClick={() => setImgPickerOpen(false)}><X size={14} strokeWidth={2} /></button>
+            </div>
+            <div className={styles.imgPickerSearch}>
+              <input
+                value={imgPickerSearch}
+                onChange={e => setImgPickerSearch(e.target.value)}
+                placeholder="Filter by product name…"
+                className={styles.imgPickerSearchInput}
+              />
+            </div>
+            <div className={styles.imgPickerBody}>
+              {imgPickerLoading ? (
+                <div className={styles.imgPickerEmpty}>Loading images…</div>
+              ) : productImages.length === 0 ? (
+                <div className={styles.imgPickerEmpty}>No product images found. Add images to your products first.</div>
+              ) : (
+                <div className={styles.imgPickerGrid}>
+                  {productImages
+                    .filter(img => !imgPickerSearch || img.productTitle.toLowerCase().includes(imgPickerSearch.toLowerCase()))
+                    .map(img => (
+                      <button
+                        key={img.key}
+                        type="button"
+                        className={`${styles.imgPickerItem} ${valForm.swatchValue === img.key ? styles.imgPickerItemSelected : ""}`}
+                        onClick={() => {
+                          setValForm(f => ({ ...f, swatchValue: img.key }));
+                          setImgPickerOpen(false);
+                        }}
+                        title={img.productTitle}
+                      >
+                        <div className={styles.imgPickerThumb}>
+                          <Image src={img.url} alt={img.productTitle} fill sizes="100px" className={styles.imgPickerThumbImg} unoptimized />
+                        </div>
+                        <span className={styles.imgPickerLabel}>{img.productTitle}</span>
+                      </button>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Option value modal ── */}
       {valModal && (
         <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) setValModal(null); }}>
@@ -424,10 +515,17 @@ export default function VariantAttributesPage() {
                 </div>
                 <div className={styles.formField}>
                   <label>Swatch type</label>
-                  <select value={valForm.swatchType} onChange={e => setValForm(f => ({ ...f, swatchType: e.target.value as ValueForm["swatchType"] }))}>
+                  <select
+                    value={valForm.swatchType}
+                    onChange={e => {
+                      const t = e.target.value as ValueForm["swatchType"];
+                      setValForm(f => ({ ...f, swatchType: t, swatchValue: "" }));
+                      if (t === "image") prefetchImages();
+                    }}
+                  >
                     <option value="">None</option>
                     <option value="color">Color (hex)</option>
-                    <option value="image">Image (GCS key)</option>
+                    <option value="image">Image</option>
                   </select>
                 </div>
                 <div className={styles.formField}>
@@ -447,12 +545,43 @@ export default function VariantAttributesPage() {
                         placeholder="#000000"
                       />
                     </div>
+                  ) : valForm.swatchType === "image" ? (
+                    <div className={styles.swatchImagePicker}>
+                      {valForm.swatchValue && (
+                        <div className={styles.swatchImagePreview}>
+                          <Image
+                            src={productImages.find(img => img.key === valForm.swatchValue)?.url ?? ""}
+                            alt="Selected swatch"
+                            fill
+                            sizes="80px"
+                            className={styles.swatchImagePreviewImg}
+                            unoptimized
+                          />
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className={`${styles.actionBtn} ${styles.actionEdit}`}
+                        onClick={openImagePicker}
+                      >
+                        {valForm.swatchValue ? "Change image" : "Pick image"}
+                      </button>
+                      {valForm.swatchValue && (
+                        <button
+                          type="button"
+                          className={`${styles.actionBtn} ${styles.actionDelete}`}
+                          onClick={() => setValForm(f => ({ ...f, swatchValue: "" }))}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                   ) : (
                     <input
                       value={valForm.swatchValue}
                       onChange={e => setValForm(f => ({ ...f, swatchValue: e.target.value }))}
-                      placeholder={valForm.swatchType === "image" ? "swatches/black-texture.jpg" : "—"}
-                      disabled={!valForm.swatchType}
+                      placeholder="—"
+                      disabled
                     />
                   )}
                 </div>

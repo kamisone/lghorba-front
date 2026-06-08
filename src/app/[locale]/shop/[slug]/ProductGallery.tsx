@@ -8,9 +8,10 @@ import styles from "./ProductGallery.module.css";
 interface Props {
   images: string[];
   title: string;
+  forcedIndex?: number;
 }
 
-export default function ProductGallery({ images, title }: Props) {
+export default function ProductGallery({ images, title, forcedIndex }: Props) {
   const [current, setCurrent] = useState(0);
   const [fading, setFading]   = useState(false);
   const [lightbox, setLightbox] = useState(false);
@@ -29,6 +30,16 @@ export default function ProductGallery({ images, title }: Props) {
 
   const prev = useCallback(() => goTo((current - 1 + images.length) % images.length), [current, goTo, images.length]);
   const next = useCallback(() => goTo((current + 1) % images.length), [current, goTo, images.length]);
+
+  // Jump to the forced index when a variant option with an image swatch is selected.
+  useEffect(() => {
+    if (forcedIndex !== undefined && forcedIndex >= 0 && forcedIndex < images.length && forcedIndex !== current) {
+      goTo(forcedIndex);
+    }
+  // goTo changes identity only when current/fading/images.length change, but we deliberately
+  // want to re-run only when forcedIndex changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forcedIndex]);
 
   // Scroll the thumbnail strip to keep the active thumb visible
   useEffect(() => {

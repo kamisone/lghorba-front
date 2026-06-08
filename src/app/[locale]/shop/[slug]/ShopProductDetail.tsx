@@ -30,6 +30,7 @@ interface Product {
   shortDescription: string | null;
   brand: string | null;
   featuredImageUrl: string | null;
+  featuredImageKey: string | null;
   galleryImageUrls: string[];
   galleryImageKeys: string[];
   variants: FlatVariant[];
@@ -131,6 +132,33 @@ export default function ShopProductDetail({
     return productGallery;
   }, [resolvedVariant, selectedVariant, productGallery]);
 
+  // When a selected option value has an image swatch, jump to the matching gallery image.
+  const forcedGalleryIndex = useMemo(() => {
+    if (!availabilityMatrix || !selectedOptionValueIds.length) return undefined;
+    // Build a map from GCS key → signed URL using the product's own images.
+    const keyToUrl = new Map<string, string>();
+    if (product.featuredImageKey && product.featuredImageUrl) {
+      keyToUrl.set(product.featuredImageKey, product.featuredImageUrl);
+    }
+    (product.galleryImageKeys ?? []).forEach((k, i) => {
+      const url = product.galleryImageUrls?.[i];
+      if (url) keyToUrl.set(k, url);
+    });
+
+    for (const attr of availabilityMatrix.attributes) {
+      for (const ov of attr.optionValues) {
+        if (ov.swatchType === "image" && ov.swatchValue && selectedOptionValueIds.includes(ov.id)) {
+          const targetUrl = keyToUrl.get(ov.swatchValue);
+          if (targetUrl) {
+            const idx = activeGallery.indexOf(targetUrl);
+            if (idx >= 0) return idx;
+          }
+        }
+      }
+    }
+    return undefined;
+  }, [selectedOptionValueIds, availabilityMatrix, product, activeGallery]);
+
   const wishlisted = isWishlisted(product.id);
   const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
 
@@ -163,7 +191,7 @@ export default function ShopProductDetail({
     <div className={styles.container}>
       {/* Gallery */}
       <div className={styles.galleryCol}>
-        <ProductGallery images={activeGallery} title={product.title} />
+        <ProductGallery images={activeGallery} title={product.title} forcedIndex={forcedGalleryIndex} />
       </div>
 
       {/* Details */}
