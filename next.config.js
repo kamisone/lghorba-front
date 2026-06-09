@@ -8,6 +8,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "storage.googleapis.com" },
     ],
+    minimumCacheTTL: 3600,
   },
   async headers() {
     return [
