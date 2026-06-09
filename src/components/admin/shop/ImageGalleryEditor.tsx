@@ -34,9 +34,13 @@ export default function ImageGalleryEditor({
     onChange(next.map(i => i.key));
   }
 
-  function handleSelect(asset: MediaAsset) {
-    if (items.some(i => i.key === asset.storageKey)) return; // deduplicate
-    notify([...items, { key: asset.storageKey, url: asset.url }]);
+  function handleSelectMulti(assets: MediaAsset[]) {
+    const remaining = maxImages - items.length;
+    const newItems = assets
+      .filter(a => !items.some(i => i.key === a.storageKey)) // deduplicate
+      .slice(0, remaining)
+      .map(a => ({ key: a.storageKey, url: a.url }));
+    if (newItems.length) notify([...items, ...newItems]);
   }
 
   function remove(index: number) {
@@ -114,8 +118,9 @@ export default function ImageGalleryEditor({
       <MediaPicker
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
-        onSelect={handleSelect}
-        title="Add gallery image"
+        multi
+        onSelectMulti={handleSelectMulti}
+        title="Add gallery images"
       />
     </div>
   );

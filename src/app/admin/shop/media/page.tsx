@@ -1,27 +1,40 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
 import styles from "./Media.module.css";
-import { X } from "lucide-react";
+import { X, Folder, FolderOpen, Pencil, Trash2, Check, ChevronRight, Plus } from "lucide-react";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  assetCount: number;
+  createdAt: string;
+}
 
 interface Asset {
-  id:               string;
-  storageKey:       string;
+  id: string;
+  storageKey: string;
   originalFilename: string;
-  mimeType:         string;
-  sizeBytes:        number;
-  width:            number | null;
-  height:           number | null;
-  altText:          string | null;
-  tags:             string[];
-  usageCount:       number;
-  url:              string;
-  createdAt:        string;
+  mimeType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  altText: string | null;
+  tags: string[];
+  folderId: string | null;
+  usageCount: number;
+  url: string;
+  createdAt: string;
 }
 
 interface UsageRecord {
   id: string; entityType: string; entityId: string; field: string; createdAt: string;
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmt(bytes: number): string {
   if (bytes < 1024)        return `${bytes} B`;
@@ -29,40 +42,158 @@ function fmt(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function buildBreadcrumb(folders: Folder[], folderId: string | null): Folder[] {
+  if (!folderId) return [];
+  const f = folders.find(x => x.id === folderId);
+  if (!f) return [];
+  return [...buildBreadcrumb(folders, f.parentId), f];
+}
+
+function getFolderPath(folders: Folder[], folderId: string): string {
+  const f = folders.find(x => x.id === folderId);
+  if (!f) return "";
+  if (!f.parentId) return f.name;
+  const parentPath = getFolderPath(folders, f.parentId);
+  return parentPath ? `${parentPath} / ${f.name}` : f.name;
+}
+
 const LIMIT = 48;
 
-export default function MediaLibraryPage() {
-  const [assets, setAssets]         = useState<Asset[]>([]);
-  const [total, setTotal]           = useState(0);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState("");
-  const [mimeFilter, setMimeFilter] = useState("");
-  const [offset, setOffset]         = useState(0);
-  const [selected, setSelected]     = useState<Asset | null>(null);
-  const [usage, setUsage]           = useState<UsageRecord[]>([]);
-  const [altText, setAltText]       = useState("");
-  const [saving, setSaving]         = useState(false);
-  const [uploading, setUploading]   = useState(false);
-  const [dragOver, setDragOver]     = useState(false);
-  const [uploadPct, setUploadPct]   = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+// ── Main component ────────────────────────────────────────────────────────────
 
-  const load = useCallback(() => {
+export default function MediaLibraryPage() {
+  // Navigation
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null); // null = All Media
+
+  // Folders
+  const [folders, setFolders]               = useState<Folder[]>([]);
+  const [newFolderName, setNewFolderName]   = useState("");
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [renamingId, setRenamingId]         = useState<string | null>(null);
+  const [renamingName, setRenamingName]     = useState("");
+
+  // Assets
+  const [assets, setAssets]       = useState<Asset[]>([]);
+  const [total, setTotal]         = useState(0);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState("");
+  const [mimeFilter, setMimeFilter] = useState("");
+  const [offset, setOffset]       = useState(0);
+
+  // Detail panel
+  const [selected, setSelected]   = useState<Asset | null>(null);
+  const [usage, setUsage]         = useState<UsageRecord[]>([]);
+  const [altText, setAltText]     = useState("");
+  const [movingToFolder, setMovingToFolder] = useState<string>("__current__");
+  const [saving, setSaving]       = useState(false);
+
+  // Upload
+  const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [dragOver, setDragOver]   = useState(false);
+
+  const fileInputRef    = useRef<HTMLInputElement>(null);
+  const newFolderRef    = useRef<HTMLInputElement>(null);
+  const renamingRef     = useRef<HTMLInputElement>(null);
+
+  const [draggingId,  setDraggingId]  = useState<string | null>(null);
+  const [dragTarget,  setDragTarget]  = useState<string | null>(null); // "" = root, uuid = folder id
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // ── Data loading ───────────────────────────────────────────────────────────
+
+  const loadFolders = useCallback(async () => {
+    const data = await fetch("/next-api/admin/media/folders").then(r => r.json()).catch(() => []);
+    setFolders(Array.isArray(data) ? data : []);
+  }, []);
+
+  const loadAssets = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
     if (search)     params.set("search", search);
     if (mimeFilter) params.set("mimeType", mimeFilter);
+    params.set("folderId", currentFolderId ?? ""); // "" → backend filters folder_id IS NULL
     fetch(`/next-api/admin/media?${params}`)
       .then(r => r.json())
       .then(d => { setAssets(d.items ?? []); setTotal(d.total ?? 0); })
       .finally(() => setLoading(false));
-  }, [search, mimeFilter, offset]);
+  }, [search, mimeFilter, offset, currentFolderId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadFolders(); }, [loadFolders]);
+  useEffect(() => { loadAssets(); }, [loadAssets]);
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+
+  function navigateTo(folderId: string | null) {
+    setCurrentFolderId(folderId);
+    setOffset(0);
+    setSelected(null);
+  }
+
+  const breadcrumb = buildBreadcrumb(folders, currentFolderId);
+  // Subfolders shown as cards at the top of the main grid
+  const gridFolders = currentFolderId === null
+    ? folders.filter(f => f.parentId === null)
+    : folders.filter(f => f.parentId === currentFolderId);
+
+  // ── Folder CRUD ────────────────────────────────────────────────────────────
+
+  async function submitNewFolder(e?: React.FormEvent) {
+    e?.preventDefault();
+    const name = newFolderName.trim();
+    if (!name) { setIsCreatingFolder(false); return; }
+    await fetch("/next-api/admin/media/folders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, parentId: currentFolderId }),
+    });
+    setNewFolderName("");
+    setIsCreatingFolder(false);
+    await loadFolders();
+  }
+
+  function startCreatingFolder() {
+    setIsCreatingFolder(true);
+    setRenamingId(null);
+    setTimeout(() => newFolderRef.current?.focus(), 50);
+  }
+
+  function startRenaming(folder: Folder, e: React.MouseEvent) {
+    e.stopPropagation();
+    setRenamingId(folder.id);
+    setRenamingName(folder.name);
+    setTimeout(() => renamingRef.current?.focus(), 50);
+  }
+
+  async function submitRename(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (!renamingId || !renamingName.trim()) { setRenamingId(null); return; }
+    await fetch(`/next-api/admin/media/folders/${renamingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: renamingName.trim() }),
+    });
+    setRenamingId(null);
+    await loadFolders();
+  }
+
+  async function deleteFolder(folder: Folder, e: React.MouseEvent) {
+    e.stopPropagation();
+    const msg = folder.assetCount > 0
+      ? `Delete "${folder.name}"? Its ${folder.assetCount} asset(s) will be moved to the parent folder.`
+      : `Delete folder "${folder.name}"?`;
+    if (!confirm(msg)) return;
+    await fetch(`/next-api/admin/media/folders/${folder.id}`, { method: "DELETE" });
+    if (currentFolderId === folder.id) navigateTo(folder.parentId);
+    await loadFolders();
+  }
+
+  // ── Asset actions ──────────────────────────────────────────────────────────
 
   async function openDetail(asset: Asset) {
     setSelected(asset);
     setAltText(asset.altText ?? "");
+    setMovingToFolder(asset.folderId ?? "");
     const data = await fetch(`/next-api/admin/media/${asset.id}/usage`).then(r => r.json());
     setUsage(Array.isArray(data) ? data : []);
   }
@@ -80,12 +211,42 @@ export default function MediaLibraryPage() {
     setSaving(false);
   }
 
+  async function moveToFolder(targetFolderId: string) {
+    if (!selected) return;
+    const folderId = targetFolderId === "" ? null : targetFolderId;
+    setSaving(true);
+    await fetch(`/next-api/admin/media/${selected.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folderId }),
+    });
+    setMovingToFolder(targetFolderId);
+    setSelected(prev => prev ? { ...prev, folderId } : null);
+    setAssets(prev => prev.map(a => a.id === selected.id ? { ...a, folderId } : a));
+    setSaving(false);
+    await loadFolders();
+    // Remove asset from current folder view if it was moved out
+    if (currentFolderId !== null && folderId !== currentFolderId) {
+      setAssets(prev => prev.filter(a => a.id !== selected.id));
+      setTotal(t => t - 1);
+      setSelected(null);
+    }
+  }
+
   async function deleteAsset() {
     if (!selected || !confirm(`Delete "${selected.originalFilename}"? This cannot be undone.`)) return;
-    await fetch(`/next-api/admin/media/${selected.id}`, { method: "DELETE" });
+    const res = await fetch(`/next-api/admin/media/${selected.id}`, { method: "DELETE" });
+    if (res.status === 409) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.message ?? "This asset is still in use and cannot be deleted.");
+      return;
+    }
     setSelected(null);
-    load();
+    loadAssets();
+    loadFolders();
   }
+
+  // ── Upload ─────────────────────────────────────────────────────────────────
 
   async function uploadFiles(files: FileList | File[]) {
     setUploading(true);
@@ -94,13 +255,15 @@ export default function MediaLibraryPage() {
       setUploadPct(Math.round((i / all.length) * 100));
       const form = new FormData();
       form.append("file", all[i]);
+      if (currentFolderId) form.append("folderId", currentFolderId);
       await fetch("/next-api/admin/media/upload", { method: "POST", body: form });
     }
     setUploadPct(100);
     setUploading(false);
     setUploadPct(0);
     setOffset(0);
-    load();
+    loadAssets();
+    loadFolders();
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -113,13 +276,159 @@ export default function MediaLibraryPage() {
     if (selected) navigator.clipboard.writeText(selected.storageKey);
   }
 
+  // ── Keyboard shortcuts ─────────────────────────────────────────────────────
+
+  function onNewFolderKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") { setIsCreatingFolder(false); setNewFolderName(""); }
+  }
+
+  function onRenamingKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") setRenamingId(null);
+  }
+
+  // ── Drag-and-drop assets onto folders ──────────────────────────────────────
+
+  function onAssetDragStart(e: React.DragEvent, assetId: string) {
+    // If this card is part of a multi-selection, drag all selected IDs
+    const ids = selectedIds.has(assetId) && selectedIds.size > 1
+      ? Array.from(selectedIds)
+      : [assetId];
+    setDraggingId(assetId);
+    e.dataTransfer.setData("text/plain", ids.join(","));
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function onAssetDragEnd() {
+    setDraggingId(null);
+    setDragTarget(null);
+  }
+
+  function onTargetOver(e: React.DragEvent, targetId: string) {
+    // Use dataTransfer.types to detect asset drags (more reliable than a ref)
+    if (!e.dataTransfer.types.includes("text/plain")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragTarget(targetId);
+  }
+
+  function onTargetLeave(e: React.DragEvent) {
+    if (e.relatedTarget && (e.currentTarget as Element).contains(e.relatedTarget as Node)) return;
+    setDragTarget(null);
+  }
+
+  async function onDropToFolder(e: React.DragEvent, targetFolderId: string | null) {
+    e.preventDefault();
+    const raw = e.dataTransfer.getData("text/plain");
+    setDraggingId(null);
+    setDragTarget(null);
+    if (!raw) return;
+
+    const assetIds = raw.split(",").filter(id => {
+      const a = assets.find(x => x.id === id);
+      return a && a.folderId !== targetFolderId;
+    });
+    if (!assetIds.length) return;
+
+    // Optimistic: remove from current view immediately
+    setAssets(prev => prev.filter(a => !assetIds.includes(a.id)));
+    setTotal(t => t - assetIds.length);
+    if (selected && assetIds.includes(selected.id)) setSelected(null);
+    setSelectedIds(new Set());
+
+    if (assetIds.length === 1) {
+      await fetch(`/next-api/admin/media/${assetIds[0]}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderId: targetFolderId }),
+      });
+    } else {
+      await fetch("/next-api/admin/media/bulk-move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assetIds, folderId: targetFolderId }),
+      });
+    }
+    loadFolders();
+  }
+
+  // ── Sidebar folder tree renderer ───────────────────────────────────────────
+
+  function renderFolderTree(parentId: string | null, depth = 0): React.ReactNode {
+    const children = folders.filter(f => f.parentId === parentId).sort((a, b) => a.name.localeCompare(b.name));
+    if (!children.length) return null;
+
+    return children.map(folder => (
+      <div key={folder.id}>
+        <div
+          className={`${styles.sidebarItem} ${currentFolderId === folder.id ? styles.sidebarItemActive : ""} ${dragTarget === folder.id ? styles.sidebarItemDragOver : ""}`}
+          style={{ paddingLeft: 12 + depth * 14 }}
+          onClick={() => navigateTo(folder.id)}
+          title={folder.name}
+          onDragOver={e => onTargetOver(e, folder.id)}
+          onDragLeave={onTargetLeave}
+          onDrop={e => onDropToFolder(e, folder.id)}
+        >
+          {currentFolderId === folder.id
+            ? <FolderOpen size={13} className={styles.sidebarFolderIcon} />
+            : <Folder     size={13} className={styles.sidebarFolderIcon} />
+          }
+          {renamingId === folder.id ? (
+            <form onSubmit={submitRename} className={styles.sidebarRenameForm} onClick={e => e.stopPropagation()}>
+              <input
+                ref={renamingRef}
+                className={styles.sidebarRenameInput}
+                value={renamingName}
+                onChange={e => setRenamingName(e.target.value)}
+                onKeyDown={onRenamingKeyDown}
+                onBlur={submitRename}
+              />
+              <button type="submit" className={styles.sidebarRenameConfirm} aria-label="Save">
+                <Check size={11} />
+              </button>
+            </form>
+          ) : (
+            <span className={styles.sidebarItemName}>{folder.name}</span>
+          )}
+          {renamingId !== folder.id && (
+            <>
+              {folder.assetCount > 0 && (
+                <span className={styles.sidebarCount}>{folder.assetCount}</span>
+              )}
+              <span className={styles.sidebarActions}>
+                <button
+                  className={styles.sidebarAction}
+                  onClick={e => startRenaming(folder, e)}
+                  aria-label="Rename"
+                  title="Rename"
+                >
+                  <Pencil size={11} />
+                </button>
+                <button
+                  className={`${styles.sidebarAction} ${styles.sidebarActionDelete}`}
+                  onClick={e => deleteFolder(folder, e)}
+                  aria-label="Delete"
+                  title="Delete folder"
+                >
+                  <Trash2 size={11} />
+                </button>
+              </span>
+            </>
+          )}
+        </div>
+        {renderFolderTree(folder.id, depth + 1)}
+      </div>
+    ));
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <div className={styles.page}>
       {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.titleGroup}>
           <h1 className={styles.title}>Media Library</h1>
-          <span className={styles.subtitle}>{total} assets</span>
+          <span className={styles.subtitle}>{total} asset{total !== 1 ? "s" : ""}</span>
         </div>
         <button className={styles.uploadBtn} onClick={() => fileInputRef.current?.click()}>
           ↑ Upload Images
@@ -134,101 +443,234 @@ export default function MediaLibraryPage() {
         />
       </div>
 
-      {/* ── Upload zone ── */}
-      <div
-        className={`${styles.uploadZone} ${dragOver ? styles.uploadZoneActive : ""}`}
-        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <div className={styles.uploadZoneTitle}>
-          {uploading ? `Uploading… ${uploadPct}%` : "Drag & drop images here to upload"}
-        </div>
-        <div className={styles.uploadZoneSub}>JPEG, PNG, WebP, AVIF, GIF, SVG — max 20 MB per file · deduplication enabled</div>
-      </div>
+      {/* ── Body: sidebar + main ── */}
+      <div className={styles.body}>
 
-      {uploading && (
-        <div className={styles.uploadProgress}>
-          <div className={styles.uploadProgressBar} style={{ width: `${uploadPct}%` }} />
-        </div>
-      )}
+        {/* ── Sidebar ── */}
+        <aside className={styles.sidebar}>
+          <button
+            className={`${styles.sidebarAllMedia} ${currentFolderId === null ? styles.sidebarItemActive : ""} ${dragTarget === "" ? styles.sidebarItemDragOver : ""}`}
+            onClick={() => navigateTo(null)}
+            onDragOver={e => onTargetOver(e, "")}
+            onDragLeave={onTargetLeave}
+            onDrop={e => onDropToFolder(e, null)}
+          >
+            <FolderOpen size={13} className={styles.sidebarFolderIcon} />
+            <span className={styles.sidebarItemName}>All Media</span>
+          </button>
 
-      {/* ── Toolbar ── */}
-      <div className={styles.toolbar}>
-        <div className={styles.searchWrap}>
-          <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-          </svg>
-          <input
-            className={styles.searchInput}
-            placeholder="Search by filename…"
-            value={search}
-            onChange={e => { setSearch(e.target.value); setOffset(0); }}
-          />
-        </div>
-        <select
-          className={styles.filterSelect}
-          value={mimeFilter}
-          onChange={e => { setMimeFilter(e.target.value); setOffset(0); }}
-        >
-          <option value="">All types</option>
-          <option value="image/jpeg">JPEG</option>
-          <option value="image/png">PNG</option>
-          <option value="image/webp">WebP</option>
-          <option value="image/avif">AVIF</option>
-          <option value="image/gif">GIF</option>
-          <option value="image/svg+xml">SVG</option>
-        </select>
-        <div className={styles.toolbarRight}>{total} assets</div>
-      </div>
-
-      {/* ── Asset grid ── */}
-      <div className={styles.grid}>
-        {loading
-          ? Array.from({ length: 24 }, (_, i) => <div key={i} className={styles.skeleton} />)
-          : assets.length === 0
-          ? (
-              <div className={styles.empty}>
-                <span className={styles.emptyIcon}>🖼</span>
-                <span className={styles.emptyText}>No assets found</span>
-                <span className={styles.emptyHint}>Upload your first image using the button above</span>
-              </div>
-            )
-          : assets.map(a => (
-              <div
-                key={a.id}
-                className={`${styles.gridItem} ${selected?.id === a.id ? styles.gridItemSelected : ""}`}
-                onClick={() => selected?.id === a.id ? setSelected(null) : openDetail(a)}
+          <div className={styles.sidebarSection}>
+            <span className={styles.sidebarSectionLabel}>Folders</span>
+            {!isCreatingFolder && (
+              <button
+                className={styles.newFolderInlineBtn}
+                onClick={startCreatingFolder}
+                title="New folder"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={a.url} alt={a.altText ?? a.originalFilename} className={styles.gridItemImg} loading="lazy" />
-                {a.usageCount > 0 && <div className={styles.gridItemUsage}>{a.usageCount}</div>}
-                <div className={styles.gridItemMeta}>
-                  <div className={styles.gridItemName}>{a.originalFilename}</div>
-                  <div className={styles.gridItemSize}>
-                    {fmt(a.sizeBytes)}{a.width ? ` · ${a.width}×${a.height}` : ""}
+                <Plus size={12} />
+              </button>
+            )}
+          </div>
+
+          {isCreatingFolder && (
+            <form onSubmit={submitNewFolder} className={styles.newFolderForm}>
+              <Folder size={13} className={styles.sidebarFolderIcon} />
+              <input
+                ref={newFolderRef}
+                className={styles.newFolderInput}
+                value={newFolderName}
+                onChange={e => setNewFolderName(e.target.value)}
+                onKeyDown={onNewFolderKeyDown}
+                placeholder="Folder name"
+                onBlur={() => { if (!newFolderName.trim()) { setIsCreatingFolder(false); } }}
+              />
+              <button type="submit" className={styles.sidebarRenameConfirm} aria-label="Create">
+                <Check size={11} />
+              </button>
+            </form>
+          )}
+
+          <div className={styles.sidebarTree}>
+            {renderFolderTree(null)}
+          </div>
+        </aside>
+
+        {/* ── Main area ── */}
+        <main className={styles.main}>
+
+          {/* ── Breadcrumb ── */}
+          <div className={styles.breadcrumb}>
+            <button className={styles.breadcrumbItem} onClick={() => navigateTo(null)}>
+              All Media
+            </button>
+            {breadcrumb.map((f, i) => (
+              <span key={f.id} className={styles.breadcrumbRow}>
+                <ChevronRight size={12} className={styles.breadcrumbSep} />
+                {i < breadcrumb.length - 1 ? (
+                  <button className={styles.breadcrumbItem} onClick={() => navigateTo(f.id)}>
+                    {f.name}
+                  </button>
+                ) : (
+                  <span className={styles.breadcrumbCurrent}>{f.name}</span>
+                )}
+              </span>
+            ))}
+          </div>
+
+          {/* ── Upload zone ── */}
+          <div
+            className={`${styles.uploadZone} ${dragOver ? styles.uploadZoneActive : ""}`}
+            onDragOver={e => { e.preventDefault(); if (e.dataTransfer.types.includes("Files")) setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className={styles.uploadZoneTitle}>
+              {uploading ? `Uploading… ${uploadPct}%` : "Drag & drop images here to upload"}
+              {currentFolderId && !uploading && (
+                <span className={styles.uploadZoneFolder}>
+                  {" · "}into <strong>{folders.find(f => f.id === currentFolderId)?.name}</strong>
+                </span>
+              )}
+            </div>
+            <div className={styles.uploadZoneSub}>
+              JPEG, PNG, WebP, AVIF, GIF, SVG — max 20 MB per file · deduplication enabled
+            </div>
+          </div>
+
+          {uploading && (
+            <div className={styles.uploadProgress}>
+              <div className={styles.uploadProgressBar} style={{ width: `${uploadPct}%` }} />
+            </div>
+          )}
+
+          {/* ── Toolbar ── */}
+          <div className={styles.toolbar}>
+            <div className={styles.searchWrap}>
+              <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                className={styles.searchInput}
+                placeholder="Search by filename…"
+                value={search}
+                onChange={e => { setSearch(e.target.value); setOffset(0); }}
+              />
+            </div>
+            <select
+              className={styles.filterSelect}
+              value={mimeFilter}
+              onChange={e => { setMimeFilter(e.target.value); setOffset(0); }}
+            >
+              <option value="">All types</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/png">PNG</option>
+              <option value="image/webp">WebP</option>
+              <option value="image/avif">AVIF</option>
+              <option value="image/gif">GIF</option>
+              <option value="image/svg+xml">SVG</option>
+            </select>
+            <div className={styles.toolbarRight}>{total} asset{total !== 1 ? "s" : ""}</div>
+          </div>
+
+          {/* ── Grid: folder cards + asset cards ── */}
+          <div className={styles.grid}>
+            {/* Folder cards */}
+            {gridFolders.map(folder => (
+              <div
+                key={folder.id}
+                className={`${styles.folderCard} ${dragTarget === folder.id ? styles.folderCardDragOver : ""}`}
+                onClick={() => navigateTo(folder.id)}
+                title={folder.name}
+                onDragOver={e => onTargetOver(e, folder.id)}
+                onDragLeave={onTargetLeave}
+                onDrop={e => onDropToFolder(e, folder.id)}
+              >
+                <div className={styles.folderCardIcon}>
+                  <Folder size={32} strokeWidth={1.5} />
+                </div>
+                <div className={styles.folderCardMeta}>
+                  <div className={styles.folderCardName}>{folder.name}</div>
+                  <div className={styles.folderCardCount}>
+                    {folder.assetCount} item{folder.assetCount !== 1 ? "s" : ""}
                   </div>
                 </div>
               </div>
-            ))
-        }
-      </div>
+            ))}
 
-      {/* ── Pagination ── */}
-      {!loading && total > LIMIT && (
-        <div className={styles.pagination}>
-          <button className={styles.pageBtn} disabled={offset === 0} onClick={() => setOffset(o => Math.max(0, o - LIMIT))}>
-            ← Previous
-          </button>
-          <span className={styles.pageInfo}>
-            {Math.floor(offset / LIMIT) + 1} / {Math.ceil(total / LIMIT)}
-          </span>
-          <button className={styles.pageBtn} disabled={offset + LIMIT >= total} onClick={() => setOffset(o => o + LIMIT)}>
-            Next →
-          </button>
-        </div>
-      )}
+            {/* Asset cards */}
+            {loading
+              ? Array.from({ length: 24 }, (_, i) => <div key={i} className={styles.skeleton} />)
+              : assets.length === 0 && gridFolders.length === 0
+              ? (
+                <div className={styles.empty}>
+                  <span className={styles.emptyIcon}>🖼</span>
+                  <span className={styles.emptyText}>No assets{currentFolderId ? " in this folder" : ""}</span>
+                  <span className={styles.emptyHint}>
+                    {currentFolderId
+                      ? "Upload images or move assets here"
+                      : "Upload your first image using the button above"}
+                  </span>
+                </div>
+              )
+              : assets.map(a => (
+                <div
+                  key={a.id}
+                  draggable
+                  onDragStart={e => onAssetDragStart(e, a.id)}
+                  onDragEnd={onAssetDragEnd}
+                  className={`${styles.gridItem} ${selected?.id === a.id ? styles.gridItemSelected : ""} ${selectedIds.has(a.id) ? styles.gridItemChecked : ""} ${draggingId === a.id ? styles.gridItemDragging : ""}`}
+                  onClick={() => { selected?.id === a.id ? setSelected(null) : openDetail(a); }}
+                >
+                  {/* Checkbox for multi-select */}
+                  <button
+                    className={`${styles.cardCheckbox} ${selectedIds.has(a.id) ? styles.cardCheckboxChecked : ""}`}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setSelectedIds(prev => {
+                        const next = new Set(prev);
+                        if (next.has(a.id)) next.delete(a.id); else next.add(a.id);
+                        return next;
+                      });
+                    }}
+                    aria-label={selectedIds.has(a.id) ? "Deselect" : "Select"}
+                  >
+                    {selectedIds.has(a.id) && <Check size={10} strokeWidth={3} />}
+                  </button>
+                  {/* Count badge when dragging multiple */}
+                  {draggingId === a.id && selectedIds.has(a.id) && selectedIds.size > 1 && (
+                    <div className={styles.dragCountBadge}>{selectedIds.size}</div>
+                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={a.url} alt={a.altText ?? a.originalFilename} className={styles.gridItemImg} loading="lazy" />
+                  {a.usageCount > 0 && <div className={styles.gridItemUsage}>{a.usageCount}</div>}
+                  <div className={styles.gridItemMeta}>
+                    <div className={styles.gridItemName}>{a.originalFilename}</div>
+                    <div className={styles.gridItemSize}>
+                      {fmt(a.sizeBytes)}{a.width ? ` · ${a.width}×${a.height}` : ""}
+                    </div>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+
+          {/* ── Pagination ── */}
+          {!loading && total > LIMIT && (
+            <div className={styles.pagination}>
+              <button className={styles.pageBtn} disabled={offset === 0} onClick={() => setOffset(o => Math.max(0, o - LIMIT))}>
+                ← Previous
+              </button>
+              <span className={styles.pageInfo}>
+                {Math.floor(offset / LIMIT) + 1} / {Math.ceil(total / LIMIT)}
+              </span>
+              <button className={styles.pageBtn} disabled={offset + LIMIT >= total} onClick={() => setOffset(o => o + LIMIT)}>
+                Next →
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
 
       {/* ── Detail panel ── */}
       {selected && (
@@ -272,8 +714,26 @@ export default function MediaLibraryPage() {
               </div>
             </div>
 
-            {/* Alt text editor */}
+            {/* Move to folder */}
             <div className={styles.detailRow} style={{ marginTop: 16 }}>
+              <div className={styles.detailLabel}>Folder</div>
+              <select
+                className={styles.folderSelect}
+                value={movingToFolder}
+                onChange={e => moveToFolder(e.target.value)}
+                disabled={saving}
+              >
+                <option value="">No folder (All Media)</option>
+                {folders.map(f => (
+                  <option key={f.id} value={f.id}>
+                    {getFolderPath(folders, f.id)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Alt text editor */}
+            <div className={styles.detailRow} style={{ marginTop: 12 }}>
               <div className={styles.detailLabel}>Alt Text</div>
               <textarea
                 className={styles.altTextarea}
