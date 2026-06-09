@@ -88,7 +88,38 @@ export default function ShopProductDetail({
 
   const defaultVariant = product.variants.find(v => v.isDefault) ?? product.variants[0];
 
-  const [selectedVariant, setSelectedVariant] = useState<AvailabilityVariant | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<AvailabilityVariant | null>(() => {
+    if (!availabilityMatrix) return null;
+
+    // Mirror the initialSel logic from ProductVariantSelector so the parent has the
+    // correct variant from the very first render, before the selector's useEffect fires.
+    if (initialVariantSlug) {
+      return availabilityMatrix.variants.find(v => v.variantSlug === initialVariantSlug) ?? null;
+    }
+
+    const { attributes, variants } = availabilityMatrix;
+    const ovToAttr = new Map<string, string>();
+    for (const attr of attributes) {
+      for (const ov of attr.optionValues) ovToAttr.set(ov.id, attr.id);
+    }
+
+    const defaultSel: Record<string, string> = {};
+    for (const attr of attributes) {
+      const preferred = attr.defaultOptionValueId ?? attr.optionValues[0]?.id;
+      if (preferred) defaultSel[attr.id] = preferred;
+    }
+
+    const isStructured = variants.some(v => v.optionValueIds.length > 0);
+    if (!isStructured) return variants.find(v => v.inStock) ?? variants[0] ?? null;
+
+    const defaultValues = Object.values(defaultSel);
+    if (defaultValues.length === attributes.length) {
+      const exact = variants.find(v => defaultValues.every(ovId => v.optionValueIds.includes(ovId)));
+      if (exact) return exact;
+    }
+
+    return variants.find(v => v.available && v.inStock) ?? variants[0] ?? null;
+  });
   const [resolveStatus, setResolveStatus] = useState<ResolveStatus>('idle');
   const [resolvedVariant, setResolvedVariant] = useState<ResolvedVariant | null>(null);
 

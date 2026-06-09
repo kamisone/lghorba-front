@@ -16,6 +16,7 @@ interface Product {
   title: string;
   featuredImageUrl: string | null;
   outOfStock?: boolean;
+  defaultVariantOutOfStock?: boolean;
   variants: Array<{ id: string; priceCents: number; compareAtPriceCents: number | null; isDefault: boolean }>;
 }
 interface Category { id: string; name: string; slug: string }
@@ -78,6 +79,7 @@ function ProductCard({
   const wishlisted = isWishlisted(product.id);
   const isOnSale = !!(defaultVariant?.compareAtPriceCents && defaultVariant.compareAtPriceCents > defaultVariant.priceCents);
   const outOfStock = !!product.outOfStock;
+  const defaultVariantOos = !!product.defaultVariantOutOfStock;
 
   return (
     <div className={styles.productCard}>
@@ -125,6 +127,10 @@ function ProductCard({
         )}
         {outOfStock ? (
           <div className={styles.outOfStockBtn}>{t.outOfStock}</div>
+        ) : defaultVariantOos ? (
+          <Link href={`/${locale}/shop/${product.slug}`} className={styles.seeDetailsBtn}>
+            {t.seeDetails}
+          </Link>
         ) : defaultVariant?.id ? (
           <AddToCartButton
             variantId={defaultVariant.id}
