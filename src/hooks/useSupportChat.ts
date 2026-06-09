@@ -23,8 +23,40 @@ export interface SupportMessage {
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "disconnected" | "error";
 
-const ACK_TIMEOUT      = 8_000;
-const ACTIVE_DEBOUNCE  = 400;
+const ACK_TIMEOUT         = 8_000;
+const ACTIVE_DEBOUNCE     = 400;
+// Give up after this many consecutive server-initiated disconnects (auth failure loop guard).
+const MAX_SERVER_DISCONNECTS = 3;
+
+// ── Module-level ws-ticket cache ──────────────────────────────────────────────
+// JWT TTL is 2 min — we cache for 90 s to leave a 30 s renewal buffer.
+// Module scope means one cache entry per page regardless of render count.
+const wsTicketCache = { value: "", expiresAt: 0 };
+
+async function fetchWsTicket(forceRefresh = false): Promise<string> {
+  const now = Date.now();
+  if (!forceRefresh && wsTicketCache.value && now < wsTicketCache.expiresAt) {
+    return wsTicketCache.value;
+  }
+  try {
+    const res = await fetch("/next-api/support/guest/ws-ticket", { method: "POST" });
+    if (!res.ok) return "";
+    const data = await res.json() as { ticket?: string };
+    const ticket = data?.ticket ?? "";
+    if (ticket) {
+      wsTicketCache.value     = ticket;
+      wsTicketCache.expiresAt = now + 90_000;
+    }
+    return ticket;
+  } catch {
+    return "";
+  }
+}
+
+function invalidateTicketCache() {
+  wsTicketCache.value     = "";
+  wsTicketCache.expiresAt = 0;
+}
 
 // ── Hook ───────────────────────────────────────────────────────────────────────
 
@@ -52,16 +84,20 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
     m => m.senderType === "admin" && m.readAt === null && !m.id.startsWith("opt-"),
   ).length;
 
-  const socketRef       = useRef<Socket | null>(null);
-  const convIdRef       = useRef<string | null>(null);
-  const guestNameRef    = useRef<string | undefined>(undefined);
-  const pendingRef      = useRef<Map<string, { content: string; retryCount: number; timer: ReturnType<typeof setTimeout> }>>(new Map());
-  const bootstrappedRef = useRef(false);
-  const isOpenRef       = useRef(isOpen);
-  const activeTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Keeps onReconnect and messages always fresh inside stable event listeners.
-  const messagesRef     = useRef<SupportMessage[]>([]);
-  const onReconnectRef  = useRef<((socket: Socket) => Promise<void>) | null>(null);
+  const socketRef                = useRef<Socket | null>(null);
+  const convIdRef                = useRef<string | null>(null);
+  const guestNameRef             = useRef<string | undefined>(undefined);
+  const pendingRef               = useRef<Map<string, { content: string; retryCount: number; timer: ReturnType<typeof setTimeout> }>>(new Map());
+  const bootstrappedRef          = useRef(false);
+  const isOpenRef                = useRef(isOpen);
+  const activeTimerRef           = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messagesRef              = useRef<SupportMessage[]>([]);
+  const onReconnectRef           = useRef<((socket: Socket) => Promise<void>) | null>(null);
+  // Counts consecutive server-initiated disconnects to detect auth failure loops.
+  const serverDisconnectCountRef = useRef(0);
+  // Debounces reconnectIfNeeded so visibilitychange + focus firing together
+  // only produce one disconnect/connect cycle and one ws-ticket request.
+  const reconnectTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   isOpenRef.current   = isOpen;
   messagesRef.current = messages;
@@ -143,13 +179,11 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
     if (isOpenRef.current) emitActive();
   }, [emitActive, doSend]);
 
-  // Keep the ref always current so the stable connect-event listener picks it up.
   onReconnectRef.current = onReconnect;
 
   // ── Bootstrap + connect ────────────────────────────────────────────────────
 
   const connect = useCallback(async () => {
-    // If a socket already exists (connected or mid-reconnect) do not create another.
     if (socketRef.current) return;
     setStatus("connecting");
 
@@ -161,7 +195,9 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
           body: "{}",
         });
         bootstrappedRef.current = true;
-      } catch { /* non-fatal */ }
+        // Bootstrap may have just set or refreshed the cookie — stale cached ticket is now wrong.
+        invalidateTicketCache();
+      } catch { /* non-fatal — socket will fail gracefully below */ }
     }
 
     try {
@@ -176,15 +212,33 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
       }
     } catch { /* non-fatal */ }
 
-    // auth is a callback so socket.io invokes it on every connect attempt.
-    // This guarantees a fresh ticket (2-minute TTL) on reconnects after
-    // sleep, tab suspension, or long network interruptions.
+    // auth is a callback — socket.io invokes it on every connection attempt (including
+    // socket.io's own automatic reconnect retries). Using the module-level cache means
+    // rapid reconnects (backoff retries, tab wake-ups) reuse the same JWT instead of
+    // hammering the ws-ticket endpoint. If the ticket is missing, we re-bootstrap once
+    // to refresh the httpOnly cookie before giving up.
     const socket = io(`${WS_HOST}/support`, {
       auth: (cb: (data: Record<string, unknown>) => void) => {
-        fetch("/next-api/support/guest/ws-ticket", { method: "POST" })
-          .then(r => r.ok ? (r.json() as Promise<{ ticket?: string }>) : null)
-          .then(data => cb({ guestTicket: data?.ticket ?? "" }))
-          .catch(()  => cb({ guestTicket: "" }));
+        const doAuth = async () => {
+          let ticket = await fetchWsTicket();
+
+          if (!ticket) {
+            // Cookie may be missing or expired — try re-bootstrapping to refresh it.
+            try {
+              await fetch("/next-api/support/guest/bootstrap", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: "{}",
+              });
+              bootstrappedRef.current = true;
+            } catch { /* non-fatal */ }
+            // Force-refresh: bypass the (now-empty) cache.
+            ticket = await fetchWsTicket(true);
+          }
+
+          cb({ guestTicket: ticket });
+        };
+        doAuth().catch(() => cb({ guestTicket: "" }));
       },
       transports:           ["websocket", "polling"],
       path:                 WS_PATH,
@@ -224,43 +278,63 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
 
     socket.on("connect", async () => {
       setStatus("connected");
+      // Successful connection — reset the server-disconnect counter.
+      serverDisconnectCountRef.current = 0;
       await onReconnectRef.current?.(socket);
     });
 
     socket.on("disconnect", (reason) => {
       setAdminTyping(false);
       setStatus("disconnected");
-      // socket.io stops auto-reconnecting when the server explicitly closes the
-      // connection. Resume manually so recovery still happens.
+
       if (reason === "io server disconnect") {
+        serverDisconnectCountRef.current++;
+
+        if (serverDisconnectCountRef.current >= MAX_SERVER_DISCONNECTS) {
+          // The server keeps rejecting us — almost certainly an auth issue.
+          // Stop reconnecting automatically to break the infinite loop.
+          // The user can click "Retry" to start fresh.
+          setStatus("error");
+          return;
+        }
+
+        // Invalidate the cached ticket so the next auth attempt fetches a fresh one —
+        // the server may have rejected the previous ticket as expired or invalid.
+        invalidateTicketCache();
         setTimeout(() => socket.connect(), 2_000);
       }
     });
 
-    // Show "disconnected" (not "error") while socket.io retries automatically.
+    // Show "disconnected" while socket.io retries automatically.
     socket.on("connect_error", () => setStatus("disconnected"));
 
     socketRef.current = socket;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Reconnect without creating a new socket ────────────────────────────────
-  // Called from visibility/online/focus events. Resumes the existing socket's
-  // reconnect loop if it exists; otherwise falls back to a full connect().
+  // Debounced with a 150 ms window: when the browser fires both visibilitychange
+  // and focus at once (tab switch), only one disconnect/connect cycle runs —
+  // preventing two simultaneous auth callbacks and two ws-ticket requests.
 
   const reconnectIfNeeded = useCallback(() => {
-    const socket = socketRef.current;
-    if (!socket) { connect(); return; }
-    if (socket.connected) return;
-    // disconnect() resets socket.io's internal backoff timer so the
-    // subsequent connect() starts immediately instead of waiting.
-    socket.disconnect();
-    socket.connect();
+    if (reconnectTimerRef.current) return; // already scheduled for this burst
+    reconnectTimerRef.current = setTimeout(() => {
+      reconnectTimerRef.current = null;
+      const socket = socketRef.current;
+      if (!socket) { connect(); return; }
+      if (socket.connected) return;
+      // disconnect() resets socket.io's internal backoff timer so the
+      // subsequent connect() starts immediately instead of waiting.
+      socket.disconnect();
+      socket.connect();
+    }, 150);
   }, [connect]);
 
   useEffect(() => {
     connect();
     return () => {
-      if (activeTimerRef.current) clearTimeout(activeTimerRef.current);
+      if (activeTimerRef.current)    clearTimeout(activeTimerRef.current);
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       socketRef.current?.disconnect();
       socketRef.current = null;
     };
@@ -330,9 +404,12 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
   }, [emitActive]);
 
   const retry = useCallback(() => {
+    if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
     socketRef.current?.disconnect();
-    socketRef.current     = null;
-    bootstrappedRef.current = false;
+    socketRef.current                = null;
+    bootstrappedRef.current          = false;
+    serverDisconnectCountRef.current = 0;
+    invalidateTicketCache();
     setStatus("idle");
     connect();
   }, [connect]);
