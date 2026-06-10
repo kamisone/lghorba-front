@@ -125,8 +125,10 @@
 /* ── Quantity ── */
 .qtyRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 6px 0;
   margin-bottom: 20px;
 }
 .qtyLabel { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
@@ -229,6 +231,7 @@
 .cartLink:hover { color: var(--color-brand-accent); }
 
 .addError { color: #ef4444; font-size: 14px; margin: 0 0 12px; }
+.qtyError { color: #ef4444; font-size: 12px; flex-basis: 100%; margin: 0; }
 
 /* ── Trust signals ── */
 .trust {

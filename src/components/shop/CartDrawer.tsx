@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useCart } from "./CartContext";
 import { getTranslations } from "@/lib/i18n";
+import { formatStockError } from "@/lib/shop/stockError";
 import styles from "./CartDrawer.module.css";
 
 function centsToEuros(cents: number) { return (cents / 100).toFixed(2); }
@@ -14,6 +15,13 @@ interface Props { locale: string }
 export default function CartDrawer({ locale }: Props) {
   const { cart, isDrawerOpen, closeDrawer, updateItem, removeItem, mutating } = useCart();
   const t = getTranslations(locale).shop;
+  const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
+
+  const handleIncrement = useCallback(async (itemId: string, currentQty: number) => {
+    setItemErrors(prev => ({ ...prev, [itemId]: "" }));
+    const result = await updateItem(itemId, currentQty + 1);
+    if (!result.ok) setItemErrors(prev => ({ ...prev, [itemId]: formatStockError(result, t) }));
+  }, [updateItem, t]);
 
   // ESC key to close
   useEffect(() => {
@@ -138,7 +146,10 @@ export default function CartDrawer({ locale }: Props) {
                   <div className={styles.itemBottom}>
                     <div className={styles.stepper}>
                       <button
-                        onClick={() => item.quantity <= 1 ? removeItem(item.id) : updateItem(item.id, item.quantity - 1)}
+                        onClick={() => {
+                          setItemErrors(prev => ({ ...prev, [item.id]: "" }));
+                          item.quantity <= 1 ? removeItem(item.id) : updateItem(item.id, item.quantity - 1);
+                        }}
                         disabled={mutating}
                         className={styles.stepBtn}
                         aria-label={t.decreaseQty}
@@ -147,7 +158,7 @@ export default function CartDrawer({ locale }: Props) {
                       </button>
                       <span className={styles.stepQty}>{item.quantity}</span>
                       <button
-                        onClick={() => updateItem(item.id, item.quantity + 1)}
+                        onClick={() => handleIncrement(item.id, item.quantity)}
                         disabled={mutating}
                         className={styles.stepBtn}
                         aria-label={t.increaseQty}
@@ -157,6 +168,9 @@ export default function CartDrawer({ locale }: Props) {
                     </div>
                     <span className={styles.lineTotal}>€{centsToEuros(item.lineTotalCents)}</span>
                   </div>
+                  {itemErrors[item.id] && (
+                    <p className={styles.itemError}>{itemErrors[item.id]}</p>
+                  )}
                 </div>
               </div>
             ))

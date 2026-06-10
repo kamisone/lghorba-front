@@ -228,6 +228,12 @@
 .removeBtn:hover { background: #fef2f2; color: var(--color-error); }
 .removeBtn:disabled { opacity: .4; cursor: not-allowed; }
 
+.itemError {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--color-error);
+}
+
 /* Stepper + line total row */
 .itemBottom {
   display: flex;

@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useCallback } from "react";
 import { X } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
 import PromoCodeInput from "@/components/shop/PromoCodeInput";
 import PriceBreakdown from "@/components/shop/PriceBreakdown";
 import { getTranslations } from "@/lib/i18n";
+import { formatStockError } from "@/lib/shop/stockError";
 import styles from "./Cart.module.css";
 
 function centsToEuros(c: number) { return (c / 100).toFixed(2); }
@@ -15,6 +17,18 @@ export default function CartPage({ params }: { params: { locale: string } }) {
   const { cart, updateItem, removeItem, loading, mutating, validateCoupon, appliedCoupon, setAppliedCoupon } = useCart();
   const { locale } = params;
   const t = getTranslations(locale).shop;
+  const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
+
+  const handleIncrement = useCallback(async (itemId: string, currentQty: number) => {
+    setItemErrors(prev => ({ ...prev, [itemId]: "" }));
+    const result = await updateItem(itemId, currentQty + 1);
+    if (!result.ok) setItemErrors(prev => ({ ...prev, [itemId]: formatStockError(result, t) }));
+  }, [updateItem, t]);
+
+  const handleDecrement = useCallback((itemId: string, currentQty: number) => {
+    setItemErrors(prev => ({ ...prev, [itemId]: "" }));
+    updateItem(itemId, currentQty - 1);
+  }, [updateItem]);
 
   if (loading && !cart) {
     return (
@@ -75,10 +89,15 @@ export default function CartPage({ params }: { params: { locale: string } }) {
                 {item.skuSnapshot && <p className={styles.itemSku}>{t.skuLabel} {item.skuSnapshot}</p>}
                 <p className={styles.itemPrice}>€{centsToEuros(item.unitPriceCents)}</p>
               </div>
-              <div className={styles.itemQty}>
-                <button onClick={() => updateItem(item.id, item.quantity - 1)} disabled={mutating}>−</button>
-                <span>{item.quantity}</span>
-                <button onClick={() => updateItem(item.id, item.quantity + 1)} disabled={mutating}>+</button>
+              <div className={styles.itemQtyCol}>
+                <div className={styles.itemQty}>
+                  <button onClick={() => handleDecrement(item.id, item.quantity)} disabled={mutating}>−</button>
+                  <span>{item.quantity}</span>
+                  <button onClick={() => handleIncrement(item.id, item.quantity)} disabled={mutating}>+</button>
+                </div>
+                {itemErrors[item.id] && (
+                  <p className={styles.itemQtyError}>{itemErrors[item.id]}</p>
+                )}
               </div>
               <div className={styles.itemTotal}>€{centsToEuros(item.lineTotalCents)}</div>
               <button onClick={() => removeItem(item.id)} className={styles.removeBtn} disabled={mutating}><X size={14} strokeWidth={2} /></button>

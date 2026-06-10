@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/shop/CartContext";
 import { useWishlist } from "@/components/shop/WishlistContext";
@@ -9,6 +9,7 @@ import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVaria
 import ProductGallery from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
+import { formatStockError, stockCheckMessage } from "@/lib/shop/stockError";
 import styles from "./ProductDetail.module.css";
 
 interface FlatVariant {
@@ -194,8 +195,27 @@ export default function ShopProductDetail({
   const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
 
   const [qty, setQty]             = useState(1);
+  const [qtyError, setQtyError]   = useState("");
   const [buyingNow, setBuyingNow] = useState(false);
   const [buyError, setBuyError]   = useState("");
+
+  const hasVariations = !!availabilityMatrix && availabilityMatrix.attributes.length > 0;
+
+  const handleQtyIncrement = useCallback(async () => {
+    if (!activeId || hasVariations) { setQty(q => q + 1); return; }
+    setQtyError("");
+    try {
+      const res = await fetch(`/next-api/public/shop/variants/${activeId}/stock`);
+      if (res.ok) {
+        const { available } = await res.json() as { available: number };
+        const msg = stockCheckMessage(available, qty + 1, t);
+        if (msg) { setQtyError(msg); return; }
+      }
+    } catch {
+      // fail open — the backend will reject at add-to-cart time
+    }
+    setQty(q => q + 1);
+  }, [activeId, hasVariations, qty, t]);
 
   const isOos         = resolveStatus === 'out_of_stock';
   const isUnavailable = resolveStatus === 'unavailable';
@@ -209,7 +229,7 @@ export default function ShopProductDetail({
     if (result.ok) {
       router.push(`/${locale}/checkout`);
     } else {
-      setBuyError(result.message ?? "Could not add to cart");
+      setBuyError(formatStockError(result, t));
       setBuyingNow(false);
     }
   }
@@ -298,10 +318,11 @@ export default function ShopProductDetail({
           <div className={styles.qtyRow}>
             <span className={styles.qtyLabel}>{t.quantity}</span>
             <div className={styles.qtyControl}>
-              <button onClick={() => setQty(q => Math.max(1, q - 1))} className={styles.qtyBtn} disabled={mutating}>−</button>
+              <button onClick={() => { setQtyError(""); setQty(q => Math.max(1, q - 1)); }} className={styles.qtyBtn} disabled={mutating}>−</button>
               <span className={styles.qty}>{qty}</span>
-              <button onClick={() => setQty(q => q + 1)} className={styles.qtyBtn} disabled={mutating}>+</button>
+              <button onClick={handleQtyIncrement} className={styles.qtyBtn} disabled={mutating}>+</button>
             </div>
+            {qtyError && <p className={styles.qtyError}>{qtyError}</p>}
           </div>
         )}
 

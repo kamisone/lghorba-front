@@ -84,25 +84,27 @@ export default function ProductGallery({ images, title, forcedIndex }: Props) {
 
   return (
     <>
-      <div className={styles.gallery}>
-        {/* Vertical thumbnail strip — desktop only */}
-        {hasMany && (
-          <div ref={stripRef} className={styles.thumbStrip}>
-            {images.map((url, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={`${styles.thumb} ${current === i ? styles.thumbActive : ""}`}
-                aria-label={`View image ${i + 1} of ${images.length}`}
-              >
-                <Image src={url} alt="" fill sizes="76px" className={styles.thumbImg} />
-              </button>
-            ))}
-          </div>
-        )}
+      {/* galleryWrap is position:relative so the absolutely-positioned navRow works on mobile */}
+      <div className={styles.galleryWrap}>
+        {/* gallery: flex row — strip + image only, so align-items:stretch gives strip the exact image height */}
+        <div className={styles.gallery}>
+          {/* Vertical thumbnail strip — desktop only */}
+          {hasMany && (
+            <div ref={stripRef} className={styles.thumbStrip}>
+              {images.map((url, i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  className={`${styles.thumb} ${current === i ? styles.thumbActive : ""}`}
+                  aria-label={`View image ${i + 1} of ${images.length}`}
+                >
+                  <Image src={url} alt="" fill sizes="76px" className={styles.thumbImg} />
+                </button>
+              ))}
+            </div>
+          )}
 
-        {/* Main image + nav */}
-        <div className={styles.mainWrap}>
+          {/* Main image */}
           <div
             className={`${styles.mainImage} ${fading ? styles.fading : ""}`}
             onClick={() => setLightbox(true)}
@@ -128,37 +130,38 @@ export default function ProductGallery({ images, title, forcedIndex }: Props) {
               </svg>
             </span>
           </div>
-
-          {/* Counter + arrows (always visible when multiple images) */}
-          {hasMany && (
-            <div className={styles.navRow}>
-              <button onClick={prev} className={styles.navBtn} aria-label="Previous image">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-              <span className={styles.counter}>{current + 1} / {images.length}</span>
-              <button onClick={next} className={styles.navBtn} aria-label="Next image">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Dot indicators — mobile only (via CSS) */}
-          {hasMany && (
-            <div className={styles.dots} aria-hidden="true">
-              {images.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goTo(i)}
-                  className={`${styles.dot} ${current === i ? styles.dotActive : ""}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
+
+        {/* Counter + arrows — below the image row */}
+        {hasMany && (
+          <div className={styles.navRow}>
+            <button onClick={prev} className={styles.navBtn} aria-label="Previous image">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <span className={styles.counter}>{current + 1} / {images.length}</span>
+            <button onClick={next} className={styles.navBtn} aria-label="Next image">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Dot indicators — mobile only (via CSS) */}
+        {hasMany && (
+          <div className={styles.dots} aria-hidden="true">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`${styles.dot} ${current === i ? styles.dotActive : ""}`}
+                aria-label={`Go to image ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Horizontal thumbnail row — mobile only (via CSS) */}

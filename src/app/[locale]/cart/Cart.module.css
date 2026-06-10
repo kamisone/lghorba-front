@@ -37,6 +37,8 @@
 .itemSku { font-size: 12px; color: var(--color-text-muted); margin: 3px 0 0; }
 .itemPrice { color: var(--color-text-secondary); margin: 5px 0 0; font-size: 14px; }
 
+.itemQtyCol { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.itemQtyError { font-size: 11px; color: var(--color-error); text-align: center; margin: 0; white-space: nowrap; }
 .itemQty { display: flex; align-items: center; gap: 8px; }
 .itemQty button {
   width: 36px; height: 36px; border: 1px solid var(--color-border);

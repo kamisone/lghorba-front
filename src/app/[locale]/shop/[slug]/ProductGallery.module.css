@@ -1,8 +1,12 @@
 /* ── Gallery layout ───────────────────────────────────────────────────────── */
+.galleryWrap {
+  position: relative; /* anchor for the absolutely-positioned navRow on mobile */
+}
+
 .gallery {
   display: flex;
   gap: 12px;
-  align-items: flex-start;
+  align-items: stretch; /* strip and image share the same height */
 }
 
 /* ── Vertical thumbnail strip (desktop) ──────────────────────────────────── */
@@ -12,11 +16,15 @@
   gap: 8px;
   flex-shrink: 0;
   width: 76px;
-  max-height: 480px;
+  /* height comes from align-items:stretch — matches the main image exactly */
   overflow-y: auto;
-  scrollbar-width: none;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
-.thumbStrip::-webkit-scrollbar { display: none; }
+.thumbStrip::-webkit-scrollbar { width: 4px; }
+.thumbStrip::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+.thumbStrip::-webkit-scrollbar-track { background: transparent; }
 
 .thumb {
   position: relative;
@@ -45,14 +53,10 @@
 .thumbActive::after { background: transparent !important; }
 .thumbImg { object-fit: cover; border-radius: 8px; }
 
-/* ── Main image wrapper ───────────────────────────────────────────────────── */
-.mainWrap {
+/* ── Main image ───────────────────────────────────────────────────────────── */
+.mainImage {
   flex: 1;
   min-width: 0;
-  position: relative;
-}
-
-.mainImage {
   position: relative;
   aspect-ratio: 1;
   border-radius: 18px;
@@ -247,10 +251,11 @@
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .gallery { flex-direction: column; gap: 0; position: static; }
+  .gallery { flex-direction: column; gap: 0; }
   .thumbStrip { display: none; }
   .dots { display: flex; }
   .mobileStrip { display: flex; }
+  /* navRow floats over the image; galleryWrap is the relative anchor */
   .navRow { margin-top: 0; position: absolute; bottom: 12px; left: 0; right: 0; pointer-events: none; }
   .navBtn { pointer-events: all; background: rgba(255,255,255,.88); backdrop-filter: blur(4px); }
   .counter { display: none; }

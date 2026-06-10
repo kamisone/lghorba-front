@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useCart } from "./CartContext";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { getTranslations } from "@/lib/i18n";
+import { formatStockError } from "@/lib/shop/stockError";
 import styles from "./AddToCartButton.module.css";
 
 interface Props {
@@ -34,12 +35,13 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
       openDrawer();
       setTimeout(() => setJustAdded(false), 2200);
     } else {
-      setAddError(result.message ?? "Could not add to cart");
+      setAddError(formatStockError(result, t));
     }
-  }, [variantId, initialQty, selectedOptionValueIds, addItem, openDrawer]);
+  }, [variantId, initialQty, selectedOptionValueIds, addItem, openDrawer, t]);
 
   const handleDecrement = useCallback(async () => {
     if (!cartItem) return;
+    setAddError("");
     if (cartItem.quantity <= 1) {
       await removeItem(cartItem.id);
     } else {
@@ -49,36 +51,41 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
 
   const handleIncrement = useCallback(async () => {
     if (!cartItem) return;
-    await updateItem(cartItem.id, cartItem.quantity + 1);
-  }, [cartItem, updateItem]);
+    setAddError("");
+    const result = await updateItem(cartItem.id, cartItem.quantity + 1);
+    if (!result.ok) setAddError(formatStockError(result, t));
+  }, [cartItem, updateItem, t]);
 
   if (cartItem) {
     return (
-      <div className={`${styles.stepper} ${styles[size]} ${className ?? ""}`}>
-        <button
-          onClick={handleDecrement}
-          disabled={mutating}
-          className={styles.stepBtn}
-          aria-label={cartItem.quantity === 1 ? t.removeFromCart : t.decreaseQty}
-        >
-          {cartItem.quantity === 1 ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-              <path d="M10 11v6" /><path d="M14 11v6" />
-              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-            </svg>
-          ) : "−"}
-        </button>
-        <span className={styles.qty}>{cartItem.quantity}</span>
-        <button
-          onClick={handleIncrement}
-          disabled={mutating}
-          className={styles.stepBtn}
-          aria-label={t.increaseQty}
-        >
-          +
-        </button>
+      <div className={`${styles.addWrap} ${className ?? ""}`}>
+        <div className={`${styles.stepper} ${styles[size]}`}>
+          <button
+            onClick={handleDecrement}
+            disabled={mutating}
+            className={styles.stepBtn}
+            aria-label={cartItem.quantity === 1 ? t.removeFromCart : t.decreaseQty}
+          >
+            {cartItem.quantity === 1 ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" /><path d="M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            ) : "−"}
+          </button>
+          <span className={styles.qty}>{cartItem.quantity}</span>
+          <button
+            onClick={handleIncrement}
+            disabled={mutating}
+            className={styles.stepBtn}
+            aria-label={t.increaseQty}
+          >
+            +
+          </button>
+        </div>
+        {addError && <p className={styles.error}>{addError}</p>}
       </div>
     );
   }

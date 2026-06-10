@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useLocale } from "@/lib/i18n/useLocale";
+import { getTranslations } from "@/lib/i18n";
 import styles from "./ProductVariantSelector.module.css";
 
 export interface AvailabilityAttribute {
@@ -48,6 +50,9 @@ interface Props {
 type OptionState = "selected" | "available" | "oos" | "unavailable";
 
 export default function ProductVariantSelector({ matrix, initialVariantSlug, onVariantChange }: Props) {
+  const locale = useLocale();
+  const t = getTranslations(locale).shop;
+
   const ovToAttr = useMemo(() => {
     const map = new Map<string, string>();
     for (const attr of matrix.attributes) {
@@ -173,7 +178,7 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
                   return (
                     <option key={ov.id} value={ov.id} disabled={state === "unavailable"}>
                       {ov.displayValue ?? ov.value}
-                      {state === "oos" ? " (out of stock)" : ""}
+                      {state === "oos" ? ` ${t.variantOos}` : ""}
                     </option>
                   );
                 })}

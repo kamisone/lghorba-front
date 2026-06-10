@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { parseApiError, type CartMutationResult } from "@/lib/shop/stockError";
 
 export interface AppliedCoupon {
   code: string;
@@ -42,8 +43,8 @@ interface CartContextValue {
   cart: Cart | null;
   loading: boolean;
   mutating: boolean;
-  addItem: (variantId: string, quantity?: number, selectedOptionValueIds?: string[]) => Promise<{ ok: boolean; message?: string }>;
-  updateItem: (itemId: string, quantity: number) => Promise<void>;
+  addItem: (variantId: string, quantity?: number, selectedOptionValueIds?: string[]) => Promise<CartMutationResult>;
+  updateItem: (itemId: string, quantity: number) => Promise<CartMutationResult>;
   removeItem: (itemId: string) => Promise<void>;
   validateCoupon: (code: string) => Promise<{ valid: boolean; discountCents: number; type: string; message?: string }>;
   token: string;
@@ -108,7 +109,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
     if (token) fetchCart();
   }, [token, fetchCart]);
 
-  const addItem = useCallback(async (variantId: string, quantity = 1, selectedOptionValueIds?: string[]): Promise<{ ok: boolean; message?: string }> => {
+  const addItem = useCallback(async (variantId: string, quantity = 1, selectedOptionValueIds?: string[]): Promise<CartMutationResult> => {
     setMutating(true);
     try {
       const res = await fetch(`/next-api/public/shop/cart/${token}/items`, {
@@ -120,17 +121,18 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
         applyCart(await res.json());
         return { ok: true };
       }
-      const err = await res.json().catch(() => ({}));
-      return { ok: false, message: (err as any).message ?? "Could not add item" };
+      const body = await res.json().catch(() => ({}));
+      const { code, available } = parseApiError(body);
+      return { ok: false, code, available };
     } catch {
-      return { ok: false, message: "Network error" };
+      return { ok: false };
     } finally {
       setMutating(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  const updateItem = useCallback(async (itemId: string, quantity: number) => {
+  const updateItem = useCallback(async (itemId: string, quantity: number): Promise<CartMutationResult> => {
     const prevCart = cartRef.current;
 
     // Optimistic update
@@ -156,10 +158,17 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quantity }),
       });
-      if (res.ok) applyCart(await res.json());
-      else setCart(prevCart);
+      if (res.ok) {
+        applyCart(await res.json());
+        return { ok: true };
+      }
+      setCart(prevCart);
+      const body = await res.json().catch(() => ({}));
+      const { code, available } = parseApiError(body);
+      return { ok: false, code, available };
     } catch {
       setCart(prevCart);
+      return { ok: false };
     } finally {
       setMutating(false);
     }
