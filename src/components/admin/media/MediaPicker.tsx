@@ -2,20 +2,33 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./MediaLibrary.module.css";
-import { X, Check, Folder, FolderOpen, ChevronRight } from "lucide-react";
+import { X, Check, Folder, FolderOpen, ChevronRight, Play } from "lucide-react";
 
 export interface MediaAsset {
   id:               string;
   storageKey:       string;
   originalFilename: string;
   mimeType:         string;
+  mediaType:        "image" | "video" | "other";
   sizeBytes:        number;
   width:            number | null;
   height:           number | null;
+  durationSeconds:  number | null;
   altText:          string | null;
   usageCount:       number;
   url:              string;
   createdAt:        string;
+}
+
+/** Formats a duration in seconds as "m:ss" (or "h:mm:ss" for videos over an hour). */
+export function formatDuration(seconds: number): string {
+  const total = Math.round(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    : `${m}:${String(s).padStart(2, "0")}`;
 }
 
 interface FolderItem {
@@ -36,6 +49,8 @@ interface Props {
   title?:            string;
   /** If set, pre-marks the asset with this storageKey as selected (single mode only) */
   currentKey?:       string;
+  /** Restrict the picker (filter + uploads) to a single media type. Default: both images and videos. */
+  mediaType?:        "image" | "video";
 }
 
 function fmt(bytes: number): string {
@@ -51,11 +66,12 @@ function buildBreadcrumb(folders: FolderItem[], folderId: string | null): Folder
   return [...buildBreadcrumb(folders, f.parentId), f];
 }
 
-export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, multi = false, title = "Select Media", currentKey }: Props) {
+export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, multi = false, title = "Select Media", currentKey, mediaType }: Props) {
   const [assets, setAssets]               = useState<MediaAsset[]>([]);
   const [total, setTotal]                 = useState(0);
   const [loading, setLoading]             = useState(false);
   const [search, setSearch]               = useState("");
+  const [typeFilter, setTypeFilter]       = useState<"" | "image" | "video">(mediaType ?? "");
   const [offset, setOffset]               = useState(0);
   const [selected, setSelected]           = useState<MediaAsset | null>(null);   // single mode
   const [pickedAssets, setPickedAssets]   = useState<MediaAsset[]>([]);          // multi mode
@@ -78,20 +94,21 @@ export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, mu
   const load = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-    if (search) params.set("search", search);
+    if (search)     params.set("search", search);
+    if (typeFilter) params.set("mediaType", typeFilter);
     params.set("folderId", currentFolderId ?? ""); // "" = unfiled (root), uuid = folder
     fetch(`/next-api/admin/media?${params}`)
       .then(r => r.json())
       .then(d => { setAssets(d.items ?? []); setTotal(d.total ?? 0); })
       .finally(() => setLoading(false));
-  }, [search, offset, currentFolderId]);
+  }, [search, typeFilter, offset, currentFolderId]);
 
   useEffect(() => { if (open) { load(); loadFolders(); } }, [open, load, loadFolders]);
 
   // Reset state when the picker opens
   useEffect(() => {
-    if (open) { setSelected(null); setPickedAssets([]); setOffset(0); setSearch(""); setCurrentFolderId(null); }
-  }, [open]);
+    if (open) { setSelected(null); setPickedAssets([]); setOffset(0); setSearch(""); setCurrentFolderId(null); setTypeFilter(mediaType ?? ""); }
+  }, [open, mediaType]);
 
   // ── Navigation ────────────────────────────────────────────────────────────
 
@@ -181,19 +198,25 @@ export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, mu
           >
             <div className={styles.uploadZoneIcon}>☁️</div>
             <div className={styles.uploadZoneTitle}>
-              {uploading ? "Uploading…" : "Drop images here or click to upload"}
+              {uploading ? "Uploading…" : `Drop ${mediaType === "video" ? "videos" : mediaType === "image" ? "images" : "media"} here or click to upload`}
               {currentFolderId && !uploading && (
                 <span style={{ color: "#1d4ed8", fontWeight: 500 }}>
                   {" · "}into <strong>{folders.find(f => f.id === currentFolderId)?.name}</strong>
                 </span>
               )}
             </div>
-            <div className={styles.uploadZoneSub}>JPEG, PNG, WebP, AVIF — max 20 MB</div>
+            <div className={styles.uploadZoneSub}>
+              {mediaType === "video"
+                ? "MP4, WebM — max 200 MB"
+                : mediaType === "image"
+                ? "JPEG, PNG, WebP, AVIF, GIF, SVG — max 20 MB"
+                : "JPEG, PNG, WebP, AVIF, GIF, SVG, MP4, WebM — images ≤20MB, videos ≤200MB"}
+            </div>
             <input
               ref={fileInputRef}
               type="file"
               className={styles.uploadZoneInput}
-              accept="image/*"
+              accept={mediaType === "video" ? "video/mp4,video/webm" : mediaType === "image" ? "image/*" : "image/*,video/mp4,video/webm"}
               multiple
               onChange={e => e.target.files && uploadFiles(e.target.files)}
             />
@@ -222,6 +245,21 @@ export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, mu
                 </span>
               ))}
             </div>
+
+            {/* Type filter — hidden when the picker is restricted to a single media type */}
+            {!mediaType && (
+              <div className={styles.typeFilter}>
+                {(["", "image", "video"] as const).map(t => (
+                  <button
+                    key={t || "all"}
+                    className={`${styles.typeFilterBtn} ${typeFilter === t ? styles.typeFilterBtnActive : ""}`}
+                    onClick={() => { setTypeFilter(t); setOffset(0); }}
+                  >
+                    {t === "" ? "All" : t === "image" ? "Images" : "Videos"}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Search */}
             <input
@@ -264,7 +302,7 @@ export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, mu
                 <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "48px 0", color: "#9ca3af" }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>🖼</div>
                   <div style={{ fontSize: 14, fontWeight: 500 }}>
-                    No images{currentFolderId ? " in this folder" : " yet"}
+                    No media{currentFolderId ? " in this folder" : " yet"}
                   </div>
                 </div>
               )
@@ -279,8 +317,17 @@ export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, mu
                       className={`${styles.gridItem} ${active ? styles.gridItemSelected : ""}`}
                       onClick={() => multi ? togglePicked(a) : setSelected(isSelected ? null : a)}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={a.url} alt={a.altText ?? a.originalFilename} className={styles.gridItemImg} loading="lazy" />
+                      {a.mediaType === "video" ? (
+                        <div className={styles.videoThumb}>
+                          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                          <video src={a.url} className={styles.gridItemImg} muted preload="metadata" />
+                          <div className={styles.playIconOverlay}><span><Play size={16} fill="#fff" /></span></div>
+                          {a.durationSeconds != null && <div className={styles.durationBadge}>{formatDuration(a.durationSeconds)}</div>}
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={a.url} alt={a.altText ?? a.originalFilename} className={styles.gridItemImg} loading="lazy" />
+                      )}
                       {a.usageCount > 0 && <div className={styles.gridItemUsage}>{a.usageCount} uses</div>}
 
                       {/* Multi-mode: show hover circle when unpicked, filled circle when picked */}
@@ -343,7 +390,7 @@ export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, mu
             }}
           >
             {multi
-              ? pickedAssets.length > 0 ? `Add ${pickedAssets.length} Image${pickedAssets.length > 1 ? "s" : ""}` : "Select Images"
+              ? pickedAssets.length > 0 ? `Add ${pickedAssets.length} Item${pickedAssets.length > 1 ? "s" : ""}` : "Select Media"
               : "Use Selected"}
           </button>
         </div>

@@ -6,7 +6,7 @@ import { useCart } from "@/components/shop/CartContext";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVariant } from "@/components/shop/ProductVariantSelector";
-import ProductGallery from "./ProductGallery";
+import ProductGallery, { type GalleryMediaItem } from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
 import { formatStockError, stockCheckMessage } from "@/lib/shop/stockError";
@@ -23,6 +23,19 @@ interface FlatVariant {
   mediaUrls: string[];
 }
 
+/** Product media item with resolved URLs, as returned by the API */
+interface ResolvedProductMediaItem {
+  key:              string;
+  type:             "image" | "video";
+  posterKey?:       string | null;
+  altText?:         string | null;
+  isFeatured?:      boolean;
+  url:              string;
+  posterUrl:        string | null;
+  durationSeconds?: number | null;
+  mimeType?:        string | null;
+}
+
 interface Product {
   id: string;
   slug: string;
@@ -30,10 +43,7 @@ interface Product {
   description: string | null;
   shortDescription: string | null;
   brand: string | null;
-  featuredImageUrl: string | null;
-  featuredImageKey: string | null;
-  galleryImageUrls: string[];
-  galleryImageKeys: string[];
+  media: ResolvedProductMediaItem[];
   variants: FlatVariant[];
   categories: Array<{ name: string }>;
 }
@@ -65,14 +75,19 @@ interface Props {
 
 function centsToEuros(cents: number) { return (cents / 100).toFixed(2); }
 
-function buildProductGallery(product: Product): string[] {
+function buildProductGallery(product: Product): GalleryMediaItem[] {
   const seen = new Set<string>();
-  const out: string[] = [];
-  const push = (url: string | null | undefined) => {
-    if (url && !seen.has(url)) { seen.add(url); out.push(url); }
-  };
-  push(product.featuredImageUrl);
-  for (const url of product.galleryImageUrls ?? []) push(url);
+  const out: GalleryMediaItem[] = [];
+  for (const m of product.media ?? []) {
+    if (!m.url || seen.has(m.key)) continue;
+    seen.add(m.key);
+    out.push({
+      type:            m.type,
+      url:             m.url,
+      posterUrl:       m.posterUrl ?? null,
+      durationSeconds: m.durationSeconds ?? null,
+    });
+  }
   return out;
 }
 
@@ -197,8 +212,8 @@ export default function ShopProductDetail({
   // Prepend variant-specific hero image to gallery when resolved.
   const activeGallery = useMemo(() => {
     const variantUrl = resolvedVariant?.featuredMediaUrl ?? selectedVariant?.featuredMediaUrl ?? null;
-    if (variantUrl && !productGallery.includes(variantUrl)) {
-      return [variantUrl, ...productGallery];
+    if (variantUrl && !productGallery.some(m => m.url === variantUrl)) {
+      return [{ type: "image" as const, url: variantUrl, posterUrl: null }, ...productGallery];
     }
     return productGallery;
   }, [resolvedVariant, selectedVariant, productGallery]);
@@ -206,22 +221,18 @@ export default function ShopProductDetail({
   // When a selected option value has an image swatch, jump to the matching gallery image.
   const forcedGalleryIndex = useMemo(() => {
     if (!availabilityMatrix || !selectedOptionValueIds.length) return undefined;
-    // Build a map from GCS key → signed URL using the product's own images.
+    // Build a map from GCS key → resolved URL using the product's own image-type media.
     const keyToUrl = new Map<string, string>();
-    if (product.featuredImageKey && product.featuredImageUrl) {
-      keyToUrl.set(product.featuredImageKey, product.featuredImageUrl);
+    for (const m of product.media ?? []) {
+      if (m.type === "image" && m.url) keyToUrl.set(m.key, m.url);
     }
-    (product.galleryImageKeys ?? []).forEach((k, i) => {
-      const url = product.galleryImageUrls?.[i];
-      if (url) keyToUrl.set(k, url);
-    });
 
     for (const attr of availabilityMatrix.attributes) {
       for (const ov of attr.optionValues) {
         if (ov.swatchType === "image" && ov.swatchValue && selectedOptionValueIds.includes(ov.id)) {
           const targetUrl = keyToUrl.get(ov.swatchValue);
           if (targetUrl) {
-            const idx = activeGallery.indexOf(targetUrl);
+            const idx = activeGallery.findIndex(m => m.url === targetUrl);
             if (idx >= 0) return idx;
           }
         }
@@ -334,7 +345,7 @@ export default function ShopProductDetail({
       {/* Gallery */}
       <div className={styles.galleryCol} ref={galleryColRef}>
         <ProductGallery
-          images={activeGallery}
+          media={activeGallery}
           title={product.title}
           forcedIndex={forcedGalleryIndex}
           compact={compact}

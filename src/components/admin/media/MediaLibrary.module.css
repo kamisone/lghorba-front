@@ -107,6 +107,38 @@
   font-family: "Material Symbols Outlined", sans-serif;
 }
 
+/* ── Video thumbnails ── */
+.videoThumb { position: relative; width: 100%; aspect-ratio: 1; background: #000; }
+.videoThumb .gridItemImg { width: 100%; height: 100%; }
+.playIconOverlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.playIconOverlay > span {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.durationBadge {
+  position: absolute; bottom: 6px; right: 6px;
+  background: rgba(0,0,0,.65); color: #fff;
+  font-size: 10px; font-weight: 600;
+  padding: 2px 6px; border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Media type segmented control ── */
+.typeFilter { display: flex; gap: 2px; background: #f3f4f6; border-radius: 8px; padding: 2px; flex-shrink: 0; }
+.typeFilterBtn {
+  padding: 6px 12px; border: none; background: none; border-radius: 6px;
+  font-size: 12.5px; font-weight: 500; color: #6b7280; cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.typeFilterBtn:hover { color: #374151; }
+.typeFilterBtnActive { background: #fff; color: #1d4ed8; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
 /* Multi-select hover circle (unpicked state) */
 .pickerCheckbox {
   position: absolute; top: 6px; left: 6px; z-index: 2;

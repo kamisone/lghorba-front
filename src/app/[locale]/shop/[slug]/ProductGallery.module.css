@@ -52,6 +52,34 @@
 .thumbActive { border-color: var(--color-brand-primary) !important; }
 .thumbActive::after { background: transparent !important; }
 .thumbImg { object-fit: cover; border-radius: 8px; }
+.thumbVideo {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 8px;
+}
+
+/* ── Video badges (thumbnails + main viewer) ───────────────────────────────── */
+.playIconBadge {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+.playIconBadge > span {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.durationBadge {
+  position: absolute; bottom: 4px; right: 4px;
+  background: rgba(0,0,0,.65); color: #fff;
+  font-size: 10px; font-weight: 600;
+  padding: 1px 5px; border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  z-index: 1;
+}
 
 /* ── Main image ───────────────────────────────────────────────────────────── */
 .mainImage {
@@ -70,6 +98,36 @@
 .fading { opacity: 0; }
 .mainImg { object-fit: contain; transition: transform .4s ease; }
 .mainImage:hover .mainImg { transform: scale(1.03); }
+
+.mainVideo {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Expand-to-lightbox button shown over video slides (zoomHint is image-only, since
+   the whole image area is clickable there) */
+.mainExpandBtn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-brand-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  transition: transform .15s;
+}
+.mainExpandBtn:hover { transform: scale(1.06); }
 
 /* Zoom hint icon */
 .zoomHint {
@@ -288,6 +346,12 @@
 @keyframes lightboxIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
 
 .lightboxImg { object-fit: contain; }
+.lightboxVideo {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  background: #000;
+}
 
 .lightboxClose {
   position: absolute;

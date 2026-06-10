@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
 import styles from "./Media.module.css";
-import { X, Folder, FolderOpen, Pencil, Trash2, Check, ChevronRight, Plus } from "lucide-react";
+import { X, Folder, FolderOpen, Pencil, Trash2, Check, ChevronRight, Plus, Play } from "lucide-react";
+import { formatDuration } from "@/components/admin/media/MediaPicker";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,9 +20,11 @@ interface Asset {
   storageKey: string;
   originalFilename: string;
   mimeType: string;
+  mediaType: "image" | "video" | "other";
   sizeBytes: number;
   width: number | null;
   height: number | null;
+  durationSeconds: number | null;
   altText: string | null;
   tags: string[];
   folderId: string | null;
@@ -78,6 +81,7 @@ export default function MediaLibraryPage() {
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState("");
   const [mimeFilter, setMimeFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"" | "image" | "video">("");
   const [offset, setOffset]       = useState(0);
 
   // Detail panel
@@ -112,12 +116,13 @@ export default function MediaLibraryPage() {
     const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
     if (search)     params.set("search", search);
     if (mimeFilter) params.set("mimeType", mimeFilter);
+    if (typeFilter) params.set("mediaType", typeFilter);
     params.set("folderId", currentFolderId ?? ""); // "" → backend filters folder_id IS NULL
     fetch(`/next-api/admin/media?${params}`)
       .then(r => r.json())
       .then(d => { setAssets(d.items ?? []); setTotal(d.total ?? 0); })
       .finally(() => setLoading(false));
-  }, [search, mimeFilter, offset, currentFolderId]);
+  }, [search, mimeFilter, typeFilter, offset, currentFolderId]);
 
   useEffect(() => { loadFolders(); }, [loadFolders]);
   useEffect(() => { loadAssets(); }, [loadAssets]);
@@ -431,12 +436,12 @@ export default function MediaLibraryPage() {
           <span className={styles.subtitle}>{total} asset{total !== 1 ? "s" : ""}</span>
         </div>
         <button className={styles.uploadBtn} onClick={() => fileInputRef.current?.click()}>
-          ↑ Upload Images
+          ↑ Upload Media
         </button>
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/mp4,video/webm"
           multiple
           style={{ display: "none" }}
           onChange={e => e.target.files && uploadFiles(e.target.files)}
@@ -526,7 +531,7 @@ export default function MediaLibraryPage() {
             onClick={() => fileInputRef.current?.click()}
           >
             <div className={styles.uploadZoneTitle}>
-              {uploading ? `Uploading… ${uploadPct}%` : "Drag & drop images here to upload"}
+              {uploading ? `Uploading… ${uploadPct}%` : "Drag & drop media here to upload"}
               {currentFolderId && !uploading && (
                 <span className={styles.uploadZoneFolder}>
                   {" · "}into <strong>{folders.find(f => f.id === currentFolderId)?.name}</strong>
@@ -534,7 +539,7 @@ export default function MediaLibraryPage() {
               )}
             </div>
             <div className={styles.uploadZoneSub}>
-              JPEG, PNG, WebP, AVIF, GIF, SVG — max 20 MB per file · deduplication enabled
+              JPEG, PNG, WebP, AVIF, GIF, SVG, MP4, WebM — images ≤20MB, videos ≤200MB · deduplication enabled
             </div>
           </div>
 
@@ -557,18 +562,31 @@ export default function MediaLibraryPage() {
                 onChange={e => { setSearch(e.target.value); setOffset(0); }}
               />
             </div>
+            <div className={styles.typeFilter}>
+              {(["", "image", "video"] as const).map(t => (
+                <button
+                  key={t || "all"}
+                  className={`${styles.typeFilterBtn} ${typeFilter === t ? styles.typeFilterBtnActive : ""}`}
+                  onClick={() => { setTypeFilter(t); setOffset(0); }}
+                >
+                  {t === "" ? "All" : t === "image" ? "Images" : "Videos"}
+                </button>
+              ))}
+            </div>
             <select
               className={styles.filterSelect}
               value={mimeFilter}
               onChange={e => { setMimeFilter(e.target.value); setOffset(0); }}
             >
-              <option value="">All types</option>
+              <option value="">All formats</option>
               <option value="image/jpeg">JPEG</option>
               <option value="image/png">PNG</option>
               <option value="image/webp">WebP</option>
               <option value="image/avif">AVIF</option>
               <option value="image/gif">GIF</option>
               <option value="image/svg+xml">SVG</option>
+              <option value="video/mp4">MP4</option>
+              <option value="video/webm">WebM</option>
             </select>
             <div className={styles.toolbarRight}>{total} asset{total !== 1 ? "s" : ""}</div>
           </div>
@@ -641,13 +659,24 @@ export default function MediaLibraryPage() {
                   {draggingId === a.id && selectedIds.has(a.id) && selectedIds.size > 1 && (
                     <div className={styles.dragCountBadge}>{selectedIds.size}</div>
                   )}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={a.url} alt={a.altText ?? a.originalFilename} className={styles.gridItemImg} loading="lazy" />
+                  {a.mediaType === "video" ? (
+                    <div className={styles.videoThumb}>
+                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                      <video src={a.url} className={styles.gridItemImg} muted preload="metadata" />
+                      <div className={styles.playIconOverlay}><span><Play size={16} fill="#fff" /></span></div>
+                      {a.durationSeconds != null && <div className={styles.durationBadge}>{formatDuration(a.durationSeconds)}</div>}
+                    </div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.url} alt={a.altText ?? a.originalFilename} className={styles.gridItemImg} loading="lazy" />
+                  )}
                   {a.usageCount > 0 && <div className={styles.gridItemUsage}>{a.usageCount}</div>}
                   <div className={styles.gridItemMeta}>
                     <div className={styles.gridItemName}>{a.originalFilename}</div>
                     <div className={styles.gridItemSize}>
-                      {fmt(a.sizeBytes)}{a.width ? ` · ${a.width}×${a.height}` : ""}
+                      {fmt(a.sizeBytes)}
+                      {a.mediaType === "video" && a.durationSeconds != null ? ` · ${formatDuration(a.durationSeconds)}` : ""}
+                      {a.width ? ` · ${a.width}×${a.height}` : ""}
                     </div>
                   </div>
                 </div>
@@ -681,8 +710,13 @@ export default function MediaLibraryPage() {
           </div>
 
           <div className={styles.detailBody}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={selected.url} alt={selected.altText ?? ""} className={styles.detailImg} />
+            {selected.mediaType === "video" ? (
+              // eslint-disable-next-line jsx-a11y/media-has-caption
+              <video src={selected.url} className={styles.detailVideo} controls preload="metadata" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={selected.url} alt={selected.altText ?? ""} className={styles.detailImg} />
+            )}
 
             <div className={styles.detailRow}>
               <div className={styles.detailLabel}>Filename</div>
@@ -696,6 +730,12 @@ export default function MediaLibraryPage() {
               <div className={styles.detailLabel}>Size</div>
               <div className={styles.detailValue}>{fmt(selected.sizeBytes)}</div>
             </div>
+            {selected.mediaType === "video" && selected.durationSeconds != null && (
+              <div className={styles.detailRow}>
+                <div className={styles.detailLabel}>Duration</div>
+                <div className={styles.detailValue}>{formatDuration(selected.durationSeconds)}</div>
+              </div>
+            )}
             {selected.width && (
               <div className={styles.detailRow}>
                 <div className={styles.detailLabel}>Dimensions</div>

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import ImageGalleryEditor from "@/components/admin/shop/ImageGalleryEditor";
-import MediaPicker, { MediaAsset } from "@/components/admin/media/MediaPicker";
+import ProductMediaManager, { ProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
@@ -27,11 +26,8 @@ export default function NewProductPage() {
   });
   const { enValues, setEn, saveEnTranslations } = useEntityTranslations('shop_product', null);
 
-  const [featuredKey, setFeaturedKey]   = useState<string | null>(null);
-  const [featuredUrl, setFeaturedUrl]   = useState<string | null>(null);
-  const [featuredOpen, setFeaturedOpen] = useState(false);
-  const [galleryKeys, setGalleryKeys]   = useState<string[]>([]);
-  const [submitting, setSubmitting]     = useState(false);
+  const [media, setMedia]           = useState<ProductMediaItem[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetch("/next-api/admin/shop/categories")
@@ -47,12 +43,6 @@ export default function NewProductPage() {
         ? f.categoryIds.filter(x => x !== id)
         : [...f.categoryIds, id],
     }));
-  }
-
-  function handleFeaturedSelect(asset: MediaAsset) {
-    setFeaturedKey(asset.storageKey);
-    setFeaturedUrl(asset.url);
-    setFeaturedOpen(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -76,8 +66,7 @@ export default function NewProductPage() {
         priceCents:        Math.round(parseFloat(form.priceCents) * 100),
         initialStock:      parseInt(form.initialStock, 10) || 0,
         featured:          form.featured,
-        featuredImageKey:  featuredKey ?? null,
-        galleryImageKeys:  galleryKeys,
+        media,
         primaryCategoryId: form.primaryCategoryId || null,
         categoryIds:       categoryIds.length ? categoryIds : undefined,
       }),
@@ -186,51 +175,7 @@ export default function NewProductPage() {
                 <span className={styles.sectionTitle}>Media</span>
               </div>
               <div className={styles.sectionBody}>
-                <div className={styles.fieldRow}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Featured image</label>
-                    <div className={styles.featuredImgWrap} onClick={() => setFeaturedOpen(true)}>
-                      {featuredUrl ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={featuredUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-                          <div className={styles.featuredImgOverlay}>
-                            <span className={styles.featuredImgOverlayBtn}>Change image</span>
-                          </div>
-                        </>
-                      ) : (
-                        <div className={styles.featuredImgPlaceholder}>
-                          <span className={styles.featuredImgIcon}>🖼</span>
-                          <span className={styles.featuredImgHint}>Click to choose image</span>
-                        </div>
-                      )}
-                    </div>
-                    {featuredKey && (
-                      <button
-                        type="button"
-                        onClick={() => { setFeaturedKey(null); setFeaturedUrl(null); }}
-                        style={{ fontSize: 12, color: "var(--color-error)", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
-                      >
-                        Remove image
-                      </button>
-                    )}
-                    <MediaPicker
-                      open={featuredOpen}
-                      onClose={() => setFeaturedOpen(false)}
-                      onSelect={handleFeaturedSelect}
-                      title="Select featured image"
-                      currentKey={featuredKey ?? undefined}
-                    />
-                  </div>
-                  <div>
-                    <ImageGalleryEditor
-                      initialKeys={[]}
-                      initialUrls={[]}
-                      onChange={setGalleryKeys}
-                      label="Gallery images"
-                    />
-                  </div>
-                </div>
+                <ProductMediaManager initialMedia={[]} onChange={setMedia} />
               </div>
             </div>
           </div>

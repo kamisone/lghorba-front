@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import ImageGalleryEditor from "@/components/admin/shop/ImageGalleryEditor";
-import MediaPicker, { MediaAsset } from "@/components/admin/media/MediaPicker";
+import ProductMediaManager, { ProductMediaItem, ResolvedProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
@@ -44,10 +42,7 @@ interface Product {
   id: string; title: string; sku: string | null; slug: string; status: string;
   featured: boolean; shortDescription: string | null; description: string | null;
   brand: string | null;
-  featuredImageKey:  string | null;
-  featuredImageUrl:  string | null;
-  galleryImageKeys:  string[];
-  galleryImageUrls:  string[];
+  media: ResolvedProductMediaItem[];
   primaryCategoryId: string | null;
   categories: Array<{ id: string; name: string }>;
   variants: DefaultVariant[];
@@ -73,11 +68,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [compareAtPrice, setCompareAtPrice] = useState("");
 
   // Media
-  const [featuredKey, setFeaturedKey]   = useState<string | null>(null);
-  const [featuredUrl, setFeaturedUrl]   = useState<string | null>(null);
-  const [featuredOpen, setFeaturedOpen] = useState(false);
-  const [galleryKeys, setGalleryKeys]   = useState<string[]>([]);
-  const [saving, setSaving]             = useState(false);
+  const [media, setMedia] = useState<ProductMediaItem[]>([]);
+  const [saving, setSaving] = useState(false);
 
   // Bilingual
   const { enValues, setEn, saveEnTranslations } = useEntityTranslations('shop_product', params.id);
@@ -99,9 +91,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       fetch(`/next-api/shop/products/${params.id}/attributes`).then(r => r.ok ? r.json() : []),
     ]).then(([p, cats, attrs, prodAttrs]) => {
       setProduct(p);
-      setGalleryKeys(p.galleryImageKeys ?? []);
-      setFeaturedKey(p.featuredImageKey ?? null);
-      setFeaturedUrl(p.featuredImageUrl ?? null);
+      setMedia(p.media ?? []);
       setCategories(Array.isArray(cats) ? cats : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
       setProductAttrs(Array.isArray(prodAttrs) ? prodAttrs : []);
@@ -222,12 +212,6 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     }));
   }
 
-  function handleFeaturedSelect(asset: MediaAsset) {
-    setFeaturedKey(asset.storageKey);
-    setFeaturedUrl(asset.url);
-    setFeaturedOpen(false);
-  }
-
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -247,8 +231,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         brand:             form.brand || null,
         primaryCategoryId: form.primaryCategoryId || null,
         categoryIds,
-        featuredImageKey:  featuredKey,
-        galleryImageKeys:  galleryKeys,
+        media,
         ...(priceCents !== undefined ? { priceCents } : {}),
         compareAtPriceCents,
       }),
@@ -261,9 +244,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       const p: Product = await res.json();
       await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt']);
       setProduct(p);
-      setGalleryKeys(p.galleryImageKeys ?? []);
-      setFeaturedKey(p.featuredImageKey ?? null);
-      setFeaturedUrl(p.featuredImageUrl ?? null);
+      setMedia(p.media ?? []);
       toast.success("Changes saved");
     }
     setSaving(false);
@@ -399,35 +380,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 <span className={styles.sectionTitle}>Media</span>
               </div>
               <div className={styles.sectionBody}>
-                <div className={styles.fieldRow}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Featured image</label>
-                    <div className={styles.featuredImgWrap} onClick={() => setFeaturedOpen(true)}>
-                      {featuredUrl ? (
-                        <>
-                          <Image src={featuredUrl} alt="" fill style={{ objectFit: "cover" }} />
-                          <div className={styles.featuredImgOverlay}>
-                            <span className={styles.featuredImgOverlayBtn}>Change image</span>
-                          </div>
-                        </>
-                      ) : (
-                        <div className={styles.featuredImgPlaceholder}>
-                          <span className={styles.featuredImgIcon}>🖼</span>
-                          <span className={styles.featuredImgHint}>Click to choose image</span>
-                        </div>
-                      )}
-                    </div>
-                    {featuredKey && (
-                      <button type="button" onClick={() => { setFeaturedKey(null); setFeaturedUrl(null); }} style={{ fontSize: 12, color: "var(--color-error)", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                        Remove image
-                      </button>
-                    )}
-                    <MediaPicker open={featuredOpen} onClose={() => setFeaturedOpen(false)} onSelect={handleFeaturedSelect} title="Select featured image" currentKey={featuredKey ?? undefined} />
-                  </div>
-                  <div>
-                    <ImageGalleryEditor initialKeys={product.galleryImageKeys ?? []} initialUrls={product.galleryImageUrls ?? []} onChange={setGalleryKeys} label="Gallery images" />
-                  </div>
-                </div>
+                <ProductMediaManager initialMedia={product.media ?? []} onChange={setMedia} />
               </div>
             </div>
 
