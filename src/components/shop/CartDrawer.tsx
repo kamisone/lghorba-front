@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useCart } from "./CartContext";
 import { getTranslations } from "@/lib/i18n";
 import { formatStockError } from "@/lib/shop/stockError";
@@ -15,13 +15,50 @@ interface Props { locale: string }
 export default function CartDrawer({ locale }: Props) {
   const { cart, isDrawerOpen, closeDrawer, updateItem, removeItem, mutating } = useCart();
   const t = getTranslations(locale).shop;
-  const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
 
-  const handleIncrement = useCallback(async (itemId: string, currentQty: number) => {
+  // Per-item qty state: pending display qty, error message, known stock cap
+  const [pendingQtys, setPendingQtys]   = useState<Record<string, number>>({});
+  const [itemErrors, setItemErrors]     = useState<Record<string, string>>({});
+  const [itemMaxAvail, setItemMaxAvail] = useState<Record<string, number>>({});
+  const debounceTimers                  = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  useEffect(() => {
+    const timers = debounceTimers.current;
+    return () => { Object.values(timers).forEach(clearTimeout); };
+  }, []);
+
+  const handleQtyChange = useCallback((itemId: string, displayQty: number, delta: 1 | -1) => {
+    const next = displayQty + delta;
+
+    if (next < 1) {
+      setPendingQtys(prev => { const n = { ...prev }; delete n[itemId]; return n; });
+      if (debounceTimers.current[itemId]) clearTimeout(debounceTimers.current[itemId]);
+      removeItem(itemId);
+      return;
+    }
+    const knownMax = itemMaxAvail[itemId];
+    if (delta === 1 && knownMax !== undefined && next > knownMax) return;
+
     setItemErrors(prev => ({ ...prev, [itemId]: "" }));
-    const result = await updateItem(itemId, currentQty + 1);
-    if (!result.ok) setItemErrors(prev => ({ ...prev, [itemId]: formatStockError(result, t) }));
-  }, [updateItem, t]);
+    setPendingQtys(prev => ({ ...prev, [itemId]: next }));
+
+    if (debounceTimers.current[itemId]) clearTimeout(debounceTimers.current[itemId]);
+    debounceTimers.current[itemId] = setTimeout(async () => {
+      const result = await updateItem(itemId, next);
+      setPendingQtys(prev => { const n = { ...prev }; delete n[itemId]; return n; });
+      if (result.ok) {
+        setItemMaxAvail(prev => { const n = { ...prev }; delete n[itemId]; return n; });
+      } else {
+        setItemErrors(prev => ({ ...prev, [itemId]: formatStockError(result, t) }));
+        if (typeof result.available === "number") {
+          setItemMaxAvail(prev => ({ ...prev, [itemId]: result.available! }));
+          if (result.available > 0 && next > result.available) {
+            setPendingQtys(prev => ({ ...prev, [itemId]: result.available! }));
+          }
+        }
+      }
+    }, 350);
+  }, [updateItem, removeItem, itemMaxAvail, t]);
 
   // ESC key to close
   useEffect(() => {
@@ -145,26 +182,27 @@ export default function CartDrawer({ locale }: Props) {
                   {/* Qty stepper + line total */}
                   <div className={styles.itemBottom}>
                     <div className={styles.stepper}>
-                      <button
-                        onClick={() => {
-                          setItemErrors(prev => ({ ...prev, [item.id]: "" }));
-                          item.quantity <= 1 ? removeItem(item.id) : updateItem(item.id, item.quantity - 1);
-                        }}
-                        disabled={mutating}
-                        className={styles.stepBtn}
-                        aria-label={t.decreaseQty}
-                      >
-                        −
-                      </button>
-                      <span className={styles.stepQty}>{item.quantity}</span>
-                      <button
-                        onClick={() => handleIncrement(item.id, item.quantity)}
-                        disabled={mutating}
-                        className={styles.stepBtn}
-                        aria-label={t.increaseQty}
-                      >
-                        +
-                      </button>
+                      {(() => {
+                        const dQty  = pendingQtys[item.id] ?? item.quantity;
+                        const atMax = itemMaxAvail[item.id] !== undefined && dQty >= itemMaxAvail[item.id];
+                        return (
+                          <>
+                            <button
+                              onClick={() => handleQtyChange(item.id, dQty, -1)}
+                              disabled={mutating}
+                              className={styles.stepBtn}
+                              aria-label={t.decreaseQty}
+                            >−</button>
+                            <span className={styles.stepQty}>{dQty}</span>
+                            <button
+                              onClick={() => handleQtyChange(item.id, dQty, 1)}
+                              disabled={mutating || atMax}
+                              className={styles.stepBtn}
+                              aria-label={t.increaseQty}
+                            >+</button>
+                          </>
+                        );
+                      })()}
                     </div>
                     <span className={styles.lineTotal}>€{centsToEuros(item.lineTotalCents)}</span>
                   </div>

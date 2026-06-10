@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
 import PromoCodeInput from "@/components/shop/PromoCodeInput";
@@ -17,18 +17,49 @@ export default function CartPage({ params }: { params: { locale: string } }) {
   const { cart, updateItem, removeItem, loading, mutating, validateCoupon, appliedCoupon, setAppliedCoupon } = useCart();
   const { locale } = params;
   const t = getTranslations(locale).shop;
-  const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
 
-  const handleIncrement = useCallback(async (itemId: string, currentQty: number) => {
-    setItemErrors(prev => ({ ...prev, [itemId]: "" }));
-    const result = await updateItem(itemId, currentQty + 1);
-    if (!result.ok) setItemErrors(prev => ({ ...prev, [itemId]: formatStockError(result, t) }));
-  }, [updateItem, t]);
+  const [pendingQtys, setPendingQtys]   = useState<Record<string, number>>({});
+  const [itemErrors, setItemErrors]     = useState<Record<string, string>>({});
+  const [itemMaxAvail, setItemMaxAvail] = useState<Record<string, number>>({});
+  const debounceTimers                  = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  const handleDecrement = useCallback((itemId: string, currentQty: number) => {
+  useEffect(() => {
+    const timers = debounceTimers.current;
+    return () => { Object.values(timers).forEach(clearTimeout); };
+  }, []);
+
+  const handleQtyChange = useCallback((itemId: string, displayQty: number, delta: 1 | -1) => {
+    const next = displayQty + delta;
+
+    if (next < 1) {
+      setPendingQtys(prev => { const n = { ...prev }; delete n[itemId]; return n; });
+      if (debounceTimers.current[itemId]) clearTimeout(debounceTimers.current[itemId]);
+      removeItem(itemId);
+      return;
+    }
+    const knownMax = itemMaxAvail[itemId];
+    if (delta === 1 && knownMax !== undefined && next > knownMax) return;
+
     setItemErrors(prev => ({ ...prev, [itemId]: "" }));
-    updateItem(itemId, currentQty - 1);
-  }, [updateItem]);
+    setPendingQtys(prev => ({ ...prev, [itemId]: next }));
+
+    if (debounceTimers.current[itemId]) clearTimeout(debounceTimers.current[itemId]);
+    debounceTimers.current[itemId] = setTimeout(async () => {
+      const result = await updateItem(itemId, next);
+      setPendingQtys(prev => { const n = { ...prev }; delete n[itemId]; return n; });
+      if (result.ok) {
+        setItemMaxAvail(prev => { const n = { ...prev }; delete n[itemId]; return n; });
+      } else {
+        setItemErrors(prev => ({ ...prev, [itemId]: formatStockError(result, t) }));
+        if (typeof result.available === "number") {
+          setItemMaxAvail(prev => ({ ...prev, [itemId]: result.available! }));
+          if (result.available > 0 && next > result.available) {
+            setPendingQtys(prev => ({ ...prev, [itemId]: result.available! }));
+          }
+        }
+      }
+    }, 350);
+  }, [updateItem, removeItem, itemMaxAvail, t]);
 
   if (loading && !cart) {
     return (
@@ -91,9 +122,17 @@ export default function CartPage({ params }: { params: { locale: string } }) {
               </div>
               <div className={styles.itemQtyCol}>
                 <div className={styles.itemQty}>
-                  <button onClick={() => handleDecrement(item.id, item.quantity)} disabled={mutating}>−</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => handleIncrement(item.id, item.quantity)} disabled={mutating}>+</button>
+                  {(() => {
+                    const dQty  = pendingQtys[item.id] ?? item.quantity;
+                    const atMax = itemMaxAvail[item.id] !== undefined && dQty >= itemMaxAvail[item.id];
+                    return (
+                      <>
+                        <button onClick={() => handleQtyChange(item.id, dQty, -1)} disabled={mutating}>−</button>
+                        <span>{dQty}</span>
+                        <button onClick={() => handleQtyChange(item.id, dQty, 1)} disabled={mutating || atMax}>+</button>
+                      </>
+                    );
+                  })()}
                 </div>
                 {itemErrors[item.id] && (
                   <p className={styles.itemQtyError}>{itemErrors[item.id]}</p>

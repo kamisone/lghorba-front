@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useCart } from "./CartContext";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { getTranslations } from "@/lib/i18n";
@@ -19,11 +19,29 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
   const { cart, addItem, updateItem, removeItem, mutating, openDrawer } = useCart();
   const locale = useLocale();
   const t = getTranslations(locale).shop;
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding]       = useState(false);
   const [justAdded, setJustAdded] = useState(false);
-  const [addError, setAddError] = useState("");
+  const [addError, setAddError]   = useState("");
+
+  // Stepper state (used when item is already in cart)
+  const [pendingQty, setPendingQty]   = useState<number | null>(null);
+  const [stepperMax, setStepperMax]   = useState<number | null>(null);
+  const [stepperErr, setStepperErr]   = useState("");
+  const stepperTimer                  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cartItem = cart?.items.find(i => i.variantId === variantId) ?? null;
+
+  // Reset stepper state when the variant being viewed changes
+  useEffect(() => {
+    setPendingQty(null);
+    setStepperMax(null);
+    setStepperErr("");
+    if (stepperTimer.current) clearTimeout(stepperTimer.current);
+  }, [variantId]);
+
+  useEffect(() => {
+    return () => { if (stepperTimer.current) clearTimeout(stepperTimer.current); };
+  }, []);
 
   const handleAdd = useCallback(async () => {
     setAdding(true);
@@ -39,34 +57,53 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
     }
   }, [variantId, initialQty, selectedOptionValueIds, addItem, openDrawer, t]);
 
-  const handleDecrement = useCallback(async () => {
+  const handleStepperChange = useCallback((delta: 1 | -1) => {
     if (!cartItem) return;
-    setAddError("");
-    if (cartItem.quantity <= 1) {
-      await removeItem(cartItem.id);
-    } else {
-      await updateItem(cartItem.id, cartItem.quantity - 1);
-    }
-  }, [cartItem, updateItem, removeItem]);
+    const base = pendingQty ?? cartItem.quantity;
+    const next = base + delta;
 
-  const handleIncrement = useCallback(async () => {
-    if (!cartItem) return;
-    setAddError("");
-    const result = await updateItem(cartItem.id, cartItem.quantity + 1);
-    if (!result.ok) setAddError(formatStockError(result, t));
-  }, [cartItem, updateItem, t]);
+    if (next < 1) {
+      setPendingQty(null);
+      if (stepperTimer.current) clearTimeout(stepperTimer.current);
+      removeItem(cartItem.id);
+      return;
+    }
+    if (delta === 1 && stepperMax !== null && next > stepperMax) return;
+
+    setStepperErr("");
+    setPendingQty(next);
+
+    if (stepperTimer.current) clearTimeout(stepperTimer.current);
+    const itemId = cartItem.id;
+    stepperTimer.current = setTimeout(async () => {
+      const result = await updateItem(itemId, next);
+      setPendingQty(null);
+      if (result.ok) {
+        setStepperMax(null);
+        setStepperErr("");
+      } else {
+        setStepperErr(formatStockError(result, t));
+        if (typeof result.available === "number") {
+          setStepperMax(result.available);
+          if (result.available > 0 && next > result.available) setPendingQty(result.available);
+        }
+      }
+    }, 350);
+  }, [cartItem, pendingQty, stepperMax, updateItem, removeItem, t]);
 
   if (cartItem) {
+    const displayQty = pendingQty ?? cartItem.quantity;
+    const atMax      = stepperMax !== null && displayQty >= stepperMax;
     return (
       <div className={`${styles.addWrap} ${className ?? ""}`}>
         <div className={`${styles.stepper} ${styles[size]}`}>
           <button
-            onClick={handleDecrement}
+            onClick={() => handleStepperChange(-1)}
             disabled={mutating}
             className={styles.stepBtn}
-            aria-label={cartItem.quantity === 1 ? t.removeFromCart : t.decreaseQty}
+            aria-label={displayQty === 1 ? t.removeFromCart : t.decreaseQty}
           >
-            {cartItem.quantity === 1 ? (
+            {displayQty === 1 ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -75,17 +112,17 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
               </svg>
             ) : "−"}
           </button>
-          <span className={styles.qty}>{cartItem.quantity}</span>
+          <span className={styles.qty}>{displayQty}</span>
           <button
-            onClick={handleIncrement}
-            disabled={mutating}
+            onClick={() => handleStepperChange(1)}
+            disabled={mutating || atMax}
             className={styles.stepBtn}
             aria-label={t.increaseQty}
           >
             +
           </button>
         </div>
-        {addError && <p className={styles.error}>{addError}</p>}
+        {stepperErr && <p className={styles.error}>{stepperErr}</p>}
       </div>
     );
   }

@@ -233,28 +233,72 @@ export default function ShopProductDetail({
   const wishlisted = isWishlisted(product.id);
   const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
 
-  const [qty, setQty]             = useState(1);
-  const [qtyError, setQtyError]   = useState("");
-  const [buyingNow, setBuyingNow] = useState(false);
-  const [buyError, setBuyError]   = useState("");
+  const [qty, setQty]               = useState(1);
+  const [qtyError, setQtyError]     = useState("");
+  const [qtyMax, setQtyMax]         = useState<number | null>(null);
+  const [buyingNow, setBuyingNow]   = useState(false);
+  const [buyError, setBuyError]     = useState("");
+  const stockCheckTimer             = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasVariations = !!availabilityMatrix && availabilityMatrix.attributes.length > 0;
 
-  const handleQtyIncrement = useCallback(async () => {
-    if (!activeId || hasVariations) { setQty(q => q + 1); return; }
+  // Reset qty and cap whenever the active variant changes
+  useEffect(() => {
+    setQty(1);
+    setQtyMax(null);
     setQtyError("");
-    try {
-      const res = await fetch(`/next-api/public/shop/variants/${activeId}/stock`);
-      if (res.ok) {
-        const { available } = await res.json() as { available: number };
-        const msg = stockCheckMessage(available, qty + 1, t);
-        if (msg) { setQtyError(msg); return; }
-      }
-    } catch {
-      // fail open — the backend will reject at add-to-cart time
-    }
-    setQty(q => q + 1);
-  }, [activeId, hasVariations, qty, t]);
+  }, [activeId]);
+
+  // For structured-variant products the /resolve endpoint already returns available stock.
+  // Sync qtyMax from that instead of making a separate /stock call.
+  useEffect(() => {
+    if (!hasVariations || !resolvedVariant) return;
+    const av = resolvedVariant.available;
+    setQtyMax(av === -1 ? null : av);
+    if (av !== -1 && av > 0) setQty(q => (q > av ? av : q));
+  }, [resolvedVariant, hasVariations]);
+
+  useEffect(() => {
+    return () => { if (stockCheckTimer.current) clearTimeout(stockCheckTimer.current); };
+  }, []);
+
+  // Debounced backend stock check — fires 400 ms after the last qty change.
+  // Skips structured-variant products (resolved via /resolve endpoint).
+  const scheduleStockCheck = useCallback((newQty: number) => {
+    if (!activeId || hasVariations) return;
+    if (stockCheckTimer.current) clearTimeout(stockCheckTimer.current);
+    stockCheckTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/next-api/public/shop/variants/${activeId}/stock`);
+        if (res.ok) {
+          const { available } = await res.json() as { available: number };
+          const msg = stockCheckMessage(available, newQty, t);
+          setQtyError(msg || "");
+          if (available !== -1) {
+            setQtyMax(available);
+            if (available > 0 && newQty > available) setQty(available);
+          } else {
+            setQtyMax(null);
+          }
+        }
+      } catch { /* fail open — backend enforces at add-to-cart */ }
+    }, 400);
+  }, [activeId, hasVariations, t]);
+
+  const handleQtyIncrement = useCallback(() => {
+    if (qtyMax !== null && qty >= qtyMax) return;
+    setQtyError("");
+    const next = qty + 1;
+    setQty(next);
+    scheduleStockCheck(next);
+  }, [qty, qtyMax, scheduleStockCheck]);
+
+  const handleQtyDecrement = useCallback(() => {
+    setQtyError("");
+    const next = Math.max(1, qty - 1);
+    setQty(next);
+    scheduleStockCheck(next);
+  }, [qty, scheduleStockCheck]);
 
   const isOos         = resolveStatus === 'out_of_stock';
   const isUnavailable = resolveStatus === 'unavailable';
@@ -263,6 +307,14 @@ export default function ShopProductDetail({
   async function handleBuyNow() {
     if (!activeId || isBlocked) return;
     setBuyError("");
+
+    // Already in the cart: don't re-add (additive on the backend, may exceed
+    // remaining stock) — just go straight to checkout.
+    if (inCart) {
+      router.push(`/${locale}/checkout`);
+      return;
+    }
+
     setBuyingNow(true);
     const result = await addItem(activeId, qty, selectedOptionValueIds.length ? selectedOptionValueIds : undefined);
     if (result.ok) {
@@ -362,9 +414,9 @@ export default function ShopProductDetail({
           <div className={styles.qtyRow}>
             <span className={styles.qtyLabel}>{t.quantity}</span>
             <div className={styles.qtyControl}>
-              <button onClick={() => { setQtyError(""); setQty(q => Math.max(1, q - 1)); }} className={styles.qtyBtn} disabled={mutating}>−</button>
+              <button onClick={handleQtyDecrement} className={styles.qtyBtn} disabled={mutating || qty <= 1}>−</button>
               <span className={styles.qty}>{qty}</span>
-              <button onClick={handleQtyIncrement} className={styles.qtyBtn} disabled={mutating}>+</button>
+              <button onClick={handleQtyIncrement} className={styles.qtyBtn} disabled={mutating || (qtyMax !== null && qty >= qtyMax)}>+</button>
             </div>
             {qtyError && <p className={styles.qtyError}>{qtyError}</p>}
           </div>
