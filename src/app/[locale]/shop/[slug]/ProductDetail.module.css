@@ -8,20 +8,25 @@
   gap: 60px;
   align-items: start;
 }
-@media (max-width: 900px) {
-  .container { grid-template-columns: 1fr; gap: 36px; padding: 24px 16px 48px; }
-  .galleryCol { position: static; }
-}
 
+/* Desktop sticky gallery column */
 .galleryCol {
   min-width: 0;
   position: sticky;
-  top: 24px;
+  top: calc(var(--header-height, 64px) + 16px);
   align-self: start;
+  z-index: 10;
+  background: var(--color-background, #fff);
+  border-radius: 20px;
 }
 
 /* ── Product details column ───────────────────────────────────────────────── */
-.details { display: flex; flex-direction: column; }
+.details {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
 
 .brand {
   font-size: 11px;
@@ -38,7 +43,6 @@
   line-height: 1.2;
   margin: 0 0 12px;
 }
-@media (max-width: 640px) { .title { font-size: 24px; } }
 
 /* ── Rating ── */
 .rating {
@@ -47,13 +51,19 @@
   gap: 3px;
   font-size: 17px;
   color: #f59e0b;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 .ratingCount { font-size: 13px; color: var(--color-text-muted); margin-left: 6px; }
 
 /* ── Price ── */
-.priceRow { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-.price { font-size: 30px; font-weight: 800; color: var(--color-brand-primary); }
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.price        { font-size: 30px; font-weight: 800; color: var(--color-brand-primary); }
 .comparePrice { font-size: 18px; text-decoration: line-through; color: var(--color-text-muted); }
 .discountBadge {
   font-size: 13px;
@@ -85,10 +95,10 @@
   background: currentColor;
   flex-shrink: 0;
 }
-.stockAvailable    { color: #16a34a; background: #f0fdf4; border-color: #bbf7d0; }
-.stockOutOfStock   { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
-.stockUnavailable  { color: #6b7280; background: #f9fafb; border-color: #e5e7eb; }
-.stockLoading      { color: #6b7280; background: #f9fafb; border-color: #e5e7eb; opacity: .7; animation: stockPulse 1.2s ease-in-out infinite; }
+.stockAvailable   { color: #16a34a; background: #f0fdf4; border-color: #bbf7d0; }
+.stockOutOfStock  { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
+.stockUnavailable { color: #6b7280; background: #f9fafb; border-color: #e5e7eb; }
+.stockLoading     { color: #6b7280; background: #f9fafb; border-color: #e5e7eb; opacity: .7; animation: stockPulse 1.2s ease-in-out infinite; }
 @keyframes stockPulse { 0%,100%{opacity:.7} 50%{opacity:.35} }
 
 /* ── Short description ── */
@@ -101,7 +111,7 @@
 
 /* ── Variants ── */
 .variantSection { margin-bottom: 24px; }
-.variantLabel { font-size: 13px; font-weight: 600; color: var(--color-text-primary); margin: 0 0 10px; }
+.variantLabel   { font-size: 13px; font-weight: 600; color: var(--color-text-primary); margin: 0 0 10px; }
 .variantButtons { display: flex; gap: 8px; flex-wrap: wrap; }
 .variantBtn {
   padding: 8px 18px;
@@ -131,8 +141,8 @@
   gap: 6px 0;
   margin-bottom: 20px;
 }
-.qtyLabel { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
-.qtyControl { display: flex; align-items: center; gap: 0; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
+.qtyLabel   { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
+.qtyControl { display: flex; align-items: center; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
 .qtyBtn {
   width: 40px;
   height: 40px;
@@ -163,8 +173,6 @@
 
 /* ── Action buttons ── */
 .actions { display: flex; gap: 10px; margin-bottom: 12px; align-items: stretch; }
-
-/* wrapper for AddToCartButton inside the actions flex row */
 .addToCartWrap { flex: 1; min-width: 0; }
 
 .addToCartBtn {
@@ -227,11 +235,10 @@
 }
 
 .addedNotice { font-size: 14px; color: var(--color-text-secondary); margin: 0 0 12px; }
-.cartLink { color: var(--color-brand-primary); font-weight: 600; text-decoration: underline; }
+.cartLink    { color: var(--color-brand-primary); font-weight: 600; text-decoration: underline; }
 .cartLink:hover { color: var(--color-brand-accent); }
-
-.addError { color: #ef4444; font-size: 14px; margin: 0 0 12px; }
-.qtyError { color: #ef4444; font-size: 12px; flex-basis: 100%; margin: 0; }
+.addError   { color: #ef4444; font-size: 14px; margin: 0 0 12px; }
+.qtyError   { color: #ef4444; font-size: 12px; flex-basis: 100%; margin: 0; }
 
 /* ── Trust signals ── */
 .trust {
@@ -248,21 +255,170 @@
 }
 
 /* ── Description ── */
-.descSection {
-  border-top: 1px solid var(--color-border);
-  padding-top: 28px;
-}
-.descSection h3 {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--color-text-heading);
-  margin: 0 0 14px;
-}
-.descBody {
-  font-size: 15px;
-  line-height: 1.75;
-  color: var(--color-text-secondary);
-}
-.descBody p { margin: 0 0 12px; }
+.descSection { border-top: 1px solid var(--color-border); padding-top: 28px; }
+.descSection h3 { font-size: 17px; font-weight: 700; color: var(--color-text-heading); margin: 0 0 14px; }
+.descBody { font-size: 15px; line-height: 1.75; color: var(--color-text-secondary); }
+.descBody p  { margin: 0 0 12px; }
 .descBody ul, .descBody ol { padding-left: 20px; margin: 0 0 12px; }
 .descBody li { margin-bottom: 6px; }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* TABLET  641–900px  and  MOBILE  ≤640px                                      */
+/* Gallery capped at vh height; details card slides up with rounded corners.   */
+/* ─────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0 0 110px; /* reserve bottom space for sticky buy bar */
+    align-items: start;
+  }
+
+  /* Gallery stays at a fixed viewport-relative height so product info is
+     reachable without excessive scrolling. */
+  .galleryCol {
+    position: static;
+    height: 52vh;
+    min-height: 240px;
+    max-height: 460px;
+    overflow: hidden;
+    border-radius: 0;
+    background: none;
+  }
+
+  /* Details card overlaps the gallery bottom edge for a continuous feel. */
+  .details {
+    position: relative;
+    z-index: 2;
+    background: var(--color-background, #fff);
+    border-radius: 24px 24px 0 0;
+    margin-top: -28px;
+    padding: 20px 16px 0;
+    box-shadow: 0 -6px 24px rgba(0, 24, 41, 0.07);
+  }
+
+  .price { font-size: 26px; }
+  .title { font-size: 26px; }
+}
+
+@media (max-width: 640px) {
+  /* galleryCol must be auto-height on mobile so the horizontal thumbnail strip
+     (a sibling of galleryWrap inside ProductGallery) renders below the image in
+     normal flow instead of being clipped. Height constraint moves to galleryWrap
+     inside ProductGallery.module.css. */
+  .galleryCol { height: auto; min-height: unset; max-height: unset; overflow: visible; }
+  /* No overlap/card effect on mobile — the thumb strip sits between gallery and
+     details, so use a clean flat transition instead. */
+  .details    { margin-top: 0; border-radius: 0; box-shadow: none; padding: 16px 16px 0; }
+  .title      { font-size: 22px; }
+  .price      { font-size: 24px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* STICKY BUY BAR — fixed at screen bottom, mobile/tablet only                */
+/* Slides up from below when the main CTA row scrolls above the viewport.     */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.stickyBuyBar { display: none; }
+
+@media (max-width: 900px) {
+  .stickyBuyBar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 24px rgba(0, 24, 41, 0.1);
+    z-index: 40;
+    /* start hidden below the screen */
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity   0.24s ease;
+  }
+
+  .stickyBuyBarVisible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+
+/* Row 1: price + variant summary + stock status */
+.stickyMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px 10px;
+  flex-wrap: wrap;
+  line-height: 1;
+}
+.stickyPrice   { font-size: 20px; font-weight: 800; color: var(--color-brand-primary); }
+.stickyCompare { font-size: 13px; text-decoration: line-through; color: var(--color-text-muted); }
+.stickyVariant {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  /* Push stock badge to the far right */
+  margin-right: auto;
+}
+.stickyStock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.stickyStock::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.stickyStockAvail { color: #16a34a; }
+.stickyStockOos   { color: #dc2626; }
+
+/* Row 2: CTA buttons */
+.stickyActions { display: flex; gap: 8px; align-items: stretch; }
+.stickyCartWrap { flex: 1; min-width: 0; }
+
+/* Disabled full-width state (OOS / no variant selected) */
+.stickyFullBtn {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--color-brand-accent);
+  color: var(--color-brand-darkest);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.stickyBuyBtn {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background: var(--color-brand-primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  transition: background .18s;
+}
+.stickyBuyBtn:disabled { opacity: .6; cursor: not-allowed; }
+.stickyBuyBtn:hover:not(:disabled) { background: var(--color-brand-mid); }

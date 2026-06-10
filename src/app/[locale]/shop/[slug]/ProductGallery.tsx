@@ -9,14 +9,19 @@ interface Props {
   images: string[];
   title: string;
   forcedIndex?: number;
+  /** Parent sets this true when the hero has been scrolled past — triggers the mini floating viewer */
+  compact?: boolean;
 }
 
-export default function ProductGallery({ images, title, forcedIndex }: Props) {
+export default function ProductGallery({ images, title, forcedIndex, compact }: Props) {
   const [current, setCurrent] = useState(0);
   const [fading, setFading]   = useState(false);
   const [lightbox, setLightbox] = useState(false);
+  const [mounted, setMounted]  = useState(false);
   const touchStartX = useRef<number | null>(null);
   const stripRef    = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Fade transition: hide → swap → show
   const goTo = useCallback((index: number) => {
@@ -178,6 +183,63 @@ export default function ProductGallery({ images, title, forcedIndex }: Props) {
             </button>
           ))}
         </div>
+      )}
+
+      {/* ── Mini floating viewer — appears when hero is scrolled past on mobile ─── */}
+      {mounted && createPortal(
+        <div
+          className={`${styles.miniViewer} ${compact ? styles.miniViewerVisible : ""}`}
+          aria-hidden={!compact}
+        >
+          {/* Image — tap to open lightbox */}
+          <div
+            className={styles.miniImage}
+            onClick={() => compact && setLightbox(true)}
+            role="button"
+            tabIndex={compact ? 0 : -1}
+            aria-label="Open image viewer"
+            onKeyDown={e => { if (compact && (e.key === "Enter" || e.key === " ")) setLightbox(true); }}
+          >
+            <Image
+              src={images[current]}
+              alt={title}
+              fill
+              sizes="120px"
+              className={styles.mainImg}
+            />
+          </div>
+
+          {/* Navigation overlay — prev, counter, next */}
+          {hasMany && (
+            <div className={styles.miniOverlay}>
+              <button
+                onClick={e => { e.stopPropagation(); prev(); }}
+                className={styles.miniBtn}
+                tabIndex={compact ? 0 : -1}
+                aria-label="Previous image"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
+              </button>
+              <span className={styles.miniCounter}>{current + 1}/{images.length}</span>
+              <button
+                onClick={e => { e.stopPropagation(); next(); }}
+                className={styles.miniBtn}
+                tabIndex={compact ? 0 : -1}
+                aria-label="Next image"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M9 18l6-6-6-6" /></svg>
+              </button>
+            </div>
+          )}
+
+          {/* Expand / zoom hint */}
+          <span className={styles.miniExpandHint} aria-hidden="true">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
+            </svg>
+          </span>
+        </div>,
+        document.body,
       )}
 
       {/* Lightbox — rendered via portal so it escapes the sticky galleryCol stacking context */}

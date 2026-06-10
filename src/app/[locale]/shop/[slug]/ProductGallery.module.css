@@ -68,7 +68,7 @@
 }
 .mainImage:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: 3px; }
 .fading { opacity: 0; }
-.mainImg { object-fit: cover; transition: transform .4s ease; }
+.mainImg { object-fit: contain; transition: transform .4s ease; }
 .mainImage:hover .mainImg { transform: scale(1.03); }
 
 /* Zoom hint icon */
@@ -167,6 +167,102 @@
   background: linear-gradient(135deg, #e9eef2 0%, #dde4ea 100%);
 }
 
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* MINI FLOATING VIEWER                                                        */
+/* Fixed corner component that appears when the hero gallery collapses.        */
+/* Hidden on desktop; slides in bottom-right on ≤900px when compact = true.   */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.miniViewer { display: none; }
+
+@media (max-width: 900px) {
+  .miniViewer {
+    display: block;
+    position: fixed;
+    top: calc(var(--header-height, 64px) + 10px);
+    right: 12px;
+    width: 96px;
+    height: 96px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 24, 41, 0.18);
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .miniViewerVisible {
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+
+/* Image fill inside the mini viewer */
+.miniImage {
+  position: absolute;
+  inset: 0;
+  cursor: zoom-in;
+  background: var(--color-surface);
+}
+
+/* Bottom navigation strip: ‹ counter › */
+.miniOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 7px;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.miniBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.miniBtn:hover { background: rgba(255, 255, 255, 0.38); }
+
+.miniCounter {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  min-width: 26px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+/* Small zoom / expand icon in top-right corner of the mini viewer */
+.miniExpandHint {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-brand-primary);
+  pointer-events: none;
+}
+
 /* ── Lightbox ─────────────────────────────────────────────────────────────── */
 .lightboxBackdrop {
   position: fixed;
@@ -250,13 +346,59 @@
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .gallery { flex-direction: column; gap: 0; }
-  .thumbStrip { display: none; }
-  .dots { display: flex; }
-  .mobileStrip { display: flex; }
-  /* navRow floats over the image; galleryWrap is the relative anchor */
-  .navRow { margin-top: 0; position: absolute; bottom: 12px; left: 0; right: 0; pointer-events: none; }
+
+/* ─ Tablet 641–900px: gallery is height-constrained by galleryCol (52vh).
+   The flex container and image must fill that height; nav is overlaid.     ─ */
+@media (max-width: 900px) {
+  .galleryWrap { height: 100%; }
+  .gallery     { height: 100%; }
+  /* Remove aspect-ratio so the image fills the fixed-height container */
+  .mainImage   { aspect-ratio: unset; height: 100%; border-radius: 0; }
+  /* Overlay nav arrows on the image — normal flow is clipped by galleryCol */
+  .navRow {
+    position: absolute;
+    bottom: 12px;
+    left: 0;
+    right: 0;
+    margin-top: 0;
+    pointer-events: none;
+    z-index: 3;
+  }
   .navBtn { pointer-events: all; background: rgba(255,255,255,.88); backdrop-filter: blur(4px); }
-  .counter { display: none; }
+  /* Mobile strip sits below the image in normal flow but is clipped by
+     galleryCol overflow:hidden — hide it explicitly for clarity */
+  .mobileStrip { display: none; }
+}
+
+/* ─ Mobile ≤640px: single-column flex; galleryCol is height:auto so the
+   horizontal thumbnail strip can render below the image in normal flow.
+   galleryWrap owns the height constraint here instead of galleryCol.        ─ */
+@media (max-width: 640px) {
+  /* galleryCol is height:auto — galleryWrap must set its own explicit height */
+  .galleryWrap {
+    height: 48vh;
+    min-height: 220px;
+    max-height: 400px;
+    overflow: hidden;
+  }
+  .gallery    { flex-direction: column; gap: 0; }
+  .thumbStrip { display: none; }
+  /* Hide arrow nav on touch — swipe + dots handle navigation */
+  .navRow { display: none; }
+  /* Dots overlaid at the bottom of the constrained image area */
+  .dots {
+    display: flex;
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .dot { pointer-events: all; }
+  /* Horizontal thumbnail strip — visible below galleryWrap in normal flow */
+  .mobileStrip {
+    display: flex;
+    padding: 8px 12px 4px;
+  }
 }

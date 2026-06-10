@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/shop/CartContext";
 import { useWishlist } from "@/components/shop/WishlistContext";
@@ -84,6 +84,45 @@ export default function ShopProductDetail({
   const { toggle, isWishlisted } = useWishlist();
   const t = getTranslations(locale).shop;
   const router = useRouter();
+
+  const galleryColRef = useRef<HTMLDivElement>(null);
+  const actionsRef    = useRef<HTMLDivElement>(null);
+  const [compact, setCompact]             = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  // Show mini viewer when the gallery element is no longer visible in the viewport.
+  useEffect(() => {
+    const el = galleryColRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (window.innerWidth <= 900) setCompact(!entry.isIntersecting);
+      },
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    const onResize = () => { if (window.innerWidth > 900) setCompact(false); };
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => { observer.disconnect(); window.removeEventListener("resize", onResize); };
+  }, []);
+
+  // Sticky buy bar: appears once the main CTA row scrolls above the viewport.
+  useEffect(() => {
+    const HEADER = 64;
+    const handle = () => {
+      if (window.innerWidth > 900) { setShowStickyBar(false); return; }
+      if (actionsRef.current) {
+        setShowStickyBar(actionsRef.current.getBoundingClientRect().bottom < HEADER);
+      }
+    };
+    handle();
+    window.addEventListener("scroll", handle, { passive: true });
+    window.addEventListener("resize", handle, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handle);
+      window.removeEventListener("resize", handle);
+    };
+  }, []);
 
   const productGallery = buildProductGallery(product);
 
@@ -241,8 +280,13 @@ export default function ShopProductDetail({
   return (
     <div className={styles.container}>
       {/* Gallery */}
-      <div className={styles.galleryCol}>
-        <ProductGallery images={activeGallery} title={product.title} forcedIndex={forcedGalleryIndex} />
+      <div className={styles.galleryCol} ref={galleryColRef}>
+        <ProductGallery
+          images={activeGallery}
+          title={product.title}
+          forcedIndex={forcedGalleryIndex}
+          compact={compact}
+        />
       </div>
 
       {/* Details */}
@@ -327,7 +371,7 @@ export default function ShopProductDetail({
         )}
 
         {/* CTA buttons */}
-        <div className={styles.actions}>
+        <div className={styles.actions} ref={actionsRef}>
           {isUnavailable ? (
             <button className={`${styles.addToCartBtn} ${styles.addToCartWrap}`} disabled>
               {t.stockUnavailable}
@@ -382,6 +426,65 @@ export default function ShopProductDetail({
             <div className={styles.descBody} dangerouslySetInnerHTML={{ __html: product.description }} />
           </div>
         )}
+      </div>
+
+      {/* ── Sticky buy bar — mobile/tablet only ─────────────────────────────── */}
+      <div
+        className={`${styles.stickyBuyBar} ${showStickyBar ? styles.stickyBuyBarVisible : ""}`}
+        aria-hidden={!showStickyBar}
+      >
+        {/* Row 1: price + selected variant title + stock status */}
+        <div className={styles.stickyMeta}>
+          <span className={styles.stickyPrice}>€{centsToEuros(activePriceCents)}</span>
+          {activeCompare && activeCompare > activePriceCents && (
+            <span className={styles.stickyCompare}>€{centsToEuros(activeCompare)}</span>
+          )}
+          {(resolvedVariant?.title ?? selectedVariant?.title) && (
+            <span className={styles.stickyVariant}>
+              {resolvedVariant?.title ?? selectedVariant?.title}
+            </span>
+          )}
+          {resolveStatus === 'available' && (
+            <span className={`${styles.stickyStock} ${styles.stickyStockAvail}`}>
+              {t.stockAvailable}
+            </span>
+          )}
+          {resolveStatus === 'out_of_stock' && (
+            <span className={`${styles.stickyStock} ${styles.stickyStockOos}`}>
+              {t.stockOutOfStock}
+            </span>
+          )}
+        </div>
+
+        {/* Row 2: CTA buttons */}
+        <div className={styles.stickyActions}>
+          {isUnavailable || isOos ? (
+            <button className={styles.stickyFullBtn} disabled>
+              {isOos ? t.stockOutOfStock : t.stockUnavailable}
+            </button>
+          ) : activeId ? (
+            <>
+              <AddToCartButton
+                variantId={activeId}
+                initialQty={qty}
+                size="sm"
+                className={styles.stickyCartWrap}
+                selectedOptionValueIds={selectedOptionValueIds.length ? selectedOptionValueIds : undefined}
+              />
+              <button
+                onClick={handleBuyNow}
+                disabled={mutating || buyingNow || resolveStatus === 'loading'}
+                className={styles.stickyBuyBtn}
+              >
+                {buyingNow ? t.redirecting : t.buyNow}
+              </button>
+            </>
+          ) : (
+            <button className={styles.stickyFullBtn} disabled>
+              {t.addToCart}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
