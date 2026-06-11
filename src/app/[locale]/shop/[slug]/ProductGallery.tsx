@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Play, Maximize2 } from "lucide-react";
+import GalleryVideo from "./GalleryVideo";
 import styles from "./ProductGallery.module.css";
 
 export interface GalleryMediaItem {
@@ -161,14 +162,11 @@ export default function ProductGallery({ media, title, forcedIndex, compact }: P
             onKeyDown={active.type === "image" ? (e => { if (e.key === "Enter" || e.key === " ") setLightbox(true); }) : undefined}
           >
             {active.type === "video" ? (
-              <video
+              <GalleryVideo
                 key={active.url}
                 src={active.url}
-                poster={active.posterUrl ?? undefined}
-                controls
-                muted
-                playsInline
-                preload="metadata"
+                poster={active.posterUrl}
+                active={!fading && !lightbox}
                 className={styles.mainVideo}
               />
             ) : (
@@ -317,15 +315,13 @@ export default function ProductGallery({ media, title, forcedIndex, compact }: P
             onTouchEnd={active.type === "image" ? onTouchEnd : undefined}
           >
             {active.type === "video" ? (
-              <video
+              <GalleryVideo
                 key={active.url}
                 src={active.url}
-                poster={active.posterUrl ?? undefined}
-                controls
-                muted
-                playsInline
-                preload="metadata"
+                poster={active.posterUrl}
+                active={lightbox}
                 className={styles.lightboxVideo}
+                allowFullscreen
               />
             ) : (
               <Image
