@@ -18,7 +18,6 @@ export interface GalleryMediaItem {
 interface Props {
   media: GalleryMediaItem[];
   title: string;
-  forcedIndex?: number;
   /** Parent sets this true when the hero has been scrolled past — triggers the mini floating viewer */
   compact?: boolean;
 }
@@ -52,7 +51,7 @@ function MediaThumb({ item, sizes }: { item: GalleryMediaItem; sizes: string }) 
   return <Image src={item.url} alt="" fill sizes={sizes} className={styles.thumbImg} />;
 }
 
-export default function ProductGallery({ media, title, forcedIndex, compact }: Props) {
+export default function ProductGallery({ media, title, compact }: Props) {
   const [current, setCurrent] = useState(0);
   const [fading, setFading]   = useState(false);
   const [lightbox, setLightbox] = useState(false);
@@ -75,15 +74,15 @@ export default function ProductGallery({ media, title, forcedIndex, compact }: P
   const prev = useCallback(() => goTo((current - 1 + media.length) % media.length), [current, goTo, media.length]);
   const next = useCallback(() => goTo((current + 1) % media.length), [current, goTo, media.length]);
 
-  // Jump to the forced index when a variant option with an image swatch is selected.
+  // The parent always places the variant-specific hero image at index 0 when one
+  // applies. Snap back to it whenever it changes (e.g. a new variant/swatch is
+  // selected) — otherwise the previously-active index can point at an unrelated
+  // slide once the array contents shift around it.
+  const heroUrl = media[0]?.url;
   useEffect(() => {
-    if (forcedIndex !== undefined && forcedIndex >= 0 && forcedIndex < media.length && forcedIndex !== current) {
-      goTo(forcedIndex);
-    }
-  // goTo changes identity only when current/fading/media.length change, but we deliberately
-  // want to re-run only when forcedIndex changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [forcedIndex]);
+    setCurrent(0);
+    setFading(false);
+  }, [heroUrl]);
 
   // Scroll the thumbnail strip to keep the active thumb visible
   useEffect(() => {
@@ -126,7 +125,9 @@ export default function ProductGallery({ media, title, forcedIndex, compact }: P
   if (!media.length) return <div className={styles.placeholder} />;
 
   const hasMany = media.length > 1;
-  const active  = media[current];
+  // Defensive clamp — guards a stale index for one render if media shrinks
+  // before the reset effect above runs.
+  const active  = media[current] ?? media[0];
 
   return (
     <>

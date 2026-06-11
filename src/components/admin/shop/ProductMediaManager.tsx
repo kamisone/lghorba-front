@@ -27,6 +27,8 @@ export interface ResolvedProductMediaItem extends ProductMediaItem {
 interface Props {
   initialMedia: ResolvedProductMediaItem[];
   onChange:     (media: ProductMediaItem[]) => void;
+  /** Mirrors onChange but keeps resolved URLs — for callers that need to display these images elsewhere. */
+  onResolvedChange?: (media: ResolvedProductMediaItem[]) => void;
   maxItems?:    number;
   label?:       string;
 }
@@ -41,7 +43,7 @@ function strip(item: ResolvedProductMediaItem): ProductMediaItem {
   };
 }
 
-export default function ProductMediaManager({ initialMedia, onChange, maxItems = 12, label = "Product media" }: Props) {
+export default function ProductMediaManager({ initialMedia, onChange, onResolvedChange, maxItems = 12, label = "Product media" }: Props) {
   const [items, setItems]                       = useState<ResolvedProductMediaItem[]>(initialMedia);
   const [pickerOpen, setPickerOpen]             = useState(false);
   const [posterTargetIndex, setPosterTargetIndex] = useState<number | null>(null);
@@ -50,6 +52,7 @@ export default function ProductMediaManager({ initialMedia, onChange, maxItems =
   function notify(next: ResolvedProductMediaItem[]) {
     setItems(next);
     onChange(next.map(strip));
+    onResolvedChange?.(next);
   }
 
   function handleAddMulti(assets: MediaAsset[]) {

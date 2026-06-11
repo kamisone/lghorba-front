@@ -188,7 +188,7 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
                 {attr.optionValues.map(ov => {
                   const state = optionState(attr.id, ov.id);
                   const isImage = ov.swatchType === "image";
-                  const displayValue = isImage ? (ov.swatchUrl ?? ov.swatchValue) : ov.swatchValue;
+                  const displayValue = isImage ? ov.swatchUrl : ov.swatchValue;
                   const bgStyle = displayValue
                     ? { background: isImage
                           ? `url(${displayValue}) center/cover`

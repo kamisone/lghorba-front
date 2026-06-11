@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductMediaManager, { ProductMediaItem, ResolvedProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
+import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
-import { Pencil } from "lucide-react";
+import { Pencil, ImagePlus } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,12 @@ interface ProductAttr {
   sortOrder: number;
   defaultOptionValueId: string | null;
   attribute: VariantAttr;
+}
+
+interface OptionImage {
+  optionValueId: string;
+  mediaKey: string;
+  url: string | null;
 }
 
 interface DefaultVariant {
@@ -69,6 +76,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   // Media
   const [media, setMedia] = useState<ProductMediaItem[]>([]);
+  const [resolvedMedia, setResolvedMedia] = useState<ResolvedProductMediaItem[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Bilingual
@@ -81,6 +89,10 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [attrLinkDefaultId, setAttrLinkDefaultId] = useState("");
   const [attrLinking, setAttrLinking]   = useState(false);
 
+  // ── Per-product images for "image" swatch option values ────────────────────
+  const [optionImages, setOptionImages] = useState<OptionImage[]>([]);
+  const [optionImagePickerTarget, setOptionImagePickerTarget] = useState<string | null>(null);
+
   // ── Load ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -89,12 +101,15 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       fetch("/next-api/admin/shop/categories").then(r => r.ok ? r.json() : []),
       fetch("/next-api/admin/shop/variant-attributes").then(r => r.ok ? r.json() : []),
       fetch(`/next-api/shop/products/${params.id}/attributes`).then(r => r.ok ? r.json() : []),
-    ]).then(([p, cats, attrs, prodAttrs]) => {
+      fetch(`/next-api/shop/products/${params.id}/option-images`).then(r => r.ok ? r.json() : []),
+    ]).then(([p, cats, attrs, prodAttrs, optImages]) => {
       setProduct(p);
       setMedia(p.media ?? []);
+      setResolvedMedia(p.media ?? []);
       setCategories(Array.isArray(cats) ? cats : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
       setProductAttrs(Array.isArray(prodAttrs) ? prodAttrs : []);
+      setOptionImages(Array.isArray(optImages) ? optImages : []);
       setForm({
         title:             p.title,
         slug:              p.slug,
@@ -201,6 +216,34 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     }
   }
 
+  // ── Per-product option images ────────────────────────────────────────────
+
+  async function setOptionImage(optionValueId: string, mediaKey: string) {
+    const res = await fetch(`/next-api/shop/products/${params.id}/option-images/${optionValueId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mediaKey }),
+    });
+    if (res.ok) {
+      const saved: OptionImage = await res.json();
+      setOptionImages(prev => [...prev.filter(oi => oi.optionValueId !== optionValueId), saved]);
+      toast.success("Image updated");
+    } else {
+      toast.error("Failed to set image");
+    }
+    setOptionImagePickerTarget(null);
+  }
+
+  async function removeOptionImage(optionValueId: string) {
+    const res = await fetch(`/next-api/shop/products/${params.id}/option-images/${optionValueId}`, { method: "DELETE" });
+    if (res.ok) {
+      setOptionImages(prev => prev.filter(oi => oi.optionValueId !== optionValueId));
+      toast.success("Image removed");
+    } else {
+      toast.error("Failed to remove image");
+    }
+  }
+
   // ── Product save ──────────────────────────────────────────────────────────
 
   function toggleCategory(id: string) {
@@ -245,6 +288,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt']);
       setProduct(p);
       setMedia(p.media ?? []);
+      setResolvedMedia(p.media ?? []);
       toast.success("Changes saved");
     }
     setSaving(false);
@@ -380,7 +424,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 <span className={styles.sectionTitle}>Media</span>
               </div>
               <div className={styles.sectionBody}>
-                <ProductMediaManager initialMedia={product.media ?? []} onChange={setMedia} />
+                <ProductMediaManager initialMedia={product.media ?? []} onChange={setMedia} onResolvedChange={setResolvedMedia} />
               </div>
             </div>
 
@@ -455,31 +499,80 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
                             {activeOvs.length === 0 ? (
                               <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>No option values defined</span>
-                            ) : activeOvs.map(ov => (
-                              <span key={ov.id} style={{
-                                display: "inline-flex", alignItems: "center", gap: 6,
-                                fontSize: 12, fontWeight: 500,
-                                background: "#fff",
-                                border: pa.defaultOptionValueId === ov.id
-                                  ? "2px solid var(--color-admin-secondary)"
-                                  : "1px solid var(--color-border)",
-                                borderRadius: 6, padding: "3px 10px",
-                                color: "var(--color-text-primary)",
-                              }}>
-                                {ov.swatchValue && ov.swatchType === "color" && (
-                                  <span style={{
-                                    width: 12, height: 12, borderRadius: "50%",
-                                    background: ov.swatchValue,
-                                    border: "1px solid rgba(0,0,0,.15)",
-                                    flexShrink: 0,
-                                  }} />
-                                )}
-                                {ov.displayValue ?? ov.value}
-                                {pa.defaultOptionValueId === ov.id && (
-                                  <span style={{ fontSize: 10, color: "var(--color-admin-secondary)", fontWeight: 700 }}>default</span>
-                                )}
-                              </span>
-                            ))}
+                            ) : activeOvs.map(ov => {
+                              const optImg = ov.swatchType === "image"
+                                ? optionImages.find(oi => oi.optionValueId === ov.id)
+                                : undefined;
+                              return (
+                                <span key={ov.id} style={{
+                                  display: "inline-flex", alignItems: "center", gap: 6,
+                                  fontSize: 12, fontWeight: 500,
+                                  background: "#fff",
+                                  border: pa.defaultOptionValueId === ov.id
+                                    ? "2px solid var(--color-admin-secondary)"
+                                    : "1px solid var(--color-border)",
+                                  borderRadius: 6, padding: "3px 10px",
+                                  color: "var(--color-text-primary)",
+                                }}>
+                                  {ov.swatchValue && ov.swatchType === "color" && (
+                                    <span style={{
+                                      width: 12, height: 12, borderRadius: "50%",
+                                      background: ov.swatchValue,
+                                      border: "1px solid rgba(0,0,0,.15)",
+                                      flexShrink: 0,
+                                    }} />
+                                  )}
+                                  {ov.swatchType === "image" && (
+                                    <span style={{
+                                      width: 20, height: 20, borderRadius: 4,
+                                      overflow: "hidden", flexShrink: 0,
+                                      background: "var(--color-surface-raised)",
+                                      border: "1px solid var(--color-border)",
+                                      display: "flex", alignItems: "center", justifyContent: "center",
+                                    }}>
+                                      {optImg?.url ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={optImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                      ) : (
+                                        <ImagePlus size={11} strokeWidth={1.75} style={{ color: "var(--color-text-muted)" }} />
+                                      )}
+                                    </span>
+                                  )}
+                                  {ov.displayValue ?? ov.value}
+                                  {pa.defaultOptionValueId === ov.id && (
+                                    <span style={{ fontSize: 10, color: "var(--color-admin-secondary)", fontWeight: 700 }}>default</span>
+                                  )}
+                                  {ov.swatchType === "image" && (
+                                    <span style={{ display: "inline-flex", gap: 4 }}>
+                                      <button
+                                        type="button"
+                                        onClick={() => setOptionImagePickerTarget(ov.id)}
+                                        style={{
+                                          fontSize: 10, fontWeight: 600,
+                                          color: "var(--color-admin-secondary)",
+                                          background: "none", border: "none", cursor: "pointer", padding: 0,
+                                        }}
+                                      >
+                                        {optImg ? "Change" : "Set image"}
+                                      </button>
+                                      {optImg && (
+                                        <button
+                                          type="button"
+                                          onClick={() => removeOptionImage(ov.id)}
+                                          style={{
+                                            fontSize: 10, fontWeight: 600,
+                                            color: "var(--color-error)",
+                                            background: "none", border: "none", cursor: "pointer", padding: 0,
+                                          }}
+                                        >
+                                          Remove
+                                        </button>
+                                      )}
+                                    </span>
+                                  )}
+                                </span>
+                              );
+                            })}
                           </div>
 
                           {/* Default option picker */}
@@ -644,6 +737,14 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           </div>
         </div>
       </form>
+
+      <ProductImagePicker
+        open={optionImagePickerTarget !== null}
+        onClose={() => setOptionImagePickerTarget(null)}
+        images={resolvedMedia.filter(m => m.type === "image")}
+        onSelect={item => setOptionImage(optionImagePickerTarget!, item.key)}
+        title="Select option image"
+      />
     </div>
   );
 }

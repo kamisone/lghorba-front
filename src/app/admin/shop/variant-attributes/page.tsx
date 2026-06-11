@@ -1,19 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import styles from "./VariantAttributes.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 import { slugify } from "@/lib/slugify";
 import { X, ChevronDown } from "lucide-react";
-
-interface ProductImage {
-  key: string;
-  url: string;
-  productId: string;
-  productTitle: string;
-}
 
 interface OptionValue {
   id: string;
@@ -29,6 +21,7 @@ interface VariantAttribute {
   id: string;
   name: string;
   slug: string;
+  adminLabel: string | null;
   displayType: "swatch" | "button" | "dropdown";
   sortOrder: number;
   isActive: boolean;
@@ -36,7 +29,7 @@ interface VariantAttribute {
 }
 
 interface AttrForm {
-  name: string; nameEn: string; slug: string;
+  name: string; nameEn: string; slug: string; adminLabel: string;
   displayType: "swatch" | "button" | "dropdown";
   sortOrder: number; isActive: boolean;
 }
@@ -47,7 +40,7 @@ interface ValueForm {
   sortOrder: number; isActive: boolean;
 }
 
-const ATTR_EMPTY: AttrForm  = { name: "", nameEn: "", slug: "", displayType: "button", sortOrder: 0, isActive: true };
+const ATTR_EMPTY: AttrForm  = { name: "", nameEn: "", slug: "", adminLabel: "", displayType: "button", sortOrder: 0, isActive: true };
 const VALUE_EMPTY: ValueForm = { value: "", displayValue: "", displayValueEn: "", swatchValue: "", swatchType: "", sortOrder: 0, isActive: true };
 
 
@@ -76,11 +69,6 @@ export default function VariantAttributesPage() {
   const [valAttrId, setValAttrId]   = useState<string | null>(null);
   const [valSaving, setValSaving]   = useState(false);
 
-  const [imgPickerOpen, setImgPickerOpen]   = useState(false);
-  const [productImages, setProductImages]   = useState<ProductImage[]>([]);
-  const [imgPickerLoading, setImgPickerLoading] = useState(false);
-  const [imgPickerSearch, setImgPickerSearch]   = useState("");
-
   const attrTranslations = useEntityTranslations("shop_variant_attribute", attrEditId);
   const valTranslations  = useEntityTranslations("shop_variation_option",  valEditId);
 
@@ -92,18 +80,6 @@ export default function VariantAttributesPage() {
     } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
-
-  async function openImagePicker() {
-    setImgPickerOpen(true);
-    if (productImages.length) return;
-    setImgPickerLoading(true);
-    try {
-      const res = await fetch("/next-api/shop/products/images");
-      if (res.ok) setProductImages(await res.json());
-    } finally {
-      setImgPickerLoading(false);
-    }
-  }
 
   // Sync EN translations into form fields once the hook loads them
   useEffect(() => {
@@ -123,14 +99,14 @@ export default function VariantAttributesPage() {
   function openAttrCreate() { setAttrForm(ATTR_EMPTY); setAttrEditId(null); setAttrModal("create"); }
   function openAttrEdit(a: VariantAttribute) {
     setAttrEditId(a.id);
-    setAttrForm({ name: a.name, nameEn: "", slug: a.slug, displayType: a.displayType, sortOrder: a.sortOrder, isActive: a.isActive });
+    setAttrForm({ name: a.name, nameEn: "", slug: a.slug, adminLabel: a.adminLabel ?? "", displayType: a.displayType, sortOrder: a.sortOrder, isActive: a.isActive });
     setAttrModal("edit");
   }
 
   async function saveAttr() {
     setAttrSaving(true);
     const { nameEn, ...rest } = attrForm;
-    const body = { ...rest, slug: attrForm.slug || slugify(attrForm.name) };
+    const body = { ...rest, slug: attrForm.slug || slugify(attrForm.name), adminLabel: attrForm.adminLabel.trim() || null };
     const url    = attrModal === "create" ? "/next-api/admin/shop/variant-attributes" : `/next-api/admin/shop/variant-attributes/${attrEditId}`;
     const method = attrModal === "create" ? "POST" : "PATCH";
     const res    = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -150,10 +126,16 @@ export default function VariantAttributesPage() {
         await fetch(`/next-api/translations/entry/${attrTranslations.enIds["name"]}`, { method: "DELETE" });
       }
       toast.success(attrModal === "create" ? "Attribute created" : "Attribute updated");
+      setAttrModal(null); load();
     } else {
-      toast.error("Failed to save attribute");
+      let msg = "Failed to save attribute";
+      try {
+        const err = await res.json();
+        if (err?.message) msg = Array.isArray(err.message) ? err.message.join(", ") : err.message;
+      } catch { /* ignore non-JSON error body */ }
+      toast.error(msg);
     }
-    setAttrSaving(false); setAttrModal(null); load();
+    setAttrSaving(false);
   }
 
   async function deleteAttr(id: string) {
@@ -164,25 +146,12 @@ export default function VariantAttributesPage() {
     load();
   }
 
-  async function prefetchImages() {
-    if (productImages.length) return;
-    setImgPickerLoading(true);
-    try {
-      const res = await fetch("/next-api/shop/products/images");
-      if (res.ok) setProductImages(await res.json());
-    } finally {
-      setImgPickerLoading(false);
-    }
-  }
-
   function openValCreate(attributeId: string) { setValForm(VALUE_EMPTY); setValEditId(null); setValAttrId(attributeId); setValModal("create"); }
   function openValEdit(v: OptionValue, attributeId: string) {
     setValEditId(v.id);
     const form: ValueForm = { value: v.value, displayValue: v.displayValue ?? "", displayValueEn: "", swatchValue: v.swatchValue ?? "", swatchType: (v.swatchType ?? "") as ValueForm["swatchType"], sortOrder: v.sortOrder, isActive: v.isActive };
     setValForm(form);
     setValAttrId(attributeId); setValModal("edit");
-    // Pre-load images so the preview works immediately when swatchType is image
-    if (v.swatchType === "image") prefetchImages();
   }
 
   async function saveVal() {
@@ -286,6 +255,7 @@ export default function VariantAttributesPage() {
                       <div className={styles.attrName} onClick={() => setExpanded(e => e === a.id ? null : a.id)}>
                         {a.name}
                       </div>
+                      {a.adminLabel && <div className={styles.attrAdminLabel}>{a.adminLabel}</div>}
                     </td>
                     <td><span className={styles.attrSlug}>{a.slug}</span></td>
                     <td>
@@ -409,6 +379,14 @@ export default function VariantAttributesPage() {
                   <input value={attrForm.slug} onChange={e => setAttrForm(f => ({ ...f, slug: e.target.value }))} placeholder="auto-generated" />
                 </div>
                 <div className={styles.formField}>
+                  <label>Internal label <span style={{ textTransform: "none", fontWeight: 400, letterSpacing: 0 }}>(admin only, optional)</span></label>
+                  <input
+                    value={attrForm.adminLabel}
+                    onChange={e => setAttrForm(f => ({ ...f, adminLabel: e.target.value }))}
+                    placeholder="e.g. Couleur (T-shirts)"
+                  />
+                </div>
+                <div className={styles.formField}>
                   <label>Display type</label>
                   <select value={attrForm.displayType} onChange={e => setAttrForm(f => ({ ...f, displayType: e.target.value as AttrForm["displayType"] }))}>
                     <option value="button">Button</option>
@@ -434,56 +412,6 @@ export default function VariantAttributesPage() {
               <button className={styles.saveBtn} disabled={attrSaving || !attrForm.name} onClick={saveAttr}>
                 {attrSaving ? "Saving…" : attrModal === "create" ? "Create Attribute" : "Save Changes"}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Image picker modal ── */}
-      {imgPickerOpen && (
-        <div className={styles.imgPickerOverlay} onClick={e => { if (e.target === e.currentTarget) setImgPickerOpen(false); }}>
-          <div className={`${styles.modal} ${styles.imgPickerModal}`}>
-            <div className={styles.modalHead}>
-              <h2 className={styles.modalTitle}>Pick a product image</h2>
-              <button className={styles.modalClose} onClick={() => setImgPickerOpen(false)}><X size={14} strokeWidth={2} /></button>
-            </div>
-            <div className={styles.imgPickerSearch}>
-              <input
-                value={imgPickerSearch}
-                onChange={e => setImgPickerSearch(e.target.value)}
-                placeholder="Filter by product name…"
-                className={styles.imgPickerSearchInput}
-              />
-            </div>
-            <div className={styles.imgPickerBody}>
-              {imgPickerLoading ? (
-                <div className={styles.imgPickerEmpty}>Loading images…</div>
-              ) : productImages.length === 0 ? (
-                <div className={styles.imgPickerEmpty}>No product images found. Add images to your products first.</div>
-              ) : (
-                <div className={styles.imgPickerGrid}>
-                  {productImages
-                    .filter(img => !imgPickerSearch || img.productTitle.toLowerCase().includes(imgPickerSearch.toLowerCase()))
-                    .map(img => (
-                      <button
-                        key={img.key}
-                        type="button"
-                        className={`${styles.imgPickerItem} ${valForm.swatchValue === img.key ? styles.imgPickerItemSelected : ""}`}
-                        onClick={() => {
-                          setValForm(f => ({ ...f, swatchValue: img.key }));
-                          setImgPickerOpen(false);
-                        }}
-                        title={img.productTitle}
-                      >
-                        <div className={styles.imgPickerThumb}>
-                          <Image src={img.url} alt={img.productTitle} fill sizes="100px" className={styles.imgPickerThumbImg} unoptimized />
-                        </div>
-                        <span className={styles.imgPickerLabel}>{img.productTitle}</span>
-                      </button>
-                    ))
-                  }
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -520,7 +448,6 @@ export default function VariantAttributesPage() {
                     onChange={e => {
                       const t = e.target.value as ValueForm["swatchType"];
                       setValForm(f => ({ ...f, swatchType: t, swatchValue: "" }));
-                      if (t === "image") prefetchImages();
                     }}
                   >
                     <option value="">None</option>
@@ -546,36 +473,9 @@ export default function VariantAttributesPage() {
                       />
                     </div>
                   ) : valForm.swatchType === "image" ? (
-                    <div className={styles.swatchImagePicker}>
-                      {valForm.swatchValue && (
-                        <div className={styles.swatchImagePreview}>
-                          <Image
-                            src={productImages.find(img => img.key === valForm.swatchValue)?.url ?? ""}
-                            alt="Selected swatch"
-                            fill
-                            sizes="80px"
-                            className={styles.swatchImagePreviewImg}
-                            unoptimized
-                          />
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        className={`${styles.actionBtn} ${styles.actionEdit}`}
-                        onClick={openImagePicker}
-                      >
-                        {valForm.swatchValue ? "Change image" : "Pick image"}
-                      </button>
-                      {valForm.swatchValue && (
-                        <button
-                          type="button"
-                          className={`${styles.actionBtn} ${styles.actionDelete}`}
-                          onClick={() => setValForm(f => ({ ...f, swatchValue: "" }))}
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
+                    <p className={styles.swatchImageHint}>
+                      Image is set per product when linking this variation.
+                    </p>
                   ) : (
                     <input
                       value={valForm.swatchValue}

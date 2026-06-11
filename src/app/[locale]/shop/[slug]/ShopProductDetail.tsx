@@ -209,37 +209,28 @@ export default function ShopProductDetail({
 
   const selectedOptionValueIds = selectedVariant?.optionValueIds ?? [];
 
-  // Prepend variant-specific hero image to gallery when resolved.
+  // Prepend the variant-specific hero image to the gallery, always at index 0,
+  // so ProductGallery can reliably snap to it on selection change. selectedVariant
+  // (synchronous, from the availability matrix) takes priority over resolvedVariant
+  // (async /resolve call) — the latter lags one tick behind a fresh selection and
+  // would otherwise show the previous variant's image until it resolves. Falls
+  // back to the selected option value's per-product swatch image (e.g. Color →
+  // Red) when the variant itself has no dedicated featured media.
   const activeGallery = useMemo(() => {
-    const variantUrl = resolvedVariant?.featuredMediaUrl ?? selectedVariant?.featuredMediaUrl ?? null;
-    if (variantUrl && !productGallery.some(m => m.url === variantUrl)) {
-      return [{ type: "image" as const, url: variantUrl, posterUrl: null }, ...productGallery];
-    }
-    return productGallery;
-  }, [resolvedVariant, selectedVariant, productGallery]);
+    let heroUrl = selectedVariant?.featuredMediaUrl ?? resolvedVariant?.featuredMediaUrl ?? null;
 
-  // When a selected option value has an image swatch, jump to the matching gallery image.
-  const forcedGalleryIndex = useMemo(() => {
-    if (!availabilityMatrix || !selectedOptionValueIds.length) return undefined;
-    // Build a map from GCS key → resolved URL using the product's own image-type media.
-    const keyToUrl = new Map<string, string>();
-    for (const m of product.media ?? []) {
-      if (m.type === "image" && m.url) keyToUrl.set(m.key, m.url);
-    }
-
-    for (const attr of availabilityMatrix.attributes) {
-      for (const ov of attr.optionValues) {
-        if (ov.swatchType === "image" && ov.swatchValue && selectedOptionValueIds.includes(ov.id)) {
-          const targetUrl = keyToUrl.get(ov.swatchValue);
-          if (targetUrl) {
-            const idx = activeGallery.findIndex(m => m.url === targetUrl);
-            if (idx >= 0) return idx;
-          }
-        }
+    if (!heroUrl && availabilityMatrix && selectedOptionValueIds.length) {
+      for (const attr of availabilityMatrix.attributes) {
+        const ov = attr.optionValues.find(o => o.swatchType === "image" && o.swatchUrl && selectedOptionValueIds.includes(o.id));
+        if (ov) { heroUrl = ov.swatchUrl; break; }
       }
     }
-    return undefined;
-  }, [selectedOptionValueIds, availabilityMatrix, product, activeGallery]);
+
+    if (!heroUrl) return productGallery;
+
+    const rest = productGallery.filter(m => m.url !== heroUrl);
+    return [{ type: "image" as const, url: heroUrl, posterUrl: null }, ...rest];
+  }, [resolvedVariant, selectedVariant, productGallery, availabilityMatrix, selectedOptionValueIds]);
 
   const wishlisted = isWishlisted(product.id);
   const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
@@ -347,7 +338,6 @@ export default function ShopProductDetail({
         <ProductGallery
           media={activeGallery}
           title={product.title}
-          forcedIndex={forcedGalleryIndex}
           compact={compact}
         />
       </div>
