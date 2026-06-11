@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LOCALES, DEFAULT_LOCALE, type Locale } from "@/lib/i18n";
-
-const COOKIE_NAME = "vitecamion_auth";
+import { ACCESS_COOKIE, REFRESH_COOKIE, type SessionResult } from "@/lib/auth/session";
+import { resolveSessionFromOrigin } from "@/lib/auth/middleware-session";
+import { setAuthCookies, clearAuthCookies } from "@/lib/auth/cookies";
 
 function detectLocale(request: NextRequest): Locale {
   const saved = request.cookies.get("vitecamion_locale")?.value as Locale | undefined;
@@ -11,13 +12,42 @@ function detectLocale(request: NextRequest): Locale {
   return DEFAULT_LOCALE;
 }
 
-export function middleware(request: NextRequest) {
+/**
+ * Resolves the admin session for this request. If refresh-token rotation
+ * happened, the new tokens are written into `request.cookies` so downstream
+ * handlers (server components, route handlers via `cookies()`) see the
+ * fresh access token for *this* request — the response cookies are applied
+ * separately via `applySessionCookies` so the browser gets them too.
+ */
+async function resolveAndPropagate(request: NextRequest): Promise<SessionResult> {
+  const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
+  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
+  const session = await resolveSessionFromOrigin(accessToken, refreshToken, request.nextUrl.origin);
+
+  if (session.rotated) {
+    request.cookies.set(ACCESS_COOKIE, session.rotated.access_token);
+    request.cookies.set(REFRESH_COOKIE, session.rotated.refresh_token);
+  }
+
+  return session;
+}
+
+function applySessionCookies(response: NextResponse, session: SessionResult): NextResponse {
+  if (session.rotated) setAuthCookies(response, session.rotated);
+  else if (session.expired) clearAuthCookies(response);
+  return response;
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ── API routes ────────────────────────────────────────────────────────────
   if (pathname.startsWith("/next-api/")) {
     // Public API — no auth required
     if (pathname.startsWith("/next-api/public/")) return NextResponse.next();
+    // Auth endpoints must stay reachable without a valid session
+    if (pathname.startsWith("/next-api/auth")) return NextResponse.next();
+
     // Protected API
     const isProtected =
       pathname.startsWith("/next-api/sms/") ||
@@ -32,21 +62,24 @@ export function middleware(request: NextRequest) {
       (pathname === "/next-api/contacts" && request.method !== "POST") ||
       pathname.startsWith("/next-api/translations/");
     if (!isProtected) return NextResponse.next();
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-    if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    return NextResponse.next();
+
+    const session = await resolveAndPropagate(request);
+    if (!session.accessToken) {
+      return applySessionCookies(NextResponse.json({ error: "unauthorized" }, { status: 401 }), session);
+    }
+    return applySessionCookies(NextResponse.next({ request: { headers: request.headers } }), session);
   }
 
-  // ── Admin pages: require admin auth cookie ───────────────────────────────
+  // ── Admin pages: require a session, recovering via refresh if needed ──────
   if (pathname.startsWith("/admin")) {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-    if (!token) {
+    const session = await resolveAndPropagate(request);
+    if (!session.accessToken) {
       const locale = detectLocale(request);
       const loginUrl = new URL(`/${locale}/login`, request.url);
       loginUrl.searchParams.set("from", pathname);
-      return NextResponse.redirect(loginUrl);
+      return applySessionCookies(NextResponse.redirect(loginUrl), session);
     }
-    return NextResponse.next();
+    return applySessionCookies(NextResponse.next({ request: { headers: request.headers } }), session);
   }
 
   // ── Vendor portal: require vendor auth cookie ─────────────────────────────
@@ -75,6 +108,20 @@ export function middleware(request: NextRequest) {
   }
 
   const locale = pathname.split("/")[1] as Locale;
+
+  // ── Login page: a user with a recoverable session must never see it ──────
+  if (pathname === `/${locale}/login`) {
+    const session = await resolveAndPropagate(request);
+    if (session.accessToken) {
+      const fromParam = request.nextUrl.searchParams.get("from");
+      const target = fromParam && fromParam.startsWith("/") && !fromParam.startsWith("//") ? fromParam : "/admin";
+      return applySessionCookies(NextResponse.redirect(new URL(target, request.url)), session);
+    }
+    const res = applySessionCookies(NextResponse.next(), session);
+    res.headers.set("x-locale", locale);
+    return res;
+  }
+
   const res = NextResponse.next();
   res.headers.set("x-locale", locale);
   return res;

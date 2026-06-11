@@ -1,82 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { REFRESH_COOKIE, rotateTokens } from "@/lib/auth/session";
+import { setAuthCookies, clearAuthCookies } from "@/lib/auth/cookies";
 
-const BACKEND_URL    = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
-const ACCESS_COOKIE  = "vitecamion_auth";
-const REFRESH_COOKIE = "vitecamion_refresh";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 5;
-
-const cookieOpts = (secure: boolean) => ({
-  httpOnly:  true,
-  secure,
-  sameSite: "strict" as const,
-  path:     "/",
-  maxAge:   COOKIE_MAX_AGE,
-});
+const BACKEND_URL = process.env.API_BASE_URL_SERVER || "http://127.0.0.1:4000";
 
 /**
- * GET — server-side redirect flow used by the login page.
- * Attempts to refresh the access token and redirects to ?to= on success,
- * or back to /login (with the stale refresh cookie cleared) on failure.
+ * Client-side refresh fallback used by TokenRefresher when a backend 401
+ * isn't explained by an expired access-token JWT (middleware already
+ * recovers that case transparently). Rotates the refresh token like every
+ * other path: new access + refresh tokens, previous refresh token revoked.
  */
-export async function GET(request: NextRequest) {
-  const rawTo = request.nextUrl.searchParams.get("to") ?? "/admin";
-  // Guard against open-redirect
-  const to    = rawTo.startsWith("/") && !rawTo.startsWith("//") ? rawTo : "/admin";
-
-  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
-  if (!refreshToken) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  let res: Response;
-  try {
-    res = await fetch(`${BACKEND_URL}/auth/refresh`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ refresh_token: refreshToken }),
-    });
-  } catch {
-    // Backend unreachable — don't delete the refresh token, it may still be valid
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  if (!res.ok) {
-    // Token rejected by the backend — clear it so login page doesn't loop
-    const r = NextResponse.redirect(new URL("/login", request.url));
-    r.cookies.delete(REFRESH_COOKIE);
-    return r;
-  }
-
-  const { access_token } = await res.json();
-  const secure   = process.env.NODE_ENV === "production";
-  const response = NextResponse.redirect(new URL(to, request.url));
-  response.cookies.set(ACCESS_COOKIE, access_token, cookieOpts(secure));
-  return response;
-}
-
 export async function POST(request: NextRequest) {
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   if (!refreshToken) {
     return NextResponse.json({ error: "no_refresh_token" }, { status: 401 });
   }
 
-  let res: Response;
-  try {
-    res = await fetch(`${BACKEND_URL}/auth/refresh`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ refresh_token: refreshToken }),
-    });
-  } catch {
-    return NextResponse.json({ error: "backend_unreachable" }, { status: 502 });
+  const rotated = await rotateTokens(refreshToken, BACKEND_URL);
+  if (!rotated) {
+    const response = NextResponse.json({ error: "refresh_failed" }, { status: 401 });
+    clearAuthCookies(response);
+    return response;
   }
 
-  if (!res.ok) {
-    return NextResponse.json({ error: "refresh_failed" }, { status: 401 });
-  }
-
-  const { access_token } = await res.json();
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(ACCESS_COOKIE, access_token, cookieOpts(process.env.NODE_ENV === "production"));
+  setAuthCookies(response, rotated);
   return response;
 }
