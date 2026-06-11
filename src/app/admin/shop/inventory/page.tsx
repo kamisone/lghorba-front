@@ -30,6 +30,7 @@ interface InventoryItem {
   productStatus: string;
   available: number;
   reserved: number;
+  committed: number;
   incoming: number;
   lowStockThreshold: number;
   updatedAt: string;
@@ -42,6 +43,7 @@ interface Movement {
   delta: number;
   availableAfter: number;
   reservedAfter: number;
+  committedAfter: number;
   note: string | null;
   createdAt: string;
 }
@@ -69,6 +71,8 @@ function movementIcon(type: string) {
   const map: Record<string, string> = {
     order_placed:    "↓",
     order_cancelled: "↑",
+    order_paid:      "→",
+    order_refunded:  "↑",
     order_shipped:   "↓",
     manual_adjustment: "✎",
     restock:         "↑",
@@ -141,6 +145,8 @@ export default function AdminInventoryPage() {
 
   const kpi = useMemo(() => ({
     total:      items.reduce((s, i) => s + i.available, 0),
+    reserved:   items.reduce((s, i) => s + i.reserved, 0),
+    committed:  items.reduce((s, i) => s + i.committed, 0),
     inStock:    items.filter(i => i.status === "in_stock").length,
     lowStock:   items.filter(i => i.status === "low_stock").length,
     outOfStock: items.filter(i => i.status === "out_of_stock").length,
@@ -266,13 +272,15 @@ export default function AdminInventoryPage() {
       {/* ── KPI strip ── */}
       <div className={styles.kpiStrip}>
         {[
-          { label: "Total units",   value: kpi.total.toLocaleString(), cls: "" },
+          { label: "Available units", value: kpi.total.toLocaleString(),     cls: "", title: "Sellable stock — not held by any order" },
+          { label: "Reserved (unpaid)", value: kpi.reserved.toLocaleString(), cls: "", title: "Held for unpaid orders — released back to Available after the 15-minute checkout window expires" },
+          { label: "Committed (paid)", value: kpi.committed.toLocaleString(), cls: "", title: "Allocated to paid orders awaiting fulfillment — deducted permanently on shipment" },
           { label: "In stock",      value: kpi.inStock,      cls: "" },
           { label: "Low stock",     value: kpi.lowStock,     cls: kpi.lowStock > 0   ? styles.kpiWarn   : "" },
           { label: "Out of stock",  value: kpi.outOfStock,   cls: kpi.outOfStock > 0 ? styles.kpiDanger : "" },
           { label: "Total SKUs",    value: kpi.skus,         cls: "" },
         ].map(k => (
-          <div key={k.label} className={styles.kpiCard}>
+          <div key={k.label} className={styles.kpiCard} title={k.title}>
             <span className={styles.kpiLabel}>{k.label}</span>
             <span className={`${styles.kpiValue} ${k.cls}`}>{k.value}</span>
           </div>
@@ -349,8 +357,9 @@ export default function AdminInventoryPage() {
               <th>Variant</th>
               <th>Options</th>
               <th style={{ width: 80 }}>Price</th>
-              <th style={{ width: 70 }}>Available</th>
-              <th style={{ width: 70 }}>Reserved</th>
+              <th style={{ width: 70 }} title="Sellable stock — not held by any order">Available</th>
+              <th style={{ width: 80 }} title="Held for unpaid orders — released back to Available after the 15-minute checkout window expires">Reserved</th>
+              <th style={{ width: 80 }} title="Allocated to paid orders awaiting fulfillment — deducted permanently on shipment">Committed</th>
               <th style={{ width: 70 }}>Incoming</th>
               <th style={{ width: 110 }}>Status</th>
               <th style={{ width: 80 }}>Threshold</th>
@@ -362,14 +371,14 @@ export default function AdminInventoryPage() {
             {loading ? (
               Array.from({ length: 8 }, (_, i) => (
                 <tr key={i}>
-                  {Array.from({ length: 13 }, (__, j) => (
+                  {Array.from({ length: 14 }, (__, j) => (
                     <td key={j}><span className={styles.skeleton} style={{ width: j === 2 ? 140 : 60, height: 13, display: "block" }} /></td>
                   ))}
                 </tr>
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={13}>
+                <td colSpan={14}>
                   <div className={styles.empty}>
                     <span>📦</span>
                     <span>{search || statusFilt !== "all" || productFilt ? "No results match your filters" : "No inventory yet"}</span>
@@ -424,7 +433,8 @@ export default function AdminInventoryPage() {
                       {item.available}
                     </span>
                   </td>
-                  <td><span className={styles.muted}>{item.reserved}</span></td>
+                  <td><span className={styles.muted} title="Held for unpaid orders (15-min checkout window)">{item.reserved}</span></td>
+                  <td><span className={styles.committed} title="Allocated to paid orders awaiting fulfillment">{item.committed}</span></td>
                   <td><span className={styles.incoming}>{item.incoming > 0 ? `+${item.incoming}` : "–"}</span></td>
                   <td>
                     <span className={`${styles.badge} ${statusStyleClass(item.status, styles)}`}>
@@ -565,7 +575,11 @@ export default function AdminInventoryPage() {
               ) : (
                 <table className={styles.mvTable}>
                   <thead>
-                    <tr><th>Date</th><th>Type</th><th>Delta</th><th>Available after</th><th>Note</th></tr>
+                    <tr>
+                      <th>Date</th><th>Type</th><th>Delta</th>
+                      <th>Available after</th><th>Reserved after</th><th>Committed after</th>
+                      <th>Note</th>
+                    </tr>
                   </thead>
                   <tbody>
                     {movements.data.map(m => (
@@ -574,6 +588,8 @@ export default function AdminInventoryPage() {
                         <td><span className={styles.mvType}>{movementIcon(m.type)} {m.type.replace(/_/g, " ")}</span></td>
                         <td><span className={m.delta >= 0 ? styles.mvPos : styles.mvNeg}>{m.delta >= 0 ? `+${m.delta}` : m.delta}</span></td>
                         <td>{m.availableAfter}</td>
+                        <td className={styles.muted}>{m.reservedAfter}</td>
+                        <td className={styles.committed}>{m.committedAfter}</td>
                         <td className={styles.muted}>{m.note ?? "—"}</td>
                       </tr>
                     ))}
