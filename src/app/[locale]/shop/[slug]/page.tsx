@@ -133,6 +133,18 @@ export default async function ProductPage({ params, searchParams }: Props) {
     } : undefined,
   };
 
+  // FAQPage JSON-LD — backend already filters to active, non-empty FAQs
+  const faqs: Array<{ question: string; answer: string }> = product.faqs ?? [];
+  const faqJsonLd = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map(f => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: { "@type": "Answer", text: f.answer },
+    })),
+  } : null;
+
   const fbt     = recommendations.frequentlyBoughtTogether ?? [];
   const similar = recommendations.similar ?? [];
 
@@ -141,6 +153,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
       <Script id="product-jsonld" type="application/ld+json">
         {JSON.stringify(jsonLd)}
       </Script>
+      {faqJsonLd && (
+        <Script id="product-faq-jsonld" type="application/ld+json">
+          {JSON.stringify(faqJsonLd)}
+        </Script>
+      )}
       <ShopProductDetail
         product={product}
         reviewStats={reviewStats}

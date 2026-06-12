@@ -5,6 +5,7 @@ import Link from "next/link";
 import ProductMediaManager, { ProductMediaItem, ResolvedProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
 import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
 import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
+import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
 import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
@@ -54,6 +55,7 @@ interface Product {
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
   trustBadges: ProductTrustBadge[];
+  faqs: ProductFaq[];
   primaryCategoryId: string | null;
   categories: Array<{ id: string; name: string }>;
   variants: DefaultVariant[];
@@ -83,6 +85,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [resolvedMedia, setResolvedMedia] = useState<ResolvedProductMediaItem[]>([]);
   const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
   const [trustBadges, setTrustBadges] = useState<ProductTrustBadge[]>([]);
+  const [faqs, setFaqs] = useState<ProductFaq[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Bilingual
@@ -114,6 +117,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setResolvedMedia(p.media ?? []);
       setInfoSections(p.infoSections ?? []);
       setTrustBadges(p.trustBadges ?? []);
+      setFaqs(p.faqs ?? []);
       setCategories(Array.isArray(cats) ? cats : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
       setProductAttrs(Array.isArray(prodAttrs) ? prodAttrs : []);
@@ -285,6 +289,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         media,
         infoSections,
         trustBadges,
+        faqs,
         ...(priceCents !== undefined ? { priceCents } : {}),
         compareAtPriceCents,
       }),
@@ -297,12 +302,14 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       const p: Product = await res.json();
       const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
       const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:label`]);
-      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields]);
+      const faqFields = faqs.flatMap(f => [`faq:${f.id}:question`, `faq:${f.id}:answer`]);
+      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields]);
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
       setInfoSections(p.infoSections ?? []);
       setTrustBadges(p.trustBadges ?? []);
+      setFaqs(p.faqs ?? []);
       toast.success("Changes saved");
     }
     setSaving(false);
@@ -461,6 +468,17 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               </div>
               <div className={styles.sectionBody}>
                 <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
+              </div>
+            </div>
+
+            {/* FAQs */}
+            <div className={styles.section}>
+              <div className={styles.sectionHead}>
+                <span className={styles.sectionIcon}>❓</span>
+                <span className={styles.sectionTitle}>FAQs</span>
+              </div>
+              <div className={styles.sectionBody}>
+                <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
               </div>
             </div>
 

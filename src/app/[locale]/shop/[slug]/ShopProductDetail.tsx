@@ -55,6 +55,15 @@ interface ProductTrustBadge {
   sortOrder: number;
 }
 
+/** A product-specific FAQ entry shown near the bottom of the page and in FAQPage JSON-LD */
+interface ProductFaq {
+  id: string;
+  question: string;
+  answer: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 interface Product {
   id: string;
   slug: string;
@@ -65,6 +74,7 @@ interface Product {
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
   trustBadges: ProductTrustBadge[];
+  faqs: ProductFaq[];
   variants: FlatVariant[];
   categories: Array<{ name: string }>;
 }
@@ -527,6 +537,24 @@ export default function ShopProductDetail({
                     <span className={styles.specChevron} aria-hidden="true" />
                   </summary>
                   <div className={styles.specValue}>{section.value}</div>
+                </details>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* FAQ */}
+        {product.faqs.length > 0 && (
+          <div className={styles.faqSection}>
+            <h3>{t.faqTitle}</h3>
+            <div className={styles.faqList}>
+              {product.faqs.map(faq => (
+                <details key={faq.id} className={styles.faqItem}>
+                  <summary className={styles.faqToggle}>
+                    <span className={styles.faqQuestion}>{faq.question}</span>
+                    <span className={styles.faqChevron} aria-hidden="true" />
+                  </summary>
+                  <div className={styles.faqAnswer}>{faq.answer}</div>
                 </details>
               ))}
             </div>

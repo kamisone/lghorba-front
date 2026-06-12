@@ -6,6 +6,7 @@ import Link from "next/link";
 import ProductMediaManager, { ProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
 import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
 import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
+import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
@@ -31,6 +32,7 @@ export default function NewProductPage() {
   const [media, setMedia]               = useState<ProductMediaItem[]>([]);
   const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
   const [trustBadges, setTrustBadges] = useState<ProductTrustBadge[]>([]);
+  const [faqs, setFaqs] = useState<ProductFaq[]>([]);
   const [submitting, setSubmitting]     = useState(false);
 
   useEffect(() => {
@@ -73,6 +75,7 @@ export default function NewProductPage() {
         media,
         infoSections,
         trustBadges,
+        faqs,
         primaryCategoryId: form.primaryCategoryId || null,
         categoryIds:       categoryIds.length ? categoryIds : undefined,
       }),
@@ -88,7 +91,8 @@ export default function NewProductPage() {
     const product = await res.json();
     const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
     const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:label`]);
-    await saveEnTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields]);
+    const faqFields = faqs.flatMap(f => [`faq:${f.id}:question`, `faq:${f.id}:answer`]);
+    await saveEnTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields]);
     toast.success("Product created");
     router.push(`/admin/shop/products/${product.id}`);
   }
@@ -199,13 +203,24 @@ export default function NewProductPage() {
             </div>
 
             {/* Trust badges */}
-            <div className={`${styles.section} ${styles.sectionLast}`}>
+            <div className={styles.section}>
               <div className={styles.sectionHead}>
                 <span className={styles.sectionIcon}>🛡️</span>
                 <span className={styles.sectionTitle}>Trust badges</span>
               </div>
               <div className={styles.sectionBody}>
                 <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
+              </div>
+            </div>
+
+            {/* FAQs */}
+            <div className={`${styles.section} ${styles.sectionLast}`}>
+              <div className={styles.sectionHead}>
+                <span className={styles.sectionIcon}>❓</span>
+                <span className={styles.sectionTitle}>FAQs</span>
+              </div>
+              <div className={styles.sectionBody}>
+                <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
               </div>
             </div>
           </div>
