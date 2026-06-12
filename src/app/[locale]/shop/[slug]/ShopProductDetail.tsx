@@ -10,6 +10,8 @@ import ProductGallery, { type GalleryMediaItem } from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
 import { formatStockError, stockCheckMessage } from "@/lib/shop/stockError";
+import { getTrustBadgeIcon } from "@/lib/shop/trustBadgeIcons";
+import { Lock, Truck, RotateCcw } from "lucide-react";
 import styles from "./ProductDetail.module.css";
 
 interface FlatVariant {
@@ -45,6 +47,14 @@ interface ProductInfoSection {
   sortOrder: number;
 }
 
+/** A small icon+label trust signal shown near the buy box (e.g. "Secure checkout") */
+interface ProductTrustBadge {
+  id: string;
+  icon: string;
+  label: string;
+  sortOrder: number;
+}
+
 interface Product {
   id: string;
   slug: string;
@@ -54,6 +64,7 @@ interface Product {
   brand: string | null;
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
+  trustBadges: ProductTrustBadge[];
   variants: FlatVariant[];
   categories: Array<{ name: string }>;
 }
@@ -477,9 +488,23 @@ export default function ShopProductDetail({
 
         {/* Trust signals */}
         <div className={styles.trust}>
-          <span>{t.trustSecure}</span>
-          <span>{t.trustShipping}</span>
-          <span>{t.trustReturns}</span>
+          {product.trustBadges.length > 0 ? (
+            product.trustBadges.map(badge => {
+              const Icon = getTrustBadgeIcon(badge.icon);
+              return (
+                <span key={badge.id} className={styles.trustItem}>
+                  <Icon size={15} className={styles.trustIcon} aria-hidden="true" />
+                  {badge.label}
+                </span>
+              );
+            })
+          ) : (
+            <>
+              <span className={styles.trustItem}><Lock size={15} className={styles.trustIcon} aria-hidden="true" />{t.trustSecure}</span>
+              <span className={styles.trustItem}><Truck size={15} className={styles.trustIcon} aria-hidden="true" />{t.trustShipping}</span>
+              <span className={styles.trustItem}><RotateCcw size={15} className={styles.trustIcon} aria-hidden="true" />{t.trustReturns}</span>
+            </>
+          )}
         </div>
 
         {/* Description */}

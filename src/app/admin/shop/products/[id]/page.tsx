@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductMediaManager, { ProductMediaItem, ResolvedProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
 import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
+import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
 import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
@@ -52,6 +53,7 @@ interface Product {
   brand: string | null;
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
+  trustBadges: ProductTrustBadge[];
   primaryCategoryId: string | null;
   categories: Array<{ id: string; name: string }>;
   variants: DefaultVariant[];
@@ -80,6 +82,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [media, setMedia] = useState<ProductMediaItem[]>([]);
   const [resolvedMedia, setResolvedMedia] = useState<ResolvedProductMediaItem[]>([]);
   const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
+  const [trustBadges, setTrustBadges] = useState<ProductTrustBadge[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Bilingual
@@ -110,6 +113,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
       setInfoSections(p.infoSections ?? []);
+      setTrustBadges(p.trustBadges ?? []);
       setCategories(Array.isArray(cats) ? cats : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
       setProductAttrs(Array.isArray(prodAttrs) ? prodAttrs : []);
@@ -280,6 +284,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         categoryIds,
         media,
         infoSections,
+        trustBadges,
         ...(priceCents !== undefined ? { priceCents } : {}),
         compareAtPriceCents,
       }),
@@ -291,11 +296,13 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     } else {
       const p: Product = await res.json();
       const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
-      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields]);
+      const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:label`]);
+      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields]);
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
       setInfoSections(p.infoSections ?? []);
+      setTrustBadges(p.trustBadges ?? []);
       toast.success("Changes saved");
     }
     setSaving(false);
@@ -443,6 +450,17 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               </div>
               <div className={styles.sectionBody}>
                 <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
+              </div>
+            </div>
+
+            {/* Trust badges */}
+            <div className={styles.section}>
+              <div className={styles.sectionHead}>
+                <span className={styles.sectionIcon}>🛡️</span>
+                <span className={styles.sectionTitle}>Trust badges</span>
+              </div>
+              <div className={styles.sectionBody}>
+                <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
               </div>
             </div>
 

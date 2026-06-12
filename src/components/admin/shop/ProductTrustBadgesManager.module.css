@@ -1,0 +1,96 @@
+.label { font-size: 13px; font-weight: 500; color: var(--color-text-label); margin-bottom: 8px; }
+
+.empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  padding: 14px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.list { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Card ── */
+.card {
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-raised);
+  transition: box-shadow .12s, border-color .12s, opacity .12s;
+}
+.card:hover { border-color: var(--color-admin-secondary); }
+.cardDragging { opacity: 0.4; }
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dragHandle {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-muted);
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.iconPreview {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+
+.select {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-white);
+}
+.select:focus {
+  outline: none;
+  border-color: var(--color-admin-secondary);
+}
+
+.removeBtn {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: none; background: transparent; color: #ef4444;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .12s;
+  flex-shrink: 0;
+}
+.removeBtn:hover { background: rgba(239,68,68,.1); }
+
+.cardBody {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cardBody > * { margin-bottom: 0; }
+
+/* ── Add tile ── */
+.addBtn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px;
+  border-radius: 10px;
+  border: 2px dashed var(--color-border);
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; color: var(--color-text-muted);
+  background: transparent; cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  transition: border-color .15s, color .15s;
+}
+.addBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }
+
+.hint { font-size: 12px; color: var(--color-text-muted); margin-top: 8px; }

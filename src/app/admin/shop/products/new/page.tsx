@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ProductMediaManager, { ProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
 import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
+import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
@@ -29,6 +30,7 @@ export default function NewProductPage() {
 
   const [media, setMedia]               = useState<ProductMediaItem[]>([]);
   const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
+  const [trustBadges, setTrustBadges] = useState<ProductTrustBadge[]>([]);
   const [submitting, setSubmitting]     = useState(false);
 
   useEffect(() => {
@@ -70,6 +72,7 @@ export default function NewProductPage() {
         featured:          form.featured,
         media,
         infoSections,
+        trustBadges,
         primaryCategoryId: form.primaryCategoryId || null,
         categoryIds:       categoryIds.length ? categoryIds : undefined,
       }),
@@ -84,7 +87,8 @@ export default function NewProductPage() {
 
     const product = await res.json();
     const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
-    await saveEnTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields]);
+    const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:label`]);
+    await saveEnTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields]);
     toast.success("Product created");
     router.push(`/admin/shop/products/${product.id}`);
   }
@@ -184,13 +188,24 @@ export default function NewProductPage() {
             </div>
 
             {/* Specifications */}
-            <div className={`${styles.section} ${styles.sectionLast}`}>
+            <div className={styles.section}>
               <div className={styles.sectionHead}>
                 <span className={styles.sectionIcon}>📋</span>
                 <span className={styles.sectionTitle}>Specifications</span>
               </div>
               <div className={styles.sectionBody}>
                 <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
+              </div>
+            </div>
+
+            {/* Trust badges */}
+            <div className={`${styles.section} ${styles.sectionLast}`}>
+              <div className={styles.sectionHead}>
+                <span className={styles.sectionIcon}>🛡️</span>
+                <span className={styles.sectionTitle}>Trust badges</span>
+              </div>
+              <div className={styles.sectionBody}>
+                <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
               </div>
             </div>
           </div>
