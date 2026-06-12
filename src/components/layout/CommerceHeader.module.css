@@ -1,0 +1,108 @@
+/* ── Spacer (prevents content jumping under fixed two-row header) ── */
+.headerSpacer {
+  height: 112px;
+  flex-shrink: 0;
+}
+
+/* ── Inner layout (two rows) ── */
+.inner {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0.6rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* ── Row 1: logo / search / account-wishlist-cart ── */
+.topRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 48px;
+}
+
+.logoOrder { order: 1; }
+.iconsOrder { order: 2; }
+
+.searchDesktop {
+  order: 1;
+  flex: 1;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.searchMobile {
+  display: none;
+  width: 100%;
+}
+
+/* ── Row 2: discovery navigation ── */
+.menuRow {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.menuRow::-webkit-scrollbar { display: none; }
+
+.menuItem { flex-shrink: 0; }
+
+.menuLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.menuLink:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.promoLink {
+  color: var(--color-brand-accent);
+}
+.promoLink:hover {
+  color: #b6ec3f;
+  background: rgba(141, 194, 32, 0.12);
+}
+
+.rentalsLink {
+  margin-left: auto;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.rentalsLink:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .headerSpacer { height: 156px; }
+
+  .searchDesktop { display: none; }
+
+  .searchMobile {
+    display: block;
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .inner { padding: 0.6rem 1.25rem; }
+}

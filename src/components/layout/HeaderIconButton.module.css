@@ -1,4 +1,4 @@
-.cartBtn {
+.iconBtn {
   position: relative;
   display: flex;
   align-items: center;
@@ -13,10 +13,19 @@
   flex-shrink: 0;
   transition: background .15s, color .15s, border-color .15s;
 }
-.cartBtn:hover {
+.iconBtn:hover {
   background: rgba(255, 255, 255, 0.13);
   border-color: rgba(255, 255, 255, 0.28);
   color: #fff;
+}
+.iconBtn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.iconBtn:disabled:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .badge {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/components/shop/CartContext";
-import styles from "./CartHeaderIcon.module.css";
+import styles from "./HeaderIconButton.module.css";
 
 export default function CartHeaderIcon() {
   const { cart, openDrawer } = useCart();
@@ -10,7 +10,7 @@ export default function CartHeaderIcon() {
   return (
     <button
       onClick={openDrawer}
-      className={styles.cartBtn}
+      className={styles.iconBtn}
       aria-label={count > 0 ? `Open cart, ${count} item${count !== 1 ? "s" : ""}` : "Open cart"}
     >
       <svg

@@ -7,7 +7,6 @@ import { X } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import shopStyles from "../Shop.module.css";
 import styles from "./Search.module.css";
-import SearchAutocomplete from "@/components/shop/SearchAutocomplete";
 import { getTranslations } from "@/lib/i18n";
 
 interface Hit {
@@ -67,31 +66,6 @@ export default function ShopSearchPage({ params }: { params: { locale: string } 
 
   return (
     <>
-      {/* ── Hero — identical structure to /shop ── */}
-      <div className={shopStyles.shopHero}>
-        <div className={shopStyles.heroBgGrid} aria-hidden="true" />
-        <div className={shopStyles.heroGlowLime} aria-hidden="true" />
-        <div className={shopStyles.heroGlowBlue} aria-hidden="true" />
-        <div className={shopStyles.heroContent}>
-          <p className={shopStyles.heroEyebrow}>{t.searchEyebrow}</p>
-          <h1 className={shopStyles.heroTitle}>
-            {t.searchHeroTitle} <span className={shopStyles.heroAccent}>{t.searchHeroAccent}</span>
-          </h1>
-          {q
-            ? <p className={shopStyles.heroSub}>{t.searchResultsFor} &ldquo;{q}&rdquo;</p>
-            : <p className={shopStyles.heroSub}>{t.searchSub}</p>
-          }
-          <div className={shopStyles.heroSearchWrap}>
-            <SearchAutocomplete
-              locale={params.locale}
-              placeholder={t.searchPlaceholder}
-              variant="hero"
-              initialValue={q}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* ── Content ── */}
       <div className={shopStyles.container}>
         {/* Active filter chips */}

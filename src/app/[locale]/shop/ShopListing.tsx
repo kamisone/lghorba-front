@@ -5,7 +5,6 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
-import SearchAutocomplete from "@/components/shop/SearchAutocomplete";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./Shop.module.css";
@@ -162,28 +161,11 @@ export default function ShopListing({
 
   return (
     <>
-      {/* ── Full-width hero ── */}
-      <div className={styles.shopHero}>
-        <div className={styles.heroBgGrid} aria-hidden="true" />
-        <div className={styles.heroGlowLime} aria-hidden="true" />
-        <div className={styles.heroGlowBlue} aria-hidden="true" />
-        <div className={styles.heroContent}>
-          <p className={styles.heroEyebrow}>{t.heroEyebrow}</p>
-          <h1 className={styles.heroTitle}>
-            {t.heroTitle} <span className={styles.heroAccent}>{t.heroTitleAccent}</span>
-          </h1>
-          <p className={styles.heroSub}>{t.heroSub}</p>
-          <div className={styles.heroSearchWrap}>
-            <SearchAutocomplete locale={locale} placeholder={t.searchPlaceholder} variant="hero" />
-          </div>
-        </div>
-      </div>
-
       {/* ── Page content ── */}
       <div className={styles.container}>
         {/* Collections banner */}
         {showCollections && (
-          <div className={styles.collectionsSection}>
+          <div id="collections" className={styles.collectionsSection}>
             <h2 className={styles.sectionLabel}>{t.collectionsLabel}</h2>
             <div className={styles.collectionsRow}>
               {featuredCollections.slice(0, 4).map(c => (

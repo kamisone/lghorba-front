@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { isValidLocale, DEFAULT_LOCALE, LOCALES } from "@/lib/i18n";
-import ClientHeader from "@/components/layout/ClientHeader";
+import HeaderSwitcher from "@/components/layout/HeaderSwitcher";
 import ClientFooter from "@/components/layout/ClientFooter";
 import CookieConsentProvider from "@/components/consent/CookieConsentProvider";
 import SupportWidget from "@/components/support/SupportWidget";
@@ -27,7 +27,7 @@ export default function LocaleLayout({
     <CookieConsentProvider locale={params.locale}>
       <CartProvider locale={params.locale}>
         <WishlistProvider>
-          <ClientHeader locale={params.locale} />
+          <HeaderSwitcher locale={params.locale} />
           <main>{children}</main>
           <ClientFooter locale={params.locale} />
           <SupportWidget locale={params.locale} />

@@ -1,51 +1,3 @@
-/* ── Shop hero ── */
-.shopHero {
-  position: relative;
-  background: var(--color-brand-darkest);
-  padding: 68px 24px 60px;
-  text-align: center;
-  overflow: hidden;
-}
-.heroBgGrid {
-  position: absolute; inset: 0; pointer-events: none;
-  background-image:
-    linear-gradient(rgba(100,180,230,.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100,180,230,.07) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-.heroGlowLime {
-  position: absolute; width: 640px; height: 640px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(141,194,32,.12) 0%, transparent 65%);
-  top: -220px; right: -160px; pointer-events: none;
-}
-.heroGlowBlue {
-  position: absolute; width: 500px; height: 500px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,70,110,.2) 0%, transparent 70%);
-  bottom: -180px; left: -120px; pointer-events: none;
-}
-.heroContent {
-  position: relative; z-index: 1;
-  max-width: 640px; margin: 0 auto;
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-}
-.heroEyebrow {
-  font-size: 11px; font-weight: 700; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--color-brand-accent); margin: 0;
-}
-.heroTitle {
-  font-size: clamp(1.9rem, 4vw, 3rem);
-  font-weight: 900; color: #fff; margin: 0;
-  line-height: 1.1; letter-spacing: -.025em;
-}
-.heroAccent {
-  background: linear-gradient(130deg, var(--color-brand-accent) 0%, var(--color-brand-light) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.heroSub {
-  font-size: 15px; color: rgba(255,255,255,.5); margin: 0; line-height: 1.6;
-}
-.heroSearchWrap { width: 100%; max-width: 560px; margin-top: 6px; }
-
 /* ── Container ── */
 .container { max-width: 1280px; margin: 0 auto; padding: 32px 16px; }
 
@@ -79,7 +31,6 @@
 @media (max-width: 768px) {
   .layout { grid-template-columns: 1fr; gap: 24px; }
   .collectionsRow { grid-template-columns: repeat(2, 1fr); }
-  .shopHero { padding: 48px 20px 44px; }
 }
 
 /* ── Sidebar ── */

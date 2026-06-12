@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./SearchAutocomplete.module.css";
 
@@ -14,7 +15,7 @@ interface Suggestion {
 interface Props {
   locale: string;
   placeholder?: string;
-  variant?: "default" | "hero";
+  variant?: "default" | "hero" | "header";
   initialValue?: string;
 }
 
@@ -29,6 +30,7 @@ export default function SearchAutocomplete({ locale, placeholder = "Search produ
   const inputRef                      = useRef<HTMLInputElement>(null);
   const containerRef                  = useRef<HTMLDivElement>(null);
   const isHero                        = variant === "hero";
+  const isHeader                      = variant === "header";
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -84,7 +86,7 @@ export default function SearchAutocomplete({ locale, placeholder = "Search produ
 
   return (
     <div ref={containerRef} className={styles.container}>
-      <form onSubmit={submit} className={isHero ? styles.formHero : styles.form}>
+      <form onSubmit={submit} className={isHero ? styles.formHero : isHeader ? styles.formHeader : styles.form}>
         <input
           ref={inputRef}
           value={query}
@@ -92,10 +94,10 @@ export default function SearchAutocomplete({ locale, placeholder = "Search produ
           onKeyDown={onKeyDown}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
-          className={isHero ? styles.inputHero : styles.input}
+          className={isHero ? styles.inputHero : isHeader ? styles.inputHeader : styles.input}
         />
-        <button type="submit" className={isHero ? styles.btnHero : styles.btn}>
-          {t.blog.searchBtn}
+        <button type="submit" className={isHero ? styles.btnHero : isHeader ? styles.btnHeader : styles.btn} aria-label={t.blog.searchBtn}>
+          {isHeader ? <Search size={16} strokeWidth={2.25} aria-hidden="true" /> : t.blog.searchBtn}
         </button>
       </form>
 
