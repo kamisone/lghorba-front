@@ -27,6 +27,16 @@
   box-shadow: 0 0 0 3px rgba(var(--rgb-admin-secondary), 0.08);
 }
 
+/* Rich text editors are too cramped side by side — stack FR/EN vertically */
+.bilingualCardRichText {
+  flex-direction: column;
+}
+.bilingualCardRichText .langSep {
+  width: auto;
+  height: 1px;
+  align-self: auto;
+}
+
 /* Each language column */
 .langRow {
   flex: 1;

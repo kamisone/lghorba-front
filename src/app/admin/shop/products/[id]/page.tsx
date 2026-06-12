@@ -394,7 +394,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   </div>
                 </div>
                 <BilingualField label="Short description" frValue={form.shortDescription} frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))} enValue={enValues.shortDescription ?? ""} enOnChange={v => setEn('shortDescription', v)} multiline rows={2} />
-                <BilingualField label="Description" frValue={form.description} frOnChange={v => setForm(f => ({ ...f, description: v }))} enValue={enValues.description ?? ""} enOnChange={v => setEn('description', v)} multiline rows={5} />
+                <BilingualField label="Description" frValue={form.description} frOnChange={v => setForm(f => ({ ...f, description: v }))} enValue={enValues.description ?? ""} enOnChange={v => setEn('description', v)} richText />
               </div>
             </div>
 

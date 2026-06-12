@@ -171,7 +171,7 @@ export default function NewProductPage() {
                   frOnChange={v => setForm(f => ({ ...f, description: v }))}
                   enValue={enValues.description ?? ""}
                   enOnChange={v => setEn('description', v)}
-                  multiline rows={5}
+                  richText
                 />
               </div>
             </div>

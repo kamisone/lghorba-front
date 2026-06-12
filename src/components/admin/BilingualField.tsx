@@ -1,6 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import styles from "./BilingualField.module.css";
+
+// TipTap/ProseMirror needs browser globals — load client-side only.
+const RichTextEditor = dynamic(() => import("./content/RichTextEditor"), { ssr: false });
 
 interface LangRowProps {
   lang: "fr" | "en";
@@ -10,12 +14,13 @@ interface LangRowProps {
   multiline?: boolean;
   rows?: number;
   required?: boolean;
+  richText?: boolean;
 }
 
 const LANG_LABEL = { fr: "Français", en: "English" } as const;
 const LANG_FLAG  = { fr: "🇫🇷",      en: "🇬🇧"     } as const;
 
-function LangRow({ lang, value, onChange, placeholder, multiline, rows = 2, required = false }: LangRowProps) {
+function LangRow({ lang, value, onChange, placeholder, multiline, rows = 2, required = false, richText = false }: LangRowProps) {
   const badge = required
     ? { text: lang === "fr" ? "Requis" : "Required", cls: styles.badgeRequired }
     : { text: lang === "fr" ? "Optionnel" : "Optional", cls: styles.badgeOptional };
@@ -28,7 +33,9 @@ function LangRow({ lang, value, onChange, placeholder, multiline, rows = 2, requ
           <span className={styles.langName}>{LANG_LABEL[lang]}</span>
           <span className={`${styles.langBadge} ${badge.cls}`}>{badge.text}</span>
         </div>
-        {multiline ? (
+        {richText ? (
+          <RichTextEditor content={value} onChange={onChange} />
+        ) : multiline ? (
           <textarea
             className={styles.langInput}
             value={value}
@@ -63,6 +70,8 @@ interface BilingualFieldProps {
   rows?: number;
   /** Mark the FR input as required (EN is always optional) */
   frRequired?: boolean;
+  /** Render a rich text (HTML) editor instead of a plain textarea */
+  richText?: boolean;
 }
 
 export default function BilingualField({
@@ -72,6 +81,7 @@ export default function BilingualField({
   multiline = false,
   rows = 2,
   frRequired = false,
+  richText = false,
 }: BilingualFieldProps) {
   return (
     <div className={styles.bilingualField}>
@@ -79,7 +89,7 @@ export default function BilingualField({
         {label}
         {frRequired && <span className={styles.requiredStar}> *</span>}
       </span>
-      <div className={styles.bilingualCard}>
+      <div className={`${styles.bilingualCard} ${richText ? styles.bilingualCardRichText : ""}`}>
         <LangRow
           lang="fr"
           value={frValue}
@@ -88,6 +98,7 @@ export default function BilingualField({
           multiline={multiline}
           rows={rows}
           required={frRequired}
+          richText={richText}
         />
         <div className={styles.langSep} />
         <LangRow
@@ -98,6 +109,7 @@ export default function BilingualField({
           multiline={multiline}
           rows={rows}
           required={false}
+          richText={richText}
         />
       </div>
     </div>
