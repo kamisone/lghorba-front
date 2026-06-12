@@ -478,7 +478,13 @@ export default function ShopProductDetail({
             </button>
           )}
           <button
-            onClick={() => toggle(product.id)}
+            onClick={() => toggle({
+              productId: product.id,
+              slug: product.slug,
+              title: product.title,
+              imageUrl: productGallery[0]?.url ?? null,
+              priceCents: activePriceCents || defaultVariant?.priceCents || null,
+            })}
             className={`${styles.wishlistBtn} ${wishlisted ? styles.wishlisted : ""}`}
             aria-label={wishlisted ? t.removeFromWishlist : t.saveToWishlist}
           >

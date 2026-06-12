@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { User } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
 import ScrollAwareHeader from "./ScrollAwareHeader";
@@ -10,7 +9,6 @@ import CommerceCategoriesMenu from "@/components/shop/CommerceCategoriesMenu";
 import SearchAutocomplete from "@/components/shop/SearchAutocomplete";
 import shellStyles from "./ClientHeader.module.css";
 import styles from "./CommerceHeader.module.css";
-import iconStyles from "./HeaderIconButton.module.css";
 
 interface Props {
   locale: string;
@@ -53,16 +51,7 @@ export default function CommerceHeader({ locale }: Props) {
             </div>
 
             <div className={`${shellStyles.navRight} ${styles.iconsOrder}`}>
-              <WishlistHeaderIcon label={shop.wishlistNavLabel} comingSoon={shop.comingSoon} />
-              <button
-                type="button"
-                className={iconStyles.iconBtn}
-                aria-label={shop.accountNavLabel}
-                title={shop.comingSoon}
-                disabled
-              >
-                <User size={19} strokeWidth={2} aria-hidden="true" />
-              </button>
+              <WishlistHeaderIcon locale={locale} label={shop.wishlistNavLabel} />
               <CartHeaderIcon />
               <span className={shellStyles.navDivider} aria-hidden="true" />
               <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} />

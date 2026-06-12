@@ -1,0 +1,11 @@
+.container { max-width: 1280px; margin: 0 auto; padding: 32px 16px; }
+.heading { font-size: 28px; font-weight: 700; color: var(--color-text-heading); margin-bottom: 28px; }
+
+.empty { max-width: 400px; margin: 80px auto; text-align: center; }
+.empty h2 { font-size: 24px; font-weight: 700; color: var(--color-text-heading); margin-bottom: 12px; }
+.emptySub { color: var(--color-text-muted); font-size: 14px; margin: 0; }
+.continueBtn {
+  margin-top: 16px; padding: 10px 20px;
+  border: 1px solid var(--color-border); border-radius: 8px; display: inline-block;
+  text-decoration: none; color: var(--color-text-primary);
+}

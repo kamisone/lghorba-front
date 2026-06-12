@@ -711,8 +711,6 @@ export const en = {
     categoriesLabel:     "Categories",
     promotionsLabel:     "Promotions",
     wishlistNavLabel:    "Wishlist",
-    accountNavLabel:     "Account",
-    comingSoon:          "Coming soon",
     openCategories:      "Browse categories",
     allProducts:         "All products",
     sale:                "Sale",
@@ -774,6 +772,10 @@ export const en = {
     loading:             "Loading…",
     browseProducts:      "Browse products",
     skuLabel:            "SKU:",
+    // wishlist page
+    wishlistPageTitle:   "My Wishlist",
+    wishlistEmpty:       "Your wishlist is empty",
+    wishlistEmptySub:    "Save items you love by tapping the heart icon",
     // variant availability
     stockAvailable:      "In stock",
     stockOutOfStock:     "Out of stock",
@@ -1582,8 +1584,6 @@ export const fr: Translations = {
     categoriesLabel:     "Catégories",
     promotionsLabel:     "Promotions",
     wishlistNavLabel:    "Favoris",
-    accountNavLabel:     "Compte",
-    comingSoon:          "Bientôt disponible",
     openCategories:      "Parcourir les catégories",
     allProducts:         "Tous les produits",
     sale:                "Promo",
@@ -1645,6 +1645,10 @@ export const fr: Translations = {
     loading:             "Chargement…",
     browseProducts:      "Parcourir les produits",
     skuLabel:            "Réf. :",
+    // wishlist page
+    wishlistPageTitle:   "Mes favoris",
+    wishlistEmpty:       "Votre liste de favoris est vide",
+    wishlistEmptySub:    "Enregistrez vos articles préférés en appuyant sur l'icône cœur",
     // variant availability
     stockAvailable:      "En stock",
     stockOutOfStock:     "Rupture de stock",

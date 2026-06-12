@@ -110,7 +110,17 @@ function ProductCard({
 
         <button
           className={`${styles.wishlistBtn} ${wishlisted ? styles.wishlisted : ""}`}
-          onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(product.id); }}
+          onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggle({
+              productId: product.id,
+              slug: product.slug,
+              title: product.title,
+              imageUrl: product.featuredImageUrl,
+              priceCents: defaultVariant?.priceCents ?? null,
+            });
+          }}
           aria-label={wishlisted ? t.removeFromWishlist : t.addToWishlist}
         >
           {wishlisted ? "♥" : "♡"}
