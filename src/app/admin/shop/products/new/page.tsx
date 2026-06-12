@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ProductMediaManager, { ProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
+import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
@@ -26,8 +27,9 @@ export default function NewProductPage() {
   });
   const { enValues, setEn, saveEnTranslations } = useEntityTranslations('shop_product', null);
 
-  const [media, setMedia]           = useState<ProductMediaItem[]>([]);
-  const [submitting, setSubmitting] = useState(false);
+  const [media, setMedia]               = useState<ProductMediaItem[]>([]);
+  const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
+  const [submitting, setSubmitting]     = useState(false);
 
   useEffect(() => {
     fetch("/next-api/admin/shop/categories")
@@ -67,6 +69,7 @@ export default function NewProductPage() {
         initialStock:      parseInt(form.initialStock, 10) || 0,
         featured:          form.featured,
         media,
+        infoSections,
         primaryCategoryId: form.primaryCategoryId || null,
         categoryIds:       categoryIds.length ? categoryIds : undefined,
       }),
@@ -80,7 +83,8 @@ export default function NewProductPage() {
     }
 
     const product = await res.json();
-    await saveEnTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt']);
+    const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
+    await saveEnTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields]);
     toast.success("Product created");
     router.push(`/admin/shop/products/${product.id}`);
   }
@@ -169,13 +173,24 @@ export default function NewProductPage() {
             </div>
 
             {/* Media section */}
-            <div className={`${styles.section} ${styles.sectionLast}`}>
+            <div className={styles.section}>
               <div className={styles.sectionHead}>
                 <span className={styles.sectionIcon}>🖼</span>
                 <span className={styles.sectionTitle}>Media</span>
               </div>
               <div className={styles.sectionBody}>
                 <ProductMediaManager initialMedia={[]} onChange={setMedia} />
+              </div>
+            </div>
+
+            {/* Specifications */}
+            <div className={`${styles.section} ${styles.sectionLast}`}>
+              <div className={styles.sectionHead}>
+                <span className={styles.sectionIcon}>📋</span>
+                <span className={styles.sectionTitle}>Specifications</span>
+              </div>
+              <div className={styles.sectionBody}>
+                <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
               </div>
             </div>
           </div>

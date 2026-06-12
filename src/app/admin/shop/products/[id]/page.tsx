@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductMediaManager, { ProductMediaItem, ResolvedProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
+import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
 import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
@@ -50,6 +51,7 @@ interface Product {
   featured: boolean; shortDescription: string | null; description: string | null;
   brand: string | null;
   media: ResolvedProductMediaItem[];
+  infoSections: ProductInfoSection[];
   primaryCategoryId: string | null;
   categories: Array<{ id: string; name: string }>;
   variants: DefaultVariant[];
@@ -77,6 +79,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   // Media
   const [media, setMedia] = useState<ProductMediaItem[]>([]);
   const [resolvedMedia, setResolvedMedia] = useState<ResolvedProductMediaItem[]>([]);
+  const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Bilingual
@@ -106,6 +109,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
+      setInfoSections(p.infoSections ?? []);
       setCategories(Array.isArray(cats) ? cats : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
       setProductAttrs(Array.isArray(prodAttrs) ? prodAttrs : []);
@@ -275,6 +279,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         primaryCategoryId: form.primaryCategoryId || null,
         categoryIds,
         media,
+        infoSections,
         ...(priceCents !== undefined ? { priceCents } : {}),
         compareAtPriceCents,
       }),
@@ -285,10 +290,12 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       toast.error((err as any).message ?? "Save failed");
     } else {
       const p: Product = await res.json();
-      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt']);
+      const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
+      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields]);
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
+      setInfoSections(p.infoSections ?? []);
       toast.success("Changes saved");
     }
     setSaving(false);
@@ -425,6 +432,17 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               </div>
               <div className={styles.sectionBody}>
                 <ProductMediaManager initialMedia={product.media ?? []} onChange={setMedia} onResolvedChange={setResolvedMedia} />
+              </div>
+            </div>
+
+            {/* Specifications */}
+            <div className={styles.section}>
+              <div className={styles.sectionHead}>
+                <span className={styles.sectionIcon}>📋</span>
+                <span className={styles.sectionTitle}>Specifications</span>
+              </div>
+              <div className={styles.sectionBody}>
+                <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
               </div>
             </div>
 

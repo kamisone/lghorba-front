@@ -36,6 +36,15 @@ interface ResolvedProductMediaItem {
   mimeType?:        string | null;
 }
 
+/** A structured spec block shown on the product page (Composition, Care, Target audience...) */
+interface ProductInfoSection {
+  id: string;
+  key: string;
+  label: string;
+  value: string;
+  sortOrder: number;
+}
+
 interface Product {
   id: string;
   slug: string;
@@ -44,6 +53,7 @@ interface Product {
   shortDescription: string | null;
   brand: string | null;
   media: ResolvedProductMediaItem[];
+  infoSections: ProductInfoSection[];
   variants: FlatVariant[];
   categories: Array<{ name: string }>;
 }
@@ -477,6 +487,24 @@ export default function ShopProductDetail({
           <div className={styles.descSection}>
             <h3>{t.descriptionTitle}</h3>
             <div className={styles.descBody} dangerouslySetInnerHTML={{ __html: product.description }} />
+          </div>
+        )}
+
+        {/* Specifications */}
+        {product.infoSections.length > 0 && (
+          <div className={styles.specsSection}>
+            <h3>{t.specificationsTitle}</h3>
+            <div className={styles.specsList}>
+              {product.infoSections.map(section => (
+                <details key={section.id} className={styles.specItem} open>
+                  <summary className={styles.specToggle}>
+                    <span className={styles.specLabel}>{section.label}</span>
+                    <span className={styles.specChevron} aria-hidden="true" />
+                  </summary>
+                  <div className={styles.specValue}>{section.value}</div>
+                </details>
+              ))}
+            </div>
           </div>
         )}
       </div>
