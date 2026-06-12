@@ -231,14 +231,14 @@ export default function CartDrawer({ locale }: Props) {
               {t.shippingCalcNote}
             </p>
             <Link
-              href={`/${locale}/checkout`}
+              href={`/${locale}/shop/checkout`}
               onClick={closeDrawer}
               className={styles.checkoutBtn}
             >
               {t.checkoutCta} — €{centsToEuros(cart!.subtotalCents)}
             </Link>
             <Link
-              href={`/${locale}/cart`}
+              href={`/${locale}/shop/cart`}
               onClick={closeDrawer}
               className={styles.viewCartBtn}
             >

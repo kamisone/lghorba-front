@@ -344,14 +344,14 @@ export default function ShopProductDetail({
     // Already in the cart: don't re-add (additive on the backend, may exceed
     // remaining stock) — just go straight to checkout.
     if (inCart) {
-      router.push(`/${locale}/checkout`);
+      router.push(`/${locale}/shop/checkout`);
       return;
     }
 
     setBuyingNow(true);
     const result = await addItem(activeId, qty, selectedOptionValueIds.length ? selectedOptionValueIds : undefined);
     if (result.ok) {
-      router.push(`/${locale}/checkout`);
+      router.push(`/${locale}/shop/checkout`);
     } else {
       setBuyError(formatStockError(result, t));
       setBuyingNow(false);

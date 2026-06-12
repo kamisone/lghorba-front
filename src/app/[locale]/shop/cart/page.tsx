@@ -171,7 +171,7 @@ export default function CartPage({ params }: { params: { locale: string } }) {
             </p>
           )}
 
-          <Link href={`/${locale}/checkout`} className={styles.checkoutBtn}>
+          <Link href={`/${locale}/shop/checkout`} className={styles.checkoutBtn}>
             {t.proceedToCheckout}
           </Link>
           <Link href={`/${locale}/shop`} className={styles.continueLink}>

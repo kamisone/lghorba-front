@@ -80,7 +80,7 @@ function StripePaymentForm({ orderId, orderNumber, locale, total }: { orderId: s
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/${locale}/checkout/success?order=${orderNumber}&id=${orderId}`,
+        return_url: `${window.location.origin}/${locale}/shop/checkout/success?order=${orderNumber}&id=${orderId}`,
       },
     });
     if (confirmError) { setError(confirmError.message ?? "Payment failed"); setPaying(false); }
