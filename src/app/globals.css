@@ -14,6 +14,16 @@
 html,
 body {
   overflow-x: clip;
+  min-height: 100dvh;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
 }
 
 /*

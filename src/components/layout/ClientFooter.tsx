@@ -6,6 +6,7 @@ import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
 import { VisaIcon, MastercardIcon, AmexIcon } from "./PaymentIcons";
 import { InstagramIcon, FacebookIcon, TiktokIcon } from "./SocialIcons";
 import NewsletterForm from "./NewsletterForm";
+import LangSwitcher from "@/components/LangSwitcher";
 
 interface Props {
   locale: string;
@@ -99,11 +100,12 @@ export default function ClientFooter({ locale }: Props) {
 
         </div>
 
-        {/* ── Bottom row: copyright + accepted payment methods ── */}
+        {/* ── Bottom row: copyright · language · payment methods ── */}
         <div className={styles.footerBottom}>
           <p className={styles.footerCopy}>
             © {new Date().getFullYear()} vitecamion · {t.footer.rights}
           </p>
+          <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} dropUp />
           <div className={styles.paymentMethods}>
             <span className={styles.paymentLabel}>{t.footer.paymentsAccepted}</span>
             <VisaIcon className={styles.paymentIcon} />

@@ -2,43 +2,50 @@
   position: relative;
 }
 
+/* ── Trigger button ── */
 .trigger {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0.35rem 0.65rem;
-  border: 1px solid rgba(var(--rgb-white), 0.18);
-  border-radius: 8px;
-  background: rgba(var(--rgb-white), 0.07);
-  color: var(--color-border-subtle);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  height: 40px;
+  padding: 0 0.65rem;
+  border: 1px solid rgba(var(--rgb-white), 0.15);
+  border-radius: 9px;
+  background: rgba(var(--rgb-white), 0.06);
+  color: rgba(var(--rgb-white), 0.62);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
 
 .trigger:hover {
-  background: rgba(var(--rgb-white), 0.13);
-  border-color: rgba(var(--rgb-white), 0.28);
-  color: var(--color-surface-raised);
+  background: rgba(var(--rgb-white), 0.11);
+  border-color: rgba(var(--rgb-white), 0.26);
+  color: rgba(var(--rgb-white), 0.92);
 }
 
-.globe {
-  font-size: 0.9rem;
-  line-height: 1;
+.globeIcon {
+  flex-shrink: 0;
+  opacity: 0.75;
 }
 
 .code {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.07em;
 }
 
 .caret {
-  color: var(--color-text-placeholder);
-  transition: transform 0.2s;
+  color: rgba(var(--rgb-white), 0.38);
+  transition: transform 0.2s ease;
   flex-shrink: 0;
+}
+
+.trigger:hover .caret {
+  color: rgba(var(--rgb-white), 0.6);
 }
 
 .caretOpen {
@@ -50,33 +57,45 @@
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  min-width: 148px;
+  min-width: 152px;
   background: var(--color-text-primary);
   border: 1px solid rgba(var(--rgb-white), 0.1);
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(var(--rgb-black), 0.35);
+  box-shadow: 0 8px 28px rgba(var(--rgb-black), 0.4), 0 2px 8px rgba(var(--rgb-black), 0.2);
   list-style: none;
   margin: 0;
   padding: 4px;
   z-index: 200;
-  animation: dropIn 0.15s ease;
+  animation: dropIn 0.14s ease;
+}
+
+.dropdownUp {
+  top: auto;
+  bottom: calc(100% + 6px);
+  animation: dropUp 0.14s ease;
 }
 
 @keyframes dropIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
+@keyframes dropUp {
+  from { opacity: 0; transform: translateY(5px)  scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Option row ── */
 .option {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   width: 100%;
-  padding: 0.45rem 0.65rem;
+  padding: 0.45rem 0.6rem;
   border: none;
   border-radius: 7px;
   background: transparent;
-  color: var(--color-text-placeholder);
+  color: rgba(var(--rgb-white), 0.58);
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
@@ -86,29 +105,41 @@
 
 .option:hover {
   background: rgba(var(--rgb-white), 0.07);
-  color: var(--color-border);
+  color: rgba(var(--rgb-white), 0.92);
 }
 
 .optionActive {
-  color: var(--color-admin-orange);
+  color: rgba(var(--rgb-white), 0.9);
 }
 
 .optionActive:hover {
-  background: rgba(var(--rgb-admin-orange), 0.1);
-  color: var(--color-admin-orange);
+  background: rgba(var(--rgb-white), 0.05);
+  color: rgba(var(--rgb-white), 0.9);
 }
 
+/* ── Flag ── */
 .flag {
-  font-size: 1rem;
-  line-height: 1;
+  width: 18px;
+  height: 13px;
   flex-shrink: 0;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+  display: flex;
+}
+
+.flagSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .optionLabel {
   flex: 1;
 }
 
+/* ── Check mark ── */
 .check {
-  color: var(--color-warning-light);
+  color: var(--color-admin-orange);
   flex-shrink: 0;
 }
