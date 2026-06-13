@@ -26,6 +26,15 @@ export default function ScrollAwareHeader({ children }: { children: React.ReactN
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Keep --header-offset in sync so sticky panels below the header
+  // can transition their `top` value alongside the header hide/show animation.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--header-offset",
+      hidden ? "0px" : "64px",
+    );
+  }, [hidden]);
+
   return (
     <header
       className={[
