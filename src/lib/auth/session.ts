@@ -1,87 +1,114 @@
-export const ACCESS_COOKIE = "vitecamion_auth";
+export const ACCESS_COOKIE  = "vitecamion_auth";
 export const REFRESH_COOKIE = "vitecamion_refresh";
 
-// Refresh tokens are valid for 15 days and rotated on every use (mirrors
-// the backend's REFRESH_TOKEN_TTL). Both auth cookies share this lifetime —
-// the access token's own 15-minute `exp` claim is what actually governs
-// request validity; the cookie just needs to outlive the rotating session.
+// Cookie lifetime mirrors the intended refresh-token TTL (15 days).
+// The access token's own `exp` JWT claim governs per-request validity;
+// the cookie just needs to outlive the rotating session.
 export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 15;
 
 export interface RotatedTokens {
-  access_token: string;
+  access_token:  string;
   refresh_token: string;
 }
 
+export interface SessionResult {
+  /** A valid (possibly freshly-rotated) access token, or null. */
+  accessToken: string | null;
+  /** Set when the refresh flow produced new tokens — caller must persist and forward these. */
+  rotated?: RotatedTokens;
+  /**
+   * Backend explicitly rejected both tokens — safe to clear auth cookies.
+   * Only set when the backend responded (not when it was unreachable).
+   */
+  expired?: boolean;
+  /**
+   * Backend was unreachable (network error / timeout).
+   * Caller must NOT clear cookies — the tokens may still be valid once
+   * the backend recovers. The user is blocked for this request but will
+   * be able to resume their session automatically.
+   */
+  networkError?: boolean;
+}
+
+// ── Token validation (backend is the single source of truth) ─────────────────
+
+type CheckResult = "valid" | "invalid" | "network_error";
+
 /**
- * The backend is the single source of truth for token validity — it owns
- * JWT_SECRET/JWT_REFRESH_SECRET and the refresh-token store. The frontend
- * never inspects or verifies tokens itself; it just asks the backend.
+ * Asks the backend whether the access token is still valid.
+ * Returns "network_error" on any fetch failure so callers can distinguish
+ * a transient outage from an explicitly rejected token.
  */
-export async function isAccessTokenValid(token: string | undefined, backendUrl: string): Promise<boolean> {
-  if (!token) return false;
+async function checkAccessToken(token: string, backendUrl: string): Promise<CheckResult> {
   try {
     const res = await fetch(`${backendUrl}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
+      cache:   "no-store",
     });
-    return res.ok;
+    return res.ok ? "valid" : "invalid";
   } catch {
-    return false;
+    return "network_error";
   }
 }
 
+export interface RotateResult {
+  tokens:       RotatedTokens | null;
+  networkError: boolean;
+}
+
 /**
- * Calls the backend's refresh endpoint, which validates the refresh token,
- * rotates it (invalidating the previous one), and returns a fresh
- * access/refresh pair.
+ * Calls the backend's refresh endpoint (rotating the token on success).
+ * Returns { networkError: true } on any fetch failure so callers can
+ * distinguish a transient outage from an explicitly rejected refresh token.
  */
-export async function rotateTokens(refreshToken: string, backendUrl: string): Promise<RotatedTokens | null> {
+export async function rotateTokens(
+  refreshToken: string,
+  backendUrl:   string,
+): Promise<RotateResult> {
   try {
     const res = await fetch(`${backendUrl}/auth/refresh`, {
-      method: "POST",
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-      cache: "no-store",
+      body:    JSON.stringify({ refresh_token: refreshToken }),
+      cache:   "no-store",
     });
-    if (!res.ok) return null;
-    return await res.json();
+    if (!res.ok) return { tokens: null, networkError: false };
+    return { tokens: await res.json(), networkError: false };
   } catch {
-    return null;
+    return { tokens: null, networkError: true };
   }
 }
 
-export interface SessionResult {
-  /** A valid (possibly freshly-rotated) access token, or null if the session cannot be recovered. */
-  accessToken: string | null;
-  /** Set when the refresh flow rotated the tokens — caller must persist these as cookies and propagate to the request. */
-  rotated?: RotatedTokens;
-  /** Set when neither the access nor the refresh token is valid — caller should clear stale auth cookies. */
-  expired?: boolean;
-}
+// ── Session resolution ────────────────────────────────────────────────────────
 
 /**
- * Single source of truth for session resolution. Used by middleware, the
- * login page, and any other auth-aware entry point so that no route has to
- * make its own assumptions about authentication state — every check is
- * delegated to the backend.
+ * Single source of truth for session resolution — every check is delegated
+ * to the backend, which owns JWT_SECRET and the refresh-token store.
  *
  * 1. Ask the backend to validate the access token.
- * 2. If it's missing/expired, attempt refresh-token recovery (with rotation).
- * 3. Only report "no session" if both checks fail.
+ * 2. If invalid (not expired), attempt refresh-token recovery with rotation.
+ * 3. A network error at either step sets `networkError` so the caller does
+ *    NOT clear cookies — cookies must only be wiped when the backend
+ *    explicitly rejects the refresh token (expired/revoked).
  */
 export async function resolveSession(
-  accessToken: string | undefined,
+  accessToken:  string | undefined,
   refreshToken: string | undefined,
-  backendUrl: string,
+  backendUrl:   string,
 ): Promise<SessionResult> {
-  if (await isAccessTokenValid(accessToken, backendUrl)) {
-    return { accessToken: accessToken! };
+  if (accessToken) {
+    const check = await checkAccessToken(accessToken, backendUrl);
+    if (check === "valid")         return { accessToken };
+    if (check === "network_error") return { accessToken: null, networkError: true };
+    // "invalid" → fall through to refresh
   }
 
   if (refreshToken) {
-    const rotated = await rotateTokens(refreshToken, backendUrl);
-    if (rotated) return { accessToken: rotated.access_token, rotated };
+    const { tokens, networkError } = await rotateTokens(refreshToken, backendUrl);
+    if (tokens)       return { accessToken: tokens.access_token, rotated: tokens };
+    if (networkError) return { accessToken: null, networkError: true };
   }
 
+  // Backend explicitly rejected both tokens.
   return { accessToken: null, expired: true };
 }

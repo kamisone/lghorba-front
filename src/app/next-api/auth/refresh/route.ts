@@ -16,14 +16,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "no_refresh_token" }, { status: 401 });
   }
 
-  const rotated = await rotateTokens(refreshToken, BACKEND_URL);
-  if (!rotated) {
+  const { tokens, networkError } = await rotateTokens(refreshToken, BACKEND_URL);
+
+  if (!tokens) {
+    if (networkError) {
+      // Backend unreachable — do NOT clear cookies; the session may still be valid.
+      return NextResponse.json({ error: "backend_unreachable" }, { status: 503 });
+    }
+    // Backend explicitly rejected the refresh token — clear stale cookies.
     const response = NextResponse.json({ error: "refresh_failed" }, { status: 401 });
     clearAuthCookies(response);
     return response;
   }
 
   const response = NextResponse.json({ ok: true });
-  setAuthCookies(response, rotated);
+  setAuthCookies(response, tokens);
   return response;
 }
