@@ -8,17 +8,15 @@ import { Star } from "lucide-react";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Status = "draft" | "scheduled" | "published" | "archived";
+type Locale = "en" | "fr";
 
-interface Category { id: string; name: string; }
-interface Tag       { id: string; name: string; }
+interface PostTranslation { title: string; slug: string; }
+interface Category        { id: string; translations: Partial<Record<Locale, { name: string }>>; }
+interface Tag             { id: string; name: string; }
 
 interface Post {
   id: string;
-  slug: string;
-  locale: string;
   status: Status;
-  title: string;
-  excerpt: string | null;
   featured: boolean;
   authorName: string | null;
   readingTimeMinutes: number;
@@ -27,6 +25,7 @@ interface Post {
   categories: Category[];
   tags: Tag[];
   createdAt: string;
+  translations: Partial<Record<Locale, PostTranslation>>;
 }
 
 interface ListResult { items: Post[]; total: number; }
@@ -37,19 +36,42 @@ const STATUS_LABELS: Record<Status, string> = {
 
 const PAGE_SIZE = 20;
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getTitle(post: Post, locale?: string): string {
+  if (locale) {
+    const t = post.translations[locale as Locale]?.title;
+    if (t) return t;
+  }
+  return post.translations.en?.title || post.translations.fr?.title || "(untitled)";
+}
+
+function getCatName(cat: Category): string {
+  return cat.translations.en?.name || cat.translations.fr?.name || "";
+}
+
+function getLocales(post: Post): Locale[] {
+  return (["en", "fr"] as Locale[]).filter(l => post.translations[l]?.slug);
+}
+
+function getViewHref(post: Post, localeFilter: string): string | null {
+  const locale = (localeFilter || (post.translations.en?.slug ? "en" : "fr")) as Locale;
+  const slug = post.translations[locale]?.slug;
+  return slug ? `/${locale}/blog/${slug}` : null;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function BlogPostList() {
-  const [items,      setItems]      = useState<Post[]>([]);
-  const [total,      setTotal]      = useState(0);
-  const [loading,    setLoading]    = useState(true);
-  const [page,       setPage]       = useState(0);
-  const [search,     setSearch]     = useState("");
+  const [items,        setItems]        = useState<Post[]>([]);
+  const [total,        setTotal]        = useState(0);
+  const [loading,      setLoading]      = useState(true);
+  const [page,         setPage]         = useState(0);
+  const [search,       setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [localeFilter, setLocaleFilter] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(0); }, 350);
     return () => clearTimeout(t);
@@ -111,8 +133,8 @@ export default function BlogPostList() {
         </select>
         <select className={styles.filterSelect} value={localeFilter} onChange={(e) => { setLocaleFilter(e.target.value); setPage(0); }}>
           <option value="">All locales</option>
-          <option value="fr">French</option>
-          <option value="en">English</option>
+          <option value="fr">French (FR)</option>
+          <option value="en">English (EN)</option>
         </select>
       </div>
 
@@ -123,7 +145,7 @@ export default function BlogPostList() {
             <tr>
               <th className={styles.th}>Article</th>
               <th className={styles.th}>Status</th>
-              <th className={styles.th}>Locale</th>
+              <th className={styles.th}>Languages</th>
               <th className={styles.th}>Categories</th>
               <th className={styles.th}>Published</th>
               <th className={styles.th}>Actions</th>
@@ -134,72 +156,80 @@ export default function BlogPostList() {
               <tr><td className={styles.td} colSpan={6} style={{ textAlign: "center", color: "var(--color-text-muted)" }}>Loading…</td></tr>
             ) : items.length === 0 ? (
               <tr><td colSpan={6}><div className={styles.empty}>No articles yet. <Link href="/admin/blog/new" style={{ color: "var(--color-brand-primary)" }}>Create the first one →</Link></div></td></tr>
-            ) : items.map(post => (
-              <tr key={post.id} className={styles.tr}>
-                <td className={styles.td}>
-                  <div className={styles.titleCell}>
-                    <span className={styles.postTitle}>
-                      {post.featured && <span className={styles.featuredStar}><Star size={14} strokeWidth={1.75} /></span>}
-                      {post.title}
+            ) : items.map(post => {
+              const title    = getTitle(post, localeFilter);
+              const locales  = getLocales(post);
+              const viewHref = getViewHref(post, localeFilter);
+              return (
+                <tr key={post.id} className={styles.tr}>
+                  <td className={styles.td}>
+                    <div className={styles.titleCell}>
+                      <span className={styles.postTitle}>
+                        {post.featured && <span className={styles.featuredStar}><Star size={14} strokeWidth={1.75} /></span>}
+                        {title}
+                      </span>
+                      {(post.translations.en?.slug || post.translations.fr?.slug) && (
+                        <span className={styles.postSlug}>
+                          /{locales.length > 0 && (post.translations[locales[0]]?.slug ?? "")}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className={styles.td}>
+                    <span className={`${styles.badge} ${styles[post.status]}`}>
+                      {STATUS_LABELS[post.status]}
                     </span>
-                    <span className={styles.postSlug}>/{post.slug}</span>
-                  </div>
-                </td>
-                <td className={styles.td}>
-                  <span className={`${styles.badge} ${styles[post.status]}`}>
-                    {STATUS_LABELS[post.status]}
-                  </span>
-                </td>
-                <td className={styles.td}>{post.locale.toUpperCase()}</td>
-                <td className={styles.td}>
-                  <div className={styles.pills}>
-                    {post.categories.map(c => (
-                      <span key={c.id} className={styles.pill}>{c.name}</span>
-                    ))}
-                  </div>
-                </td>
-                <td className={styles.td}>
-                  {post.publishedAt
-                    ? new Date(post.publishedAt).toLocaleDateString()
-                    : post.scheduledPublishAt
-                      ? `📅 ${new Date(post.scheduledPublishAt).toLocaleDateString()}`
-                      : "—"}
-                </td>
-                <td className={styles.td}>
-                  <div className={styles.actions}>
-                    <Link href={`/admin/blog/${post.id}/edit`} className={styles.actionBtn}>Edit</Link>
-                    {post.status !== "published" && (
+                  </td>
+                  <td className={styles.td}>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {locales.map(l => (
+                        <span key={l} className={styles.localeBadge}>{l.toUpperCase()}</span>
+                      ))}
+                      {locales.length === 0 && <span style={{ color: "var(--color-text-muted)" }}>—</span>}
+                    </div>
+                  </td>
+                  <td className={styles.td}>
+                    <div className={styles.pills}>
+                      {post.categories.map(c => (
+                        <span key={c.id} className={styles.pill}>{getCatName(c)}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className={styles.td}>
+                    {post.publishedAt
+                      ? new Date(post.publishedAt).toLocaleDateString()
+                      : post.scheduledPublishAt
+                        ? `📅 ${new Date(post.scheduledPublishAt).toLocaleDateString()}`
+                        : "—"}
+                  </td>
+                  <td className={styles.td}>
+                    <div className={styles.actions}>
+                      <Link href={`/admin/blog/${post.id}/edit`} className={styles.actionBtn}>Edit</Link>
+                      {post.status !== "published" && (
+                        <button type="button" className={styles.actionBtn} onClick={() => publishPost(post.id)}>
+                          Publish
+                        </button>
+                      )}
+                      {viewHref && (
+                        <a href={viewHref} target="_blank" rel="noopener noreferrer" className={styles.actionBtn}>
+                          View ↗
+                        </a>
+                      )}
                       <button
                         type="button"
-                        className={styles.actionBtn}
-                        onClick={() => publishPost(post.id)}
+                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                        onClick={() => deletePost(post.id, title)}
                       >
-                        Publish
+                        Delete
                       </button>
-                    )}
-                    <a
-                      href={`/${post.locale}/blog/${post.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.actionBtn}
-                    >
-                      View ↗
-                    </a>
-                    <button
-                      type="button"
-                      className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                      onClick={() => deletePost(post.id, post.title)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
-        {/* Pagination */}
         {total > PAGE_SIZE && (
           <div className={styles.paging}>
             <span>{total} articles · page {page + 1} / {totalPages}</span>

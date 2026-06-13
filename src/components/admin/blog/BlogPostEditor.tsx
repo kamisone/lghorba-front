@@ -13,24 +13,33 @@ const BlogRichEditor = dynamic(() => import("./BlogRichEditor"), { ssr: false })
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type BlogPostStatus = "draft" | "scheduled" | "published" | "archived";
+type Locale = "en" | "fr";
 
-export interface BlogCategory { id: string; name: string; slug: string; color: string | null; }
-export interface BlogTag       { id: string; name: string; slug: string; }
-
-export interface BlogPost {
-  id: string;
-  slug: string;
-  locale: string;
-  status: BlogPostStatus;
+interface PostTranslation {
   title: string;
+  slug: string;
   excerpt: string | null;
   content: string | null;
-  featuredImageKey: string | null;
-  featuredImageUrl: string | null;
-  featuredImageAlt: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
   canonicalUrl: string | null;
+  featuredImageAlt: string | null;
+}
+
+export interface BlogCategory {
+  id: string;
+  slug: string;
+  color: string | null;
+  translations: Partial<Record<Locale, { name: string }>>;
+}
+
+export interface BlogTag { id: string; name: string; slug: string; }
+
+export interface BlogPost {
+  id: string;
+  status: BlogPostStatus;
+  featuredImageKey: string | null;
+  featuredImageUrl: string | null;
   readingTimeMinutes: number;
   publishedAt: string | null;
   scheduledPublishAt: string | null;
@@ -38,11 +47,27 @@ export interface BlogPost {
   authorName: string | null;
   categories: BlogCategory[];
   tags: BlogTag[];
+  translations: Partial<Record<Locale, PostTranslation>>;
 }
 
-interface Props {
-  postId?: string;
+interface Props { postId?: string; }
+
+// Per-locale form state
+interface TranslationForm {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  seoTitle: string;
+  seoDescription: string;
+  canonicalUrl: string;
+  featuredImageAlt: string;
 }
+
+const emptyForm = (): TranslationForm => ({
+  title: "", slug: "", excerpt: "", content: "",
+  seoTitle: "", seoDescription: "", canonicalUrl: "", featuredImageAlt: "",
+});
 
 // ── Picker modal ──────────────────────────────────────────────────────────────
 
@@ -92,19 +117,17 @@ export default function BlogPostEditor({ postId }: Props) {
   const [saved,      setSaved]      = useState(false);
   const [error,      setError]      = useState<string | null>(null);
 
-  // Form state
-  const [title,              setTitle]              = useState("");
-  const [slug,               setSlug]               = useState("");
-  const [locale,             setLocale]             = useState<"fr" | "en">("fr");
+  // Language tab
+  const [activeLang, setActiveLang] = useState<Locale>("en");
+  const [translations, setTranslations] = useState<Record<Locale, TranslationForm>>({
+    en: emptyForm(),
+    fr: emptyForm(),
+  });
+
+  // Shared (non-translatable) fields
   const [status,             setStatus]             = useState<BlogPostStatus>("draft");
-  const [excerpt,            setExcerpt]            = useState("");
-  const [content,            setContent]            = useState("");
   const [featuredImageKey,        setFeaturedImageKey]        = useState("");
   const [featuredImagePreviewUrl, setFeaturedImagePreviewUrl] = useState<string | null>(null);
-  const [featuredImageAlt,        setFeaturedImageAlt]        = useState("");
-  const [seoTitle,           setSeoTitle]           = useState("");
-  const [seoDescription,     setSeoDescription]     = useState("");
-  const [canonicalUrl,       setCanonicalUrl]       = useState("");
   const [scheduledPublishAt, setScheduledPublishAt] = useState("");
   const [featured,           setFeatured]           = useState(false);
   const [authorName,         setAuthorName]         = useState("");
@@ -117,10 +140,22 @@ export default function BlogPostEditor({ postId }: Props) {
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [showTagPicker, setShowTagPicker] = useState(false);
 
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef  = useRef<HTMLInputElement>(null);
+  const autoSaveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-save timer
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ── Helper: update a field in the active language ──────────────────────────
+
+  function setField<K extends keyof TranslationForm>(key: K, val: TranslationForm[K]) {
+    setTranslations(prev => ({
+      ...prev,
+      [activeLang]: { ...prev[activeLang], [key]: val },
+    }));
+  }
+
+  // ── Category display name (active lang with fallback) ──────────────────────
+
+  const catName = (c: BlogCategory) =>
+    c.translations[activeLang]?.name ?? c.translations.en?.name ?? c.translations.fr?.name ?? c.slug;
 
   // ── Load data ──────────────────────────────────────────────────────────────
 
@@ -139,25 +174,38 @@ export default function BlogPostEditor({ postId }: Props) {
     fetch(`/next-api/blog/${postId}`)
       .then(r => r.json())
       .then((p: BlogPost) => {
-        setTitle(p.title);
-        setSlug(p.slug);
-        setLocale(p.locale as "fr" | "en");
         setStatus(p.status);
-        setExcerpt(p.excerpt ?? "");
-        setContent(p.content ?? "");
-        setFeaturedImageKey(p.featuredImageKey ?? "");
-        setFeaturedImagePreviewUrl(p.featuredImageUrl ?? null);
-        setFeaturedImageAlt(p.featuredImageAlt ?? "");
-        setSeoTitle(p.seoTitle ?? "");
-        setSeoDescription(p.seoDescription ?? "");
-        setCanonicalUrl(p.canonicalUrl ?? "");
-        setScheduledPublishAt(
-          p.scheduledPublishAt ? p.scheduledPublishAt.slice(0, 16) : "",
-        );
+        setScheduledPublishAt(p.scheduledPublishAt ? p.scheduledPublishAt.slice(0, 16) : "");
         setFeatured(p.featured);
         setAuthorName(p.authorName ?? "");
         setCategoryIds(p.categories.map(c => c.id));
         setTagIds(p.tags.map(t => t.id));
+        setFeaturedImageKey(p.featuredImageKey ?? "");
+        setFeaturedImagePreviewUrl(p.featuredImageUrl ?? null);
+        setTranslations({
+          en: {
+            title:            p.translations.en?.title ?? "",
+            slug:             p.translations.en?.slug ?? "",
+            excerpt:          p.translations.en?.excerpt ?? "",
+            content:          p.translations.en?.content ?? "",
+            seoTitle:         p.translations.en?.seoTitle ?? "",
+            seoDescription:   p.translations.en?.seoDescription ?? "",
+            canonicalUrl:     p.translations.en?.canonicalUrl ?? "",
+            featuredImageAlt: p.translations.en?.featuredImageAlt ?? "",
+          },
+          fr: {
+            title:            p.translations.fr?.title ?? "",
+            slug:             p.translations.fr?.slug ?? "",
+            excerpt:          p.translations.fr?.excerpt ?? "",
+            content:          p.translations.fr?.content ?? "",
+            seoTitle:         p.translations.fr?.seoTitle ?? "",
+            seoDescription:   p.translations.fr?.seoDescription ?? "",
+            canonicalUrl:     p.translations.fr?.canonicalUrl ?? "",
+            featuredImageAlt: p.translations.fr?.featuredImageAlt ?? "",
+          },
+        });
+        // Open the first language that has a title
+        if (!p.translations.en?.title && p.translations.fr?.title) setActiveLang("fr");
       })
       .catch(() => setError("Failed to load post"))
       .finally(() => setLoading(false));
@@ -166,35 +214,52 @@ export default function BlogPostEditor({ postId }: Props) {
   // ── Auto-slug ──────────────────────────────────────────────────────────────
 
   const handleTitleChange = (val: string) => {
-    setTitle(val);
-    if (!isEdit || status === "draft") {
-      setSlug(slugify(val));
-    }
+    const autoSlug = !isEdit || status === "draft" ? slugify(val) : translations[activeLang].slug;
+    setTranslations(prev => ({
+      ...prev,
+      [activeLang]: { ...prev[activeLang], title: val, slug: autoSlug },
+    }));
   };
 
-  // ── Auto-save draft (debounced 3s) ─────────────────────────────────────────
+  // ── Build payload ──────────────────────────────────────────────────────────
 
   const buildPayload = useCallback(() => ({
-    title,
-    slug:               slug || undefined,
-    locale,
     status,
-    excerpt:            excerpt || null,
-    content:            content || null,
-    featuredImageKey:   featuredImageKey || null,
-    featuredImageAlt:   featuredImageAlt || null,
-    seoTitle:           seoTitle || null,
-    seoDescription:     seoDescription || null,
-    canonicalUrl:       canonicalUrl || null,
     scheduledPublishAt: scheduledPublishAt ? new Date(scheduledPublishAt).toISOString() : null,
     featured,
-    authorName:         authorName || null,
+    authorName: authorName || null,
+    featuredImageKey: featuredImageKey || null,
     categoryIds,
     tagIds,
-  }), [title, slug, locale, status, excerpt, content, featuredImageKey, featuredImageAlt, seoTitle, seoDescription, canonicalUrl, scheduledPublishAt, featured, authorName, categoryIds, tagIds]);
+    translations: {
+      en: {
+        title:            translations.en.title || undefined,
+        slug:             translations.en.slug  || undefined,
+        excerpt:          translations.en.excerpt || null,
+        content:          translations.en.content || null,
+        seoTitle:         translations.en.seoTitle || null,
+        seoDescription:   translations.en.seoDescription || null,
+        canonicalUrl:     translations.en.canonicalUrl || null,
+        featuredImageAlt: translations.en.featuredImageAlt || null,
+      },
+      fr: {
+        title:            translations.fr.title || undefined,
+        slug:             translations.fr.slug  || undefined,
+        excerpt:          translations.fr.excerpt || null,
+        content:          translations.fr.content || null,
+        seoTitle:         translations.fr.seoTitle || null,
+        seoDescription:   translations.fr.seoDescription || null,
+        canonicalUrl:     translations.fr.canonicalUrl || null,
+        featuredImageAlt: translations.fr.featuredImageAlt || null,
+      },
+    },
+  }), [translations, status, scheduledPublishAt, featured, authorName, featuredImageKey, categoryIds, tagIds]);
+
+  // ── Save ───────────────────────────────────────────────────────────────────
 
   const save = useCallback(async (opts: { publish?: boolean } = {}) => {
-    if (!title.trim()) { setError("Title is required"); return; }
+    const hasTitle = translations.en.title.trim() || translations.fr.title.trim();
+    if (!hasTitle) { setError("At least one language title is required"); return; }
     setSaving(true);
     setError(null);
     try {
@@ -232,15 +297,16 @@ export default function BlogPostEditor({ postId }: Props) {
     } finally {
       setSaving(false);
     }
-  }, [buildPayload, isEdit, postId, router, title]);
+  }, [buildPayload, isEdit, postId, router, translations]);
 
   // Debounced auto-save for edits
   useEffect(() => {
-    if (!isEdit || !title) return;
+    if (!isEdit) return;
+    if (!translations.en.title && !translations.fr.title) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => save(), 10_000);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
-  }, [title, content, excerpt, seoTitle, seoDescription, isEdit, save]);
+  }, [translations, isEdit, save]);
 
   // ── Featured image upload ──────────────────────────────────────────────────
 
@@ -252,7 +318,6 @@ export default function BlogPostEditor({ postId }: Props) {
       const data = await res.json() as { key: string; url: string };
       setFeaturedImageKey(data.key);
       setFeaturedImagePreviewUrl(data.url);
-      if (!featuredImageAlt) setFeaturedImageAlt(file.name.replace(/\.[^.]+$/, ""));
     } catch {
       setError("Image upload failed");
     }
@@ -262,10 +327,10 @@ export default function BlogPostEditor({ postId }: Props) {
 
   if (loading) return <div style={{ padding: 40, color: "var(--color-text-muted)" }}>Loading…</div>;
 
+  const t = translations[activeLang];
   const selectedCats = allCategories.filter(c => categoryIds.includes(c.id));
-  const selectedTags = allTags.filter(t => tagIds.includes(t.id));
-
-  const featuredImageUrl = featuredImagePreviewUrl;
+  const selectedTags = allTags.filter(tg => tagIds.includes(tg.id));
+  const catPickerItems = allCategories.map(c => ({ id: c.id, name: catName(c) }));
 
   return (
     <div className={styles.page}>
@@ -289,21 +354,36 @@ export default function BlogPostEditor({ postId }: Props) {
         </div>
       </div>
 
-      {saved  && <p className={styles.savedNote}>Saved ✓</p>}
-      {error  && <p className={styles.errorNote}>{error}</p>}
+      {saved && <p className={styles.savedNote}>Saved ✓</p>}
+      {error && <p className={styles.errorNote}>{error}</p>}
 
       <div className={styles.layout}>
         {/* ── Main column ── */}
         <div className={styles.main}>
-          {/* Title */}
+          {/* Language tabs */}
+          <div className={styles.langTabs}>
+            {(["en", "fr"] as const).map(lang => (
+              <button
+                key={lang}
+                type="button"
+                className={`${styles.langTab} ${activeLang === lang ? styles.langTabActive : ""}`}
+                onClick={() => setActiveLang(lang)}
+              >
+                {lang === "en" ? "EN — English" : "FR — Français"}
+                {translations[lang].title && <span className={styles.langDot} />}
+              </button>
+            ))}
+          </div>
+
+          {/* Title & slug */}
           <div className={styles.card}>
             <div className={styles.field}>
               <label className={styles.label}>Title *</label>
               <input
                 className={styles.input}
-                value={title}
+                value={t.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Article title"
+                placeholder={activeLang === "en" ? "Article title" : "Titre de l'article"}
               />
             </div>
             <div className={styles.field}>
@@ -314,14 +394,14 @@ export default function BlogPostEditor({ postId }: Props) {
               <div className={styles.slugRow}>
                 <input
                   className={`${styles.input} ${styles.slugInput}`}
-                  value={slug}
-                  onChange={(e) => setSlug(slugify(e.target.value))}
+                  value={t.slug}
+                  onChange={(e) => setField("slug", slugify(e.target.value))}
                   placeholder="article-url-slug"
                 />
                 <button
                   type="button"
                   className={styles.slugBtn}
-                  onClick={() => setSlug(slugify(title))}
+                  onClick={() => setField("slug", slugify(t.title))}
                 >
                   ↺ Regenerate
                 </button>
@@ -334,21 +414,24 @@ export default function BlogPostEditor({ postId }: Props) {
               </label>
               <textarea
                 className={styles.textarea}
-                value={excerpt}
-                onChange={(e) => setExcerpt(e.target.value)}
-                placeholder="A short, compelling summary of the article (150–200 chars recommended)…"
+                value={t.excerpt}
+                onChange={(e) => setField("excerpt", e.target.value)}
+                placeholder={activeLang === "en"
+                  ? "A short, compelling summary (150–200 chars recommended)…"
+                  : "Un résumé court et accrocheur (150–200 caractères recommandés)…"}
                 rows={3}
               />
             </div>
           </div>
 
-          {/* Content */}
+          {/* Content — remount editor when switching language to reset internal state */}
           <div className={styles.card}>
             <div className={styles.cardTitle}>Content</div>
             <BlogRichEditor
-              content={content}
-              onChange={setContent}
-              placeholder="Start writing your article…"
+              key={activeLang}
+              content={t.content ?? ""}
+              onChange={(val) => setField("content", val)}
+              placeholder={activeLang === "en" ? "Start writing your article…" : "Commencez à rédiger votre article…"}
             />
           </div>
 
@@ -362,31 +445,31 @@ export default function BlogPostEditor({ postId }: Props) {
               </label>
               <input
                 className={styles.input}
-                value={seoTitle}
-                onChange={(e) => setSeoTitle(e.target.value)}
+                value={t.seoTitle}
+                onChange={(e) => setField("seoTitle", e.target.value)}
                 placeholder="Custom SEO title"
                 maxLength={70}
               />
-              <span className={styles.labelMuted}>{seoTitle.length}/70</span>
+              <span className={styles.labelMuted}>{t.seoTitle.length}/70</span>
             </div>
             <div className={styles.field}>
               <label className={styles.label}>SEO Description</label>
               <textarea
                 className={styles.textarea}
-                value={seoDescription}
-                onChange={(e) => setSeoDescription(e.target.value)}
+                value={t.seoDescription}
+                onChange={(e) => setField("seoDescription", e.target.value)}
                 placeholder="Meta description for search engines (150–160 chars recommended)"
                 rows={3}
                 maxLength={160}
               />
-              <span className={styles.labelMuted}>{seoDescription.length}/160</span>
+              <span className={styles.labelMuted}>{t.seoDescription.length}/160</span>
             </div>
             <div className={styles.field}>
               <label className={styles.label}>Canonical URL <span className={styles.labelMuted}>(optional)</span></label>
               <input
                 className={styles.input}
-                value={canonicalUrl}
-                onChange={(e) => setCanonicalUrl(e.target.value)}
+                value={t.canonicalUrl}
+                onChange={(e) => setField("canonicalUrl", e.target.value)}
                 placeholder="https://example.com/blog/original-post"
                 type="url"
               />
@@ -418,13 +501,6 @@ export default function BlogPostEditor({ postId }: Props) {
                 />
               </div>
             )}
-            <div className={styles.field}>
-              <label className={styles.label}>Locale</label>
-              <select className={styles.select} value={locale} onChange={(e) => setLocale(e.target.value as "fr" | "en")}>
-                <option value="fr">French (FR)</option>
-                <option value="en">English (EN)</option>
-              </select>
-            </div>
             <label className={styles.checkRow}>
               <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
               <span className={styles.checkLabel}>Featured article</span>
@@ -447,8 +523,8 @@ export default function BlogPostEditor({ postId }: Props) {
           {/* Featured image */}
           <div className={styles.card}>
             <div className={styles.cardTitle}>Featured image</div>
-            {featuredImageUrl ? (
-              <img src={featuredImageUrl} alt={featuredImageAlt} className={styles.imagePreview} />
+            {featuredImagePreviewUrl ? (
+              <img src={featuredImagePreviewUrl} alt={t.featuredImageAlt} className={styles.imagePreview} />
             ) : (
               <div
                 className={styles.imagePlaceholder}
@@ -470,7 +546,7 @@ export default function BlogPostEditor({ postId }: Props) {
                 e.target.value = "";
               }}
             />
-            {featuredImageUrl && (
+            {featuredImagePreviewUrl && (
               <button
                 type="button"
                 className={`${styles.btnGhost} ${styles.btnFull}`}
@@ -482,12 +558,15 @@ export default function BlogPostEditor({ postId }: Props) {
             )}
             {featuredImageKey && (
               <div className={styles.field}>
-                <label className={styles.label}>Alt text</label>
+                <label className={styles.label}>
+                  Alt text
+                  <span className={styles.labelMuted}>({activeLang.toUpperCase()})</span>
+                </label>
                 <input
                   className={styles.input}
-                  value={featuredImageAlt}
-                  onChange={(e) => setFeaturedImageAlt(e.target.value)}
-                  placeholder="Image alt description"
+                  value={t.featuredImageAlt}
+                  onChange={(e) => setField("featuredImageAlt", e.target.value)}
+                  placeholder="Image description for screen readers"
                 />
               </div>
             )}
@@ -499,7 +578,7 @@ export default function BlogPostEditor({ postId }: Props) {
             <div className={styles.pills}>
               {selectedCats.map(c => (
                 <span key={c.id} className={styles.pill}>
-                  {c.name}
+                  {catName(c)}
                   <button
                     type="button"
                     className={styles.pillRemove}
@@ -507,11 +586,7 @@ export default function BlogPostEditor({ postId }: Props) {
                   ><X size={14} strokeWidth={2} /></button>
                 </span>
               ))}
-              <button
-                type="button"
-                className={styles.addPill}
-                onClick={() => setShowCatPicker(true)}
-              >
+              <button type="button" className={styles.addPill} onClick={() => setShowCatPicker(true)}>
                 + Add
               </button>
             </div>
@@ -521,21 +596,17 @@ export default function BlogPostEditor({ postId }: Props) {
           <div className={styles.card}>
             <div className={styles.cardTitle}>Tags</div>
             <div className={styles.pills}>
-              {selectedTags.map(t => (
-                <span key={t.id} className={styles.pill}>
-                  {t.name}
+              {selectedTags.map(tg => (
+                <span key={tg.id} className={styles.pill}>
+                  {tg.name}
                   <button
                     type="button"
                     className={styles.pillRemove}
-                    onClick={() => setTagIds(ids => ids.filter(id => id !== t.id))}
+                    onClick={() => setTagIds(ids => ids.filter(id => id !== tg.id))}
                   ><X size={14} strokeWidth={2} /></button>
                 </span>
               ))}
-              <button
-                type="button"
-                className={styles.addPill}
-                onClick={() => setShowTagPicker(true)}
-              >
+              <button type="button" className={styles.addPill} onClick={() => setShowTagPicker(true)}>
                 + Add
               </button>
             </div>
@@ -556,7 +627,7 @@ export default function BlogPostEditor({ postId }: Props) {
       {showCatPicker && (
         <PickerModal
           title="Select categories"
-          items={allCategories}
+          items={catPickerItems}
           selected={categoryIds}
           onToggle={(id) => setCategoryIds(ids => ids.includes(id) ? ids.filter(i => i !== id) : [...ids, id])}
           onClose={() => setShowCatPicker(false)}

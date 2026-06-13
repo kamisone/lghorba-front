@@ -181,3 +181,17 @@
 .pagingBtn:not(:disabled):hover { background: var(--color-surface-raised); }
 
 .featuredStar { color: #f59e0b; font-size: 14px; margin-right: 4px; }
+
+.localeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  letter-spacing: 0.03em;
+}
