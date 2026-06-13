@@ -43,6 +43,7 @@
 .menuRow {
   display: flex;
   align-items: center;
+  justify-content: safe center;
   gap: 0.2rem;
   overflow-x: auto;
   scrollbar-width: none;

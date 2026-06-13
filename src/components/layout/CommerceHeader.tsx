@@ -6,7 +6,7 @@ import LangSwitcher from "@/components/LangSwitcher";
 import ScrollAwareHeader from "./ScrollAwareHeader";
 import CartHeaderIcon from "./CartHeaderIcon";
 import WishlistHeaderIcon from "@/components/shop/WishlistHeaderIcon";
-import CommerceCategoriesMenu from "@/components/shop/CommerceCategoriesMenu";
+import CommerceCategoryNav from "@/components/shop/CommerceCategoryNav";
 import SearchAutocomplete from "@/components/shop/SearchAutocomplete";
 import shellStyles from "./ClientHeader.module.css";
 import styles from "./CommerceHeader.module.css";
@@ -69,13 +69,7 @@ export default function CommerceHeader({ locale }: Props) {
 
           {/* ── Second row: category/discovery navigation ── */}
           <nav className={styles.menuRow} aria-label={t.nav.navAriaLabel}>
-            <CommerceCategoriesMenu locale={locale} className={styles.menuItem} />
-            <Link href={`/${locale}/shop#collections`} className={`${styles.menuLink} ${styles.menuItem}`}>
-              {shop.collectionsLabel}
-            </Link>
-            <Link href={`/${locale}/shop`} className={`${styles.menuLink} ${styles.promoLink} ${styles.menuItem}`}>
-              {shop.promotionsLabel}
-            </Link>
+            <CommerceCategoryNav locale={locale} className={styles.menuItem} />
           </nav>
 
         </div>
