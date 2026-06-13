@@ -1,0 +1,238 @@
+/* ── Wrapper ────────────────────────────────────────────────────────────────── */
+.wrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.tbBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.tbBtn:hover {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+.tbBtnActive {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: transparent;
+}
+.tbBtnActive:hover {
+  background: #1e40af;
+  color: #fff;
+}
+
+.tbDivider {
+  width: 1px;
+  height: 28px;
+  background: #e5e7eb;
+  margin: 0 4px;
+  align-self: center;
+}
+
+.tbSpacer { flex: 1; }
+
+/* ── Snippet dropdown ──────────────────────────────────────────────────────── */
+.snippetDropdown { position: relative; }
+.snippetMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 200px;
+  padding: 4px;
+}
+.snippetMenuItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+}
+.snippetMenuItem:hover { background: #f3f4f6; }
+
+/* ── Editor content ─────────────────────────────────────────────────────────── */
+.editor {
+  min-height: 360px;
+  padding: 20px 24px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #111827;
+  outline: none;
+}
+
+.editor :global(.ProseMirror) {
+  outline: none;
+  min-height: 320px;
+}
+
+.editor :global(h1) { font-size: 2em;   font-weight: 700; margin: 1em 0 0.5em; }
+.editor :global(h2) { font-size: 1.5em; font-weight: 700; margin: 1em 0 0.5em; }
+.editor :global(h3) { font-size: 1.2em; font-weight: 600; margin: 1em 0 0.4em; }
+.editor :global(p)  { margin: 0 0 1em; }
+.editor :global(ul),
+.editor :global(ol) { margin: 0 0 1em 1.5em; }
+.editor :global(li) { margin: 0.25em 0; }
+.editor :global(blockquote) {
+  border-left: 3px solid #1d4ed8;
+  padding-left: 16px;
+  margin: 1em 0;
+  color: #6b7280;
+  font-style: italic;
+}
+.editor :global(hr) {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2em 0;
+}
+.editor :global(a) {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.editor :global(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1em 0;
+  display: block;
+}
+.editor :global(.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ── Link modal overlay ─────────────────────────────────────────────────────── */
+.linkModal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.35);
+  z-index: 9999;
+}
+.linkBox {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px;
+  width: 360px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.linkBox h4 { margin: 0 0 14px; font-size: 15px; color: #111827; }
+.linkInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111827;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+.linkInput:focus { outline: none; border-color: #1d4ed8; }
+.linkActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.btnPrimary {
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 6px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btnPrimary:hover { background: #1e40af; }
+.btnGhost {
+  height: 34px;
+  padding: 0 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btnGhost:hover { background: #f3f4f6; }
+
+/* ── Preview ───────────────────────────────────────────────────────────────── */
+.previewControls {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+.previewWidthBtn {
+  padding: 4px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 12px;
+  cursor: pointer;
+}
+.previewWidthBtnActive {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: transparent;
+}
+.previewFrameOuter {
+  display: flex;
+  justify-content: center;
+  background: #f3f4f6;
+  padding: 16px;
+}
+.previewFrame {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  min-height: 400px;
+  transition: width 0.15s ease;
+}

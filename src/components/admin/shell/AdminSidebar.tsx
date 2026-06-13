@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   Car, CalendarDays, CalendarCheck, ParkingCircle,
-  Receipt, Tag, User, Mail, Key,
+  Receipt, Tag, User, Mail, Key, Send,
   Headphones, Bell, MailOpen,
   MapPin, Layers, Package, FolderOpen, LayoutGrid,
   SlidersHorizontal, Warehouse, Star, Images,
@@ -74,6 +74,15 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/support",                 icon: Headphones, label: "Support",     badge: "waitingAdmin"     },
       { href: "/admin/notifications/reminders", icon: Bell,       label: "Reminders",   badge: "reminderFailures" },
       { href: "/admin/email-ingestion",         icon: MailOpen,   label: "Email Import" },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      { href: "/admin/marketing/newsletters", icon: Mail,      label: "Newsletters"     },
+      { href: "/admin/marketing/campaigns",   icon: Send,      label: "Campaigns"       },
+      { href: "/admin/marketing/subscribers", icon: Users,     label: "Subscribers"     },
+      { href: "/admin/marketing/analytics",   icon: BarChart3, label: "Email Analytics" },
     ],
   },
   {

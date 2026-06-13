@@ -1,0 +1,62 @@
+/* ── Audience selector ─────────────────────────────────────────────────────── */
+.audienceSelector { display: flex; flex-direction: column; gap: 10px; }
+.audienceCount { font-size: 13px; color: #6b7280; }
+.tagInputRow { display: flex; flex-direction: column; gap: 8px; }
+.chipRow { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 500;
+}
+.chip button {
+  border: none; background: none; color: #1d4ed8; cursor: pointer;
+  font-size: 14px; line-height: 1; padding: 0;
+}
+
+/* ── Campaign status badges ────────────────────────────────────────────────── */
+.statusBadge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.statusDraft     { background: #f3f4f6; color: #6b7280; }
+.statusScheduled { background: #fef9c3; color: #854d0e; }
+.statusSending   { background: #dbeafe; color: #1d4ed8; }
+.statusSent      { background: #d1fae5; color: #065f46; }
+.statusCancelled { background: #fee2e2; color: #dc2626; }
+
+.subStatusSubscribed   { background: #d1fae5; color: #065f46; }
+.subStatusUnsubscribed { background: #f3f4f6; color: #6b7280; }
+.subStatusBounced      { background: #fee2e2; color: #dc2626; }
+
+/* ── Campaign editor layout ────────────────────────────────────────────────── */
+.editorLayout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+.editorMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.editorSidebar { display: flex; flex-direction: column; gap: 16px; }
+
+.actionBar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ── Charts ────────────────────────────────────────────────────────────────── */
+.chartGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chartCard { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; }
+.chartTitle { font-size: 14px; font-weight: 600; margin: 0 0 12px; color: #374151; }
+
+@media (max-width: 1100px) {
+  .editorLayout { grid-template-columns: 1fr; }
+  .chartGrid { grid-template-columns: 1fr; }
+}
+
+/* ── Bulk action bar ───────────────────────────────────────────────────────── */
+.bulkBar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+  padding: 10px 14px; margin-bottom: 12px; font-size: 13px; color: #1d4ed8;
+}
+
+/* ── Modal ─────────────────────────────────────────────────────────────────── */
+.modalOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.modalBox {
+  background: #fff; border-radius: 10px; padding: 24px; width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.modalBox h3 { margin: 0 0 16px; font-size: 16px; }
+.modalActions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
