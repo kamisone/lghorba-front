@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Car } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
 import ScrollAwareHeader from "./ScrollAwareHeader";
@@ -51,10 +52,14 @@ export default function CommerceHeader({ locale }: Props) {
             </div>
 
             <div className={`${shellStyles.navRight} ${styles.iconsOrder}`}>
+              <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} />
+              <Link href={`/${locale}`} className={styles.crossLink}>
+                <Car size={16} strokeWidth={2} aria-hidden="true" />
+                <span className={styles.crossLinkLabel}>{t.nav.backToRentals}</span>
+              </Link>
+              <span className={shellStyles.navDivider} aria-hidden="true" />
               <WishlistHeaderIcon locale={locale} label={shop.wishlistNavLabel} />
               <CartHeaderIcon />
-              <span className={shellStyles.navDivider} aria-hidden="true" />
-              <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} />
             </div>
 
             <div className={styles.searchMobile}>
@@ -70,9 +75,6 @@ export default function CommerceHeader({ locale }: Props) {
             </Link>
             <Link href={`/${locale}/shop`} className={`${styles.menuLink} ${styles.promoLink} ${styles.menuItem}`}>
               {shop.promotionsLabel}
-            </Link>
-            <Link href={`/${locale}`} className={`${styles.rentalsLink} ${styles.menuItem}`}>
-              {t.nav.backToRentals}
             </Link>
           </nav>
 

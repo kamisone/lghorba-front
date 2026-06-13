@@ -76,20 +76,26 @@
   background: rgba(141, 194, 32, 0.12);
 }
 
-.rentalsLink {
-  margin-left: auto;
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
+/* ── Cross-section link (back to rentals) ── */
+.crossLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 40px;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  background: rgba(141, 194, 32, 0.14);
+  color: var(--color-brand-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: background .15s, color .15s;
 }
-.rentalsLink:hover {
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.06);
+.crossLink:hover {
+  background: rgba(141, 194, 32, 0.22);
+  color: #b6ec3f;
 }
 
 /* ── Responsive ── */
@@ -105,4 +111,9 @@
   }
 
   .inner { padding: 0.6rem 1.25rem; }
+}
+
+@media (max-width: 480px) {
+  .crossLinkLabel { display: none; }
+  .crossLink { width: 40px; justify-content: center; padding: 0; }
 }

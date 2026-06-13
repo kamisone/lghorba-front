@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./ClientFooter.module.css";
 import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
+import { VisaIcon, MastercardIcon, AmexIcon } from "./PaymentIcons";
 
 interface Props {
   locale: string;
@@ -28,6 +29,9 @@ export default function ClientFooter({ locale }: Props) {
             <Link href={`/${locale}/about`} className={styles.footerLink}>
               {t.footer.about}
             </Link>
+            <Link href={`/${locale}/shop`} className={styles.footerLink}>
+              {t.footer.shop}
+            </Link>
             <Link href={`/${locale}/privacy-policy`} className={styles.footerLink}>
               {t.footer.privacy}
             </Link>
@@ -47,11 +51,17 @@ export default function ClientFooter({ locale }: Props) {
           </nav>
         </div>
 
-        {/* ── Bottom row: copyright ── */}
+        {/* ── Bottom row: copyright + accepted payment methods ── */}
         <div className={styles.footerBottom}>
           <p className={styles.footerCopy}>
             © {new Date().getFullYear()} vitecamion · {t.footer.rights}
           </p>
+          <div className={styles.paymentMethods}>
+            <span className={styles.paymentLabel}>{t.footer.paymentsAccepted}</span>
+            <VisaIcon className={styles.paymentIcon} />
+            <MastercardIcon className={styles.paymentIcon} />
+            <AmexIcon className={styles.paymentIcon} />
+          </div>
         </div>
 
       </div>

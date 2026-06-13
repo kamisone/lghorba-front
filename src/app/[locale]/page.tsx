@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
@@ -14,6 +15,7 @@ import {
   CalendarDays,
   Navigation,
   CheckCircle2,
+  ShoppingBag,
 } from "lucide-react";
 import styles from "../page.module.css";
 
@@ -234,6 +236,20 @@ export default async function LandingPage({ params }: { params: { locale: string
               </div>
             </div>
 
+          </div>
+
+          <div className={styles.shopBanner}>
+            <div className={styles.shopBannerIcon}>
+              <ShoppingBag size={22} strokeWidth={1.75} />
+            </div>
+            <div className={styles.shopBannerText}>
+              <p className={styles.shopBannerEyebrow}>{t.shopBanner.eyebrow}</p>
+              <h3 className={styles.shopBannerTitle}>{t.shopBanner.title}</h3>
+              <p className={styles.shopBannerBody}>{t.shopBanner.body}</p>
+            </div>
+            <Link href={`/${locale}/shop`} className={styles.shopBannerCta}>
+              {t.shopBanner.cta}
+            </Link>
           </div>
         </div>
       </section>

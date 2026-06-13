@@ -140,6 +140,17 @@
   margin: 0;
 }
 
+.inlineLink {
+  color: var(--color-brand-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s;
+}
+.inlineLink:hover {
+  text-decoration-color: currentColor;
+}
+
 /* ── Values ── */
 .valuesSection {
   padding: 2.5rem 0;
@@ -164,7 +175,9 @@
 }
 
 .valueIcon {
-  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-brand-accent);
 }
 
 .valueTitle {

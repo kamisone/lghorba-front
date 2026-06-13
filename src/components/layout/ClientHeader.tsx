@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
 import HamburgerMenu from "./HamburgerMenu";
@@ -69,6 +70,10 @@ export default function ClientHeader({ locale }: Props) {
           {/* ── Right slot ── */}
           <div className={styles.navRight}>
             <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} />
+            <Link href={`/${locale}/shop`} className={styles.crossLink}>
+              <ShoppingBag size={16} strokeWidth={2} aria-hidden="true" />
+              <span className={styles.crossLinkLabel}>{t.nav.shop}</span>
+            </Link>
             <CartHeaderIcon />
             <span className={styles.navDivider} aria-hidden="true" />
             <Link href={ctaHref} className={styles.navCta}>

@@ -65,10 +65,15 @@
   color: var(--color-text-placeholder);
 }
 
-/* ── Bottom row: copyright ── */
+/* ── Bottom row: copyright + accepted payment methods ── */
 .footerBottom {
   border-top: 1px solid rgba(var(--rgb-white), 0.07);
   padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .footerCopy {
@@ -76,6 +81,26 @@
   color: var(--color-text-secondary);
   margin: 0;
   opacity: 0.6;
+}
+
+.paymentMethods {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paymentLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.paymentIcon {
+  width: 32px;
+  height: 21px;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 
 /* ── Tablet (≤ 768px): centre-align everything ── */
@@ -91,6 +116,8 @@
   }
 
   .footerBottom {
+    flex-direction: column;
+    justify-content: center;
     text-align: center;
   }
 }
