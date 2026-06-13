@@ -175,7 +175,6 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Content & Merchandising",
         icon:  BookOpen,
         items: [
-          { href: "/admin/blog",                      icon: FileEdit, label: "Blog Posts"              },
           { href: "/admin/shop/collections/seo",      icon: Search,   label: "SEO Landing Pages"       },
           { href: "/admin/shop/collections/featured", icon: Star,     label: "Featured Collections"    },
           { href: "/admin/shop/merchandising",        icon: Store,    label: "Homepage Merchandising"  },
