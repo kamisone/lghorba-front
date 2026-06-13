@@ -18,16 +18,31 @@ export async function resolveSessionFromOrigin(
   refreshToken: string | undefined,
   origin: string,
 ): Promise<SessionResult> {
+  const controller = new AbortController();
+  // 5-second ceiling: if the session route is slow/hung, fail fast without
+  // wiping cookies — the user resumes their session on the next request.
+  const timer = setTimeout(() => controller.abort(), 5_000);
+
   try {
     const res = await fetch(`${origin}/next-api/auth/session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken }),
       cache: "no-store",
+      signal: controller.signal,
     });
-    if (!res.ok) return { accessToken: null, expired: true };
-    return await res.json();
+    clearTimeout(timer);
+
+    // A non-2xx response means the session route itself errored (500, 502 …),
+    // NOT that the backend explicitly rejected the tokens. Treat it as a
+    // transient failure — do NOT clear cookies.
+    if (!res.ok) return { accessToken: null, networkError: true };
+
+    return await res.json() as SessionResult;
   } catch {
-    return { accessToken: null, expired: true };
+    clearTimeout(timer);
+    // Network error, connection refused, or AbortError from the timeout above.
+    // None of these mean the backend rejected the tokens — do NOT clear cookies.
+    return { accessToken: null, networkError: true };
   }
 }
