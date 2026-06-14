@@ -6,11 +6,13 @@ import BilingualField from "@/components/admin/BilingualField";
 import { TRUST_BADGE_ICON_OPTIONS, getTrustBadgeIcon, type TrustBadgeIconName } from "@/lib/shop/trustBadgeIcons";
 import styles from "./ProductTrustBadgesManager.module.css";
 
-/** A small icon+label trust signal shown near the PDP buy box (e.g. "Secure checkout"). */
+/** A small icon+title trust signal shown near the PDP buy box (e.g. "Secure checkout"). */
 export interface ProductTrustBadge {
   id: string;
   icon: TrustBadgeIconName;
-  label: string;
+  title: string;
+  subtitle?: string;
+  link?: string;
   sortOrder: number;
 }
 
@@ -35,7 +37,7 @@ export default function ProductTrustBadgesManager({ badges, onChange, enValues, 
   }
 
   function addBadge() {
-    notify([...badges, { id: genId(), icon: "BadgeCheck", label: "", sortOrder: badges.length }]);
+    notify([...badges, { id: genId(), icon: "BadgeCheck", title: "", subtitle: "", link: "", sortOrder: badges.length }]);
   }
 
   function update(index: number, patch: Partial<ProductTrustBadge>) {
@@ -57,8 +59,6 @@ export default function ProductTrustBadgesManager({ badges, onChange, enValues, 
 
   return (
     <div>
-      <p className={styles.label}>Trust badges</p>
-
       {badges.length === 0 && (
         <p className={styles.empty}>No badges yet. The page will show the default "Secure checkout / Free shipping / Easy returns" signals.</p>
       )}
@@ -93,15 +93,34 @@ export default function ProductTrustBadgesManager({ badges, onChange, enValues, 
 
               <div className={styles.cardBody}>
                 <BilingualField
-                  label="Badge label"
-                  frValue={badge.label}
-                  frOnChange={val => update(i, { label: val })}
+                  label="Badge title"
+                  frValue={badge.title}
+                  frOnChange={val => update(i, { title: val })}
                   frPlaceholder="e.g. Secure checkout"
                   frRequired
-                  enValue={enValues[`trustBadge:${badge.id}:label`] ?? ""}
-                  enOnChange={val => setEn(`trustBadge:${badge.id}:label`, val)}
+                  enValue={enValues[`trustBadge:${badge.id}:title`] ?? ""}
+                  enOnChange={val => setEn(`trustBadge:${badge.id}:title`, val)}
                   enPlaceholder="e.g. Secure checkout"
                 />
+                <BilingualField
+                  label="Subtitle (optional)"
+                  frValue={badge.subtitle ?? ""}
+                  frOnChange={val => update(i, { subtitle: val })}
+                  frPlaceholder="e.g. Paiement 100% sécurisé"
+                  enValue={enValues[`trustBadge:${badge.id}:subtitle`] ?? ""}
+                  enOnChange={val => setEn(`trustBadge:${badge.id}:subtitle`, val)}
+                  enPlaceholder="e.g. 100% secure payment"
+                />
+                <label className={styles.linkField}>
+                  <span className={styles.linkLabel}>Link (optional)</span>
+                  <input
+                    className={styles.linkInput}
+                    type="text"
+                    value={badge.link ?? ""}
+                    onChange={e => update(i, { link: e.target.value })}
+                    placeholder="e.g. /shipping-policy"
+                  />
+                </label>
               </div>
             </div>
           );

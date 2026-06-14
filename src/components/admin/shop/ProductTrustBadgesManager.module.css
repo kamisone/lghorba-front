@@ -1,5 +1,3 @@
-.label { font-size: 13px; font-weight: 500; color: var(--color-text-label); margin-bottom: 8px; }
-
 .empty {
   font-size: 13px;
   color: var(--color-text-muted);
@@ -77,6 +75,39 @@
   gap: 14px;
 }
 .cardBody > * { margin-bottom: 0; }
+
+/* ── Link field (single, non-bilingual) ── */
+.linkField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.linkLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-label);
+}
+
+.linkInput {
+  width: 100%;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 0.84rem;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.linkInput::placeholder { color: #b6c3d6; }
+.linkInput:focus {
+  border-color: var(--color-admin-secondary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-admin-secondary), 0.1);
+}
 
 /* ── Add tile ── */
 .addBtn {

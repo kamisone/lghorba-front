@@ -14,17 +14,6 @@ export interface ProductInfoSection {
   sortOrder: number;
 }
 
-const PRESET_KEYS: { key: string; label: string }[] = [
-  { key: "composition",      label: "Composition" },
-  { key: "care",              label: "Care instructions" },
-  { key: "target_audience",   label: "Target audience" },
-  { key: "dimensions",        label: "Dimensions" },
-  { key: "material",          label: "Material" },
-  { key: "usage",             label: "Usage" },
-  { key: "additional_info",   label: "Additional information" },
-  { key: "custom",            label: "Custom" },
-];
-
 function genId(): string {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
@@ -57,14 +46,6 @@ export default function ProductInfoSectionsManager({ sections, onChange, enValue
     notify(sections.filter((_, i) => i !== index));
   }
 
-  function handlePresetChange(index: number, key: string) {
-    const preset = PRESET_KEYS.find(p => p.key === key);
-    const section = sections[index];
-    const patch: Partial<ProductInfoSection> = { key };
-    if (preset && key !== "custom" && !section.label.trim()) patch.label = preset.label;
-    update(index, patch);
-  }
-
   function handleDrop(targetIndex: number) {
     if (dragIndex === null || dragIndex === targetIndex) { setDragIndex(null); return; }
     const next = [...sections];
@@ -76,8 +57,6 @@ export default function ProductInfoSectionsManager({ sections, onChange, enValue
 
   return (
     <div>
-      <p className={styles.label}>Specification sections</p>
-
       {sections.length === 0 && (
         <p className={styles.empty}>No sections yet. Add "Composition", "Care instructions", "Target audience"...</p>
       )}
@@ -95,13 +74,7 @@ export default function ProductInfoSectionsManager({ sections, onChange, enValue
           >
             <div className={styles.cardHead}>
               <span className={styles.dragHandle}><GripVertical size={16} /></span>
-              <select
-                className={styles.select}
-                value={section.key}
-                onChange={e => handlePresetChange(i, e.target.value)}
-              >
-                {PRESET_KEYS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-              </select>
+              <span className={styles.cardHeadLabel}>Specification</span>
               <button type="button" className={styles.removeBtn} onClick={() => remove(i)} title="Remove">
                 <Trash2 size={15} />
               </button>

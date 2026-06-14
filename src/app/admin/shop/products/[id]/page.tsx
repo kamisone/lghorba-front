@@ -6,6 +6,7 @@ import ProductMediaManager, { ProductMediaItem, ResolvedProductMediaItem } from 
 import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
 import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
 import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
+import CollapsibleSection from "@/components/admin/shop/CollapsibleSection";
 import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
@@ -301,7 +302,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     } else {
       const p: Product = await res.json();
       const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
-      const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:label`]);
+      const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:title`, `trustBadge:${b.id}:subtitle`]);
       const faqFields = faqs.flatMap(f => [`faq:${f.id}:question`, `faq:${f.id}:answer`]);
       await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields]);
       setProduct(p);
@@ -401,7 +402,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   </div>
                 </div>
                 <BilingualField label="Short description" frValue={form.shortDescription} frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))} enValue={enValues.shortDescription ?? ""} enOnChange={v => setEn('shortDescription', v)} multiline rows={2} />
-                <BilingualField label="Description" frValue={form.description} frOnChange={v => setForm(f => ({ ...f, description: v }))} enValue={enValues.description ?? ""} enOnChange={v => setEn('description', v)} richText />
+                <BilingualField label="Description" frValue={form.description} frOnChange={v => setForm(f => ({ ...f, description: v }))} enValue={enValues.description ?? ""} enOnChange={v => setEn('description', v)} richText collapsible />
               </div>
             </div>
 
@@ -450,57 +451,32 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             </div>
 
             {/* Specifications */}
-            <div className={styles.section}>
-              <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>📋</span>
-                <span className={styles.sectionTitle}>Specifications</span>
-              </div>
-              <div className={styles.sectionBody}>
-                <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
-              </div>
-            </div>
+            <CollapsibleSection icon="📋" title="Specifications">
+              <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
 
             {/* Trust badges */}
-            <div className={styles.section}>
-              <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>🛡️</span>
-                <span className={styles.sectionTitle}>Trust badges</span>
-              </div>
-              <div className={styles.sectionBody}>
-                <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
-              </div>
-            </div>
+            <CollapsibleSection icon="🛡️" title="Trust badges">
+              <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
 
             {/* FAQs */}
-            <div className={styles.section}>
-              <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>❓</span>
-                <span className={styles.sectionTitle}>FAQs</span>
-              </div>
-              <div className={styles.sectionBody}>
-                <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
-              </div>
-            </div>
+            <CollapsibleSection icon="❓" title="FAQs">
+              <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
 
             {/* ── Variations ── */}
-            <div className={`${styles.section} ${styles.sectionLast}`}>
-              <div className={styles.sectionHead} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span className={styles.sectionIcon}>🎨</span>
-                  <span className={styles.sectionTitle}>Variations</span>
-                </div>
+            <CollapsibleSection icon="🎨" title="Variations" last>
                 {productAttrs.length > 0 && (
                   <button
                     type="button"
                     onClick={() => generateCombinations(false)}
                     className={styles.saveBtn}
-                    style={{ fontSize: 12, padding: "5px 12px" }}
+                    style={{ fontSize: 12, padding: "5px 12px", marginBottom: 14 }}
                   >
                     Generate Combinations
                   </button>
                 )}
-              </div>
-              <div className={styles.sectionBody}>
 
                 {/* Currently linked attributes */}
                 {productAttrs.length === 0 ? (
@@ -715,8 +691,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     All available variations are linked to this product.
                   </p>
                 )}
-              </div>
-            </div>
+            </CollapsibleSection>
           </div>
 
           {/* ── Right sidebar ── */}

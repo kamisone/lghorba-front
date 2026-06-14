@@ -1,0 +1,15 @@
+.headRow {
+  cursor: pointer;
+  user-select: none;
+}
+
+.chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform .15s;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}

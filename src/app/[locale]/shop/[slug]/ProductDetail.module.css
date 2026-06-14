@@ -256,6 +256,10 @@
 
 .trustItem { display: inline-flex; align-items: center; gap: 6px; }
 .trustIcon { flex-shrink: 0; color: var(--color-text-muted); }
+.trustText { display: flex; flex-direction: column; line-height: 1.3; }
+.trustSubtitle { font-size: 11px; color: var(--color-text-placeholder); }
+.trustLink { color: inherit; text-decoration: none; }
+.trustLink:hover .trustText { text-decoration: underline; }
 
 /* ── Description ── */
 .descSection { border-top: 1px solid var(--color-border); padding-top: 28px; }

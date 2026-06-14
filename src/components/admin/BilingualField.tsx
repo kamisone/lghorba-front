@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
+import { ChevronDown } from "lucide-react";
 import styles from "./BilingualField.module.css";
 
 // TipTap/ProseMirror needs browser globals — load client-side only.
@@ -72,6 +74,10 @@ interface BilingualFieldProps {
   frRequired?: boolean;
   /** Render a rich text (HTML) editor instead of a plain textarea */
   richText?: boolean;
+  /** Collapse the FR/EN inputs behind a clickable label */
+  collapsible?: boolean;
+  /** When collapsible, whether the field starts expanded */
+  defaultOpen?: boolean;
 }
 
 export default function BilingualField({
@@ -82,36 +88,59 @@ export default function BilingualField({
   rows = 2,
   frRequired = false,
   richText = false,
+  collapsible = false,
+  defaultOpen = false,
 }: BilingualFieldProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  const isOpen = !collapsible || open;
+
+  const labelContent = (
+    <span className={styles.bilingualLabel}>
+      {label}
+      {frRequired && <span className={styles.requiredStar}> *</span>}
+    </span>
+  );
+
   return (
     <div className={styles.bilingualField}>
-      <span className={styles.bilingualLabel}>
-        {label}
-        {frRequired && <span className={styles.requiredStar}> *</span>}
-      </span>
-      <div className={`${styles.bilingualCard} ${richText ? styles.bilingualCardRichText : ""}`}>
-        <LangRow
-          lang="fr"
-          value={frValue}
-          onChange={frOnChange}
-          placeholder={frPlaceholder}
-          multiline={multiline}
-          rows={rows}
-          required={frRequired}
-          richText={richText}
-        />
-        <div className={styles.langSep} />
-        <LangRow
-          lang="en"
-          value={enValue}
-          onChange={enOnChange}
-          placeholder={enPlaceholder}
-          multiline={multiline}
-          rows={rows}
-          required={false}
-          richText={richText}
-        />
-      </div>
+      {collapsible ? (
+        <button
+          type="button"
+          className={styles.bilingualLabelToggle}
+          onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+        >
+          {labelContent}
+          <ChevronDown size={14} className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`} />
+        </button>
+      ) : (
+        labelContent
+      )}
+      {isOpen && (
+        <div className={`${styles.bilingualCard} ${richText ? styles.bilingualCardRichText : ""}`}>
+          <LangRow
+            lang="fr"
+            value={frValue}
+            onChange={frOnChange}
+            placeholder={frPlaceholder}
+            multiline={multiline}
+            rows={rows}
+            required={frRequired}
+            richText={richText}
+          />
+          <div className={styles.langSep} />
+          <LangRow
+            lang="en"
+            value={enValue}
+            onChange={enOnChange}
+            placeholder={enPlaceholder}
+            multiline={multiline}
+            rows={rows}
+            required={false}
+            richText={richText}
+          />
+        </div>
+      )}
     </div>
   );
 }

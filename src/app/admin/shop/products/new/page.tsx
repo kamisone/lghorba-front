@@ -7,6 +7,7 @@ import ProductMediaManager, { ProductMediaItem } from "@/components/admin/shop/P
 import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
 import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
 import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
+import CollapsibleSection from "@/components/admin/shop/CollapsibleSection";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
@@ -90,7 +91,7 @@ export default function NewProductPage() {
 
     const product = await res.json();
     const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
-    const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:label`]);
+    const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:title`, `trustBadge:${b.id}:subtitle`]);
     const faqFields = faqs.flatMap(f => [`faq:${f.id}:question`, `faq:${f.id}:answer`]);
     await saveEnTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields]);
     toast.success("Product created");
@@ -176,6 +177,7 @@ export default function NewProductPage() {
                   enValue={enValues.description ?? ""}
                   enOnChange={v => setEn('description', v)}
                   richText
+                  collapsible
                 />
               </div>
             </div>
@@ -192,37 +194,19 @@ export default function NewProductPage() {
             </div>
 
             {/* Specifications */}
-            <div className={styles.section}>
-              <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>📋</span>
-                <span className={styles.sectionTitle}>Specifications</span>
-              </div>
-              <div className={styles.sectionBody}>
-                <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
-              </div>
-            </div>
+            <CollapsibleSection icon="📋" title="Specifications">
+              <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
 
             {/* Trust badges */}
-            <div className={styles.section}>
-              <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>🛡️</span>
-                <span className={styles.sectionTitle}>Trust badges</span>
-              </div>
-              <div className={styles.sectionBody}>
-                <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
-              </div>
-            </div>
+            <CollapsibleSection icon="🛡️" title="Trust badges">
+              <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
 
             {/* FAQs */}
-            <div className={`${styles.section} ${styles.sectionLast}`}>
-              <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>❓</span>
-                <span className={styles.sectionTitle}>FAQs</span>
-              </div>
-              <div className={styles.sectionBody}>
-                <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
-              </div>
-            </div>
+            <CollapsibleSection icon="❓" title="FAQs" last>
+              <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
           </div>
 
           {/* ── Right sidebar ── */}

@@ -10,6 +10,31 @@
   color: var(--color-text-label);
 }
 
+.bilingualLabelToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform .15s;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
 /* Card — two columns side by side */
 .bilingualCard {
   display: flex;

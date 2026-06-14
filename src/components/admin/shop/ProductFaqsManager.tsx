@@ -57,8 +57,6 @@ export default function ProductFaqsManager({ faqs, onChange, enValues, setEn }: 
 
   return (
     <div>
-      <p className={styles.label}>FAQs</p>
-
       {faqs.length === 0 && (
         <p className={styles.empty}>No FAQs yet. Add common questions about this product.</p>
       )}

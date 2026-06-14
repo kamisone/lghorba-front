@@ -47,11 +47,13 @@ interface ProductInfoSection {
   sortOrder: number;
 }
 
-/** A small icon+label trust signal shown near the buy box (e.g. "Secure checkout") */
+/** A small icon+title trust signal shown near the buy box (e.g. "Secure checkout") */
 interface ProductTrustBadge {
   id: string;
   icon: string;
-  label: string;
+  title: string;
+  subtitle?: string;
+  link?: string;
   sortOrder: number;
 }
 
@@ -507,10 +509,22 @@ export default function ShopProductDetail({
           {product.trustBadges.length > 0 ? (
             product.trustBadges.map(badge => {
               const Icon = getTrustBadgeIcon(badge.icon);
-              return (
-                <span key={badge.id} className={styles.trustItem}>
+              const content = (
+                <>
                   <Icon size={15} className={styles.trustIcon} aria-hidden="true" />
-                  {badge.label}
+                  <span className={styles.trustText}>
+                    {badge.title}
+                    {badge.subtitle && <span className={styles.trustSubtitle}>{badge.subtitle}</span>}
+                  </span>
+                </>
+              );
+              return badge.link ? (
+                <a key={badge.id} href={badge.link} className={`${styles.trustItem} ${styles.trustLink}`}>
+                  {content}
+                </a>
+              ) : (
+                <span key={badge.id} className={styles.trustItem}>
+                  {content}
                 </span>
               );
             })
