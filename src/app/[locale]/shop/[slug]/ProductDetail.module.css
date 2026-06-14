@@ -315,8 +315,8 @@
 }
 
 /* ── FAQ ── */
-.faqSection { border-top: 1px solid var(--color-border); padding-top: 28px; margin-top: 28px; }
-.faqSection h3 { font-size: 17px; font-weight: 700; color: var(--color-text-heading); margin: 0 0 6px; }
+.faqSectionFull { max-width: 1280px; margin: 48px auto 0; padding: 0 16px 64px; }
+.faqSectionFull h2 { font-size: 20px; font-weight: 700; color: var(--color-text-heading); margin: 0 0 16px; }
 .faqList { display: flex; flex-direction: column; }
 
 .faqItem { border-bottom: 1px solid var(--color-border); }

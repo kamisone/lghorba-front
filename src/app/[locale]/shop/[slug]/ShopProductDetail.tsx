@@ -563,23 +563,6 @@ export default function ShopProductDetail({
           </div>
         )}
 
-        {/* FAQ */}
-        {product.faqs.length > 0 && (
-          <div className={styles.faqSection}>
-            <h3>{t.faqTitle}</h3>
-            <div className={styles.faqList}>
-              {product.faqs.map(faq => (
-                <details key={faq.id} className={styles.faqItem}>
-                  <summary className={styles.faqToggle}>
-                    <span className={styles.faqQuestion}>{faq.question}</span>
-                    <span className={styles.faqChevron} aria-hidden="true" />
-                  </summary>
-                  <div className={styles.faqAnswer}>{faq.answer}</div>
-                </details>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Sticky buy bar — mobile/tablet only ─────────────────────────────── */}

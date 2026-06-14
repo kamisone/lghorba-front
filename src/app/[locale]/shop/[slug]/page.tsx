@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import ShopProductDetail from "./ShopProductDetail";
 import { getTranslations } from "@/lib/i18n";
+import styles from "./ProductDetail.module.css";
 import type { AvailabilityMatrix } from "@/components/shop/ProductVariantSelector";
 
 interface Props {
@@ -175,6 +176,23 @@ export default async function ProductPage({ params, searchParams }: Props) {
           {similar.length > 0 && (
             <RecommendationRow title={t.similarProducts} items={similar} locale={params.locale} />
           )}
+        </div>
+      )}
+
+      {faqs.length > 0 && (
+        <div className={styles.faqSectionFull}>
+          <h2>{t.faqTitle}</h2>
+          <div className={styles.faqList}>
+            {faqs.map((faq, i) => (
+              <details key={i} className={styles.faqItem}>
+                <summary className={styles.faqToggle}>
+                  <span className={styles.faqQuestion}>{faq.question}</span>
+                  <span className={styles.faqChevron} aria-hidden="true" />
+                </summary>
+                <div className={styles.faqAnswer}>{faq.answer}</div>
+              </details>
+            ))}
+          </div>
         </div>
       )}
     </>
