@@ -31,6 +31,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   pointer-events: none;
 }
 
@@ -757,9 +758,19 @@
 }
 
 @media (max-width: 640px) {
-  .hero { height: calc(100vh - 64px + 20px); }
+  .hero {
+    height: calc(100vh - 64px + 20px);
+    padding: 4.5rem 1.25rem 1.5rem;
+  }
+  .heroVideo { object-position: center 35%; }
+  .heroContent { gap: 1rem; }
+  .heroTitle { font-size: clamp(2.2rem, 9vw, 3rem); }
+  .heroSub { font-size: 0.92rem; }
   .heroBtns { flex-direction: column; align-items: stretch; }
   .btnPrimary, .btnOutline { text-align: center; }
+  .heroCard { margin-top: 1.5rem; }
+  .heroStat { padding: 1rem 0.5rem; }
+  .heroStatNum { font-size: 1.4rem; }
   .sectionSub { font-size: 0.9rem; }
 
   .platforms,

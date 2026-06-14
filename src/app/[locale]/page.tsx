@@ -100,7 +100,7 @@ export default async function LandingPage({ params }: { params: { locale: string
       <section className={styles.hero}>
         <video
           className={styles.heroVideo}
-          src="/assets/cars/car-rental-hero.mp4"
+          src="/assets/cars/rentals_hero_bg.mp4"
           autoPlay
           loop
           muted
