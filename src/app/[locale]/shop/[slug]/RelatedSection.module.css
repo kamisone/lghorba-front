@@ -1,0 +1,26 @@
+.section {
+  max-width: 1280px;
+  margin: 48px auto 0;
+  padding: 0 16px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text-heading);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
+}

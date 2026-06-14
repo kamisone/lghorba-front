@@ -1,9 +1,12 @@
 export const revalidate = 300;
 
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Script from "next/script";
 import ShopProductDetail from "./ShopProductDetail";
+import RelatedSection from "./RelatedSection";
+import RelatedProductsSkeleton from "@/components/shop/RelatedProductsSkeleton";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./ProductDetail.module.css";
 import type { AvailabilityMatrix } from "@/components/shop/ProductVariantSelector";
@@ -35,16 +38,6 @@ async function fetchActivePromotion(productId: string) {
     return await res.json();
   } catch {
     return null;
-  }
-}
-
-async function fetchRecommendations(slug: string) {
-  try {
-    const res = await fetch(`${API}/public/shop/products/${slug}/recommendations`, { next: { revalidate: 3600 } });
-    if (!res.ok || res.status === 204) return { frequentlyBoughtTogether: [], similar: [] };
-    return await res.json();
-  } catch {
-    return { frequentlyBoughtTogether: [], similar: [] };
   }
 }
 
@@ -94,10 +87,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 export default async function ProductPage({ params, searchParams }: Props) {
   const t = getTranslations(params.locale).shop;
-  const [product, reviewStats, recommendations, availabilityMatrix] = await Promise.all([
+  const [product, reviewStats, availabilityMatrix] = await Promise.all([
     fetchProduct(params.slug, params.locale),
     fetchReviewStats(params.slug),
-    fetchRecommendations(params.slug),
     fetchAvailabilityMatrix(params.slug, params.locale),
   ]);
 
@@ -146,9 +138,6 @@ export default async function ProductPage({ params, searchParams }: Props) {
     })),
   } : null;
 
-  const fbt     = recommendations.frequentlyBoughtTogether ?? [];
-  const similar = recommendations.similar ?? [];
-
   return (
     <>
       <Script id="product-jsonld" type="application/ld+json">
@@ -168,17 +157,6 @@ export default async function ProductPage({ params, searchParams }: Props) {
         initialVariantSlug={initialVariantSlug}
       />
 
-      {(fbt.length > 0 || similar.length > 0) && (
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 16px 64px" }}>
-          {fbt.length > 0 && (
-            <RecommendationRow title={t.customersAlsoBought} items={fbt} locale={params.locale} />
-          )}
-          {similar.length > 0 && (
-            <RecommendationRow title={t.similarProducts} items={similar} locale={params.locale} />
-          )}
-        </div>
-      )}
-
       {faqs.length > 0 && (
         <div className={styles.faqSectionFull}>
           <h2>{t.faqTitle}</h2>
@@ -195,36 +173,10 @@ export default async function ProductPage({ params, searchParams }: Props) {
           </div>
         </div>
       )}
-    </>
-  );
-}
 
-function RecommendationRow({ title, items, locale }: { title: string; items: any[]; locale: string }) {
-  return (
-    <div style={{ marginTop: 48 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>{title}</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 16 }}>
-        {items.map((p: any) => (
-          <a key={p.id} href={`/${locale}/shop/${p.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
-            <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "#fff" }}>
-              {p.featuredImageKey && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={`/next-api/public/shop/products/${p.slug}/image`}
-                  alt={p.title}
-                  style={{ width: "100%", aspectRatio: "1", objectFit: "cover" }}
-                />
-              )}
-              <div style={{ padding: 12 }}>
-                <p style={{ margin: 0, fontWeight: 500, fontSize: 14 }}>{p.title}</p>
-                {p.minPriceCents != null && (
-                  <p style={{ margin: "4px 0 0", fontWeight: 700 }}>€{(p.minPriceCents / 100).toFixed(2)}</p>
-                )}
-              </div>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
+      <Suspense fallback={<RelatedProductsSkeleton />}>
+        <RelatedSection slug={params.slug} locale={params.locale} />
+      </Suspense>
+    </>
   );
 }
