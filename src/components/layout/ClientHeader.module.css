@@ -71,43 +71,31 @@
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
-  flex: 1;
-  justify-content: center;
-  min-width: 0;
+  gap: 0.3rem;
+  margin-left: 0.75rem;
 }
 
 .navLink {
   position: relative;
-  padding: 0.45rem 0.9rem;
-  border-radius: 8px;
+  padding: 0.5rem 1.05rem;
+  border-radius: 999px;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.68);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
   text-decoration: none;
   letter-spacing: 0.01em;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.18s ease, background 0.18s ease;
   white-space: nowrap;
 }
 .navLink:hover {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.navLinkActive {
-  color: #ffffff;
-  font-weight: 600;
-}
-.navLinkActive::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 18px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--color-brand-accent);
+.navLinkActive,
+.navLinkActive:hover {
+  color: var(--color-brand-accent);
+  background: rgba(141, 194, 32, 0.12);
 }
 
 /* ── Right slot ── */
@@ -116,6 +104,7 @@
   align-items: center;
   gap: 0.85rem;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* ── Cross-section link (e.g. Shop) ── */
@@ -352,8 +341,8 @@
 
 /* ── Responsive breakpoints ── */
 @media (max-width: 900px) {
-  .navLinks { gap: 0; }
-  .navLink  { padding: 0.4rem 0.65rem; font-size: 0.82rem; }
+  .navLinks { gap: 0.15rem; margin-left: 0.25rem; }
+  .navLink  { padding: 0.45rem 0.8rem; font-size: 0.82rem; }
 }
 
 @media (max-width: 768px) {

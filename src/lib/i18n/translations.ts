@@ -10,8 +10,6 @@ export const en = {
   nav: {
     home: "Home",
     fleet: "Fleet",
-    platforms: "Platforms",
-    howItWorks: "How it works",
     shop: "Shop",
     contact: "Contact",
     bookNow: "Book now",
@@ -986,8 +984,6 @@ export const fr: Translations = {
   nav: {
     home: "Accueil",
     fleet: "Flotte",
-    platforms: "Plateformes",
-    howItWorks: "Comment ça marche",
     shop: "Boutique",
     contact: "Contact",
     bookNow: "Réserver",

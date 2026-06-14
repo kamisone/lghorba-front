@@ -5,12 +5,7 @@
   /* Caps over the white bottom of the search section */
   border-radius: 32px 32px 0 0;
   margin-top: -32px;
-  /* Grid + globs in one background declaration */
-  background:
-    linear-gradient(rgba(100, 180, 230, 0.10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100, 180, 230, 0.10) 1px, transparent 1px),
-    var(--color-brand-darkest);
-  background-size: 60px 60px, 60px 60px, 100%;
+  background: var(--color-brand-darkest);
   padding: 5rem 0 4.5rem;
   overflow: hidden;
 }

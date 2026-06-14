@@ -18,8 +18,6 @@ export default function ClientHeader({ locale }: Props) {
   const navLinks = [
     { href: `/${locale}`,           label: t.nav.home },
     { href: `/${locale}/fleet`,     label: t.nav.fleet },
-    { href: `/${locale}#platforms`, label: t.nav.platforms },
-    { href: `/${locale}#how`,       label: t.nav.howItWorks },
     { href: `/${locale}/contact`,   label: t.nav.contact },
   ];
   const ctaHref = `/${locale}/fleet`;

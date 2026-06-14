@@ -4,10 +4,6 @@
   color: var(--color-text-heading);
   overflow-x: hidden;
   background-color: #f8fafc;
-  background-image:
-    linear-gradient(rgba(0, 70, 110, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 70, 110, 0.07) 1px, transparent 1px);
-  background-size: 60px 60px;
 }
 
 
@@ -210,10 +206,6 @@
 .searchSection {
   position: relative;
   background-color: var(--color-brand-darkest);
-  background-image:
-    linear-gradient(rgba(100, 180, 230, 0.10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100, 180, 230, 0.10) 1px, transparent 1px);
-  background-size: 60px 60px;
   padding: 0 0 5rem;
   border-radius: 32px 32px 0 0;
   margin-top: -32px;
@@ -673,10 +665,6 @@
   border-radius: 32px 32px 0 0;
   margin-top: -32px;
   background-color: var(--color-brand-darkest);
-  background-image:
-    linear-gradient(rgba(100, 180, 230, 0.10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100, 180, 230, 0.10) 1px, transparent 1px);
-  background-size: 60px 60px;
 }
 
 .platforms > .sectionInner,
@@ -746,12 +734,17 @@
   }
   .howSteps::before { display: none; }
   .howStep {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 60px auto 1fr;
+    align-items: center;
+    column-gap: 1.25rem;
+    row-gap: 0.35rem;
     text-align: left;
-    align-items: flex-start;
-    gap: 1.25rem;
   }
-  .howStepBadge { flex-shrink: 0; }
+  .howStepBadge { grid-column: 1; grid-row: 1 / 3; }
+  .howStepN { grid-column: 2; grid-row: 1 / 3; }
+  .howStepTitle { grid-column: 3; grid-row: 1; }
+  .howStepDesc { grid-column: 3; grid-row: 2; }
 
   .whyGrid { grid-template-columns: 1fr; gap: 2rem; }
   .whyFeatures { grid-template-columns: 1fr; }
@@ -786,4 +779,22 @@
     text-align: center;
   }
   .shopBannerCta { width: 100%; justify-content: center; }
+
+  .howSteps { gap: 2rem; }
+  /* Vertical progress line through the badges, left-aligned */
+  .howSteps::before {
+    display: block;
+    top: 30px;
+    bottom: 30px;
+    left: 30px;
+    right: auto;
+    width: 1.5px;
+    height: auto;
+    background: linear-gradient(
+      180deg,
+      var(--color-border) 0%,
+      rgba(var(--rgb-brand-accent), 0.4) 50%,
+      var(--color-border) 100%
+    );
+  }
 }
