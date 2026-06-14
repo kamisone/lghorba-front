@@ -200,6 +200,14 @@
 .photoBtnPrev { left: 8px; }
 .photoBtnNext { right: 8px; }
 
+/* Touch devices have no :hover — keep the controls visible so users
+   know they can tap to change photos. */
+@media (hover: none) {
+  .photoBtn {
+    opacity: 1;
+  }
+}
+
 .photoDots {
   position: absolute;
   bottom: 10px;
@@ -326,39 +334,41 @@
 /* ── Arrows ── */
 .arrow {
   position: absolute;
-  /* Occupy 80 % of the carousel height, vertically centred */
-  top: 10%;
-  bottom: 10%;
-  width: 52px;
-  border-radius: 10px;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 1.8rem;
-  line-height: 1;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(8, 20, 35, 0.55);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  transition: background 0.18s ease, color 0.18s ease,
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transition: background 0.18s ease, border-color 0.18s ease,
               opacity 0.22s ease, transform 0.18s ease;
 }
 
 .arrow:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.28);
-  color: rgba(255, 255, 255, 0.95);
+  background: rgba(141, 194, 32, 0.85);
+  border-color: rgba(141, 194, 32, 0.9);
+  transform: translateY(-50%) scale(1.08);
 }
 
 /* Hidden when no more content in that direction */
 .arrowHidden {
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.88);
+  transform: translateY(-50%) scale(0.85);
 }
 
-.arrowPrev { left: 0; }
-.arrowNext { right: 0; }
+.arrowPrev { left: 10px; }
+.arrowNext { right: 10px; }
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
@@ -367,5 +377,7 @@
     border-radius: 20px 20px 0 0;
     margin-top: -20px;
   }
-  .arrow { width: 40px; font-size: 1.4rem; }
+  .arrow { width: 38px; height: 38px; }
+  .arrowPrev { left: 6px; }
+  .arrowNext { right: 6px; }
 }

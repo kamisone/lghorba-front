@@ -411,7 +411,7 @@
 
 /* ── Shop banner ── */
 .shopBanner {
-  margin-top: 1.25rem;
+  margin-top: 3rem;
   padding: 1.25rem 1.5rem;
   border-radius: 16px;
   background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);

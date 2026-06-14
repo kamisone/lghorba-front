@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { Car } from "lucide-react";
+import { Car, ChevronLeft, ChevronRight } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./FleetCarousel.module.css";
 
@@ -260,14 +260,18 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
           onClick={() => go(-1)}
           disabled={!canGoLeft}
           aria-label={labels.prevVehicles}
-        >‹</button>
+        >
+          <ChevronLeft size={22} strokeWidth={2.25} />
+        </button>
 
         <button
           className={`${styles.arrow} ${styles.arrowNext} ${!canGoRight ? styles.arrowHidden : ""}`}
           onClick={() => go(1)}
           disabled={!canGoRight}
           aria-label={labels.nextVehicles}
-        >›</button>
+        >
+          <ChevronRight size={22} strokeWidth={2.25} />
+        </button>
       </div>
     </section>
   );

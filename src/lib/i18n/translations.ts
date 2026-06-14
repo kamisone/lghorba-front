@@ -111,7 +111,7 @@ export const en = {
       {
         n: "01",
         title: "Choose your vehicle",
-        desc: "Browse our fleet on Turo, Getaround, or contact us directly for private rental.",
+        desc: "Browse our fleet on Turo, Getaround, or book directly through our platform for a seamless rental experience.",
       },
       {
         n: "02",
@@ -1087,7 +1087,7 @@ export const fr: Translations = {
       {
         n: "01",
         title: "Choisissez votre véhicule",
-        desc: "Parcourez notre flotte sur Turo, Getaround ou contactez-nous directement pour une location privée.",
+        desc: "Découvrez nos véhicules sur Turo, Getaround ou profitez des meilleurs tarifs en réservant directement sur notre plateforme.",
       },
       {
         n: "02",
@@ -1486,7 +1486,7 @@ export const fr: Translations = {
       },
       {
         title: "2. Hébergement",
-        body: "Ce site est hébergé par : Hostinger International Ltd., 61 Lordou Vironos Street, 6023 Larnaca, Chypre. Téléphone : +370 645 03378."
+        body: "Ce site est hébergé par : Hostinger International Ltd., 61 Lordou Vironos Street, 6023 Larnaca, Chypre. Téléphone : +370 645 03378.",
       },
       {
         title: "3. Propriété intellectuelle",
@@ -1502,7 +1502,7 @@ export const fr: Translations = {
       },
       {
         title: "6. Droit applicable",
-        body: "Les présentes mentions légales sont régies par le droit français. Tout litige relatif à l'utilisation de ce site sera soumis à la compétence exclusive des tribunaux de Melun, France."
+        body: "Les présentes mentions légales sont régies par le droit français. Tout litige relatif à l'utilisation de ce site sera soumis à la compétence exclusive des tribunaux de Melun, France.",
       },
     ],
   },
