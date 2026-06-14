@@ -25,3 +25,144 @@
   background: rgba(141, 194, 32, 0.22);
   color: #b6ec3f;
 }
+
+/* ── Root nav: keep children as flat flex items of the header's .menuRow ── */
+.nav {
+  display: contents;
+}
+
+/* ── Parent category with children: link + caret toggle ── */
+.dropdownWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.caretBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-left: -6px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.caretBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.caretBtn svg {
+  transition: transform .2s ease;
+}
+.caretBtnOpen svg {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown panel (portalled to body, positioned via JS) ── */
+.dropdown {
+  position: fixed;
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--color-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  z-index: 500;
+  animation: dropIn .15s ease;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dropdownList,
+.dropdownSublist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dropdownRow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.dropdownLink {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background .12s, color .12s;
+}
+.dropdownLink:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.dropdownLinkActive {
+  background: rgba(141, 194, 32, 0.16) !important;
+  color: var(--color-brand-accent) !important;
+  font-weight: 600;
+}
+
+.dropdownToggle {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.dropdownToggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.dropdownToggle svg {
+  transition: transform .2s ease;
+}
+.dropdownToggleIconOpen {
+  transform: rotate(90deg);
+}
+
+.dropdownChildren {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  opacity: 0;
+  transition: grid-template-rows .2s ease, opacity .15s ease;
+}
+.dropdownChildrenOpen {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.dropdownSublist {
+  padding-left: 14px;
+  padding-top: 1px;
+}

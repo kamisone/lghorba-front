@@ -1,12 +1,14 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
+import { buildCategoryTree, getAncestorIds, type CategoryNode as BaseCategoryNode } from "@/lib/shop/categoryTree";
 import styles from "./Shop.module.css";
 
 interface Product {
@@ -18,7 +20,8 @@ interface Product {
   defaultVariantOutOfStock?: boolean;
   variants: Array<{ id: string; priceCents: number; compareAtPriceCents: number | null; isDefault: boolean }>;
 }
-interface Category { id: string; name: string; slug: string }
+interface Category { id: string; name: string; slug: string; parentId?: string | null }
+type CategoryNode = BaseCategoryNode<Category>;
 interface Collection { id: string; slug: string; name: string; imageUrl: string | null }
 
 interface ActivePromotion {
@@ -47,6 +50,62 @@ interface Props {
 
 function centsToEuros(cents: number) {
   return (cents / 100).toFixed(2);
+}
+
+function CategoryTreeItem({
+  node, activeCategory, expanded, onToggle, buildUrl, t,
+}: {
+  node: CategoryNode;
+  activeCategory?: string;
+  expanded: Set<string>;
+  onToggle: (id: string) => void;
+  buildUrl: (params: Record<string, string | undefined>) => string;
+  t: { expandCategory: string; collapseCategory: string };
+}) {
+  const hasChildren = node.children.length > 0;
+  const isOpen = expanded.has(node.id);
+  const isActive = activeCategory === node.id;
+
+  return (
+    <li>
+      <div className={styles.categoryRow}>
+        <Link
+          href={buildUrl({ category: node.id, page: "1" })}
+          className={`${styles.categoryLink} ${isActive ? styles.activeCategory : ""}`}
+        >
+          {node.name}
+        </Link>
+        {hasChildren && (
+          <button
+            type="button"
+            className={styles.categoryToggle}
+            onClick={() => onToggle(node.id)}
+            aria-expanded={isOpen}
+            aria-label={isOpen ? t.collapseCategory : t.expandCategory}
+          >
+            <ChevronRight size={16} strokeWidth={2} className={isOpen ? styles.categoryToggleIconOpen : ""} />
+          </button>
+        )}
+      </div>
+      {hasChildren && (
+        <div className={`${styles.categoryChildren} ${isOpen ? styles.categoryChildrenOpen : ""}`}>
+          <ul className={styles.categorySublist}>
+            {node.children.map(child => (
+              <CategoryTreeItem
+                key={child.id}
+                node={child}
+                activeCategory={activeCategory}
+                expanded={expanded}
+                onToggle={onToggle}
+                buildUrl={buildUrl}
+                t={t}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+    </li>
+  );
 }
 
 function resolvePromotion(
@@ -158,7 +217,34 @@ export default function ShopListing({
 }: Props) {
   const t = getTranslations(locale).shop;
   const totalPages = Math.ceil(total / limit);
-  const activeLabel = categories.find(c => c.id === activeCategory)?.name;
+  const categoryTree = useMemo(() => buildCategoryTree(categories), [categories]);
+
+  const categoryPath = useMemo(() => {
+    if (!activeCategory) return [] as Category[];
+    const byId = new Map(categories.map(c => [c.id, c]));
+    const ancestors = getAncestorIds(categories, activeCategory)
+      .slice().reverse()
+      .map(id => byId.get(id))
+      .filter((c): c is Category => !!c);
+    const current = byId.get(activeCategory);
+    return current ? [...ancestors, current] : ancestors;
+  }, [categories, activeCategory]);
+
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(getAncestorIds(categories, activeCategory)),
+  );
+
+  useEffect(() => {
+    setExpanded(new Set(getAncestorIds(categories, activeCategory)));
+  }, [categories, activeCategory]);
+
+  function toggleCategory(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   function buildUrl(params: Record<string, string | undefined>) {
     const qs = new URLSearchParams();
@@ -195,31 +281,47 @@ export default function ShopListing({
             <h4 className={styles.sidebarTitle}>{t.categoriesLabel}</h4>
             <ul className={styles.categoryList}>
               <li>
-                <Link href={buildUrl({ category: undefined, page: "1" })} className={!activeCategory ? styles.activeCategory : ""}>
+                <Link
+                  href={buildUrl({ category: undefined, page: "1" })}
+                  className={`${styles.categoryLink} ${!activeCategory ? styles.activeCategory : ""}`}
+                >
                   {t.allProducts}
                 </Link>
               </li>
-              {categories.map(cat => (
-                <li key={cat.id}>
-                  <Link
-                    href={buildUrl({ category: cat.id, page: "1" })}
-                    className={activeCategory === cat.id ? styles.activeCategory : ""}
-                  >
-                    {cat.name}
-                  </Link>
-                </li>
+              {categoryTree.map(node => (
+                <CategoryTreeItem
+                  key={node.id}
+                  node={node}
+                  activeCategory={activeCategory}
+                  expanded={expanded}
+                  onToggle={toggleCategory}
+                  buildUrl={buildUrl}
+                  t={t}
+                />
               ))}
             </ul>
           </aside>
 
           {/* Grid */}
           <div className={styles.main}>
-            {activeLabel && (
-              <div className={styles.filterBar}>
-                <Link href={buildUrl({ category: undefined, page: "1" })} className={styles.filterChip}>
-                  {activeLabel} <em className={styles.filterChipX}><X size={14} strokeWidth={2} /></em>
+            {categoryPath.length > 0 && (
+              <nav className={styles.breadcrumbs} aria-label={t.categoriesLabel}>
+                <Link href={buildUrl({ category: undefined, page: "1" })} className={styles.breadcrumbLink}>
+                  {t.allProducts}
                 </Link>
-              </div>
+                {categoryPath.map((cat, i) => (
+                  <span key={cat.id} className={styles.breadcrumbSegment}>
+                    <ChevronRight size={14} strokeWidth={2} className={styles.breadcrumbSep} />
+                    {i === categoryPath.length - 1 ? (
+                      <span className={styles.breadcrumbCurrent}>{cat.name}</span>
+                    ) : (
+                      <Link href={buildUrl({ category: cat.id, page: "1" })} className={styles.breadcrumbLink}>
+                        {cat.name}
+                      </Link>
+                    )}
+                  </span>
+                ))}
+              </nav>
             )}
 
             <p className={styles.resultCount}>{total} {total !== 1 ? t.resultPlural : t.resultSingular}</p>
