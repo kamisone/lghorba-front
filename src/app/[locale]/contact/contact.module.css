@@ -31,15 +31,6 @@
   transform: translateX(-50%);
 }
 
-.heroBgGrid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(var(--rgb-white),0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(var(--rgb-white),0.025) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
 .heroContent {
   position: relative;
   max-width: 600px;

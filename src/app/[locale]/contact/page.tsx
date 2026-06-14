@@ -64,7 +64,6 @@ export default function ContactPage() {
       <div className={styles.hero}>
         <div className={styles.heroBg} aria-hidden="true">
           <div className={styles.heroBgGlow} />
-          <div className={styles.heroBgGrid} />
         </div>
         <div className={styles.heroContent}>
           <span className={styles.eyebrow}>{t.eyebrow}</span>

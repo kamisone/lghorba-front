@@ -79,11 +79,12 @@
   position: relative;
   padding: 0.5rem 1.05rem;
   border-radius: 999px;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.6);
   text-decoration: none;
-  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   transition: color 0.18s ease, background 0.18s ease;
   white-space: nowrap;
 }
@@ -285,10 +286,12 @@
   display: block;
   padding: 0.8rem 0.85rem;
   border-radius: 9px;
-  font-size: 0.975rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: rgba(255, 255, 255, 0.72);
   text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   transition: background 0.13s, color 0.13s;
 }
 .drawerLink:hover {
