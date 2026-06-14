@@ -47,6 +47,8 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith("/next-api/public/")) return NextResponse.next();
     // Auth endpoints must stay reachable without a valid session
     if (pathname.startsWith("/next-api/auth")) return NextResponse.next();
+    // Guest support chat — authenticated via its own support_token cookie, not the admin session
+    if (pathname.startsWith("/next-api/support/guest/")) return NextResponse.next();
 
     // Every other /next-api/* route is protected: resolve (and, if needed,
     // refresh) the session so all admin endpoints share the same global
