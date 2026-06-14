@@ -33,6 +33,7 @@ interface ReminderLog {
   errorMessage: string | null;
   smsStatus: string | null;
   recipientPhone: string | null;
+  smsConsumed: boolean | null;
   messageBody: string | null;
   smsError: string | null;
   emailStatus: string | null;
@@ -161,6 +162,13 @@ function ChannelPill({ status }: { status: string | null }) {
   if (!status) return <span className={styles.pillNa}>—</span>;
   const c = status === "sent" ? styles.pillSent : status === "failed" ? styles.pillFailed : styles.pillSkipped;
   return <span className={`${styles.pill} ${c}`}>{status}</span>;
+}
+
+function ConsumedPill({ consumed }: { consumed: boolean | null }) {
+  if (consumed === null) return <span className={styles.pillNa}>—</span>;
+  return consumed
+    ? <span className={`${styles.pill} ${styles.pillSent}`}>delivered</span>
+    : <span className={`${styles.pill} ${styles.pillSkipped}`}>pending</span>;
 }
 
 function StatusBadge({ status }: { status: ReminderLog["status"] }) {
@@ -675,7 +683,7 @@ export default function AdminReminders() {
                   <thead>
                     <tr>
                       <th>Status</th><th>Booking</th><th>Scheduled for</th>
-                      <th>SMS</th><th>SMS recipient</th>
+                      <th>SMS</th><th>SMS recipient</th><th>SMS delivery</th>
                       <th>Email</th><th>Email recipient</th>
                       <th>Attempts</th>
                     </tr>
@@ -688,6 +696,7 @@ export default function AdminReminders() {
                         <td className={styles.nowrap}>{log.scheduledFor ? fmtDateTime(log.scheduledFor, tz, "fr-FR") : "—"}</td>
                         <td><ChannelPill status={log.smsStatus} /></td>
                         <td className={styles.mono}>{log.recipientPhone ?? "—"}</td>
+                        <td><ConsumedPill consumed={log.smsConsumed} /></td>
                         <td><ChannelPill status={log.emailStatus} /></td>
                         <td className={styles.mono}>{log.recipientEmail ?? "—"}</td>
                         <td style={{ textAlign: "center" }}>{log.attemptCount}</td>
