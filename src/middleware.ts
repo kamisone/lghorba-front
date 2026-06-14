@@ -48,21 +48,9 @@ export async function middleware(request: NextRequest) {
     // Auth endpoints must stay reachable without a valid session
     if (pathname.startsWith("/next-api/auth")) return NextResponse.next();
 
-    // Protected API
-    const isProtected =
-      pathname.startsWith("/next-api/sms/") ||
-      pathname.startsWith("/next-api/cars/") ||
-      pathname.startsWith("/next-api/bookings/") ||
-      pathname.startsWith("/next-api/rent-sessions/") ||
-      pathname.startsWith("/next-api/users/") ||
-      pathname === "/next-api/users" ||
-      pathname.startsWith("/next-api/admins/") ||
-      pathname === "/next-api/admins" ||
-      pathname.startsWith("/next-api/contacts/") ||
-      (pathname === "/next-api/contacts" && request.method !== "POST") ||
-      pathname.startsWith("/next-api/translations/");
-    if (!isProtected) return NextResponse.next();
-
+    // Every other /next-api/* route is protected: resolve (and, if needed,
+    // refresh) the session so all admin endpoints share the same global
+    // refresh behaviour rather than relying on an allowlist.
     const session = await resolveAndPropagate(request);
     if (!session.accessToken) {
       return applySessionCookies(NextResponse.json({ error: "unauthorized" }, { status: 401 }), session);

@@ -29,7 +29,10 @@ export default function TokenRefresher() {
       }
 
       const res = await originalFetch(...args);
-      if (res.status !== 401) return res;
+      // 401 (unauthenticated) or 403 (forbidden) both trigger a refresh
+      // attempt — an expired/invalid access token can surface as either
+      // depending on the endpoint.
+      if (res.status !== 401 && res.status !== 403) return res;
 
       // Another refresh is already in flight — queue this retry
       if (isRefreshing) {

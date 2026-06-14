@@ -5,7 +5,13 @@ function baseOpts() {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict" as const,
+    // "lax" (not "strict"): the session must survive top-level
+    // navigations/reloads after the tab has been idle for a while (e.g. the
+    // browser discarding and reloading a background tab). With "strict",
+    // that reload can omit the cookies entirely, which middleware then reads
+    // as "no session" and clears the (still valid) auth cookies outright —
+    // logging the admin out even though the refresh token was never expired.
+    sameSite: "lax" as const,
     path: "/",
     maxAge: REFRESH_TOKEN_MAX_AGE,
   };
