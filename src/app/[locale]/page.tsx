@@ -98,10 +98,20 @@ export default async function LandingPage({ params }: { params: { locale: string
 
       {/* ── Hero ── */}
       <section className={styles.hero}>
+        <video
+          className={styles.heroVideo}
+          src="/assets/cars/car-rental-hero.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="none"
+          aria-hidden="true"
+        />
+        <div className={styles.heroVideoOverlay} aria-hidden="true" />
         <div className={styles.heroBg} aria-hidden="true">
           <div className={styles.heroBgGlow1} />
           <div className={styles.heroBgGlow2} />
-          <div className={styles.heroBgGrid} />
         </div>
         <div className={styles.heroContent}>
           <span className={styles.heroPill}>{t.hero.pill}</span>
