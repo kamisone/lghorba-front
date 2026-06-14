@@ -12,6 +12,7 @@ interface RentSession {
   endedAt?: string;
   status: string;
   car?: { id: string; name: string; immatriculation: string };
+  booking?: { id: string; startDateTime: string; endDateTime: string } | null;
 }
 
 interface User {
@@ -262,7 +263,7 @@ export default function UserDetailPage() {
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
-                <tr><th>Car</th><th>Started</th><th>Ended</th><th>Status</th></tr>
+                <tr><th>Car</th><th>Started</th><th>Ended</th><th>Status</th><th>Booking</th></tr>
               </thead>
               <tbody>
                 {user.rentSessions.map(s => (
@@ -276,6 +277,12 @@ export default function UserDetailPage() {
                     <td className={styles.dateCell}>{new Date(s.startedAt).toLocaleString()}</td>
                     <td className={styles.dateCell}>{s.endedAt ? new Date(s.endedAt).toLocaleString() : <span className={styles.na}>ongoing</span>}</td>
                     <td><span className={`${styles.statusBadge} ${styles[`status_${s.status}`]}`}>{s.status}</span></td>
+                    <td>
+                      {s.booking
+                        ? <Link href={`/admin/bookings?modal=booking&id=${s.booking.id}`} className={styles.carLink}>View booking ↗</Link>
+                        : <span className={styles.na}>—</span>
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
