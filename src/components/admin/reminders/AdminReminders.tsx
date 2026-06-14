@@ -27,6 +27,7 @@ interface ReminderSettings {
 interface ReminderLog {
   id: string;
   bookingId: string;
+  type: "pickup" | "return";
   scheduledFor: string;
   sentAt: string | null;
   status: "scheduled" | "sent" | "failed" | "skipped" | "cancelled";
@@ -57,7 +58,7 @@ type SaveStatus = "idle" | "saving" | "saved" | "error";
 // ── Defaults ──────────────────────────────────────────────────────────────────
 
 const DEFAULT_SMS_TEMPLATE =
-  `[RAPPEL] Réservation dans {{minutesBefore}}min\n` +
+  `[RAPPEL {{reminderType}}] Réservation dans {{minutesBefore}}min\n` +
   `Client : {{customerName}} | {{customerPhone}}\n` +
   `Véhicule : {{carDetails}}\n` +
   `Source : {{source}}\n` +
@@ -67,10 +68,10 @@ const DEFAULT_SMS_TEMPLATE =
   `Réf : {{reservationId}}`;
 
 const DEFAULT_EMAIL_SUBJECT =
-  `[Rappel] Réservation {{carDetails}} – {{startDateTime}}`;
+  `[Rappel {{reminderType}}] Réservation {{carDetails}} – {{startDateTime}}`;
 
 const DEFAULT_EMAIL_TEMPLATE =
-  `Rappel de réservation dans {{minutesBefore}} minutes.\n\n` +
+  `Rappel ({{reminderType}}) — réservation dans {{minutesBefore}} minutes.\n\n` +
   `Client : {{customerName}} ({{customerPhone}})\n` +
   `Véhicule : {{carDetails}}\n` +
   `Source : {{source}}\n` +
@@ -81,14 +82,14 @@ const DEFAULT_EMAIL_TEMPLATE =
   `Référence : {{reservationId}}`;
 
 const PLACEHOLDERS = [
-  "{{minutesBefore}}","{{customerName}}","{{customerPhone}}",
+  "{{reminderType}}","{{minutesBefore}}","{{customerName}}","{{customerPhone}}",
   "{{carDetails}}","{{carBrand}}","{{carModel}}","{{source}}",
   "{{startDateTime}}","{{endDateTime}}","{{location}}",
   "{{totalPrice}}","{{reservationId}}","{{bookingId}}",
 ];
 
 const SAMPLE_VARS: Record<string, string> = {
-  minutesBefore: "60", customerName: "Jean Dupont",
+  reminderType: "Départ", minutesBefore: "60", customerName: "Jean Dupont",
   customerPhone: "+33 6 12 34 56 78", carDetails: "Renault Kangoo VU",
   carBrand: "Renault", carModel: "Kangoo", carName: "Kangoo VU",
   source: "turo", startDateTime: "01/06/2025 09:00",
@@ -169,6 +170,14 @@ function ConsumedPill({ consumed }: { consumed: boolean | null }) {
   return consumed
     ? <span className={`${styles.pill} ${styles.pillSent}`}>delivered</span>
     : <span className={`${styles.pill} ${styles.pillSkipped}`}>pending</span>;
+}
+
+function TypeBadge({ type }: { type: ReminderLog["type"] }) {
+  return (
+    <span className={`${styles.pill} ${type === "return" ? styles.pillSkipped : styles.pillSent}`}>
+      {type === "return" ? "Return" : "Pickup"}
+    </span>
+  );
 }
 
 function StatusBadge({ status }: { status: ReminderLog["status"] }) {
@@ -415,7 +424,7 @@ export default function AdminReminders() {
                 <div className={styles.timingRow}>
                   <div>
                     <div className={styles.rowLabel}>Reminder timing</div>
-                    <div className={styles.rowSub}>Applied to both SMS and email — sent this many minutes before booking start</div>
+                    <div className={styles.rowSub}>Applied to both SMS and email — sent this many minutes before booking start, and again this many minutes before booking return</div>
                   </div>
                   <div className={styles.timingInput}>
                     <input
@@ -425,7 +434,7 @@ export default function AdminReminders() {
                       onChange={e => setLocal({ ...local, reminderMinutesBefore: Number(e.target.value) })}
                       aria-label="Minutes before booking"
                     />
-                    <span className={styles.inputSuffix}>min before start</span>
+                    <span className={styles.inputSuffix}>min before start/return</span>
                   </div>
                 </div>
               </div>
@@ -682,7 +691,7 @@ export default function AdminReminders() {
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th>Status</th><th>Booking</th><th>Scheduled for</th>
+                      <th>Status</th><th>Type</th><th>Booking</th><th>Scheduled for</th>
                       <th>SMS</th><th>SMS recipient</th><th>SMS delivery</th>
                       <th>Email</th><th>Email recipient</th>
                       <th>Attempts</th>
@@ -692,6 +701,7 @@ export default function AdminReminders() {
                     {logs.items.map(log => (
                       <tr key={log.id}>
                         <td><StatusBadge status={log.status} /></td>
+                        <td><TypeBadge type={log.type} /></td>
                         <td><span className={styles.mono}>{log.bookingId.slice(0, 8)}…</span></td>
                         <td className={styles.nowrap}>{log.scheduledFor ? fmtDateTime(log.scheduledFor, tz, "fr-FR") : "—"}</td>
                         <td><ChannelPill status={log.smsStatus} /></td>
