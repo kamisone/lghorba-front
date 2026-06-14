@@ -83,50 +83,6 @@
   line-height: 1.4;
 }
 
-/* ── Date + time row ── */
-.datetimeRow {
-  display: flex;
-  gap: 8px;
-}
-
-/* ── Inputs ── */
-.dateInput,
-.timeInput {
-  border: 1.5px solid var(--color-border);
-  border-radius: 12px;
-  padding: 13px 14px;
-  font-size: 0.9rem;
-  color: var(--color-text-primary);
-  background: var(--color-white);
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  -webkit-appearance: none;
-}
-.dateInput:hover,
-.timeInput:hover {
-  border-color: rgba(var(--rgb-brand-primary), 0.35);
-}
-.dateInput:focus,
-.timeInput:focus {
-  border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 3px rgba(var(--rgb-brand-primary), 0.1);
-}
-.dateInput { flex: 1; min-width: 0; }
-.timeInput { width: 96px; flex-shrink: 0; }
-
-.inputErr {
-  border-color: var(--color-error) !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
-}
-
-.errMsg {
-  font-size: 0.78rem;
-  color: var(--color-error);
-  margin: 0;
-  font-weight: 500;
-}
-
 /* ── Search button ── */
 .searchBtn {
   display: flex;

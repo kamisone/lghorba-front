@@ -1,20 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AddressAutocomplete, { type SelectedAddress } from "./AddressAutocomplete";
-import { isoToLocalParts, localPartsToUTC } from "@/lib/dateUtils";
+import DateTimePicker, { type DateTimePickerHandle } from "./DateTimePicker";
+import { isoToLocalDT, localDTToISO, nowNextSlot } from "@/lib/dateUtils";
 import { loadSearchContext } from "@/lib/searchContext";
 import styles from "./CarSearchForm.module.css";
 import { MapPin, ArrowRight, CalendarDays, Flag, Search } from "lucide-react";
 
-function nowPlusHours(h: number): { date: string; time: string } {
-  const d = new Date(Date.now() + h * 3_600_000);
+/** Add `hours` to a "YYYY-MM-DDTHH:mm" wall-clock string, preserving the format. */
+function addHours(localDT: string, hours: number): string {
+  const [datePart, timePart] = localDT.split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const [h, mi]    = timePart.split(":").map(Number);
+  const dt = new Date(Date.UTC(y, mo - 1, d, h, mi));
+  dt.setUTCHours(dt.getUTCHours() + hours);
   const pad = (n: number) => String(n).padStart(2, "0");
-  return {
-    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-    time: `${pad(d.getHours())}:00`,
-  };
+  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}T${pad(dt.getUTCHours())}:${pad(dt.getUTCMinutes())}`;
 }
 
 export interface SearchFormLabels {
@@ -26,52 +29,72 @@ export interface SearchFormLabels {
   addressHelper:       string;
   searchBtn:           string;
   dateError:           string;
+  pickupPlaceholder:   string;
+  returnPlaceholder:   string;
+  clearLabel:          string;
+  noSlotsLabel:        string;
 }
 
 interface Props {
-  locale:  string;
-  labels:  SearchFormLabels;
+  locale:     string;
+  labels:     SearchFormLabels;
+  businessTz: string;
 }
 
-export default function CarSearchForm({ locale, labels }: Props) {
+export default function CarSearchForm({ locale, labels, businessTz }: Props) {
   const router = useRouter();
 
-  const defaultStart = nowPlusHours(2);
-  const defaultEnd   = nowPlusHours(26);
+  const defaultStart = addHours(nowNextSlot(businessTz), 2);
+  const defaultEnd   = addHours(defaultStart, 24);
 
-  const [startDate, setStartDate] = useState(defaultStart.date);
-  const [startTime, setStartTime] = useState(defaultStart.time);
-  const [endDate,   setEndDate]   = useState(defaultEnd.date);
-  const [endTime,   setEndTime]   = useState(defaultEnd.time);
-  const [address,   setAddress]   = useState<SelectedAddress | null>(null);
-  const [dateError, setDateError] = useState<string | undefined>();
+  const [startDateTime, setStartDateTime] = useState(defaultStart);
+  const [endDateTime,   setEndDateTime]   = useState(defaultEnd);
+  const [address,       setAddress]       = useState<SelectedAddress | null>(null);
+  const [dateError,     setDateError]     = useState<string | undefined>();
+
+  const endPickerRef = useRef<DateTimePickerHandle>(null);
 
   // Pre-fill from last search context on mount
   useEffect(() => {
     const ctx = loadSearchContext();
     if (!ctx || new Date(ctx.start) <= new Date()) return;
-    const sp = isoToLocalParts(ctx.start);
-    const ep = isoToLocalParts(ctx.end);
-    setStartDate(sp.date); setStartTime(sp.time);
-    setEndDate(ep.date);   setEndTime(ep.time);
-  }, []);
+    setStartDateTime(isoToLocalDT(ctx.start, businessTz));
+    setEndDateTime(isoToLocalDT(ctx.end, businessTz));
+  }, [businessTz]);
 
   const validate = useCallback((): boolean => {
-    const start = new Date(`${startDate}T${startTime}`);
-    const end   = new Date(`${endDate}T${endTime}`);
-    if (end <= start) {
+    if (new Date(endDateTime) <= new Date(startDateTime)) {
       setDateError(labels.dateError);
       return false;
     }
     setDateError(undefined);
     return true;
-  }, [startDate, startTime, endDate, endTime, labels.dateError]);
+  }, [startDateTime, endDateTime, labels.dateError]);
+
+  function handleStartChange(v: string) {
+    if (!v) return;
+    setStartDateTime(v);
+    if (new Date(v) >= new Date(endDateTime)) {
+      setEndDateTime(addHours(v, 24));
+    }
+    setDateError(undefined);
+  }
+
+  function handleEndChange(v: string) {
+    if (!v) return;
+    setEndDateTime(v);
+    setDateError(undefined);
+  }
+
+  function handleStartComplete() {
+    setTimeout(() => endPickerRef.current?.openPicker(), 160);
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    const start = localPartsToUTC(startDate, startTime);
-    const end   = localPartsToUTC(endDate, endTime);
+    const start = localDTToISO(startDateTime, businessTz);
+    const end   = localDTToISO(endDateTime, businessTz);
     const params = new URLSearchParams({ start, end });
     if (address) {
       params.set("lat",     String(address.lat));
@@ -91,22 +114,17 @@ export default function CarSearchForm({ locale, labels }: Props) {
             <CalendarDays size={16} strokeWidth={1.75} className={styles.fieldIcon} />
             {labels.fromLabel}
           </label>
-          <div className={styles.datetimeRow}>
-            <input
-              type="date"
-              className={styles.dateInput}
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-            />
-            <input
-              type="time"
-              className={styles.timeInput}
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              required
-            />
-          </div>
+          <DateTimePicker
+            value={startDateTime}
+            onChange={handleStartChange}
+            minValue={nowNextSlot(businessTz)}
+            placeholder={labels.pickupPlaceholder}
+            onComplete={handleStartComplete}
+            locale={locale}
+            clearLabel={labels.clearLabel}
+            noSlotsLabel={labels.noSlotsLabel}
+            businessTz={businessTz}
+          />
         </div>
 
         <div className={styles.arrowWrap} aria-hidden="true">
@@ -118,23 +136,18 @@ export default function CarSearchForm({ locale, labels }: Props) {
             <Flag size={16} strokeWidth={1.75} className={styles.fieldIcon} />
             {labels.toLabel}
           </label>
-          <div className={styles.datetimeRow}>
-            <input
-              type="date"
-              className={`${styles.dateInput} ${dateError ? styles.inputErr : ""}`}
-              value={endDate}
-              onChange={(e) => { setEndDate(e.target.value); setDateError(undefined); }}
-              required
-            />
-            <input
-              type="time"
-              className={`${styles.timeInput} ${dateError ? styles.inputErr : ""}`}
-              value={endTime}
-              onChange={(e) => { setEndTime(e.target.value); setDateError(undefined); }}
-              required
-            />
-          </div>
-          {dateError && <p className={styles.errMsg}>{dateError}</p>}
+          <DateTimePicker
+            ref={endPickerRef}
+            value={endDateTime}
+            onChange={handleEndChange}
+            minValue={startDateTime}
+            placeholder={labels.returnPlaceholder}
+            error={dateError}
+            locale={locale}
+            clearLabel={labels.clearLabel}
+            noSlotsLabel={labels.noSlotsLabel}
+            businessTz={businessTz}
+          />
         </div>
       </div>
 

@@ -354,6 +354,10 @@
   flex-shrink: 0;
 }
 
+.platformIconWrapWide {
+  width: 64px;
+}
+
 .platformName {
   font-size: 1.05rem;
   font-weight: 800;
@@ -564,29 +568,6 @@
   color: var(--color-text-secondary);
 }
 
-.fleetCta {
-  margin-top: 2.25rem;
-  display: flex;
-  justify-content: center;
-}
-
-.fleetCtaBtn {
-  display: inline-block;
-  padding: 0.75rem 1.75rem;
-  border-radius: 10px;
-  background: transparent;
-  border: 1.5px solid var(--color-brand-primary);
-  color: var(--color-brand-primary);
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s, transform 0.12s;
-}
-.fleetCtaBtn:hover {
-  background: var(--color-brand-primary);
-  color: var(--color-white);
-  transform: translateY(-1px);
-}
 
 
 /* ── How it works ── */

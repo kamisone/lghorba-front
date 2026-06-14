@@ -5,8 +5,6 @@ import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import CarSearchForm from "@/components/CarSearchForm";
 import {
-  Key,
-  Smartphone,
   ShieldCheck,
   Car,
   Truck,
@@ -17,9 +15,21 @@ import {
   CheckCircle2,
   ShoppingBag,
 } from "lucide-react";
+import { TuroLogo, GetaroundLogo } from "@/components/icons/PlatformLogos";
 import styles from "../page.module.css";
 
 const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
+
+async function getBusinessTimezone(): Promise<string> {
+  try {
+    const res = await fetch(`${API_SERVER}/public/platform-settings`, { cache: "no-store" });
+    if (!res.ok) return "Europe/Paris";
+    const data = await res.json() as { timezone?: string };
+    return data.timezone ?? "Europe/Paris";
+  } catch {
+    return "Europe/Paris";
+  }
+}
 
 async function getPublicCars(locale: string): Promise<CarouselCar[]> {
   try {
@@ -70,7 +80,10 @@ export async function generateMetadata({
 export default async function LandingPage({ params }: { params: { locale: string } }) {
   const t = getTranslations(params.locale);
   const locale = params.locale;
-  const cars = await getPublicCars(locale);
+  const [cars, businessTz] = await Promise.all([
+    getPublicCars(locale),
+    getBusinessTimezone(),
+  ]);
 
   const fleetItems = [
     { Icon: Car,   variantClass: "fleetCardCity", ...t.fleet.city },
@@ -133,6 +146,7 @@ export default async function LandingPage({ params }: { params: { locale: string
           <div className={styles.searchCard}>
             <CarSearchForm
               locale={locale}
+              businessTz={businessTz}
               labels={{
                 fromLabel:          t.search.fromLabel,
                 toLabel:            t.search.toLabel,
@@ -142,6 +156,10 @@ export default async function LandingPage({ params }: { params: { locale: string
                 addressHelper:      t.search.addressHelper,
                 searchBtn:          t.search.searchBtn,
                 dateError:          t.search.dateError,
+                pickupPlaceholder:  t.booking.pickupPlaceholder,
+                returnPlaceholder:  t.booking.returnPlaceholder,
+                clearLabel:         t.dateTimePicker.clear,
+                noSlotsLabel:       t.dateTimePicker.noSlots,
               }}
             />
           </div>
@@ -180,8 +198,8 @@ export default async function LandingPage({ params }: { params: { locale: string
 
             <div className={`${styles.platformCard} ${styles.platformCardTuro}`}>
               <div className={styles.platformTop}>
-                <div className={styles.platformIconWrap}>
-                  <Key size={20} strokeWidth={1.75} />
+                <div className={`${styles.platformIconWrap} ${styles.platformIconWrapWide}`}>
+                  <TuroLogo width={40} height={15} />
                 </div>
                 <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
               </div>
@@ -201,7 +219,7 @@ export default async function LandingPage({ params }: { params: { locale: string
             <div className={`${styles.platformCard} ${styles.platformCardGetaround}`}>
               <div className={styles.platformTop}>
                 <div className={styles.platformIconWrap}>
-                  <Smartphone size={20} strokeWidth={1.75} />
+                  <GetaroundLogo width={22} height={22} />
                 </div>
                 <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
               </div>
@@ -278,9 +296,6 @@ export default async function LandingPage({ params }: { params: { locale: string
                 </div>
               </div>
             ))}
-          </div>
-          <div className={styles.fleetCta}>
-            <a href={`/${locale}/fleet`} className={styles.fleetCtaBtn}>{t.fleet.sub}</a>
           </div>
         </div>
       </section>
