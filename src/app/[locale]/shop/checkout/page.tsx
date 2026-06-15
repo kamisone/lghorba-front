@@ -151,7 +151,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   const orderIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    fetch("/next-api/shop/countries")
+    fetch("/next-api/public/shop/countries")
       .then(r => r.ok ? r.json() : [])
       .then(data => { if (Array.isArray(data)) setCountries(data); })
       .catch(() => {})

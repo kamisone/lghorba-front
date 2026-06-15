@@ -146,6 +146,7 @@ const NAV_GROUPS: NavGroup[] = [
           { href: "/admin/shop/shipping",                icon: Truck,          label: "Shipping Config"      },
           { href: "/admin/shop/shipping/delivery-rules", icon: ClipboardCheck, label: "Delivery Rules"       },
           { href: "/admin/shop/fulfillment",             icon: Box,            label: "Fulfillment Tracking" },
+          { href: "/admin/shop/countries",               icon: Flag,           label: "Countries"             },
         ],
       },
       {
@@ -195,7 +196,6 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Settings",
         icon:  Settings,
         items: [
-          { href: "/admin/shop/countries",              icon: Flag,              label: "Countries"                },
           { href: "/admin/shop/settings/taxes",         icon: Receipt,           label: "Taxes & VAT"              },
           { href: "/admin/shop/settings/currency",      icon: ArrowLeftRight,    label: "Currency Settings"        },
           { href: "/admin/shop/settings/config",        icon: SlidersHorizontal, label: "Commerce Configuration"   },
