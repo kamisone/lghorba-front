@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Check } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -418,12 +419,19 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
           <h3>{t.checkoutOrderSummary}</h3>
 
           {/* Line items */}
-          <div className={styles.lineItems}>
+          <div className={`${styles.lineItems} ${cart.items.length > 4 ? styles.lineItemsCarousel : ""}`}>
             {cart.items.map(item => (
-              <div key={item.id} className={styles.summaryItem}>
+              <div key={item.id} className={`${styles.summaryItem} ${cart.items.length > 4 ? styles.summaryItemCard : ""}`}>
+                <div className={styles.summaryItemImage}>
+                  {item.imageUrl ? (
+                    <Image src={item.imageUrl} alt={item.titleSnapshot} fill sizes="56px" style={{ objectFit: "cover" }} />
+                  ) : (
+                    <div className={styles.summaryItemImagePlaceholder} />
+                  )}
+                  {item.quantity > 1 && <span className={styles.summaryItemQtyBadge}>×{item.quantity}</span>}
+                </div>
                 <span className={styles.summaryItemName}>
                   {item.titleSnapshot}
-                  <em className={styles.summaryItemQty}> ×{item.quantity}</em>
                   {item.optionsSnapshot && item.optionsSnapshot.length > 0 && (
                     <span className={styles.summaryItemOptions}>
                       {item.optionsSnapshot.map(o => `${o.attributeName}: ${o.displayValue ?? o.value}`).join(" · ")}

@@ -148,18 +148,59 @@
 }
 .summary h3 { font-size: 17px; font-weight: 700; color: var(--color-text-heading); margin: 0 0 16px; }
 
-.lineItems { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.lineItems { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
 .summaryItem {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 8px; font-size: 13px; color: var(--color-text-secondary);
+  display: flex; align-items: center;
+  gap: 10px; font-size: 13px; color: var(--color-text-secondary);
 }
-.summaryItemName { min-width: 0; }
-.summaryItemQty  { color: var(--color-text-muted); font-style: normal; font-weight: 400; }
+.summaryItemImage {
+  position: relative; flex-shrink: 0;
+  width: 48px; height: 48px;
+  border-radius: 10px; overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.summaryItemImagePlaceholder { width: 100%; height: 100%; background: #e9eef2; }
+.summaryItemQtyBadge {
+  position: absolute; bottom: -4px; right: -4px;
+  background: var(--color-brand-primary); color: #fff;
+  font-size: 10px; font-weight: 700; line-height: 1;
+  padding: 2px 5px; border-radius: 8px;
+  border: 2px solid var(--color-surface);
+}
+.summaryItemName { flex: 1; min-width: 0; align-self: center; }
 .summaryItemOptions {
   display: block; font-size: 11px; color: var(--color-text-muted);
   margin-top: 2px; white-space: normal;
 }
-.summaryItemPrice { font-weight: 600; white-space: nowrap; color: var(--color-text-heading); }
+.summaryItemPrice { font-weight: 600; white-space: nowrap; color: var(--color-text-heading); align-self: center; }
+
+/* ── Carousel layout (many products) ── */
+.lineItemsCarousel {
+  flex-direction: row;
+  overflow-x: auto;
+  gap: 12px;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.lineItemsCarousel::-webkit-scrollbar { height: 6px; }
+.lineItemsCarousel::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+.summaryItemCard {
+  flex: 0 0 116px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  scroll-snap-align: start;
+}
+.summaryItemCard .summaryItemImage { width: 100%; height: 100px; }
+.summaryItemCard .summaryItemName {
+  font-size: 12px; font-weight: 500;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; line-height: 1.3;
+}
+.summaryItemCard .summaryItemPrice { font-size: 12px; }
 
 .summaryPromo {
   padding: 14px 0;
