@@ -148,6 +148,10 @@
 }
 .summary h3 { font-size: 17px; font-weight: 700; color: var(--color-text-heading); margin: 0 0 16px; }
 
+@media (max-width: 768px) {
+  .summary { order: -1; position: static; margin-bottom: 8px; }
+}
+
 .lineItems { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
 .summaryItem {
   display: flex; align-items: center;
