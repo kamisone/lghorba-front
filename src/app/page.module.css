@@ -363,11 +363,23 @@
   width: 64px;
 }
 
+.platformTopText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
 .platformName {
   font-size: 1.05rem;
   font-weight: 800;
   color: var(--color-text-heading);
   margin: 0;
+}
+
+.platformCountry {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .platformBody {

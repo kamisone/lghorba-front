@@ -4,7 +4,6 @@ export default function RelatedProductsSkeleton() {
   return (
     <section className={styles.section} aria-hidden="true">
       <div className={styles.header}>
-        <div className={`${styles.skeletonBar} ${styles.skeletonSubtitle}`} />
         <div className={`${styles.skeletonBar} ${styles.skeletonTitle}`} />
       </div>
 

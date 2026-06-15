@@ -40,12 +40,14 @@ export const en = {
     sub: "Same vehicles, multiple booking channels — choose the option that works best for you.",
     turo: {
       name: "Turo",
+      country: "🇺🇸 American company",
       desc: "Book instantly on Turo. Flexible pickup, contactless handover, and comprehensive insurance included.",
       link: "View on Turo →",
       features: ["Instant booking", "Insurance included", "Flexible pickup"],
     },
     getaround: {
       name: "Getaround",
+      country: "🇫🇷 French company",
       badge: "Most popular",
       desc: "Connect & drive in minutes. Available 24/7 with keyless entry. Perfect for same-day bookings.",
       link: "View on Getaround →",
@@ -1022,12 +1024,14 @@ export const fr: Translations = {
     sub: "Les mêmes véhicules, plusieurs canaux de réservation — choisissez celui qui vous convient.",
     turo: {
       name: "Turo",
+      country: "🇺🇸 Entreprise américaine",
       desc: "Réservez instantanément sur Turo. Prise en charge flexible, remise sans contact, assurance complète incluse.",
       link: "Voir sur Turo →",
       features: ["Réservation instantanée", "Assurance incluse", "Retrait flexible"],
     },
     getaround: {
       name: "Getaround",
+      country: "🇫🇷 Entreprise française",
       badge: "Le plus populaire",
       desc: "Connectez-vous et conduisez en quelques minutes. Disponible 24h/24 avec accès sans clé. Parfait pour les réservations du jour.",
       link: "Voir sur Getaround →",

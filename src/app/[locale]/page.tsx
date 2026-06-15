@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import CarSearchForm from "@/components/CarSearchForm";
 import {
-  ShieldCheck,
   Car,
   Truck,
   Package,
@@ -211,7 +211,10 @@ export default async function LandingPage({ params }: { params: { locale: string
                 <div className={`${styles.platformIconWrap} ${styles.platformIconWrapWide}`}>
                   <TuroLogo width={40} height={15} />
                 </div>
-                <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
+                <div className={styles.platformTopText}>
+                  <h3 className={styles.platformName}>{t.platforms.turo.name}</h3>
+                  <span className={styles.platformCountry}>{t.platforms.turo.country}</span>
+                </div>
               </div>
               <div className={styles.platformBody}>
                 <div className={styles.platformTags}>
@@ -231,7 +234,10 @@ export default async function LandingPage({ params }: { params: { locale: string
                 <div className={styles.platformIconWrap}>
                   <GetaroundLogo width={22} height={22} />
                 </div>
-                <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
+                <div className={styles.platformTopText}>
+                  <h3 className={styles.platformName}>{t.platforms.getaround.name}</h3>
+                  <span className={styles.platformCountry}>{t.platforms.getaround.country}</span>
+                </div>
               </div>
               <div className={styles.platformBody}>
                 <div className={styles.platformTags}>
@@ -249,7 +255,7 @@ export default async function LandingPage({ params }: { params: { locale: string
             <div className={`${styles.platformCard} ${styles.platformCardPrivate}`}>
               <div className={styles.platformTop}>
                 <div className={styles.platformIconWrap}>
-                  <ShieldCheck size={20} strokeWidth={1.75} />
+                  <Image src="/assets/logo_vitecamion_icon.png" alt="" aria-hidden={true} width={24} height={24} />
                 </div>
                 <h3 className={styles.platformName}>{t.platforms.private.name}</h3>
               </div>

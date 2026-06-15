@@ -219,8 +219,7 @@ export default function RelatedProductsCarousel({ items, locale, labels }: Props
   return (
     <section className={styles.section} aria-label={labels.title}>
       <div className={styles.header}>
-        <p className={styles.subtitle}>{labels.subtitle}</p>
-        <h2 className={styles.title}>{labels.title}</h2>
+        <h2 className={styles.title}>{labels.subtitle}</h2>
       </div>
 
       <div className={styles.viewport}>
