@@ -100,14 +100,16 @@ export default async function LandingPage({ params }: { params: { locale: string
       <section className={styles.hero}>
         <video
           className={styles.heroVideo}
-          src="/assets/cars/rentals_hero.mp4"
           autoPlay
           loop
           muted
           playsInline
           preload="none"
           aria-hidden="true"
-        />
+        >
+          <source src="/assets/cars/rentals_hero_mobile.mp4" media="(max-width: 767px)" />
+          <source src="/assets/cars/rentals_hero.mp4" />
+        </video>
         <div className={styles.heroVideoOverlay} aria-hidden="true" />
         <div className={styles.heroBg} aria-hidden="true">
           <div className={styles.heroBgGlow1} />
