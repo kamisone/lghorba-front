@@ -20,7 +20,9 @@ const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
 async function fetchProduct(slug: string, locale: string) {
   const lang = locale !== "fr" ? `?lang=${locale}` : "";
-  const res = await fetch(`${API}/public/shop/products/${slug}${lang}`, { next: { revalidate: 300 } });
+  const res = await fetch(`${API}/public/shop/products/${slug}${lang}`, {
+    next: { revalidate: 300, tags: ["products", `product-${slug}`] },
+  });
   if (!res.ok) return null;
   return res.json();
 }
@@ -45,7 +47,7 @@ async function fetchAvailabilityMatrix(slug: string, locale: string): Promise<Av
   try {
     const lang = locale !== "fr" ? `?lang=${locale}` : "";
     const res = await fetch(`${API}/public/shop/products/${slug}/variants/availability${lang}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 60, tags: ["products", `product-${slug}`] },
     });
     if (!res.ok) return null;
     return await res.json();
