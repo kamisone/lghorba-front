@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { proxyRequest } from "@/lib/proxy";
 
 export function GET(req: NextRequest, { params }: { params: { postId: string } }) {
@@ -6,5 +7,7 @@ export function GET(req: NextRequest, { params }: { params: { postId: string } }
 }
 
 export function POST(req: NextRequest, { params }: { params: { postId: string } }) {
-  return proxyRequest(req, "POST", `/admin/blog/posts/${params.postId}/products`);
+  return proxyRequest(req, "POST", `/admin/blog/posts/${params.postId}/products`, {
+    onSuccess: () => revalidateTag("blog"),
+  });
 }

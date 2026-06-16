@@ -1,3 +1,5 @@
+export const revalidate = 60;
+
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ArticlePage from "@/components/blog/ArticlePage";
