@@ -54,9 +54,10 @@ export function useBookingForm(deps: Deps) {
     deliveryValidation, selectedLocationId, deliveryLocations, activeDeliveryFee,
   } = deps;
 
-  const [name,  setName]  = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [name,        setName]        = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [email,       setEmail]       = useState("");
+  const [phone,       setPhone]       = useState("");
 
   const [fieldErrors, setFieldErrors] = useState({ name: "", email: "", phone: "" });
   const [touched,     setTouched]     = useState({ name: false, email: false, phone: false });
@@ -133,11 +134,12 @@ export function useBookingForm(deps: Deps) {
       }
       const data = await api.bookings.create({
         carId,
-        startDateTime: startISO,
-        endDateTime:   endISO,
-        customerName:  name.trim(),
-        customerEmail: email.trim(),
-        customerPhone: phone.trim(),
+        startDateTime:       startISO,
+        endDateTime:         endISO,
+        customerName:        name.trim(),
+        customerCompanyName: companyName.trim() || undefined,
+        customerEmail:       email.trim(),
+        customerPhone:       phone.trim(),
         ...(couponCode.trim() ? { couponCode: couponCode.trim() } : {}),
         ...deliveryPayload as object,
       });
@@ -157,7 +159,8 @@ export function useBookingForm(deps: Deps) {
   };
 
   return {
-    name, setName, email, setEmail, phone, setPhone,
+    name, setName, companyName, setCompanyName,
+    email, setEmail, phone, setPhone,
     fieldErrors, setFieldErrors,
     touched, setTouched,
     submitting, submitError,

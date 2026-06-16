@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Check } from "lucide-react";
+import { AlertCircle, Check } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useCart } from "@/components/shop/CartContext";
@@ -90,7 +90,12 @@ function StripePaymentForm({ orderId, orderNumber, locale, total }: { orderId: s
   return (
     <form onSubmit={handlePay} className={styles.stripeForm}>
       <PaymentElement />
-      {error && <p className={styles.error}>{error}</p>}
+      {error && (
+        <p className={styles.error} role="alert">
+          <AlertCircle size={15} className={styles.errorIcon} />
+          {error}
+        </p>
+      )}
       <button type="submit" disabled={paying || !stripe} className={styles.payBtn}>
         {paying ? t.processing : `${t.payPrefix}€${centsToEuros(total)}`}
       </button>
@@ -139,11 +144,12 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   const [step, setStep]           = useState<Step>("address");
   const [snapshot, setSnapshot]   = useState<CheckoutSnapshot | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError]   = useState("");
+  const [submitting, setSubmitting]       = useState(false);
+  const [formError, setFormError]         = useState("");
+  const [nameGroupError, setNameGroupError] = useState("");
 
   const [form, setForm] = useState({
-    email: "", firstName: "", lastName: "", phone: "",
+    email: "", firstName: "", lastName: "", companyName: "", phone: "",
     line1: "", line2: "", city: "", zip: "", country: "MA",
   });
 
@@ -172,6 +178,15 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   async function handleSubmitAddress(e: React.FormEvent) {
     e.preventDefault();
     if (!cart?.items.length) return;
+
+    const hasName    = form.firstName.trim() && form.lastName.trim();
+    const hasCompany = form.companyName.trim();
+    if (!hasName && !hasCompany) {
+      setNameGroupError(t.nameOrCompanyRequired);
+      return;
+    }
+    setNameGroupError("");
+
     setSubmitting(true);
     setFormError("");
 
@@ -179,17 +194,18 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        cartToken:  token,
-        email:      form.email,
-        firstName:  form.firstName,
-        lastName:   form.lastName,
-        phone:      form.phone || null,
-        line1:      form.line1,
-        line2:      form.line2 || null,
-        city:       form.city,
-        zip:        form.zip,
-        country:    form.country,
-        couponCode: appliedCoupon?.code ?? null,
+        cartToken:   token,
+        email:       form.email,
+        firstName:   form.firstName,
+        lastName:    form.lastName,
+        companyName: form.companyName || null,
+        phone:       form.phone || null,
+        line1:       form.line1,
+        line2:       form.line2 || null,
+        city:        form.city,
+        zip:         form.zip,
+        country:     form.country,
+        couponCode:  appliedCoupon?.code ?? null,
       }),
     });
 
@@ -288,16 +304,27 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
               <h2 className={styles.sectionTitle}>{t.contactInfo}</h2>
               <div className={styles.row}>
                 <div className={styles.field}>
-                  <label>{t.firstName}</label>
-                  <input required value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} />
+                  <label>{t.firstName}<span className={styles.requiredMark} aria-hidden="true"> *</span></label>
+                  <input value={form.firstName} onChange={e => { setForm(f => ({ ...f, firstName: e.target.value })); setNameGroupError(""); }} />
                 </div>
                 <div className={styles.field}>
-                  <label>{t.lastName}</label>
-                  <input required value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} />
+                  <label>{t.lastName}<span className={styles.requiredMark} aria-hidden="true"> *</span></label>
+                  <input value={form.lastName} onChange={e => { setForm(f => ({ ...f, lastName: e.target.value })); setNameGroupError(""); }} />
                 </div>
               </div>
               <div className={styles.field}>
-                <label>{t.emailLabel}</label>
+                <label>{t.companyNameOptional}</label>
+                <input value={form.companyName} onChange={e => { setForm(f => ({ ...f, companyName: e.target.value })); setNameGroupError(""); }} />
+              </div>
+              <p className={styles.requiredNote}>{t.requiredNote}</p>
+              {nameGroupError && (
+                <p className={styles.error} role="alert">
+                  <AlertCircle size={15} className={styles.errorIcon} />
+                  {nameGroupError}
+                </p>
+              )}
+              <div className={styles.field}>
+                <label>{t.emailLabel}<span className={styles.requiredMark} aria-hidden="true"> *</span></label>
                 <input type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
               </div>
               <div className={styles.field}>
@@ -307,7 +334,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
 
               <h2 className={styles.sectionTitle}>{t.shippingAddressTitle}</h2>
               <div className={styles.field}>
-                <label>{t.countryLabel}</label>
+                <label>{t.countryLabel}<span className={styles.requiredMark} aria-hidden="true"> *</span></label>
                 <select
                   required
                   disabled={countriesLoading}
@@ -324,7 +351,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                 </select>
               </div>
               <div className={styles.field}>
-                <label>{t.addressLine1}</label>
+                <label>{t.addressLine1}<span className={styles.requiredMark} aria-hidden="true"> *</span></label>
                 <input required value={form.line1} onChange={e => setForm(f => ({ ...f, line1: e.target.value }))} />
               </div>
               <div className={styles.field}>
@@ -333,16 +360,21 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
               </div>
               <div className={styles.row}>
                 <div className={styles.field}>
-                  <label>{t.cityLabel}</label>
+                  <label>{t.cityLabel}<span className={styles.requiredMark} aria-hidden="true"> *</span></label>
                   <input required value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
                 </div>
                 <div className={styles.field}>
-                  <label>{t.zipLabel}</label>
+                  <label>{t.zipLabel}<span className={styles.requiredMark} aria-hidden="true"> *</span></label>
                   <input required value={form.zip} onChange={e => setForm(f => ({ ...f, zip: e.target.value }))} />
                 </div>
               </div>
 
-              {formError && <p className={styles.error}>{formError}</p>}
+              {formError && (
+                <p className={styles.error} role="alert">
+                  <AlertCircle size={15} className={styles.errorIcon} />
+                  {formError}
+                </p>
+              )}
               <button type="submit" disabled={submitting} className={styles.continueBtn}>
                 {submitting ? t.processing : t.continueToShipping}
               </button>
@@ -389,7 +421,12 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                   {submitting ? t.processing : t.continueToPayment}
                 </button>
               </div>
-              {formError && <p className={styles.error}>{formError}</p>}
+              {formError && (
+                <p className={styles.error} role="alert">
+                  <AlertCircle size={15} className={styles.errorIcon} />
+                  {formError}
+                </p>
+              )}
             </form>
           )}
 
@@ -401,7 +438,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                 <ReservationTimer expiresAt={snapshot.reservationExpiresAt} locale={locale} />
               )}
               {clientSecret && (
-                <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
+                <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" }, locale: locale as any }}>
                   <StripePaymentForm
                     orderId={snapshot.orderId}
                     orderNumber={snapshot.orderNumber}

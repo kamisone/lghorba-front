@@ -201,7 +201,7 @@ export default function PaymentForm({
         </div>
       </div>
 
-      <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
+      <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" }, locale: locale as any }}>
         <CheckoutForm bookingId={bookingId} carId={carId} locale={locale} returnBase={returnBase} />
       </Elements>
 

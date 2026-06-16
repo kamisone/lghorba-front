@@ -32,12 +32,14 @@ interface Labels {
   baseRate:         string;
   bookNow:          string;
   submitting:       string;
-  nameLabel:        string;
-  namePlaceholder:  string;
-  emailLabel:       string;
-  emailPlaceholder: string;
-  phoneLabel:       string;
-  phonePlaceholder: string;
+  nameLabel:          string;
+  namePlaceholder:    string;
+  companyLabel:       string;
+  companyPlaceholder: string;
+  emailLabel:         string;
+  emailPlaceholder:   string;
+  phoneLabel:         string;
+  phonePlaceholder:   string;
   dateError:        string;
   minimumOneDay:    string;
   noPriceConfigured: string;
@@ -104,7 +106,8 @@ export default function BookingPanel({
     deliveryEnabled, deliveryMode, deliveryType, deliveryAddress,
     deliveryValidation, selectedLocationId, deliveryLocations, activeDeliveryFee,
   });
-  const { name, setName, email, setEmail, phone, setPhone,
+  const { name, setName, companyName, setCompanyName,
+          email, setEmail, phone, setPhone,
           fieldErrors, setFieldErrors, touched, setTouched,
           submitting, submitError, couponCode, setCouponCode,
           couponResult, setCouponResult, couponChecking, validate, handleBook } = form;
@@ -417,6 +420,22 @@ export default function BookingPanel({
             {touched.name && fieldErrors.name && (
               <span id="bp-name-err" className={styles.fieldError} role="alert">{fieldErrors.name}</span>
             )}
+          </div>
+
+          {/* Company (optional) */}
+          <div className={styles.field}>
+            <label htmlFor="bp-company" className={styles.fieldLabel}>
+              {labels.companyLabel}
+            </label>
+            <input
+              id="bp-company"
+              type="text"
+              className={styles.fieldInput}
+              placeholder={labels.companyPlaceholder}
+              value={companyName}
+              onChange={e => setCompanyName(e.target.value)}
+              autoComplete="organization"
+            />
           </div>
 
           {/* Email */}

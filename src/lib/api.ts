@@ -77,15 +77,16 @@ export interface DeliveryValidation {
 }
 
 export interface CreateBookingPayload {
-  carId:              string;
-  startDateTime:      string;
-  endDateTime:        string;
-  customerName:       string;
-  customerEmail:      string;
-  customerPhone:      string;
-  couponCode?:        string;
-  deliveryRequested?: boolean;
-  deliveryAddress?:   string;
+  carId:               string;
+  startDateTime:       string;
+  endDateTime:         string;
+  customerName:        string;
+  customerCompanyName?: string;
+  customerEmail:       string;
+  customerPhone:       string;
+  couponCode?:         string;
+  deliveryRequested?:  boolean;
+  deliveryAddress?:    string;
   deliveryAddressLat?: number;
   deliveryAddressLng?: number;
 }
