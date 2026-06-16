@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest } from "next/server";\nimport { revalidateTag } from "next/cache";
 import { proxyRequest } from "@/lib/proxy";
 
 export function POST(req: NextRequest, { params }: { params: { id: string } }) {

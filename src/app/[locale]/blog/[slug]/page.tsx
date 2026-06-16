@@ -31,7 +31,7 @@ interface Post {
 async function fetchPost(slug: string): Promise<Post | null> {
   try {
     const res = await fetch(`${API}/public/blog/posts/slug/${slug}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 60, tags: ["blog", `blog-${slug}`] },
     });
     if (!res.ok) return null;
     return res.json();
@@ -43,7 +43,7 @@ async function fetchPost(slug: string): Promise<Post | null> {
 async function fetchRelated(postId: string): Promise<Post[]> {
   try {
     const res = await fetch(`${API}/public/blog/posts/${postId}/related`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 300, tags: ["blog"] },
     });
     if (!res.ok) return [];
     return res.json();
@@ -55,7 +55,7 @@ async function fetchRelated(postId: string): Promise<Post[]> {
 async function fetchProductRefs(postId: string): Promise<any[]> {
   try {
     const res = await fetch(`${API}/public/blog/posts/${postId}/products`, {
-      next: { revalidate: 120 },
+      next: { revalidate: 120, tags: ["blog", "products"] },
     });
     if (!res.ok) return [];
     return res.json();

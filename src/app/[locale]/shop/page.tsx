@@ -29,10 +29,10 @@ export default async function ShopPage({ params, searchParams }: Props) {
   const langParam = locale !== 'fr' ? `?lang=${locale}` : '';
 
   const [productsRes, categoriesRes, collectionsRes, promotionsRes] = await Promise.all([
-    fetch(`${API}/public/shop/products?${qs}`, { next: { revalidate: 60 } }),
-    fetch(`${API}/public/shop/products/categories`, { next: { revalidate: 300 } }),
-    fetch(`${API}/public/shop/collections/featured${langParam}`, { next: { revalidate: 300 } }),
-    fetch(`${API}/public/shop/promotions/active`, { next: { revalidate: 60 } }),
+    fetch(`${API}/public/shop/products?${qs}`, { next: { revalidate: 60, tags: ["products"] } }),
+    fetch(`${API}/public/shop/products/categories`, { next: { revalidate: 300, tags: ["products"] } }),
+    fetch(`${API}/public/shop/collections/featured${langParam}`, { next: { revalidate: 300, tags: ["collections"] } }),
+    fetch(`${API}/public/shop/promotions/active`, { next: { revalidate: 60, tags: ["promotions"] } }),
   ]);
 
   const productsData  = productsRes.ok  ? await productsRes.json()  : { items: [], total: 0 };

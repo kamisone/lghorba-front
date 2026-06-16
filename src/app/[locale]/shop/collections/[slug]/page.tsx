@@ -13,7 +13,7 @@ const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
 async function fetchCollection(slug: string, locale?: string) {
   const lang = locale && locale !== 'fr' ? `?lang=${locale}` : '';
-  const res = await fetch(`${API}/public/shop/collections/${slug}${lang}`, { next: { revalidate: 120 } });
+  const res = await fetch(`${API}/public/shop/collections/${slug}${lang}`, { next: { revalidate: 120, tags: ["collections", `collection-${slug}`] } });
   if (!res.ok) return null;
   return res.json();
 }
@@ -38,7 +38,7 @@ export default async function CollectionPage({ params }: Props) {
   let products: any[] = [];
   if (productIds.length > 0) {
     const qs = new URLSearchParams({ limit: "50" });
-    const res = await fetch(`${API}/public/shop/products?${qs}`, { next: { revalidate: 60 } });
+    const res = await fetch(`${API}/public/shop/products?${qs}`, { next: { revalidate: 60, tags: ["products", "collections"] } });
     if (res.ok) {
       const data = await res.json();
       const idSet = new Set(productIds);
