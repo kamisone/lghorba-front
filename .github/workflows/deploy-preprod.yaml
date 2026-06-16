@@ -49,6 +49,7 @@ jobs:
           source: "docker/k8s/front-deployment.yaml,docker/k8s/front-cluster-ip-service.yaml,docker/k8s/front-hap.yaml,docker/k8s/front-ingress-service.yaml"
           target: "/srv/k8s/front"
           strip_components: 2
+          timeout: 5m
 
       - name: apply k8s files
         uses: appleboy/ssh-action@master
