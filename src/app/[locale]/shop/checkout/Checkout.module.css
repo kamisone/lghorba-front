@@ -9,38 +9,75 @@
 .steps {
   display: flex;
   align-items: center;
-  gap: 0;
-  margin-bottom: 36px;
+  margin-bottom: 40px;
   user-select: none;
 }
 .stepItem {
   display: flex;
   align-items: center;
-  gap: 0;
   flex: 1;
   min-width: 0;
 }
 .stepItem:last-child { flex: none; }
+
+/* Reset button used as the dot+label hitbox */
+.stepBtn {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  cursor: default;
+  outline: none;
+  text-decoration: none;
+}
+.stepBtn:focus-visible .stepDot {
+  box-shadow: 0 0 0 3px rgba(0,70,110,.25);
+}
+.stepBtnClickable {
+  cursor: pointer;
+}
+.stepBtnClickable:hover .stepDotDone {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px rgba(var(--color-brand-accent-rgb, 138,195,26), .18);
+}
+.stepBtnClickable:hover .stepLabelDone {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .stepDot {
   width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700;
   background: var(--color-surface); border: 2px solid var(--color-border);
   color: var(--color-text-muted);
-  transition: background .22s, border-color .22s, color .22s;
+  transition: background .2s, border-color .2s, color .2s, transform .18s, box-shadow .18s;
 }
-.stepDotActive { background: var(--color-brand-primary); border-color: var(--color-brand-primary); color: #fff; }
-.stepDotDone   { background: var(--color-brand-accent); border-color: var(--color-brand-accent); color: var(--color-brand-darkest); }
+.stepDotActive {
+  background: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,70,110,.22);
+}
+.stepDotDone {
+  background: var(--color-brand-accent);
+  border-color: var(--color-brand-accent);
+  color: var(--color-brand-darkest);
+}
 .stepLabel {
-  font-size: 12px; font-weight: 600; margin-left: 8px; color: var(--color-text-muted);
+  font-size: 12px; font-weight: 600; margin-left: 8px;
+  color: var(--color-text-muted);
   white-space: nowrap;
+  transition: color .18s;
 }
 .stepLabelActive { color: var(--color-brand-primary); }
 .stepLabelDone   { color: var(--color-brand-accent); }
 .stepLine {
   flex: 1; height: 2px; margin: 0 10px;
   background: var(--color-border); border-radius: 1px;
-  transition: background .22s;
+  transition: background .25s;
 }
 .stepLineDone { background: var(--color-brand-accent); }
 

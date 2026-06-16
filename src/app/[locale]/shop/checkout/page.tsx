@@ -107,23 +107,42 @@ function StripePaymentForm({ orderId, orderNumber, locale, total }: { orderId: s
 
 type Step = "address" | "shipping" | "payment";
 
-function StepIndicator({ current, locale }: { current: Step; locale: string }) {
+function StepIndicator({
+  current,
+  locale,
+  onStepClick,
+}: {
+  current: Step;
+  locale: string;
+  onStepClick: (step: Step) => void;
+}) {
   const t = getTranslations(locale).shop;
   const STEP_LABELS: Record<Step, string> = { address: t.stepAddress, shipping: t.stepShipping, payment: t.stepPayment };
   const steps: Step[] = ["address", "shipping", "payment"];
+  const currentIdx = steps.indexOf(current);
+
   return (
     <div className={styles.steps}>
       {steps.map((s, i) => {
-        const done    = steps.indexOf(current) > i;
-        const active  = current === s;
+        const done      = currentIdx > i;
+        const active    = current === s;
+        const clickable = done;
         return (
           <div key={s} className={styles.stepItem}>
-            <div className={`${styles.stepDot} ${active ? styles.stepDotActive : done ? styles.stepDotDone : ""}`}>
-              {done ? <Check size={14} strokeWidth={2} /> : i + 1}
-            </div>
-            <span className={`${styles.stepLabel} ${active ? styles.stepLabelActive : done ? styles.stepLabelDone : ""}`}>
-              {STEP_LABELS[s]}
-            </span>
+            <button
+              type="button"
+              className={`${styles.stepBtn} ${clickable ? styles.stepBtnClickable : ""}`}
+              onClick={clickable ? () => onStepClick(s) : undefined}
+              aria-current={active ? "step" : undefined}
+              tabIndex={clickable ? 0 : -1}
+            >
+              <div className={`${styles.stepDot} ${active ? styles.stepDotActive : done ? styles.stepDotDone : ""}`}>
+                {done ? <Check size={14} strokeWidth={2} /> : i + 1}
+              </div>
+              <span className={`${styles.stepLabel} ${active ? styles.stepLabelActive : done ? styles.stepLabelDone : ""}`}>
+                {STEP_LABELS[s]}
+              </span>
+            </button>
             {i < steps.length - 1 && <div className={`${styles.stepLine} ${done ? styles.stepLineDone : ""}`} />}
           </div>
         );
@@ -256,6 +275,20 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
       .finally(() => setCountriesLoading(false));
   }, []);
 
+  function handleStepClick(s: Step) {
+    setFormError("");
+    setNameGroupError("");
+    if (s === "address") {
+      // Go back to address — keep form data and snapshot so re-submit is idempotent
+      setClientSecret(null);
+      setStep("address");
+    } else if (s === "shipping" && snapshot) {
+      // Go back to shipping from payment — snapshot already has shipping methods
+      setClientSecret(null);
+      setStep("shipping");
+    }
+  }
+
   async function handleApplyCoupon(code: string) {
     const subtotalCents = cart?.subtotalCents ?? 0;
     const res = await fetch(`/next-api/public/shop/cart/${token}/validate-coupon`, {
@@ -387,7 +420,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   return (
     <div className={styles.container}>
       <h1 className={styles.heading}>{t.checkoutTitle}</h1>
-      <StepIndicator current={step} locale={locale} />
+      <StepIndicator current={step} locale={locale} onStepClick={handleStepClick} />
 
       <div className={styles.layout}>
         {/* ── Left: step form ── */}
@@ -506,7 +539,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
               </div>
 
               <div className={styles.actionRow}>
-                <button type="button" onClick={() => { setStep("address"); setSnapshot(null); setClientSecret(null); clearSession(token); }} className={styles.backBtn}>{t.back}</button>
+                <button type="button" onClick={() => handleStepClick("address")} className={styles.backBtn}>{t.back}</button>
                 <button
                   type="submit"
                   disabled={submitting || shippingUpdating || !selectedMethodId}
