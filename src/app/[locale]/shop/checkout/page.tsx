@@ -132,6 +132,36 @@ function StepIndicator({ current, locale }: { current: Step; locale: string }) {
   );
 }
 
+// ── Session persistence helpers ────────────────────────────────────────────────
+
+interface CheckoutPersistedState {
+  step: Step;
+  form: { email: string; firstName: string; lastName: string; companyName: string; phone: string; line1: string; line2: string; city: string; zip: string; country: string };
+  snapshot: CheckoutSnapshot | null;
+  selectedMethodId: string | null;
+  clientSecret: string | null;
+}
+
+function persistKey(cartToken: string) { return `checkout:${cartToken}`; }
+
+function saveSession(cartToken: string | null, state: CheckoutPersistedState) {
+  if (!cartToken) return;
+  try { sessionStorage.setItem(persistKey(cartToken), JSON.stringify(state)); } catch {}
+}
+
+function loadSession(cartToken: string | null): CheckoutPersistedState | null {
+  if (!cartToken) return null;
+  try {
+    const raw = sessionStorage.getItem(persistKey(cartToken));
+    return raw ? (JSON.parse(raw) as CheckoutPersistedState) : null;
+  } catch { return null; }
+}
+
+function clearSession(cartToken: string | null) {
+  if (!cartToken) return;
+  try { sessionStorage.removeItem(persistKey(cartToken)); } catch {}
+}
+
 // ── Main checkout page ─────────────────────────────────────────────────────────
 
 export default function CheckoutPage({ params }: { params: { locale: string } }) {
@@ -147,6 +177,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   const [submitting, setSubmitting]       = useState(false);
   const [formError, setFormError]         = useState("");
   const [nameGroupError, setNameGroupError] = useState("");
+  const [restoring, setRestoring]         = useState(true);
 
   const [form, setForm] = useState({
     email: "", firstName: "", lastName: "", companyName: "", phone: "",
@@ -156,6 +187,66 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   const [shippingUpdating, setShippingUpdating] = useState(false);
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
   const orderIdRef = useRef<string | null>(null);
+
+  // Persist state to sessionStorage whenever key values change
+  useEffect(() => {
+    if (restoring) return;
+    saveSession(token, { step, form, snapshot, selectedMethodId, clientSecret });
+  }, [step, form, snapshot, selectedMethodId, clientSecret, token, restoring]);
+
+  // Sync form + step to the DB session (debounced) so abandoned-cart email links
+  // can restore the form on any device. Fire-and-forget — never blocks the UI.
+  useEffect(() => {
+    if (restoring || !token) return;
+    const tid = setTimeout(() => {
+      fetch("/next-api/public/shop/checkout/session", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cartToken:    token,
+          locale,
+          step,
+          orderId:      snapshot?.orderId ?? null,
+          formSnapshot: form,
+        }),
+      }).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(tid);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, step, snapshot?.orderId, token, restoring]);
+
+  // Restore persisted state on mount
+  useEffect(() => {
+    const saved = loadSession(token);
+    if (saved && saved.step !== "address") {
+      setForm(saved.form);
+      setSnapshot(saved.snapshot);
+      setSelectedMethodId(saved.selectedMethodId);
+      if (saved.snapshot) orderIdRef.current = saved.snapshot.orderId;
+
+      if (saved.step === "payment" && saved.snapshot) {
+        // Re-fetch client secret for payment step (PaymentIntent may still be valid)
+        fetch(`/next-api/public/shop/checkout/${saved.snapshot.orderId}/payment-intent`, { method: "POST" })
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data?.clientSecret) {
+              setClientSecret(data.clientSecret);
+              setStep("payment");
+            } else {
+              // PaymentIntent no longer valid — drop back to shipping
+              setStep("shipping");
+            }
+          })
+          .catch(() => setStep("shipping"))
+          .finally(() => setRestoring(false));
+        return;
+      }
+
+      setStep(saved.step);
+    }
+    setRestoring(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   useEffect(() => {
     fetch("/next-api/public/shop/countries")
@@ -277,6 +368,10 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
         <a href={`/${locale}/shop`}>{t.continueShopping}</a>
       </div>
     );
+  }
+
+  if (restoring) {
+    return <div className={styles.container} style={{ textAlign: "center", padding: "80px 0" }} />;
   }
 
   // Derive breakdown from server snapshot when available, else from cart
@@ -411,7 +506,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
               </div>
 
               <div className={styles.actionRow}>
-                <button type="button" onClick={() => setStep("address")} className={styles.backBtn}>{t.back}</button>
+                <button type="button" onClick={() => { setStep("address"); setSnapshot(null); setClientSecret(null); clearSession(token); }} className={styles.backBtn}>{t.back}</button>
                 <button
                   type="submit"
                   disabled={submitting || shippingUpdating || !selectedMethodId}
