@@ -52,7 +52,7 @@ interface DefaultVariant {
 interface Product {
   id: string; title: string; sku: string | null; slug: string; status: string;
   featured: boolean; shortDescription: string | null; description: string | null;
-  brand: string | null;
+  brand: string | null; basePriceCents: number | null;
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
   trustBadges: ProductTrustBadge[];
@@ -134,12 +134,17 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         primaryCategoryId: p.primaryCategoryId ?? "",
         categoryIds:       (p.categories ?? []).map((c: { id: string }) => c.id),
       });
+      // Base price comes from product.basePriceCents; fall back to default variant for legacy products
+      if (p.basePriceCents != null) {
+        setPrice((p.basePriceCents / 100).toFixed(2));
+      } else {
+        const dv: DefaultVariant | undefined =
+          (p.variants ?? []).find((v: DefaultVariant) => v.isDefault) ?? p.variants?.[0];
+        if (dv?.priceCents != null) setPrice((dv.priceCents / 100).toFixed(2));
+      }
       const dv: DefaultVariant | undefined =
         (p.variants ?? []).find((v: DefaultVariant) => v.isDefault) ?? p.variants?.[0];
-      if (dv) {
-        setPrice((dv.priceCents / 100).toFixed(2));
-        setCompareAtPrice(dv.compareAtPriceCents ? (dv.compareAtPriceCents / 100).toFixed(2) : "");
-      }
+      setCompareAtPrice(dv?.compareAtPriceCents ? (dv.compareAtPriceCents / 100).toFixed(2) : "");
     });
   }, [params.id]);
 
@@ -276,7 +281,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       ? [form.primaryCategoryId, ...form.categoryIds]
       : form.categoryIds;
 
-    const priceCents          = price ? Math.round(parseFloat(price) * 100) : undefined;
+    const basePriceCents      = price ? Math.round(parseFloat(price) * 100) : undefined;
     const compareAtPriceCents = compareAtPrice ? Math.round(parseFloat(compareAtPrice) * 100) : null;
 
     const res = await fetch(`/next-api/shop/products/${params.id}`, {
@@ -291,7 +296,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         infoSections,
         trustBadges,
         faqs,
-        ...(priceCents !== undefined ? { priceCents } : {}),
+        ...(basePriceCents !== undefined ? { basePriceCents } : {}),
         compareAtPriceCents,
       }),
     });
@@ -415,7 +420,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               <div className={styles.sectionBody}>
                 <div className={styles.fieldRow}>
                   <div className={styles.field}>
-                    <label className={styles.label}>Price (€) *</label>
+                    <label className={styles.label}>Base price (€) *</label>
                     <input
                       className={styles.input}
                       type="number" step="0.01" min="0"

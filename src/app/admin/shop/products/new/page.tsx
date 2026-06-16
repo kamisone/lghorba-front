@@ -23,7 +23,7 @@ export default function NewProductPage() {
   const [form, setForm] = useState({
     title: "", slug: "", sku: "", brand: "",
     shortDescription: "", description: "",
-    priceCents: "", initialStock: "0",
+    basePriceCents: "", initialStock: "0",
     featured: false,
     primaryCategoryId: "",
     categoryIds: [] as string[],
@@ -70,7 +70,7 @@ export default function NewProductPage() {
         brand:             form.brand || null,
         shortDescription:  form.shortDescription || null,
         description:       form.description || null,
-        priceCents:        Math.round(parseFloat(form.priceCents) * 100),
+        basePriceCents:    Math.round(parseFloat(form.basePriceCents) * 100),
         initialStock:      parseInt(form.initialStock, 10) || 0,
         featured:          form.featured,
         media,
@@ -220,7 +220,7 @@ export default function NewProductPage() {
               <div className={styles.sidebarCardBody}>
                 <div className={styles.field}>
                   <label className={styles.label}>
-                    Price (€)<span className={styles.required}>*</span>
+                    Base price (€)<span className={styles.required}>*</span>
                   </label>
                   <input
                     required
@@ -228,8 +228,8 @@ export default function NewProductPage() {
                     step="0.01"
                     min="0"
                     className={styles.input}
-                    value={form.priceCents}
-                    onChange={e => setForm(f => ({ ...f, priceCents: e.target.value }))}
+                    value={form.basePriceCents}
+                    onChange={e => setForm(f => ({ ...f, basePriceCents: e.target.value }))}
                     placeholder="0.00"
                   />
                 </div>

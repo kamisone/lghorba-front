@@ -13,6 +13,7 @@ interface OptionValue {
   displayValue: string | null;
   swatchValue: string | null;
   swatchType: "color" | "image" | null;
+  priceAdjustmentCents: number | null;
   sortOrder: number;
   isActive: boolean;
 }
@@ -37,11 +38,12 @@ interface AttrForm {
 interface ValueForm {
   value: string; displayValue: string; displayValueEn: string; swatchValue: string;
   swatchType: "color" | "image" | "";
+  priceAdjustmentEuros: string;
   sortOrder: number; isActive: boolean;
 }
 
 const ATTR_EMPTY: AttrForm  = { name: "", nameEn: "", slug: "", adminLabel: "", displayType: "button", sortOrder: 0, isActive: true };
-const VALUE_EMPTY: ValueForm = { value: "", displayValue: "", displayValueEn: "", swatchValue: "", swatchType: "", sortOrder: 0, isActive: true };
+const VALUE_EMPTY: ValueForm = { value: "", displayValue: "", displayValueEn: "", swatchValue: "", swatchType: "", priceAdjustmentEuros: "", sortOrder: 0, isActive: true };
 
 
 const DISPLAY_LABEL: Record<string, string> = { button: "Button", swatch: "Swatch", dropdown: "Dropdown" };
@@ -149,15 +151,29 @@ export default function VariantAttributesPage() {
   function openValCreate(attributeId: string) { setValForm(VALUE_EMPTY); setValEditId(null); setValAttrId(attributeId); setValModal("create"); }
   function openValEdit(v: OptionValue, attributeId: string) {
     setValEditId(v.id);
-    const form: ValueForm = { value: v.value, displayValue: v.displayValue ?? "", displayValueEn: "", swatchValue: v.swatchValue ?? "", swatchType: (v.swatchType ?? "") as ValueForm["swatchType"], sortOrder: v.sortOrder, isActive: v.isActive };
+    const form: ValueForm = {
+      value: v.value, displayValue: v.displayValue ?? "", displayValueEn: "",
+      swatchValue: v.swatchValue ?? "", swatchType: (v.swatchType ?? "") as ValueForm["swatchType"],
+      priceAdjustmentEuros: v.priceAdjustmentCents != null ? (v.priceAdjustmentCents / 100).toFixed(2) : "",
+      sortOrder: v.sortOrder, isActive: v.isActive,
+    };
     setValForm(form);
     setValAttrId(attributeId); setValModal("edit");
   }
 
   async function saveVal() {
     setValSaving(true);
-    const { displayValueEn, ...rest } = valForm;
-    const body = { ...rest, displayValue: valForm.displayValue || null, swatchValue: valForm.swatchValue || null, swatchType: valForm.swatchType || null };
+    const { displayValueEn, priceAdjustmentEuros, ...rest } = valForm;
+    const priceAdjustmentCents = priceAdjustmentEuros.trim()
+      ? Math.round(parseFloat(priceAdjustmentEuros) * 100)
+      : null;
+    const body = {
+      ...rest,
+      displayValue: valForm.displayValue || null,
+      swatchValue: valForm.swatchValue || null,
+      swatchType: valForm.swatchType || null,
+      priceAdjustmentCents,
+    };
     const url    = valModal === "create" ? `/next-api/admin/shop/variant-attributes/${valAttrId}/values` : `/next-api/admin/shop/variant-attributes/${valAttrId}/values/${valEditId}`;
     const method = valModal === "create" ? "POST" : "PATCH";
     const res    = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -298,6 +314,7 @@ export default function VariantAttributesPage() {
                                   <th>Swatch</th>
                                   <th>Value</th>
                                   <th>Display label</th>
+                                  <th>Price adj.</th>
                                   <th>Order</th>
                                   <th>Status</th>
                                   <th>Actions</th>
@@ -316,6 +333,14 @@ export default function VariantAttributesPage() {
                                     </td>
                                     <td><span className={styles.valValue}>{v.value}</span></td>
                                     <td><span className={styles.valDisplay}>{v.displayValue ?? v.value}</span></td>
+                                    <td>
+                                      {v.priceAdjustmentCents != null
+                                        ? <span className={styles.valAdjustment}>
+                                            {v.priceAdjustmentCents >= 0 ? "+" : ""}€{(v.priceAdjustmentCents / 100).toFixed(2)}
+                                          </span>
+                                        : <span className={styles.swatchNone}>—</span>
+                                      }
+                                    </td>
                                     <td>{v.sortOrder}</td>
                                     <td>
                                       <span className={`${styles.valBadge} ${v.isActive ? styles.valBadgeActive : styles.valBadgeHidden}`}>
@@ -484,6 +509,19 @@ export default function VariantAttributesPage() {
                       disabled
                     />
                   )}
+                </div>
+                <div className={styles.formField}>
+                  <label>
+                    Price adjustment (€)
+                    <span style={{ textTransform: "none", fontWeight: 400, letterSpacing: 0 }}> — optional, e.g. +5.00 or -2.50</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={valForm.priceAdjustmentEuros}
+                    onChange={e => setValForm(f => ({ ...f, priceAdjustmentEuros: e.target.value }))}
+                    placeholder="Leave blank for no adjustment"
+                  />
                 </div>
                 <div className={styles.formField}>
                   <label>Sort order</label>
