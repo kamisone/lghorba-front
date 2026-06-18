@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
 import styles from "./Media.module.css";
 import { X, Folder, FolderOpen, Pencil, Trash2, Check, ChevronRight, Plus, Play } from "lucide-react";
 import { formatDuration } from "@/components/admin/media/MediaPicker";
+import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ interface Asset {
   height: number | null;
   durationSeconds: number | null;
   altText: string | null;
+  title: string | null;
   tags: string[];
   folderId: string | null;
   usageCount: number;
@@ -88,8 +90,10 @@ export default function MediaLibraryPage() {
   const [selected, setSelected]   = useState<Asset | null>(null);
   const [usage, setUsage]         = useState<UsageRecord[]>([]);
   const [altText, setAltText]     = useState("");
+  const [title, setTitle]         = useState("");
   const [movingToFolder, setMovingToFolder] = useState<string>("__current__");
   const [saving, setSaving]       = useState(false);
+  const { enValues, setEn, saveEnTranslations } = useEntityTranslations('media_asset', selected?.id ?? null);
 
   // Upload
   const [uploading, setUploading] = useState(false);
@@ -198,21 +202,23 @@ export default function MediaLibraryPage() {
   async function openDetail(asset: Asset) {
     setSelected(asset);
     setAltText(asset.altText ?? "");
+    setTitle(asset.title ?? "");
     setMovingToFolder(asset.folderId ?? "");
     const data = await fetch(`/next-api/admin/media/${asset.id}/usage`).then(r => r.json());
     setUsage(Array.isArray(data) ? data : []);
   }
 
-  async function saveAlt() {
+  async function saveSeoFields() {
     if (!selected) return;
     setSaving(true);
     const updated = await fetch(`/next-api/admin/media/${selected.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ altText }),
+      body: JSON.stringify({ altText, title }),
     }).then(r => r.json());
+    await saveEnTranslations(selected.id, ['altText', 'title']);
     setSelected({ ...selected, ...updated });
-    setAssets(prev => prev.map(a => a.id === selected.id ? { ...a, altText } : a));
+    setAssets(prev => prev.map(a => a.id === selected.id ? { ...a, altText, title } : a));
     setSaving(false);
   }
 
@@ -772,18 +778,30 @@ export default function MediaLibraryPage() {
               </select>
             </div>
 
-            {/* Alt text editor */}
-            <div className={styles.detailRow} style={{ marginTop: 12 }}>
-              <div className={styles.detailLabel}>Alt Text</div>
-              <textarea
-                className={styles.altTextarea}
-                value={altText}
-                onChange={e => setAltText(e.target.value)}
-                rows={2}
-                placeholder="Describe the image for accessibility and SEO"
-              />
-              <button className={styles.saveAltBtn} onClick={saveAlt} disabled={saving}>
-                {saving ? "Saving…" : "Save Alt Text"}
+            {/* SEO fields */}
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className={styles.detailLabel} style={{ fontWeight: 700, fontSize: 12, marginBottom: -4 }}>SEO &amp; Accessibility</div>
+
+              <div>
+                <div className={styles.detailLabel}>Alt Text (FR)</div>
+                <textarea className={styles.altTextarea} value={altText} onChange={e => setAltText(e.target.value)} rows={2} placeholder="Description de l'image" />
+              </div>
+              <div>
+                <div className={styles.detailLabel}>Alt Text (EN)</div>
+                <textarea className={styles.altTextarea} value={enValues.altText ?? ""} onChange={e => setEn("altText", e.target.value)} rows={2} placeholder="Image description" />
+              </div>
+
+              <div>
+                <div className={styles.detailLabel}>Title (FR)</div>
+                <input className={styles.altTextarea} style={{ resize: "none", height: "auto", padding: "7px 10px" }} value={title} onChange={e => setTitle(e.target.value)} placeholder="Titre de l'image" />
+              </div>
+              <div>
+                <div className={styles.detailLabel}>Title (EN)</div>
+                <input className={styles.altTextarea} style={{ resize: "none", height: "auto", padding: "7px 10px" }} value={enValues.title ?? ""} onChange={e => setEn("title", e.target.value)} placeholder="Image title" />
+              </div>
+
+              <button className={styles.saveAltBtn} onClick={saveSeoFields} disabled={saving}>
+                {saving ? "Saving…" : "Save SEO Fields"}
               </button>
             </div>
 
