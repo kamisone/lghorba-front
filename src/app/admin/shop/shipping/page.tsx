@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import { getFlagSvgDataUrl } from "@/lib/european-flags";
+
+interface ShippingCountry {
+  isoCode: string;
+  name: string;
+  isShippingEnabled: boolean;
+}
 
 interface ShippingZone {
   id: string;
   name: string;
   countryCodes: string[];
   isActive: boolean;
+  surchargeCents: number;
+  freeShippingThresholdCents: number | null;
+  estimatedDeliveryDays: string | null;
 }
 
 interface ShippingMethod {
@@ -26,27 +36,149 @@ interface ShippingMethod {
   sortOrder: number;
 }
 
-type ZoneForm = { name: string; countryCodes: string; isActive: boolean };
+type ZoneForm = {
+  name: string; countryCodes: string[]; isActive: boolean;
+  surcharge: string; freeShippingThreshold: string;
+  estimatedDeliveryDays: string;
+};
 type MethodForm = {
   zoneId: string; name: string; description: string; carrier: string;
-  priceCents: number; freeAboveCents: string;
+  price: string; freeAbove: string;
   estimatedDaysMin: number; estimatedDaysMax: number;
   isActive: boolean; sortOrder: number;
 };
 
-const EMPTY_ZONE: ZoneForm    = { name: "", countryCodes: "", isActive: true };
+const EMPTY_ZONE: ZoneForm = {
+  name: "", countryCodes: [], isActive: true,
+  surcharge: "0", freeShippingThreshold: "",
+  estimatedDeliveryDays: "",
+};
 const EMPTY_METHOD: MethodForm = {
   zoneId: "", name: "", description: "", carrier: "",
-  priceCents: 0, freeAboveCents: "",
+  price: "0", freeAbove: "",
   estimatedDaysMin: 2, estimatedDaysMax: 5,
   isActive: true, sortOrder: 0,
 };
 
+const centsToEur = (c: number) => (c / 100).toFixed(2);
+const eurToCents = (e: string) => Math.round(parseFloat(e || "0") * 100);
+
+function flagEmoji(isoCode: string) {
+  return isoCode.toUpperCase().split("").map(c =>
+    String.fromCodePoint(0x1f1e0 + c.charCodeAt(0) - 65)
+  ).join("");
+}
+
+function FlagInline({ code, size = 14 }: { code: string; size?: number }) {
+  const url = getFlagSvgDataUrl(code);
+  if (!url) return <>{flagEmoji(code)}</>;
+  return <img src={url} alt={code} width={size * 1.5} height={size} style={{ borderRadius: 2, verticalAlign: "middle", border: "1px solid #e5e7eb" }} />;
+}
+
+function CountryPicker({ available, selected, onChange }: {
+  available: ShippingCountry[];
+  selected: string[];
+  onChange: (codes: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const filtered = available.filter(c =>
+    !selected.includes(c.isoCode) &&
+    (c.name.toLowerCase().includes(search.toLowerCase()) || c.isoCode.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  function add(code: string) {
+    onChange([...selected, code]);
+    setSearch("");
+  }
+  function remove(code: string) {
+    onChange(selected.filter(c => c !== code));
+  }
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <div
+        style={{
+          display: "flex", flexWrap: "wrap", gap: 6, padding: "6px 10px",
+          border: "1px solid #d1d5db", borderRadius: 8, minHeight: 38, cursor: "text",
+          background: "#fff", alignItems: "center",
+        }}
+        onClick={() => setOpen(true)}
+      >
+        {selected.map(code => (
+          <span
+            key={code}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 4,
+              background: "#f3f4f6", borderRadius: 6, padding: "2px 8px",
+              fontSize: 12, fontWeight: 500, color: "#374151",
+            }}
+          >
+            <FlagInline code={code} /> {available.find(c => c.isoCode === code)?.name ?? code}
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); remove(code); }}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#9ca3af", lineHeight: 1, padding: 0 }}
+            >
+              &times;
+            </button>
+          </span>
+        ))}
+        <input
+          value={search}
+          onChange={e => { setSearch(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder={selected.length === 0 ? "Search countries…" : ""}
+          style={{ border: "none", outline: "none", flex: 1, minWidth: 80, fontSize: 13, background: "transparent" }}
+        />
+      </div>
+      {open && filtered.length > 0 && (
+        <div
+          style={{
+            position: "absolute", top: "100%", left: 0, right: 0, zIndex: 10,
+            background: "#fff", border: "1px solid #d1d5db", borderRadius: 8,
+            marginTop: 4, maxHeight: 200, overflowY: "auto",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+          }}
+        >
+          {filtered.map(c => (
+            <div
+              key={c.isoCode}
+              onClick={() => add(c.isoCode)}
+              style={{
+                padding: "8px 12px", cursor: "pointer", fontSize: 13,
+                display: "flex", alignItems: "center", gap: 8,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              <FlagInline code={c.isoCode} size={16} />
+              <span>{c.name}</span>
+              <span style={{ color: "#9ca3af", fontSize: 11, marginLeft: "auto" }}>{c.isoCode}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ShippingPage() {
   const { toast } = useToast();
 
-  const [zones,   setZones]   = useState<ShippingZone[]>([]);
-  const [methods, setMethods] = useState<ShippingMethod[]>([]);
+  const [zones,     setZones]     = useState<ShippingZone[]>([]);
+  const [methods,   setMethods]   = useState<ShippingMethod[]>([]);
+  const [countries, setCountries] = useState<ShippingCountry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeZone, setActiveZone] = useState<string | "all">("all");
 
@@ -63,12 +195,14 @@ export default function ShippingPage() {
   async function load() {
     setLoading(true);
     try {
-      const [zr, mr] = await Promise.all([
+      const [zr, mr, cr] = await Promise.all([
         fetch("/next-api/admin/shop/shipping/zones"),
         fetch("/next-api/admin/shop/shipping/methods"),
+        fetch("/next-api/admin/shop/countries"),
       ]);
       if (zr.ok) setZones(await zr.json());
       if (mr.ok) setMethods(await mr.json());
+      if (cr.ok) setCountries(await cr.json());
     } finally {
       setLoading(false);
     }
@@ -80,14 +214,28 @@ export default function ShippingPage() {
 
   function openCreateZone() { setZoneForm(EMPTY_ZONE); setEditZoneId(null); setZoneModal("create"); }
   function openEditZone(z: ShippingZone) {
-    setZoneForm({ name: z.name, countryCodes: z.countryCodes.join(", "), isActive: z.isActive });
+    setZoneForm({
+      name: z.name,
+      countryCodes: [...z.countryCodes],
+      isActive: z.isActive,
+      surcharge: centsToEur(z.surchargeCents ?? 0),
+      freeShippingThreshold: z.freeShippingThresholdCents != null ? centsToEur(z.freeShippingThresholdCents) : "",
+      estimatedDeliveryDays: z.estimatedDeliveryDays ?? "",
+    });
     setEditZoneId(z.id);
     setZoneModal("edit");
   }
 
   async function saveZone() {
     setSaving(true);
-    const body = { name: zoneForm.name, countryCodes: zoneForm.countryCodes.split(",").map(s => s.trim().toUpperCase()).filter(Boolean), isActive: zoneForm.isActive };
+    const body = {
+      name: zoneForm.name,
+      countryCodes: zoneForm.countryCodes,
+      isActive: zoneForm.isActive,
+      surchargeCents: eurToCents(zoneForm.surcharge),
+      freeShippingThresholdCents: zoneForm.freeShippingThreshold !== "" ? eurToCents(zoneForm.freeShippingThreshold) : null,
+      estimatedDeliveryDays: zoneForm.estimatedDeliveryDays || null,
+    };
     const url    = zoneModal === "create" ? "/next-api/admin/shop/shipping/zones" : `/next-api/admin/shop/shipping/zones/${editZoneId}`;
     const method = zoneModal === "create" ? "POST" : "PATCH";
     const res    = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -116,7 +264,7 @@ export default function ShippingPage() {
   function openEditMethod(m: ShippingMethod & { description?: string | null }) {
     setMethodForm({
       zoneId: m.zoneId, name: m.name, description: m.description ?? "", carrier: m.carrier ?? "",
-      priceCents: m.priceCents, freeAboveCents: m.freeAboveCents != null ? String(m.freeAboveCents) : "",
+      price: centsToEur(m.priceCents), freeAbove: m.freeAboveCents != null ? centsToEur(m.freeAboveCents) : "",
       estimatedDaysMin: m.estimatedDaysMin, estimatedDaysMax: m.estimatedDaysMax,
       isActive: m.isActive, sortOrder: m.sortOrder,
     });
@@ -127,10 +275,16 @@ export default function ShippingPage() {
   async function saveMethod() {
     setSaving(true);
     const body = {
-      ...methodForm,
+      zoneId:         methodForm.zoneId,
+      name:           methodForm.name,
       description:    methodForm.description || null,
       carrier:        methodForm.carrier || null,
-      freeAboveCents: methodForm.freeAboveCents !== "" ? Number(methodForm.freeAboveCents) : null,
+      priceCents:     eurToCents(methodForm.price),
+      freeAboveCents: methodForm.freeAbove !== "" ? eurToCents(methodForm.freeAbove) : null,
+      estimatedDaysMin: methodForm.estimatedDaysMin,
+      estimatedDaysMax: methodForm.estimatedDaysMax,
+      isActive:       methodForm.isActive,
+      sortOrder:      methodForm.sortOrder,
     };
     const url    = methodModal === "create" ? "/next-api/admin/shop/shipping/methods" : `/next-api/admin/shop/shipping/methods/${editMethodId}`;
     const method = methodModal === "create" ? "POST" : "PATCH";
@@ -158,8 +312,10 @@ export default function ShippingPage() {
 
   const visibleMethods = activeZone === "all" ? methods : methods.filter(m => m.zoneId === activeZone);
   const zoneMap = Object.fromEntries(zones.map(z => [z.id, z.name]));
+  const countryMap = Object.fromEntries(countries.map(c => [c.isoCode, c.name]));
+  const shippingCountries = countries.filter(c => c.isShippingEnabled);
 
-  const fmt = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  const fmt = (cents: number) => `${(cents / 100).toFixed(2)} €`;
 
   const SKEL = Array.from({ length: 3 }, (_, i) => i);
 
@@ -180,6 +336,9 @@ export default function ShippingPage() {
           <tr>
             <th>Name</th>
             <th>Countries</th>
+            <th>Surcharge</th>
+            <th>Free above</th>
+            <th>Est. delivery</th>
             <th>Methods</th>
             <th>Status</th>
             <th>Actions</th>
@@ -189,7 +348,7 @@ export default function ShippingPage() {
           {loading
             ? SKEL.map(i => (
                 <tr key={i}>
-                  {[120, 200, 50, 60, 120].map((w, j) => (
+                  {[120, 200, 70, 80, 90, 50, 60, 120].map((w, j) => (
                     <td key={j}><span className={styles.skeleton} style={{ height: 14, width: w }} /></td>
                   ))}
                 </tr>
@@ -198,8 +357,18 @@ export default function ShippingPage() {
                 <tr key={z.id}>
                   <td><strong>{z.name}</strong></td>
                   <td style={{ fontSize: 12, color: "#6b7280" }}>
-                    {z.countryCodes.length === 0 ? <em>Worldwide</em> : z.countryCodes.slice(0, 8).join(", ") + (z.countryCodes.length > 8 ? ` +${z.countryCodes.length - 8}` : "")}
+                    {z.countryCodes.length === 0
+                      ? <em>Worldwide</em>
+                      : <>
+                          {z.countryCodes.slice(0, 5).map(c => (
+                            <span key={c} style={{ marginRight: 8, whiteSpace: "nowrap" }}><FlagInline code={c} /> {countryMap[c] ?? c}</span>
+                          ))}
+                          {z.countryCodes.length > 5 && <span>+{z.countryCodes.length - 5}</span>}
+                        </>}
                   </td>
+                  <td>{z.surchargeCents ? fmt(z.surchargeCents) : "—"}</td>
+                  <td style={{ fontSize: 13, color: "#6b7280" }}>{z.freeShippingThresholdCents != null ? fmt(z.freeShippingThresholdCents) : "—"}</td>
+                  <td style={{ fontSize: 13 }}>{z.estimatedDeliveryDays ?? "—"}</td>
                   <td>{methods.filter(m => m.zoneId === z.id).length}</td>
                   <td>
                     <span className={`${styles.badge} ${z.isActive ? styles.badgeActive : styles.badgeDraft}`}>
@@ -215,7 +384,7 @@ export default function ShippingPage() {
               ))
           }
           {!loading && zones.length === 0 && (
-            <tr><td colSpan={5} style={{ textAlign: "center", color: "#9ca3af", padding: 32 }}>No shipping zones yet</td></tr>
+            <tr><td colSpan={8} style={{ textAlign: "center", color: "#9ca3af", padding: 32 }}>No shipping zones yet</td></tr>
           )}
         </tbody>
       </table>
@@ -287,7 +456,7 @@ export default function ShippingPage() {
       {/* ── Zone Modal ── */}
       {zoneModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div style={{ background: "#fff", borderRadius: 12, padding: 32, width: 480, maxWidth: "95vw" }}>
+          <div style={{ background: "#fff", borderRadius: 12, padding: 32, width: 560, maxWidth: "95vw" }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24 }}>
               {zoneModal === "create" ? "New Shipping Zone" : "Edit Shipping Zone"}
             </h2>
@@ -297,8 +466,24 @@ export default function ShippingPage() {
                 <input value={zoneForm.name} onChange={e => setZoneForm(f => ({ ...f, name: e.target.value }))} placeholder="Europe, North America…" />
               </div>
               <div className={`${styles.formField} ${styles.formSpan2}`}>
-                <label>Country codes (comma-separated, leave empty for worldwide)</label>
-                <input value={zoneForm.countryCodes} onChange={e => setZoneForm(f => ({ ...f, countryCodes: e.target.value }))} placeholder="FR, DE, IT, ES…" />
+                <label>Countries (leave empty for worldwide)</label>
+                <CountryPicker
+                  available={shippingCountries}
+                  selected={zoneForm.countryCodes}
+                  onChange={codes => setZoneForm(f => ({ ...f, countryCodes: codes }))}
+                />
+              </div>
+              <div className={styles.formField}>
+                <label>Surcharge (€)</label>
+                <input type="number" min={0} step="0.01" value={zoneForm.surcharge} onChange={e => setZoneForm(f => ({ ...f, surcharge: e.target.value }))} placeholder="e.g. 5.00" />
+              </div>
+              <div className={styles.formField}>
+                <label>Free shipping above (€)</label>
+                <input type="number" min={0} step="0.01" value={zoneForm.freeShippingThreshold} onChange={e => setZoneForm(f => ({ ...f, freeShippingThreshold: e.target.value }))} placeholder="e.g. 100.00" />
+              </div>
+              <div className={styles.formField}>
+                <label>Est. delivery time</label>
+                <input value={zoneForm.estimatedDeliveryDays} onChange={e => setZoneForm(f => ({ ...f, estimatedDeliveryDays: e.target.value }))} placeholder="3-5 business days" />
               </div>
               <div className={styles.formField}>
                 <label>Status</label>
@@ -358,12 +543,12 @@ export default function ShippingPage() {
                 <input value={methodForm.carrier} onChange={e => setMethodForm(f => ({ ...f, carrier: e.target.value }))} placeholder="DHL, Colissimo…" />
               </div>
               <div className={styles.formField}>
-                <label>Price (cents) *</label>
-                <input type="number" min={0} value={methodForm.priceCents} onChange={e => setMethodForm(f => ({ ...f, priceCents: Number(e.target.value) }))} />
+                <label>Price (€) *</label>
+                <input type="number" min={0} step="0.01" value={methodForm.price} onChange={e => setMethodForm(f => ({ ...f, price: e.target.value }))} placeholder="e.g. 4.90" />
               </div>
               <div className={styles.formField}>
-                <label>Free above (cents, optional)</label>
-                <input type="number" min={0} value={methodForm.freeAboveCents} onChange={e => setMethodForm(f => ({ ...f, freeAboveCents: e.target.value }))} placeholder="e.g. 5000 for $50" />
+                <label>Free above (€, optional)</label>
+                <input type="number" min={0} step="0.01" value={methodForm.freeAbove} onChange={e => setMethodForm(f => ({ ...f, freeAbove: e.target.value }))} placeholder="e.g. 50.00" />
               </div>
               <div className={styles.formField}>
                 <label>Est. days min</label>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { X } from "lucide-react";
+import { EUROPEAN_FLAGS, getFlagSvgDataUrl } from "@/lib/european-flags";
 
 interface Country {
   isoCode: string;
@@ -37,10 +38,128 @@ const EMPTY_FORM: CountryForm = {
   isActive: true, isShippingEnabled: false, isEuVat: false,
 };
 
+function FlagIcon({ code, size = 24 }: { code: string; size?: number }) {
+  const url = getFlagSvgDataUrl(code);
+  if (!url) return <span style={{ fontSize: size }}>{flagEmoji(code)}</span>;
+  return <img src={url} alt={code} width={size * 1.5} height={size} style={{ borderRadius: 3, objectFit: "cover", border: "1px solid #e5e7eb" }} />;
+}
+
 function flagEmoji(isoCode: string) {
   return isoCode.toUpperCase().split("").map(c =>
     String.fromCodePoint(0x1f1e0 + c.charCodeAt(0) - 65)
   ).join("");
+}
+
+function FlagDropdown({ selected, onSelect }: {
+  selected: string;
+  onSelect: (code: string, name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const entries = Object.entries(EUROPEAN_FLAGS);
+  const filtered = search
+    ? entries.filter(([code, e]) =>
+        e.name.toLowerCase().includes(search.toLowerCase()) ||
+        code.toLowerCase().includes(search.toLowerCase()))
+    : entries;
+
+  const selectedEntry = selected ? EUROPEAN_FLAGS[selected.toUpperCase()] : null;
+
+  return (
+    <div ref={ref} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: ".04em" }}>
+        Country flag
+      </label>
+      <div style={{ position: "relative" }}>
+        <div
+          onClick={() => setOpen(!open)}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "8px 12px", border: "1px solid var(--color-border)",
+            borderRadius: 8, cursor: "pointer", background: "var(--color-surface)",
+            minHeight: 40,
+          }}
+        >
+          {selectedEntry ? (
+            <>
+              <img
+                src={`data:image/svg+xml,${encodeURIComponent(selectedEntry.svg)}`}
+                alt={selected} width={30} height={20}
+                style={{ borderRadius: 3, border: "1px solid #e5e7eb" }}
+              />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>{selectedEntry.name}</span>
+              <span style={{ fontSize: 11, color: "var(--color-text-muted)", marginLeft: "auto" }}>{selected.toUpperCase()}</span>
+            </>
+          ) : (
+            <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>Search and select a country…</span>
+          )}
+        </div>
+
+        {open && (
+          <div style={{
+            position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20,
+            background: "#fff", border: "1px solid var(--color-border)", borderRadius: 10,
+            marginTop: 4, boxShadow: "0 8px 24px rgba(0,0,0,.12)", overflow: "hidden",
+          }}>
+            <div style={{ padding: 8, borderBottom: "1px solid var(--color-border)" }}>
+              <input
+                autoFocus
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search by name or code…"
+                style={{
+                  width: "100%", padding: "8px 10px", border: "1px solid var(--color-border)",
+                  borderRadius: 6, fontSize: 13, outline: "none", background: "var(--color-surface)",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ maxHeight: 220, overflowY: "auto" }}>
+              {filtered.length === 0 && (
+                <div style={{ padding: "12px 16px", fontSize: 13, color: "var(--color-text-muted)", textAlign: "center" }}>
+                  No matching country
+                </div>
+              )}
+              {filtered.map(([code, entry]) => {
+                const isActive = selected.toUpperCase() === code;
+                return (
+                  <div
+                    key={code}
+                    onClick={() => { onSelect(code, entry.name); setOpen(false); setSearch(""); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "8px 14px", cursor: "pointer", fontSize: 13,
+                      background: isActive ? "#EEF2FF" : "transparent",
+                    }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "#f9fafb"; }}
+                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <img
+                      src={`data:image/svg+xml,${encodeURIComponent(entry.svg)}`}
+                      alt={code} width={30} height={20}
+                      style={{ borderRadius: 3, border: "1px solid #e5e7eb", flexShrink: 0 }}
+                    />
+                    <span style={{ fontWeight: isActive ? 600 : 400 }}>{entry.name}</span>
+                    <span style={{ fontSize: 11, color: "var(--color-text-muted)", marginLeft: "auto" }}>{code}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function CountriesPage() {
@@ -210,7 +329,7 @@ export default function CountriesPage() {
               ))
             : countries.map(c => (
                 <tr key={c.isoCode}>
-                  <td style={{ fontSize: 22 }}>{flagEmoji(c.isoCode)}</td>
+                  <td><FlagIcon code={c.isoCode} size={22} /></td>
                   <td>
                     <strong>{c.name}</strong>
                     {c.nativeName && c.nativeName !== c.name && (
@@ -293,6 +412,19 @@ export default function CountriesPage() {
 
             {/* Body */}
             <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Country flag selector */}
+              <FlagDropdown
+                selected={form.isoCode}
+                onSelect={(code, name) => {
+                  setForm(f => ({
+                    ...f,
+                    isoCode: code,
+                    name: f.name || name,
+                    continentCode: f.continentCode || "EU",
+                  }));
+                }}
+              />
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {field("ISO Code (2-letter) *", "isoCode", { maxLength: 2, placeholder: "FR", upper: true })}
                 {field("ISO Code 3-letter", "isoCode3", { maxLength: 3, placeholder: "FRA", upper: true })}

@@ -88,6 +88,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [trustBadges, setTrustBadges] = useState<ProductTrustBadge[]>([]);
   const [faqs, setFaqs] = useState<ProductFaq[]>([]);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   // Bilingual
   const { enValues, setEn, saveEnTranslations } = useEntityTranslations('shop_product', params.id);
@@ -98,6 +99,15 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [attrLinkId, setAttrLinkId]     = useState("");
   const [attrLinkDefaultId, setAttrLinkDefaultId] = useState("");
   const [attrLinking, setAttrLinking]   = useState(false);
+
+  // ── Inventory (for simple products without variations) ─────────────────────
+  const [inventory, setInventory] = useState<{
+    available: number; reserved: number; committed: number;
+    incoming: number; lowStockThreshold: number;
+  } | null>(null);
+  const [stockDelta, setStockDelta] = useState("");
+  const [stockNote, setStockNote] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
 
   // ── Per-product images for "image" swatch option values ────────────────────
   const [optionImages, setOptionImages] = useState<OptionImage[]>([]);
@@ -145,6 +155,13 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       const dv: DefaultVariant | undefined =
         (p.variants ?? []).find((v: DefaultVariant) => v.isDefault) ?? p.variants?.[0];
       setCompareAtPrice(dv?.compareAtPriceCents ? (dv.compareAtPriceCents / 100).toFixed(2) : "");
+
+      // Load inventory for the default variant
+      if (dv?.id) {
+        fetch(`/next-api/shop/inventory/${dv.id}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(inv => { if (inv) setInventory(inv); });
+      }
     });
   }, [params.id]);
 
@@ -321,6 +338,59 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     setSaving(false);
   }
 
+  async function handlePublish() {
+    setPublishing(true);
+    const res = await fetch(`/next-api/shop/products/${params.id}/publish`, { method: "POST" });
+    if (res.ok) {
+      const p: Product = await res.json();
+      setProduct(p);
+      setForm(f => ({ ...f, status: p.status }));
+      toast.success("Product published");
+    } else {
+      const err = await res.json().catch(() => ({}));
+      toast.error((err as any).message ?? "Publish failed");
+    }
+    setPublishing(false);
+  }
+
+  const defaultVariant: DefaultVariant | undefined =
+    (product?.variants ?? []).find((v: DefaultVariant) => v.isDefault) ?? product?.variants?.[0];
+  const isSimpleProduct = productAttrs.length === 0;
+
+  async function handleAdjustStock() {
+    const delta = parseInt(stockDelta, 10);
+    if (!defaultVariant || isNaN(delta) || delta === 0) return;
+    setAdjusting(true);
+    const res = await fetch(`/next-api/shop/inventory/${defaultVariant.id}/adjust`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ delta, note: stockNote || "Manual adjustment from product page" }),
+    });
+    if (res.ok) {
+      const inv = await fetch(`/next-api/shop/inventory/${defaultVariant.id}`).then(r => r.ok ? r.json() : null);
+      if (inv) setInventory(inv);
+      toast.success(`Stock adjusted by ${delta > 0 ? "+" : ""}${delta}`);
+      setStockDelta("");
+      setStockNote("");
+    } else {
+      const err = await res.json().catch(() => ({}));
+      toast.error((err as any).message ?? "Failed to adjust stock");
+    }
+    setAdjusting(false);
+  }
+
+  async function handleUpdateThreshold(value: number) {
+    if (!defaultVariant) return;
+    const res = await fetch(`/next-api/shop/inventory/${defaultVariant.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lowStockThreshold: value }),
+    });
+    if (res.ok) {
+      setInventory(prev => prev ? { ...prev, lowStockThreshold: value } : prev);
+    }
+  }
+
   // ── Loading skeleton ──────────────────────────────────────────────────────
 
   if (!product) return (
@@ -376,9 +446,14 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           <span className={styles.topbarTitle}>{product.title}</span>
         </div>
         <div className={styles.topbarActions}>
-          <button form="product-form" type="submit" className={styles.saveBtn} disabled={saving}>
+          <button form="product-form" type="submit" className={styles.saveBtn} disabled={saving || publishing}>
             {saving ? "Saving…" : "Save Changes"}
           </button>
+          {form.status !== "active" && (
+            <button type="button" className={styles.publishBtn} disabled={publishing || saving} onClick={handlePublish}>
+              {publishing ? "Publishing…" : "Publish"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -768,6 +843,93 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 </div>
               </div>
             </div>
+
+            {/* Inventory — shown for simple products (no variations) */}
+            {isSimpleProduct && inventory && (
+              <div className={styles.sidebarCard}>
+                <div className={styles.sidebarCardHead}>
+                  <span className={styles.sidebarCardTitle}>Inventory</span>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6,
+                    background: inventory.available <= 0 ? "#fee2e2" : inventory.available <= inventory.lowStockThreshold ? "#fef3c7" : "#dcfce7",
+                    color: inventory.available <= 0 ? "#dc2626" : inventory.available <= inventory.lowStockThreshold ? "#d97706" : "#16a34a",
+                  }}>
+                    {inventory.available <= 0 ? "Out of stock" : inventory.available <= inventory.lowStockThreshold ? "Low stock" : "In stock"}
+                  </span>
+                </div>
+                <div className={styles.sidebarCardBody}>
+                  {/* Stock levels */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    <div style={{ background: "var(--color-surface)", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-primary)" }}>{inventory.available}</div>
+                      <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Available</div>
+                    </div>
+                    <div style={{ background: "var(--color-surface)", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-primary)" }}>{inventory.reserved}</div>
+                      <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Reserved</div>
+                    </div>
+                    <div style={{ background: "var(--color-surface)", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-primary)" }}>{inventory.committed}</div>
+                      <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Committed</div>
+                    </div>
+                    <div style={{ background: "var(--color-surface)", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-primary)" }}>{inventory.incoming}</div>
+                      <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Incoming</div>
+                    </div>
+                  </div>
+
+                  <div className={styles.divider} />
+
+                  {/* Adjust stock */}
+                  <label className={styles.label} style={{ marginBottom: 6 }}>Adjust stock</label>
+                  <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={stockDelta}
+                      onChange={e => setStockDelta(e.target.value)}
+                      placeholder="+10 or -5"
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      className={styles.saveBtn}
+                      disabled={adjusting || !stockDelta || parseInt(stockDelta, 10) === 0}
+                      onClick={handleAdjustStock}
+                      style={{ fontSize: 12, padding: "6px 14px" }}
+                    >
+                      {adjusting ? "…" : "Apply"}
+                    </button>
+                  </div>
+                  <input
+                    className={styles.input}
+                    value={stockNote}
+                    onChange={e => setStockNote(e.target.value)}
+                    placeholder="Reason (optional)"
+                    style={{ fontSize: 12, marginBottom: 12 }}
+                  />
+
+                  <div className={styles.divider} />
+
+                  {/* Low stock threshold */}
+                  <div className={styles.field}>
+                    <label className={styles.label}>Low stock alert threshold</label>
+                    <input
+                      className={styles.input}
+                      type="number" min={0}
+                      value={inventory.lowStockThreshold}
+                      onChange={e => {
+                        const v = parseInt(e.target.value, 10);
+                        if (!isNaN(v) && v >= 0) {
+                          setInventory(prev => prev ? { ...prev, lowStockThreshold: v } : prev);
+                          handleUpdateThreshold(v);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </form>

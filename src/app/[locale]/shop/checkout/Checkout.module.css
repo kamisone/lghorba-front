@@ -229,7 +229,8 @@
   padding: 2px 5px; border-radius: 8px;
   border: 2px solid var(--color-surface);
 }
-.summaryItemName { flex: 1; min-width: 0; align-self: center; }
+.summaryItemName { flex: 1; min-width: 0; align-self: center; cursor: pointer; }
+.summaryItemName:hover { text-decoration: underline; }
 .summaryItemOptions {
   display: block; font-size: 11px; color: var(--color-text-muted);
   margin-top: 2px; white-space: normal;

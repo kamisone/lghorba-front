@@ -64,6 +64,13 @@
   flex-wrap: wrap;
 }
 .price        { font-size: 30px; font-weight: 800; color: var(--color-brand-primary); }
+.unitPrice {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
 .comparePrice { font-size: 18px; text-decoration: line-through; color: var(--color-text-muted); }
 .discountBadge {
   font-size: 13px;
@@ -142,7 +149,8 @@
   margin-bottom: 20px;
 }
 .qtyLabel   { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
-.qtyControl { display: flex; align-items: center; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
+.qtyControl { display: flex; align-items: center; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; transition: opacity .2s ease; }
+.qtyDisabled { opacity: .45; pointer-events: none; }
 .qtyBtn {
   width: 40px;
   height: 40px;
@@ -173,11 +181,12 @@
 
 /* ── Action buttons ── */
 .actions { display: flex; gap: 10px; margin-bottom: 12px; align-items: stretch; }
-.addToCartWrap { flex: 1; min-width: 0; }
+.addToCartWrap { flex: 1; min-width: 0; min-height: 52px; }
 
 .addToCartBtn {
-  flex: 1;
-  padding: 15px;
+  width: 100%;
+  min-height: 52px;
+  padding: 15px 20px;
   background: var(--color-brand-accent);
   color: var(--color-brand-darkest);
   border: none;
@@ -187,6 +196,9 @@
   cursor: pointer;
   letter-spacing: .01em;
   transition: background .18s, transform .15s, box-shadow .18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .addToCartBtn:disabled { opacity: .6; cursor: not-allowed; }
 .addToCartBtn:hover:not(:disabled) {

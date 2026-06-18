@@ -268,12 +268,13 @@ export default function ShopProductDetail({
   const wishlisted = isWishlisted(product.id);
   const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
 
-  const [qty, setQty]               = useState(1);
-  const [qtyError, setQtyError]     = useState("");
-  const [qtyMax, setQtyMax]         = useState<number | null>(null);
-  const [buyingNow, setBuyingNow]   = useState(false);
-  const [buyError, setBuyError]     = useState("");
-  const stockCheckTimer             = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [qty, setQty]                   = useState(1);
+  const [qtyError, setQtyError]       = useState("");
+  const [qtyMax, setQtyMax]           = useState<number | null>(null);
+  const [buyingNow, setBuyingNow]     = useState(false);
+  const [buyError, setBuyError]       = useState("");
+  const [stockChecking, setStockChecking] = useState(false);
+  const stockCheckTimer               = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasVariations = !!availabilityMatrix && availabilityMatrix.attributes.length > 0;
 
@@ -302,6 +303,7 @@ export default function ShopProductDetail({
   const scheduleStockCheck = useCallback((newQty: number) => {
     if (!activeId || hasVariations) return;
     if (stockCheckTimer.current) clearTimeout(stockCheckTimer.current);
+    setStockChecking(true);
     stockCheckTimer.current = setTimeout(async () => {
       try {
         const res = await fetch(`/next-api/public/shop/variants/${activeId}/stock`);
@@ -317,6 +319,7 @@ export default function ShopProductDetail({
           }
         }
       } catch { /* fail open — backend enforces at add-to-cart */ }
+      setStockChecking(false);
     }, 400);
   }, [activeId, hasVariations, t]);
 
@@ -338,9 +341,12 @@ export default function ShopProductDetail({
   const isOos         = resolveStatus === 'out_of_stock';
   const isUnavailable = resolveStatus === 'unavailable';
   const isBlocked     = isOos || isUnavailable;
+  const verifying     = resolveStatus === 'loading' || stockChecking;
+
+  const totalPriceCents = activePriceCents * qty;
 
   async function handleBuyNow() {
-    if (!activeId || isBlocked) return;
+    if (!activeId || isBlocked || verifying) return;
     setBuyError("");
 
     // Already in the cart: don't re-add (additive on the backend, may exceed
@@ -390,9 +396,15 @@ export default function ShopProductDetail({
         )}
 
         <div className={styles.priceRow}>
-          <span className={styles.price}>€{centsToEuros(activePriceCents)}</span>
+          <span className={styles.price}>
+            {qty > 1 ? (
+              <>{centsToEuros(totalPriceCents)} €<span className={styles.unitPrice}>{centsToEuros(activePriceCents)} € × {qty}</span></>
+            ) : (
+              <>{centsToEuros(activePriceCents)} €</>
+            )}
+          </span>
           {activeCompare && activeCompare > activePriceCents && (
-            <span className={styles.comparePrice}>€{centsToEuros(activeCompare)}</span>
+            <span className={styles.comparePrice}>{centsToEuros(activeCompare)} €</span>
           )}
           {activePromotion ? (
             <PromotionBadge promotion={activePromotion} size="md" />
@@ -443,42 +455,33 @@ export default function ShopProductDetail({
           </p>
         )}
 
-        {/* Quantity row */}
-        {!inCart && !isBlocked && (
-          <div className={styles.qtyRow}>
-            <span className={styles.qtyLabel}>{t.quantity}</span>
-            <div className={styles.qtyControl}>
-              <button onClick={handleQtyDecrement} className={styles.qtyBtn} disabled={mutating || qty <= 1}>−</button>
-              <span className={styles.qty}>{qty}</span>
-              <button onClick={handleQtyIncrement} className={styles.qtyBtn} disabled={mutating || (qtyMax !== null && qty >= qtyMax)}>+</button>
-            </div>
-            {qtyError && <p className={styles.qtyError}>{qtyError}</p>}
+        {/* Quantity row — always visible, disabled when item is in cart or unavailable */}
+        <div className={styles.qtyRow}>
+          <span className={styles.qtyLabel}>{t.quantity}</span>
+          <div className={`${styles.qtyControl} ${(inCart || isBlocked || verifying) ? styles.qtyDisabled : ""}`}>
+            <button onClick={handleQtyDecrement} className={styles.qtyBtn} disabled={mutating || qty <= 1 || inCart || isBlocked || verifying}>−</button>
+            <span className={styles.qty}>{qty}</span>
+            <button onClick={handleQtyIncrement} className={styles.qtyBtn} disabled={mutating || (qtyMax !== null && qty >= qtyMax) || inCart || isBlocked || verifying}>+</button>
           </div>
-        )}
+          {qtyError && <p className={styles.qtyError}>{qtyError}</p>}
+        </div>
 
         {/* CTA buttons */}
         <div className={styles.actions} ref={actionsRef}>
-          {isUnavailable ? (
-            <button className={`${styles.addToCartBtn} ${styles.addToCartWrap}`} disabled>
-              {t.stockUnavailable}
-            </button>
-          ) : isOos ? (
-            <button className={`${styles.addToCartBtn} ${styles.addToCartWrap}`} disabled>
-              {t.stockOutOfStock}
-            </button>
-          ) : activeId ? (
-            <AddToCartButton
-              variantId={activeId}
-              initialQty={qty}
-              size="lg"
-              className={styles.addToCartWrap}
-              selectedOptionValueIds={selectedOptionValueIds.length ? selectedOptionValueIds : undefined}
-            />
-          ) : (
-            <button className={`${styles.addToCartBtn} ${styles.addToCartWrap}`} disabled>
-              {t.addToCart}
-            </button>
-          )}
+          <AddToCartButton
+            variantId={activeId || "none"}
+            initialQty={qty}
+            size="lg"
+            className={styles.addToCartWrap}
+            selectedOptionValueIds={selectedOptionValueIds.length ? selectedOptionValueIds : undefined}
+            disabled={verifying || !activeId}
+            blockedLabel={
+              isUnavailable ? t.stockUnavailable
+              : isOos ? t.stockOutOfStock
+              : !activeId ? t.addToCart
+              : null
+            }
+          />
           <button
             onClick={() => toggle({
               productId: product.id,
@@ -496,7 +499,7 @@ export default function ShopProductDetail({
 
         <button
           onClick={handleBuyNow}
-          disabled={mutating || buyingNow || !activeId || isBlocked || resolveStatus === 'loading'}
+          disabled={mutating || buyingNow || !activeId || isBlocked || verifying}
           className={styles.buyNowBtn}
         >
           {buyingNow ? t.redirecting : t.buyNow}
@@ -572,9 +575,11 @@ export default function ShopProductDetail({
       >
         {/* Row 1: price + selected variant title + stock status */}
         <div className={styles.stickyMeta}>
-          <span className={styles.stickyPrice}>€{centsToEuros(activePriceCents)}</span>
+          <span className={styles.stickyPrice}>
+            {qty > 1 ? `${centsToEuros(totalPriceCents)} €` : `${centsToEuros(activePriceCents)} €`}
+          </span>
           {activeCompare && activeCompare > activePriceCents && (
-            <span className={styles.stickyCompare}>€{centsToEuros(activeCompare)}</span>
+            <span className={styles.stickyCompare}>{centsToEuros(activeCompare)} €</span>
           )}
           {(resolvedVariant?.title ?? selectedVariant?.title) && (
             <span className={styles.stickyVariant}>
@@ -595,30 +600,27 @@ export default function ShopProductDetail({
 
         {/* Row 2: CTA buttons */}
         <div className={styles.stickyActions}>
-          {isUnavailable || isOos ? (
-            <button className={styles.stickyFullBtn} disabled>
-              {isOos ? t.stockOutOfStock : t.stockUnavailable}
-            </button>
-          ) : activeId ? (
-            <>
-              <AddToCartButton
-                variantId={activeId}
-                initialQty={qty}
-                size="sm"
-                className={styles.stickyCartWrap}
-                selectedOptionValueIds={selectedOptionValueIds.length ? selectedOptionValueIds : undefined}
-              />
-              <button
-                onClick={handleBuyNow}
-                disabled={mutating || buyingNow || resolveStatus === 'loading'}
-                className={styles.stickyBuyBtn}
-              >
-                {buyingNow ? t.redirecting : t.buyNow}
-              </button>
-            </>
-          ) : (
-            <button className={styles.stickyFullBtn} disabled>
-              {t.addToCart}
+          <AddToCartButton
+            variantId={activeId || "none"}
+            initialQty={qty}
+            size="sm"
+            className={styles.stickyCartWrap}
+            selectedOptionValueIds={selectedOptionValueIds.length ? selectedOptionValueIds : undefined}
+            disabled={verifying || !activeId}
+            blockedLabel={
+              isOos ? t.stockOutOfStock
+              : isUnavailable ? t.stockUnavailable
+              : !activeId ? t.addToCart
+              : null
+            }
+          />
+          {!isBlocked && activeId && (
+            <button
+              onClick={handleBuyNow}
+              disabled={mutating || buyingNow || verifying}
+              className={styles.stickyBuyBtn}
+            >
+              {buyingNow ? t.redirecting : t.buyNow}
             </button>
           )}
         </div>

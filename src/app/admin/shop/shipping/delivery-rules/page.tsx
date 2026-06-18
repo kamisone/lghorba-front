@@ -11,8 +11,9 @@ export default function DeliveryRulesPage() {
         <div style={{ fontSize: 48, marginBottom: 16 }}>🚚</div>
         <p style={{ fontSize: 16, fontWeight: 500, color: "#374151", marginBottom: 8 }}>Advanced delivery rules are in development</p>
         <p style={{ fontSize: 14, maxWidth: 400, margin: "0 auto" }}>
-          Configure delivery conditions by weight, destination, or cart value.
-          Basic shipping methods are already configurable from the Shipping section.
+          Weight-based pricing and carrier integrations are coming soon.
+          Zone surcharges, free shipping thresholds, and delivery estimates are
+          configurable from the Shipping section.
         </p>
       </div>
     </div>

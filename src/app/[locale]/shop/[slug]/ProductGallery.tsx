@@ -53,7 +53,6 @@ function MediaThumb({ item, sizes }: { item: GalleryMediaItem; sizes: string }) 
 
 export default function ProductGallery({ media, title, compact }: Props) {
   const [current, setCurrent] = useState(0);
-  const [fading, setFading]   = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [mounted, setMounted]  = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -61,15 +60,10 @@ export default function ProductGallery({ media, title, compact }: Props) {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Fade transition: hide → swap → show
   const goTo = useCallback((index: number) => {
-    if (index === current || fading || !media.length) return;
-    setFading(true);
-    setTimeout(() => {
-      setCurrent(index);
-      setFading(false);
-    }, 160);
-  }, [current, fading, media.length]);
+    if (index === current || !media.length) return;
+    setCurrent(index);
+  }, [current, media.length]);
 
   const prev = useCallback(() => goTo((current - 1 + media.length) % media.length), [current, goTo, media.length]);
   const next = useCallback(() => goTo((current + 1) % media.length), [current, goTo, media.length]);
@@ -81,7 +75,6 @@ export default function ProductGallery({ media, title, compact }: Props) {
   const heroUrl = media[0]?.url;
   useEffect(() => {
     setCurrent(0);
-    setFading(false);
   }, [heroUrl]);
 
   // Scroll the thumbnail strip to keep the active thumb visible
@@ -151,9 +144,9 @@ export default function ProductGallery({ media, title, compact }: Props) {
             </div>
           )}
 
-          {/* Main media */}
+          {/* Main media — crossfade stack */}
           <div
-            className={`${styles.mainImage} ${fading ? styles.fading : ""}`}
+            className={styles.mainImage}
             onClick={active.type === "image" ? () => setLightbox(true) : undefined}
             onTouchStart={active.type === "image" ? onTouchStart : undefined}
             onTouchEnd={active.type === "image" ? onTouchEnd : undefined}
@@ -162,24 +155,33 @@ export default function ProductGallery({ media, title, compact }: Props) {
             aria-label={active.type === "image" ? "Open full-size image" : undefined}
             onKeyDown={active.type === "image" ? (e => { if (e.key === "Enter" || e.key === " ") setLightbox(true); }) : undefined}
           >
-            {active.type === "video" ? (
-              <GalleryVideo
-                key={active.url}
-                src={active.url}
-                poster={active.posterUrl}
-                active={!fading && !lightbox}
-                className={styles.mainVideo}
-              />
-            ) : (
-              <Image
-                src={active.url}
-                alt={`${title}${hasMany ? ` — image ${current + 1}` : ""}`}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 520px"
-                className={styles.mainImg}
-                priority={current === 0}
-              />
-            )}
+            {media.map((item, i) => {
+              const isActive = i === current;
+              if (item.type === "video") {
+                return (
+                  <div key={item.url} className={`${styles.slideLayer} ${isActive ? styles.slideActive : ""}`}>
+                    <GalleryVideo
+                      src={item.url}
+                      poster={item.posterUrl}
+                      active={isActive && !lightbox}
+                      className={styles.mainVideo}
+                    />
+                  </div>
+                );
+              }
+              return (
+                <div key={item.url} className={`${styles.slideLayer} ${isActive ? styles.slideActive : ""}`}>
+                  <Image
+                    src={item.url}
+                    alt={`${title}${hasMany ? ` — image ${i + 1}` : ""}`}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 520px"
+                    className={styles.mainImg}
+                    priority={i === 0}
+                  />
+                </div>
+              );
+            })}
 
             {active.type === "image" ? (
               <span className={styles.zoomHint} aria-hidden="true">

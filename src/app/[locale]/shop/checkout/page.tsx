@@ -29,6 +29,13 @@ interface CheckoutSnapshot {
   couponCode: string | null;
   shippingMethodId: string | null;
   shippingMethods: ShippingMethod[];
+  zoneInfo: {
+    id: string;
+    name: string;
+    surchargeCents: number;
+    freeShippingThresholdCents: number | null;
+    estimatedDeliveryDays: string | null;
+  } | null;
   reservationExpiresAt: string | null;
 }
 
@@ -585,27 +592,47 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
 
           {/* Line items */}
           <div className={`${styles.lineItems} ${cart.items.length > 4 ? styles.lineItemsCarousel : ""}`}>
-            {cart.items.map(item => (
-              <div key={item.id} className={`${styles.summaryItem} ${cart.items.length > 4 ? styles.summaryItemCard : ""}`}>
-                <div className={styles.summaryItemImage}>
-                  {item.imageUrl ? (
-                    <Image src={item.imageUrl} alt={item.titleSnapshot} fill sizes="56px" style={{ objectFit: "cover" }} />
+            {cart.items.map(item => {
+              const href = item.productSlug ? `/${locale}/shop/${item.productSlug}` : null;
+              return (
+                <div key={item.id} className={`${styles.summaryItem} ${cart.items.length > 4 ? styles.summaryItemCard : ""}`}>
+                  {href ? (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className={styles.summaryItemImage}>
+                      {item.imageUrl ? (
+                        <Image src={item.imageUrl} alt={item.titleSnapshot} fill sizes="56px" style={{ objectFit: "cover" }} />
+                      ) : (
+                        <div className={styles.summaryItemImagePlaceholder} />
+                      )}
+                      {item.quantity > 1 && <span className={styles.summaryItemQtyBadge}>×{item.quantity}</span>}
+                    </a>
                   ) : (
-                    <div className={styles.summaryItemImagePlaceholder} />
+                    <div className={styles.summaryItemImage}>
+                      {item.imageUrl ? (
+                        <Image src={item.imageUrl} alt={item.titleSnapshot} fill sizes="56px" style={{ objectFit: "cover" }} />
+                      ) : (
+                        <div className={styles.summaryItemImagePlaceholder} />
+                      )}
+                      {item.quantity > 1 && <span className={styles.summaryItemQtyBadge}>×{item.quantity}</span>}
+                    </div>
                   )}
-                  {item.quantity > 1 && <span className={styles.summaryItemQtyBadge}>×{item.quantity}</span>}
+                  <a
+                    href={href ?? "#"}
+                    target={href ? "_blank" : undefined}
+                    rel={href ? "noopener noreferrer" : undefined}
+                    className={styles.summaryItemName}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {item.titleSnapshot}
+                    {item.optionsSnapshot && item.optionsSnapshot.length > 0 && (
+                      <span className={styles.summaryItemOptions}>
+                        {item.optionsSnapshot.map(o => `${o.attributeName}: ${o.displayValue ?? o.value}`).join(" · ")}
+                      </span>
+                    )}
+                  </a>
+                  <span className={styles.summaryItemPrice}>{centsToEuros(item.lineTotalCents)} €</span>
                 </div>
-                <span className={styles.summaryItemName}>
-                  {item.titleSnapshot}
-                  {item.optionsSnapshot && item.optionsSnapshot.length > 0 && (
-                    <span className={styles.summaryItemOptions}>
-                      {item.optionsSnapshot.map(o => `${o.attributeName}: ${o.displayValue ?? o.value}`).join(" · ")}
-                    </span>
-                  )}
-                </span>
-                <span className={styles.summaryItemPrice}>€{centsToEuros(item.lineTotalCents)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Promo code input (only visible before checkout is initiated) */}

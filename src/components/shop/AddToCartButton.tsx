@@ -13,9 +13,12 @@ interface Props {
   size?: "sm" | "lg";
   className?: string;
   selectedOptionValueIds?: string[];
+  disabled?: boolean;
+  /** When set, renders a disabled button with this label instead of the normal add-to-cart UI. */
+  blockedLabel?: string | null;
 }
 
-export default function AddToCartButton({ variantId, initialQty = 1, size = "lg", className, selectedOptionValueIds }: Props) {
+export default function AddToCartButton({ variantId, initialQty = 1, size = "lg", className, selectedOptionValueIds, disabled: externalDisabled, blockedLabel }: Props) {
   const { cart, addItem, updateItem, removeItem, mutating, openDrawer } = useCart();
   const locale = useLocale();
   const t = getTranslations(locale).shop;
@@ -91,6 +94,20 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
     }, 350);
   }, [cartItem, pendingQty, stepperMax, updateItem, removeItem, t]);
 
+  if (blockedLabel) {
+    return (
+      <div className={`${styles.addWrap} ${className ?? ""}`}>
+        <button
+          disabled
+          className={`${styles.addBtn} ${styles[size]}`}
+          aria-label={blockedLabel}
+        >
+          {blockedLabel}
+        </button>
+      </div>
+    );
+  }
+
   if (cartItem) {
     const displayQty = pendingQty ?? cartItem.quantity;
     const atMax      = stepperMax !== null && displayQty >= stepperMax;
@@ -131,7 +148,7 @@ export default function AddToCartButton({ variantId, initialQty = 1, size = "lg"
     <div className={`${styles.addWrap} ${className ?? ""}`}>
       <button
         onClick={handleAdd}
-        disabled={adding || mutating}
+        disabled={adding || mutating || externalDisabled}
         className={`${styles.addBtn} ${styles[size]} ${justAdded ? styles.justAdded : ""}`}
         aria-label={t.addToCart}
       >
