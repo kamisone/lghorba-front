@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ProductMediaManager, { ProductMediaItem, ResolvedProductMediaItem } from "@/components/admin/shop/ProductMediaManager";
 import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
@@ -66,6 +67,7 @@ interface Product {
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
+  const router = useRouter();
 
   // Product & categories
   const [product, setProduct]       = useState<Product | null>(null);
@@ -353,6 +355,18 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     setPublishing(false);
   }
 
+  async function handleDelete() {
+    if (!confirm("Delete this product? This action can be undone from the deleted products list.")) return;
+    const res = await fetch(`/next-api/shop/products/${params.id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Product deleted");
+      router.push("/admin/shop/products");
+    } else {
+      const err = await res.json().catch(() => ({}));
+      toast.error((err as any).message ?? "Delete failed");
+    }
+  }
+
   const defaultVariant: DefaultVariant | undefined =
     (product?.variants ?? []).find((v: DefaultVariant) => v.isDefault) ?? product?.variants?.[0];
   const isSimpleProduct = productAttrs.length === 0;
@@ -446,6 +460,9 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           <span className={styles.topbarTitle}>{product.title}</span>
         </div>
         <div className={styles.topbarActions}>
+          <button type="button" className={styles.deleteBtn} onClick={handleDelete} disabled={saving || publishing}>
+            Delete
+          </button>
           <button form="product-form" type="submit" className={styles.saveBtn} disabled={saving || publishing}>
             {saving ? "Saving…" : "Save Changes"}
           </button>

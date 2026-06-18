@@ -95,6 +95,23 @@
 .publishBtn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
 .publishBtn:disabled { opacity: 0.55; cursor: not-allowed; }
 
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 9px;
+  border: 1.5px solid #fca5a5;
+  background: #fff;
+  color: #dc2626;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.deleteBtn:hover:not(:disabled) { background: #fef2f2; border-color: #f87171; }
+.deleteBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+
 /* ── Layout ── */
 .body {
   display: grid;
