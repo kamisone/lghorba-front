@@ -159,6 +159,20 @@ export default async function ProductPage({ params, searchParams }: Props) {
         initialVariantSlug={initialVariantSlug}
       />
 
+      {product.infoSections?.length > 0 && (
+        <div className={styles.specsSectionFull}>
+          <h2>{t.specificationsTitle}</h2>
+          <div className={styles.specsGrid}>
+            {product.infoSections.map((section: { id: string; label: string; value: string }) => (
+              <div key={section.id} className={styles.specCard}>
+                <span className={styles.specCardLabel}>{section.label}</span>
+                <span className={styles.specCardValue}>{section.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {faqs.length > 0 && (
         <div className={styles.faqSectionFull}>
           <h2>{t.faqTitle}</h2>

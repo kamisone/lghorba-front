@@ -549,24 +549,6 @@ export default function ShopProductDetail({
           </div>
         )}
 
-        {/* Specifications */}
-        {product.infoSections.length > 0 && (
-          <div className={styles.specsSection}>
-            <h3>{t.specificationsTitle}</h3>
-            <div className={styles.specsList}>
-              {product.infoSections.map(section => (
-                <details key={section.id} className={styles.specItem} open>
-                  <summary className={styles.specToggle}>
-                    <span className={styles.specLabel}>{section.label}</span>
-                    <span className={styles.specChevron} aria-hidden="true" />
-                  </summary>
-                  <div className={styles.specValue}>{section.value}</div>
-                </details>
-              ))}
-            </div>
-          </div>
-        )}
-
       </div>
 
       {/* ── Sticky buy bar — mobile/tablet only ─────────────────────────────── */}
