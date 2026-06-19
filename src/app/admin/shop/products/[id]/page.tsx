@@ -7,13 +7,14 @@ import ProductMediaManager, { ProductMediaItem, ResolvedProductMediaItem } from 
 import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/admin/shop/ProductInfoSectionsManager";
 import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
 import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
+import ProductDocumentsManager, { ProductDocument } from "@/components/admin/shop/ProductDocumentsManager";
 import CollapsibleSection from "@/components/admin/shop/CollapsibleSection";
 import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
-import { Pencil, ImagePlus } from "lucide-react";
+import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ interface Product {
   infoSections: ProductInfoSection[];
   trustBadges: ProductTrustBadge[];
   faqs: ProductFaq[];
+  documents: ProductDocument[];
   primaryCategoryId: string | null;
   categories: Array<{ id: string; name: string }>;
   variants: DefaultVariant[];
@@ -89,6 +91,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
   const [trustBadges, setTrustBadges] = useState<ProductTrustBadge[]>([]);
   const [faqs, setFaqs] = useState<ProductFaq[]>([]);
+  const [documents, setDocuments] = useState<ProductDocument[]>([]);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
@@ -131,6 +134,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setInfoSections(p.infoSections ?? []);
       setTrustBadges(p.trustBadges ?? []);
       setFaqs(p.faqs ?? []);
+      setDocuments(p.documents ?? []);
       setCategories(Array.isArray(cats) ? cats : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
       setProductAttrs(Array.isArray(prodAttrs) ? prodAttrs : []);
@@ -315,6 +319,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         infoSections,
         trustBadges,
         faqs,
+        documents,
         ...(basePriceCents !== undefined ? { basePriceCents } : {}),
         compareAtPriceCents,
       }),
@@ -328,13 +333,15 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
       const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:title`, `trustBadge:${b.id}:subtitle`]);
       const faqFields = faqs.flatMap(f => [`faq:${f.id}:question`, `faq:${f.id}:answer`]);
-      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields]);
+      const documentFields = documents.map(d => `document:${d.id}:title`);
+      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields]);
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
       setInfoSections(p.infoSections ?? []);
       setTrustBadges(p.trustBadges ?? []);
       setFaqs(p.faqs ?? []);
+      setDocuments(p.documents ?? []);
       toast.success("Changes saved");
     }
     setSaving(false);
@@ -506,7 +513,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             {/* Pricing */}
             <div className={styles.section}>
               <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>💰</span>
+                <span className={styles.sectionIcon}><DollarSign size={14} strokeWidth={1.75} /></span>
                 <span className={styles.sectionTitle}>Pricing</span>
               </div>
               <div className={styles.sectionBody}>
@@ -539,7 +546,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             {/* Media */}
             <div className={styles.section}>
               <div className={styles.sectionHead}>
-                <span className={styles.sectionIcon}>🖼</span>
+                <span className={styles.sectionIcon}><Image size={14} strokeWidth={1.75} /></span>
                 <span className={styles.sectionTitle}>Media</span>
               </div>
               <div className={styles.sectionBody}>
@@ -548,22 +555,27 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             </div>
 
             {/* Specifications */}
-            <CollapsibleSection icon="📋" title="Specifications">
+            <CollapsibleSection icon={<ClipboardList size={14} strokeWidth={1.75} />} title="Specifications">
               <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
             </CollapsibleSection>
 
             {/* Trust badges */}
-            <CollapsibleSection icon="🛡️" title="Trust badges">
+            <CollapsibleSection icon={<Shield size={14} strokeWidth={1.75} />} title="Trust badges">
               <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
             </CollapsibleSection>
 
             {/* FAQs */}
-            <CollapsibleSection icon="❓" title="FAQs">
+            <CollapsibleSection icon={<HelpCircle size={14} strokeWidth={1.75} />} title="FAQs">
               <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
             </CollapsibleSection>
 
+            {/* Documents */}
+            <CollapsibleSection icon={<FileText size={14} strokeWidth={1.75} />} title="Documents (PDF)">
+              <ProductDocumentsManager productId={params.id} documents={documents} onChange={setDocuments} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
+
             {/* ── Variations ── */}
-            <CollapsibleSection icon="🎨" title="Variations" last>
+            <CollapsibleSection icon={<Palette size={14} strokeWidth={1.75} />} title="Variations" last>
                 {productAttrs.length > 0 && (
                   <button
                     type="button"

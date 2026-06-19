@@ -77,6 +77,7 @@ interface Product {
   infoSections: ProductInfoSection[];
   trustBadges: ProductTrustBadge[];
   faqs: ProductFaq[];
+  documents: Array<{ id: string; title: string; url: string; originalFilename: string; sizeBytes: number }>;
   variants: FlatVariant[];
   categories: Array<{ name: string }>;
 }

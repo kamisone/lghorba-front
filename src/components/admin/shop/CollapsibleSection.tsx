@@ -6,7 +6,7 @@ import peStyles from "@/app/admin/shop/products/ProductEdit.module.css";
 import styles from "./CollapsibleSection.module.css";
 
 interface Props {
-  icon: string;
+  icon: ReactNode;
   title: string;
   children: ReactNode;
   /** Closed by default — the admin expands it to edit. */
