@@ -126,7 +126,7 @@ export default function ProductGallery({ media, title, compact }: Props) {
     <>
       {/* galleryWrap is position:relative so the absolutely-positioned navRow works on mobile */}
       <div className={styles.galleryWrap}>
-        {/* gallery: flex row — strip + image only, so align-items:stretch gives strip the exact image height */}
+        {/* gallery: strip is absolutely positioned so mainImage alone sets the height; strip scrolls vertically */}
         <div className={styles.gallery}>
           {/* Vertical thumbnail strip — desktop only */}
           {hasMany && (
