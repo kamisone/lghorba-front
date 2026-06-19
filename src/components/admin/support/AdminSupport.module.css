@@ -253,6 +253,20 @@
   gap: 6px;
 }
 
+.chatPageUrl {
+  margin: 2px 0 0;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+.chatPageUrl a {
+  color: var(--color-brand-primary, #2563eb);
+  text-decoration: none;
+}
+.chatPageUrl a:hover { text-decoration: underline; }
+
 .chatActions { display: flex; gap: 8px; }
 
 .actionBtn {

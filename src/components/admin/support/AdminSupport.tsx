@@ -14,6 +14,7 @@ interface Conversation {
   id: string;
   guestToken: string;
   guestName: string | null;
+  pageUrl: string | null;
   assignedAdminId: string | null;
   status: string;
   lastMessageAt: string | null;
@@ -644,6 +645,11 @@ export default function AdminSupport() {
                   <span className={`${styles.statusBadge} ${statusClass(selected.status, styles)}`}>{statusLabel(selected.status)}</span>
                   {selected.firstResponseAt && <span className={styles.responseTime}> · {t.chat.firstReply} {relTime(selected.firstResponseAt, locale)}</span>}
                 </p>
+                {selected.pageUrl && (
+                  <p className={styles.chatPageUrl}>
+                    <a href={selected.pageUrl} target="_blank" rel="noopener noreferrer">{selected.pageUrl.replace(/^https?:\/\/[^/]+/, "")}</a>
+                  </p>
+                )}
               </div>
               <div className={styles.chatActions}>
                 {selected.status !== "closed" ? (

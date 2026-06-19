@@ -132,7 +132,7 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
 
     socket.emit(
       "message:send",
-      { content, clientId, guestName: guestNameRef.current },
+      { content, clientId, guestName: guestNameRef.current, pageUrl: window.location.href },
       (ack: { ok: boolean; message?: SupportMessage; clientId?: string; error?: string }) => {
         clearTimeout(timer);
         pendingRef.current.delete(clientId);
