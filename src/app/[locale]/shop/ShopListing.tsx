@@ -126,10 +126,12 @@ function ProductCard({
   product,
   locale,
   promotion,
+  priority = false,
 }: {
   product: Product;
   locale: string;
   promotion: PromotionInfo | null;
+  priority?: boolean;
 }) {
   const { toggle, isWishlisted } = useWishlist();
   const t = getTranslations(locale).shop;
@@ -149,6 +151,7 @@ function ProductCard({
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
             className={styles.productImage}
+            priority={priority}
           />
         ) : (
           <div className={styles.productImagePlaceholder} />
@@ -330,12 +333,13 @@ export default function ShopListing({
               <div className={styles.empty}>{t.noProductsFound}</div>
             ) : (
               <div className={styles.productGrid}>
-                {products.map(p => (
+                {products.map((p, i) => (
                   <ProductCard
                     key={p.id}
                     product={p}
                     locale={locale}
                     promotion={resolvePromotion(p, activePromotions, activeCategory)}
+                    priority={i < 4}
                   />
                 ))}
               </div>

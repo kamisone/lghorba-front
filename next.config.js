@@ -5,6 +5,7 @@ const nextConfig = {
     NEXT_PUBLIC_GCS_BUCKET: process.env.GCS_BUCKET_NAME ?? "",
   },
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: "storage.googleapis.com" },
     ],

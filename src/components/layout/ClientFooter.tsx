@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Mail, MapPin } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
@@ -24,9 +25,11 @@ export default function ClientFooter({ locale }: Props) {
           {/* Brand / contact column */}
           <div className={styles.footerCol}>
             <div className={styles.footerLogo}>
-              <img
+              <Image
                 src="/assets/logo_vitecamion_icon.png"
                 alt="vitecamion"
+                width={28}
+                height={21}
                 className={styles.logoIcon}
               />
               <span className={styles.logoText}>vitecamion</span>
