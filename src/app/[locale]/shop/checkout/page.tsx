@@ -337,6 +337,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
         zip:         form.zip,
         country:     form.country,
         couponCode:  appliedCoupon?.code ?? null,
+        locale,
       }),
     });
 
