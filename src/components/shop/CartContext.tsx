@@ -49,6 +49,7 @@ interface CartContextValue {
   validateCoupon: (code: string) => Promise<{ valid: boolean; discountCents: number; type: string; message?: string }>;
   token: string;
   refresh: () => Promise<void>;
+  clearCart: () => void;
   appliedCoupon: AppliedCoupon | null;
   setAppliedCoupon: (c: AppliedCoupon | null) => void;
   isDrawerOpen: boolean;
@@ -216,6 +217,14 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
     return res.json();
   }, [token, cart]);
 
+  const clearCart = useCallback(() => {
+    const newToken = crypto.randomUUID();
+    localStorage.setItem("shop_cart_token", newToken);
+    setToken(newToken);
+    setCart(null);
+    setAppliedCoupon(null);
+  }, []);
+
   const openDrawer  = useCallback(() => setIsDrawerOpen(true),  []);
   const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
 
@@ -223,7 +232,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
     <CartContext.Provider value={{
       cart, loading, mutating,
       addItem, updateItem, removeItem, validateCoupon,
-      token, refresh: fetchCart,
+      token, refresh: fetchCart, clearCart,
       appliedCoupon, setAppliedCoupon,
       isDrawerOpen, openDrawer, closeDrawer,
     }}>

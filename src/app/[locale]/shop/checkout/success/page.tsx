@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
+import ClearCartOnMount from "./ClearCartOnMount";
 
 interface Props {
   params: { locale: string };
@@ -13,6 +14,7 @@ export default function CheckoutSuccessPage({ params, searchParams }: Props) {
 
   return (
     <div style={{ maxWidth: 520, margin: "80px auto", textAlign: "center", padding: "0 16px" }}>
+      <ClearCartOnMount />
       <div style={{
         width: 72, height: 72, borderRadius: "50%",
         background: "var(--color-brand-accent)", margin: "0 auto 24px",
