@@ -199,7 +199,7 @@ const NAV_GROUPS: NavGroup[] = [
           { href: "/admin/shop/settings/taxes",         icon: Receipt,           label: "Taxes & VAT"              },
           { href: "/admin/shop/settings/currency",      icon: ArrowLeftRight,    label: "Currency Settings"        },
           { href: "/admin/shop/settings/config",        icon: SlidersHorizontal, label: "Commerce Configuration"   },
-          { href: "/admin/shop/settings/notifications", icon: Mail,              label: "Notification Templates"   },
+          { href: "/admin/shop/settings/notifications", icon: Mail,              label: "Admin Notifications"      },
           { href: "/admin/shop/settings/checkout",      icon: ShoppingCart,      label: "Checkout Settings"        },
         ],
       },

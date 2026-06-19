@@ -1,0 +1,169 @@
+/* ── Layout ── */
+.page { padding: 24px; max-width: 1100px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.title { font-size: 22px; font-weight: 700; margin: 0; color: #0f172a; }
+.subtitle { font-size: 13px; color: #64748b; margin: 4px 0 0; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+/* ── Tabs ── */
+.tabRow {
+  display: flex; gap: 0; margin-bottom: 24px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.tab {
+  padding: 10px 20px; border: none; background: none;
+  font-size: 14px; font-weight: 600; color: #64748b;
+  cursor: pointer; position: relative; transition: color .15s;
+}
+.tab:hover { color: #334155; }
+.tabActive {
+  color: #00466E;
+}
+.tabActive::after {
+  content: ""; position: absolute; bottom: -2px; left: 0; right: 0;
+  height: 2px; background: #00466E; border-radius: 1px;
+}
+
+/* ── Cards ── */
+.card {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  overflow: hidden;
+}
+.cardHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid #f1f5f9;
+}
+.cardTitle { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
+.cardBody { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── Toggle row ── */
+.toggleRow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+}
+.toggleLabel { font-size: 13px; font-weight: 600; color: #334155; }
+.toggle {
+  position: relative; width: 40px; height: 22px;
+  border-radius: 11px; border: none; cursor: pointer;
+  background: #cbd5e1; transition: background .15s;
+  padding: 0; flex-shrink: 0;
+}
+.toggle::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; transition: transform .15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.toggleOn { background: #00466E; }
+.toggleOn::after { transform: translateX(18px); }
+
+/* ── Chips (phones / emails) ── */
+.chipList { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 6px;
+  background: #f1f5f9; font-size: 12px; font-weight: 500; color: #334155;
+}
+.chipRemove {
+  border: none; background: none; cursor: pointer; padding: 0;
+  color: #94a3b8; display: flex; align-items: center;
+  transition: color .15s;
+}
+.chipRemove:hover { color: #ef4444; }
+
+/* ── Add row (input + button) ── */
+.addRow { display: flex; gap: 8px; }
+.addInput {
+  flex: 1; padding: 7px 12px; border: 1px solid #e2e8f0; border-radius: 8px;
+  font-size: 13px; outline: none; transition: border-color .15s;
+}
+.addInput:focus { border-color: #00466E; }
+.addBtn {
+  padding: 7px 14px; border: none; border-radius: 8px;
+  background: #00466E; color: #fff; font-size: 13px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: opacity .15s;
+}
+.addBtn:hover { opacity: .88; }
+.addBtn:disabled { opacity: .4; cursor: default; }
+
+/* ── Event checkboxes ── */
+.eventList { display: flex; flex-direction: column; gap: 8px; }
+.eventRow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  transition: background .1s; cursor: pointer;
+}
+.eventRow:hover { background: #f8fafc; }
+.eventCheckbox {
+  width: 16px; height: 16px; accent-color: #00466E; cursor: pointer;
+}
+.eventLabel { font-size: 13px; color: #334155; font-weight: 500; }
+.eventDesc { font-size: 11px; color: #94a3b8; }
+
+/* ── Save bar ── */
+.saveBar {
+  display: flex; justify-content: flex-end; margin-top: 20px;
+}
+.saveBtn {
+  padding: 9px 22px; border: none; border-radius: 8px;
+  background: #00466E; color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: opacity .15s, transform .1s;
+}
+.saveBtn:hover { opacity: .88; transform: translateY(-1px); }
+.saveBtn:disabled { opacity: .4; cursor: default; transform: none; }
+.saved {
+  font-size: 13px; color: #059669; font-weight: 600;
+  display: flex; align-items: center; gap: 6px; margin-right: 12px;
+}
+
+/* ── Logs section ── */
+.logsSection { margin-top: 32px; }
+.logsHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+}
+.logsTitle { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; }
+.logsFilters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filterSelect {
+  padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 8px;
+  font-size: 12px; background: #fff; color: #334155; outline: none;
+  cursor: pointer;
+}
+
+.logsTable {
+  width: 100%; border-collapse: collapse;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  overflow: hidden;
+}
+.logsTable th {
+  text-align: left; padding: 10px 14px; font-size: 11px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: #64748b; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+}
+.logsTable td {
+  padding: 10px 14px; font-size: 13px; color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+.logsTable tr:last-child td { border-bottom: none; }
+.logsTable tr:hover td { background: #fafbfc; }
+
+/* ── Status badges ── */
+.statusSent    { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; background: #d1fae5; color: #065f46; }
+.statusFailed  { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; background: #fee2e2; color: #dc2626; }
+.statusSkipped { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; background: #f3f4f6; color: #6b7280; }
+
+.channelSms   { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #7c3aed; }
+.channelEmail { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #0369a1; }
+
+.emptyLogs {
+  text-align: center; padding: 40px 16px; color: #94a3b8; font-size: 14px;
+}
+
+.loadMore {
+  display: block; margin: 16px auto 0; padding: 8px 20px;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  background: #fff; font-size: 13px; font-weight: 600; color: #334155;
+  cursor: pointer; transition: background .15s;
+}
+.loadMore:hover { background: #f8fafc; }
