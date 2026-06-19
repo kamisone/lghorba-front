@@ -9,6 +9,12 @@ import { getTranslations } from "@/lib/i18n";
 import { buildCategoryTree, getAncestorIds, type CategoryNode as BaseCategoryNode } from "@/lib/shop/categoryTree";
 import styles from "./CommerceCategoryNav.module.css";
 
+interface RawCategory {
+  id: string;
+  name: string;
+  parentId?: string | null;
+  translations?: Record<string, Record<string, string>>;
+}
 interface Category { id: string; name: string; parentId?: string | null }
 type CategoryNode = BaseCategoryNode<Category>;
 
@@ -96,9 +102,16 @@ export default function CommerceCategoryNav({ locale, className }: Props) {
   useEffect(() => {
     fetch("/next-api/public/shop/products/categories")
       .then(r => r.ok ? r.json() : [])
-      .then(data => setCategories(Array.isArray(data) ? data : []))
+      .then((data: RawCategory[]) => {
+        const resolved = (Array.isArray(data) ? data : []).map(c => ({
+          id: c.id,
+          name: c.translations?.name?.[locale] ?? c.name,
+          parentId: c.parentId,
+        }));
+        setCategories(resolved);
+      })
       .catch(() => {});
-  }, []);
+  }, [locale]);
 
   const onShopPage = pathname === `/${locale}/shop`;
   const activeCategory = onShopPage ? searchParams.get("category") : null;

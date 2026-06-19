@@ -35,17 +35,24 @@ export default async function ShopPage({ params, searchParams }: Props) {
     fetch(`${API}/public/shop/promotions/active`, { next: { revalidate: 60, tags: ["promotions"] } }),
   ]);
 
-  const productsData  = productsRes.ok  ? await productsRes.json()  : { items: [], total: 0 };
-  const categories    = categoriesRes.ok ? await categoriesRes.json() : [];
-  const collections   = collectionsRes.ok ? await collectionsRes.json() : [];
-  const promotions    = promotionsRes.ok ? await promotionsRes.json() : [];
+  const productsData   = productsRes.ok  ? await productsRes.json()  : { items: [], total: 0 };
+  const rawCategories  = categoriesRes.ok ? await categoriesRes.json() : [];
+  const collections    = collectionsRes.ok ? await collectionsRes.json() : [];
+  const promotions     = promotionsRes.ok ? await promotionsRes.json() : [];
+
+  const categories = (Array.isArray(rawCategories) ? rawCategories : []).map(
+    (c: { id: string; name: string; slug: string; parentId?: string | null; translations?: Record<string, Record<string, string>> }) => ({
+      ...c,
+      name: c.translations?.name?.[locale] ?? c.name,
+    }),
+  );
 
   return (
     <ShopListing
       locale={locale}
       products={productsData.items ?? []}
       total={productsData.total ?? 0}
-      categories={Array.isArray(categories) ? categories : []}
+      categories={categories}
       featuredCollections={Array.isArray(collections) ? collections : []}
       activePromotions={Array.isArray(promotions) ? promotions : []}
       page={page}
