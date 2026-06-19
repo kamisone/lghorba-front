@@ -109,6 +109,19 @@ export default function CarsPage() {
                       <span><CarIcon size={16} strokeWidth={1.75} /></span>
                     </div>
                   )}
+                  {car.isCurrentlyRented && car.currentRentEnd ? (
+                    <span className={`${styles.bookingBadge} ${styles.bookingBadgeActive}`}>
+                      Return {new Date(car.currentRentEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </span>
+                  ) : car.nextBookingStart ? (
+                    <span className={`${styles.bookingBadge} ${styles.bookingBadgeNext}`}>
+                      Next {new Date(car.nextBookingStart).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </span>
+                  ) : !car.isCurrentlyRented ? (
+                    <span className={`${styles.bookingBadge} ${styles.bookingBadgeIdle}`}>
+                      Available
+                    </span>
+                  ) : null}
                 </div>
                 <div className={styles.cardBody}>
                   <div className={styles.carNameRow}>

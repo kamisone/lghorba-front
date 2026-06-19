@@ -111,6 +111,35 @@
   font-size: 4rem;
 }
 
+.bookingBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  z-index: 1;
+}
+
+.bookingBadgeActive {
+  background: rgba(239, 68, 68, 0.88);
+  color: #fff;
+}
+
+.bookingBadgeNext {
+  background: rgba(var(--rgb-admin-primary), 0.82);
+  color: #fff;
+}
+
+.bookingBadgeIdle {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-text-muted);
+}
+
 .cardBody {
   padding: 1rem 1.2rem 1.3rem;
 }

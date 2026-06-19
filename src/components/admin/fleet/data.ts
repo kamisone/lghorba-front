@@ -47,6 +47,9 @@ export interface Car {
   photo?: string | null;
   isCurrentlyRented?: boolean;
   isTrackingActive?: boolean;
+  currentRentEnd?: string | null;
+  nextBookingStart?: string | null;
+  nextBookingEnd?: string | null;
   // Vehicle specs
   brand?: string | null;
   model?: string | null;
