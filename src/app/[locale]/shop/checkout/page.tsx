@@ -37,6 +37,7 @@ interface CheckoutSnapshot {
     estimatedDeliveryDays: string | null;
   } | null;
   reservationExpiresAt: string | null;
+  trackingToken: string | null;
 }
 
 // ── Reservation countdown ──────────────────────────────────────────────────────
@@ -69,7 +70,7 @@ function ReservationTimer({ expiresAt, locale }: { expiresAt: string; locale: st
 
 // ── Stripe payment form ────────────────────────────────────────────────────────
 
-function StripePaymentForm({ orderId, orderNumber, locale, total }: { orderId: string; orderNumber: string; locale: string; total: number }) {
+function StripePaymentForm({ orderId, orderNumber, locale, total, trackingToken }: { orderId: string; orderNumber: string; locale: string; total: number; trackingToken?: string | null }) {
   const t      = getTranslations(locale).shop;
   const stripe   = useStripe();
   const elements = useElements();
@@ -88,7 +89,7 @@ function StripePaymentForm({ orderId, orderNumber, locale, total }: { orderId: s
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/${locale}/shop/checkout/success?order=${orderNumber}&id=${orderId}`,
+        return_url: `${window.location.origin}/${locale}/shop/checkout/success?order=${orderNumber}&id=${orderId}${trackingToken ? `&token=${trackingToken}` : ""}`,
       },
     });
     if (confirmError) { setError(confirmError.message ?? "Payment failed"); setPaying(false); }
@@ -585,6 +586,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                     orderNumber={snapshot.orderNumber}
                     locale={locale}
                     total={snapshot.totalCents}
+                    trackingToken={snapshot.trackingToken}
                   />
                 </Elements>
               )}
