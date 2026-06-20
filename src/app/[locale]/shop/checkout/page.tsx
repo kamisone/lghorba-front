@@ -282,17 +282,22 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
       .finally(() => setCountriesLoading(false));
   }, []);
 
+  function goToStep(s: Step) {
+    setStep(s);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function handleStepClick(s: Step) {
     setFormError("");
     setNameGroupError("");
     if (s === "address") {
       // Go back to address — keep form data and snapshot so re-submit is idempotent
       setClientSecret(null);
-      setStep("address");
+      goToStep("address");
     } else if (s === "shipping" && snapshot) {
       // Go back to shipping from payment — snapshot already has shipping methods
       setClientSecret(null);
-      setStep("shipping");
+      goToStep("shipping");
     }
   }
 
@@ -357,7 +362,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
       setSelectedMethodId(firstId);
       await applyShippingMethod(snap.orderId, firstId, snap);
     } else {
-      setStep("shipping");
+      goToStep("shipping");
     }
     setSubmitting(false);
   }
@@ -373,7 +378,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
       const updated: CheckoutSnapshot = await res.json();
       setSnapshot(updated);
       setSelectedMethodId(updated.shippingMethodId);
-      if (currentSnap) setStep("shipping");
+      if (currentSnap) goToStep("shipping");
     }
     setShippingUpdating(false);
   }
@@ -398,7 +403,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
 
     const { clientSecret: cs } = await intentRes.json();
     setClientSecret(cs);
-    setStep("payment");
+    goToStep("payment");
     setSubmitting(false);
   }
 
