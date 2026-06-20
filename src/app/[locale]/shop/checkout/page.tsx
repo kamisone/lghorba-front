@@ -421,15 +421,24 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
     return <div className={styles.container} style={{ textAlign: "center", padding: "80px 0" }} />;
   }
 
-  // Derive breakdown from server snapshot when available, else from cart
+  // Derive breakdown from server snapshot when available, else from cart.
+  // On the address step, the user can still change the coupon — prefer appliedCoupon
+  // over the (now stale) snapshot discount so the UI reflects the new coupon immediately.
+  const onAddressStep              = step === "address";
   const breakdownSubtotal          = snapshot?.subtotalCents ?? cart.subtotalCents;
-  const breakdownShipping          = snapshot?.shippingCents;
+  const breakdownShipping          = onAddressStep ? undefined : snapshot?.shippingCents;
   const breakdownCategoryDiscount  = snapshot?.categoryDiscountCents ?? 0;
-  const breakdownCouponDiscount    = snapshot?.discountCents ?? (appliedCoupon?.discountCents ?? 0);
-  const breakdownCouponCode        = snapshot?.couponCode   ?? appliedCoupon?.code ?? null;
-  const breakdownTotal             = snapshot?.totalCents   ?? Math.max(0, cart.subtotalCents - breakdownCouponDiscount);
+  const breakdownCouponDiscount    = onAddressStep
+    ? (appliedCoupon?.discountCents ?? 0)
+    : (snapshot?.discountCents ?? (appliedCoupon?.discountCents ?? 0));
+  const breakdownCouponCode        = onAddressStep
+    ? (appliedCoupon?.code ?? null)
+    : (snapshot?.couponCode ?? appliedCoupon?.code ?? null);
+  const breakdownTotal             = onAddressStep
+    ? Math.max(0, cart.subtotalCents - breakdownCouponDiscount)
+    : (snapshot?.totalCents ?? Math.max(0, cart.subtotalCents - breakdownCouponDiscount));
   const shippingMethods            = snapshot?.shippingMethods ?? [];
-  const checkoutInitiated          = step !== "address";
+  const checkoutInitiated          = !onAddressStep;
 
   return (
     <div className={styles.container}>
