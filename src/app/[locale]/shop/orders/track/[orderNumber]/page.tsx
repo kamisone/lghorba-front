@@ -105,6 +105,13 @@ export default function OrderTrackDetailPage({ params }: { params: { locale: str
     delivered:  t.trackTimelineDelivered,
   };
 
+  const stepDateMap = new Map<string, string>();
+  for (const entry of order.timeline) {
+    if (!stepDateMap.has(entry.status)) {
+      stepDateMap.set(entry.status, entry.date);
+    }
+  }
+
   const statusLabel: Record<string, string> = {
     draft: "Draft", pending: "Pending", awaiting_payment: "Awaiting payment",
     paid: t.trackTimelinePaid, processing: t.trackTimelinePreparing,
@@ -140,6 +147,13 @@ export default function OrderTrackDetailPage({ params }: { params: { locale: str
                 <StatusIcon status={step} />
               </div>
               <span className={styles.timelineLabel}>{timelineLabels[step]}</span>
+              {stepDateMap.has(step) && (
+                <span className={styles.timelineDate}>
+                  {new Date(stepDateMap.get(step)!).toLocaleDateString(params.locale, { day: "numeric", month: "short" })}
+                  {" · "}
+                  {new Date(stepDateMap.get(step)!).toLocaleTimeString(params.locale, { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
               {i < STATUS_ORDER.length - 1 && <div className={`${styles.timelineLine} ${currentIdx > i ? styles.timelineLineDone : ""}`} />}
             </div>
           );

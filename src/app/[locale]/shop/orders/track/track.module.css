@@ -100,6 +100,12 @@
 }
 .timelineStepDone .timelineLabel { color: var(--color-brand-primary); }
 
+.timelineDate {
+  font-size: 10px; font-weight: 500; color: var(--color-text-muted);
+  text-align: center; margin-top: 2px; opacity: 0.8;
+}
+.timelineStepDone .timelineDate { color: var(--color-brand-mid); opacity: 1; }
+
 .timelineLine {
   position: absolute; top: 22px; left: calc(50% + 26px); right: calc(-50% + 26px);
   height: 2px; background: var(--color-border); z-index: 0;
