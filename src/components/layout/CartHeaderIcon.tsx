@@ -3,15 +3,17 @@
 import { useCart } from "@/components/shop/CartContext";
 import styles from "./HeaderIconButton.module.css";
 
-export default function CartHeaderIcon() {
+export default function CartHeaderIcon({ label }: { label?: string }) {
   const { cart, openDrawer } = useCart();
   const count = cart?.itemCount ?? 0;
+  const title = label ?? "Cart";
 
   return (
     <button
       onClick={openDrawer}
       className={styles.iconBtn}
-      aria-label={count > 0 ? `Open cart, ${count} item${count !== 1 ? "s" : ""}` : "Open cart"}
+      aria-label={count > 0 ? `${title}, ${count}` : title}
+      title={title}
     >
       <svg
         width="20"

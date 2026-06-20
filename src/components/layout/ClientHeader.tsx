@@ -67,12 +67,12 @@ export default function ClientHeader({ locale }: Props) {
           {/* ── Right slot ── */}
           <div className={styles.navRight}>
             <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} />
-            <Link href={`/${locale}/shop`} className={styles.crossLink}>
+            <Link href={`/${locale}/shop`} className={styles.crossLink} title={t.nav.shop}>
               <ShoppingBag size={16} strokeWidth={2} aria-hidden="true" />
               <span className={styles.crossLinkLabel}>{t.nav.shop}</span>
             </Link>
             <span className={styles.navDivider} aria-hidden="true" />
-            <Link href={ctaHref} className={styles.navCta}>
+            <Link href={ctaHref} className={styles.navCta} title={t.nav.bookNow}>
               {t.nav.bookNow}
             </Link>
             <HamburgerMenu

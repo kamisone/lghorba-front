@@ -15,7 +15,7 @@ export default function WishlistHeaderIcon({ locale, label }: Props) {
   const count = wishlist.length;
 
   return (
-    <Link href={`/${locale}/shop/wishlist`} className={styles.iconBtn} aria-label={label}>
+    <Link href={`/${locale}/shop/wishlist`} className={styles.iconBtn} aria-label={label} title={label}>
       <Heart size={19} strokeWidth={2} aria-hidden="true" />
       {count > 0 && (
         <span className={styles.badge} aria-hidden="true">

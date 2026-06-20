@@ -53,3 +53,9 @@
   from { transform: scale(0.6); }
   to   { transform: scale(1); }
 }
+
+@media (max-width: 640px) {
+  .iconBtn { width: 34px; height: 34px; border-radius: 8px; }
+  .iconBtn svg { width: 16px; height: 16px; }
+  .badge { min-width: 16px; height: 16px; font-size: 9px; top: -5px; right: -5px; padding: 0 4px; }
+}

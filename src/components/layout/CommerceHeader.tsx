@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Car } from "lucide-react";
+import { Car, Package } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
 import ScrollAwareHeader from "./ScrollAwareHeader";
@@ -9,6 +9,7 @@ import WishlistHeaderIcon from "@/components/shop/WishlistHeaderIcon";
 import CommerceCategoryNav from "@/components/shop/CommerceCategoryNav";
 import SearchAutocomplete from "@/components/shop/SearchAutocomplete";
 import shellStyles from "./ClientHeader.module.css";
+import iconStyles from "./HeaderIconButton.module.css";
 import styles from "./CommerceHeader.module.css";
 
 interface Props {
@@ -53,13 +54,16 @@ export default function CommerceHeader({ locale }: Props) {
 
             <div className={`${shellStyles.navRight} ${styles.iconsOrder}`}>
               <LangSwitcher locale={locale} ariaLabel={t.nav.selectLanguage} />
-              <Link href={`/${locale}`} className={styles.crossLink}>
+              <Link href={`/${locale}`} className={styles.crossLink} title={t.nav.backToRentals}>
                 <Car size={16} strokeWidth={2} aria-hidden="true" />
                 <span className={styles.crossLinkLabel}>{t.nav.backToRentals}</span>
               </Link>
               <span className={shellStyles.navDivider} aria-hidden="true" />
+              <Link href={`/${locale}/shop/orders/track`} className={iconStyles.iconBtn} aria-label={shop.trackMyOrder} title={shop.trackMyOrder}>
+                <Package size={18} strokeWidth={1.75} />
+              </Link>
               <WishlistHeaderIcon locale={locale} label={shop.wishlistNavLabel} />
-              <CartHeaderIcon />
+              <CartHeaderIcon label={shop.cartNavLabel} />
             </div>
 
             <div className={styles.searchMobile}>
