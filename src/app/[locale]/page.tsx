@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
+import ResponsiveHeroVideo from "@/components/ResponsiveHeroVideo";
 import CarSearchForm from "@/components/CarSearchForm";
 import {
   Car,
@@ -98,18 +99,11 @@ export default async function LandingPage({ params }: { params: { locale: string
 
       {/* ── Hero ── */}
       <section className={styles.hero}>
-        <video
+        <ResponsiveHeroVideo
+          desktopSrc="/assets/cars/rentals_hero.mp4"
+          mobileSrc="/assets/cars/rentals_hero_mobile.mp4"
           className={styles.heroVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="none"
-          aria-hidden="true"
-        >
-          <source src="/assets/cars/rentals_hero_mobile.mp4" media="(max-width: 767px)" />
-          <source src="/assets/cars/rentals_hero.mp4" />
-        </video>
+        />
         <div className={styles.heroVideoOverlay} aria-hidden="true" />
         <div className={styles.heroBg} aria-hidden="true">
           <div className={styles.heroBgGlow1} />
