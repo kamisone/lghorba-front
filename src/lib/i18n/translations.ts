@@ -24,7 +24,10 @@ export const en = {
     backToRentals: "Vehicle rentals",
   },
   hero: {
-    pill: "Car rental · Turo · Getaround · Private",
+    pillPrefix: "Car rental",
+    pillTuro: "Turo",
+    pillGetaround: "Getaround",
+    pillPrivate: "Private",
     title1: "Drive fast,",
     title2: "book smarter",
     sub: "Premium vehicles available on Turo, Getaround, and direct private rental. Transparent pricing, recent models, flexible bookings.",
@@ -1032,7 +1035,10 @@ export const fr: Translations = {
     backToRentals: "Location de véhicules",
   },
   hero: {
-    pill: "Location · Turo · Getaround · Privé",
+    pillPrefix: "Location",
+    pillTuro: "Turo",
+    pillGetaround: "Getaround",
+    pillPrivate: "Privé",
     title1: "Roulez vite,",
     title2: "réservez mieux",
     sub: "Véhicules premium disponibles sur Turo, Getaround et en location privée directe. Tarifs transparents, modèles récents, réservations flexibles.",

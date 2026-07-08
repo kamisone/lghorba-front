@@ -109,34 +109,62 @@ export default async function LandingPage({ params }: { params: { locale: string
           <div className={styles.heroBgGlow1} />
           <div className={styles.heroBgGlow2} />
         </div>
-        <div className={styles.heroContent}>
-          <span className={styles.heroPill}>{t.hero.pill}</span>
-          <h1 className={styles.heroTitle}>
-            {t.hero.title1}
-            <br />
-            <span className={styles.heroAccent}>{t.hero.title2}</span>
-          </h1>
-          <p className={styles.heroSub}>{t.hero.sub}</p>
-          <div className={styles.heroBtns}>
-            <a href="#platforms" className={styles.btnPrimary}>{t.hero.cta1}</a>
-            <a href={`/${locale}/fleet`} className={styles.btnOutline}>{t.hero.cta2}</a>
+        <div className={styles.heroBottomRow}>
+          <span className={styles.heroPill}>
+            {t.hero.pillPrefix}
+            <span className={styles.heroPillDot}>·</span>
+            <a
+              href="https://turo.com/us/en/drivers/49282472"
+              className={styles.heroPillLink}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t.hero.pillTuro}
+            </a>
+            <span className={styles.heroPillDot}>·</span>
+            <a
+              href="https://fr.getaround.com/users/5054364"
+              className={styles.heroPillLink}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t.hero.pillGetaround}
+            </a>
+            <span className={styles.heroPillDot}>·</span>
+            <a href={`/${locale}/fleet`} className={styles.heroPillLink}>
+              {t.hero.pillPrivate}
+            </a>
+          </span>
+          <div className={styles.heroContent}>
+            <h1 className={styles.heroTitle}>
+              {t.hero.title1}
+              <br />
+              <span className={styles.heroAccent}>{t.hero.title2}</span>
+            </h1>
           </div>
-        </div>
-        <div className={styles.heroCard} aria-hidden="true">
-          <div className={styles.heroCardInner}>
-            <div className={styles.heroStat}>
-              <span className={styles.heroStatNum}>{t.hero.stat1.num}</span>
-              <span className={styles.heroStatLabel}>{t.hero.stat1.label}</span>
+          <div className={styles.heroSecondary}>
+            <p className={styles.heroSub}>{t.hero.sub}</p>
+            <div className={styles.heroBtns}>
+              <a href="#platforms" className={styles.btnPrimary}>{t.hero.cta1}</a>
+              <a href={`/${locale}/fleet`} className={styles.btnOutline}>{t.hero.cta2}</a>
             </div>
-            <div className={styles.heroStatDivider} />
-            <div className={styles.heroStat}>
-              <span className={styles.heroStatNum}>{t.hero.stat2.num}</span>
-              <span className={styles.heroStatLabel}>{t.hero.stat2.label}</span>
-            </div>
-            <div className={styles.heroStatDivider} />
-            <div className={styles.heroStat}>
-              <span className={styles.heroStatNum}>{t.hero.stat3.num}</span>
-              <span className={styles.heroStatLabel}>{t.hero.stat3.label}</span>
+          </div>
+          <div className={styles.heroCard} aria-hidden="true">
+            <div className={styles.heroCardInner}>
+              <div className={styles.heroStat}>
+                <span className={styles.heroStatNum}>{t.hero.stat1.num}</span>
+                <span className={styles.heroStatLabel}>{t.hero.stat1.label}</span>
+              </div>
+              <div className={styles.heroStatDivider} />
+              <div className={styles.heroStat}>
+                <span className={styles.heroStatNum}>{t.hero.stat2.num}</span>
+                <span className={styles.heroStatLabel}>{t.hero.stat2.label}</span>
+              </div>
+              <div className={styles.heroStatDivider} />
+              <div className={styles.heroStat}>
+                <span className={styles.heroStatNum}>{t.hero.stat3.num}</span>
+                <span className={styles.heroStatLabel}>{t.hero.stat3.label}</span>
+              </div>
             </div>
           </div>
         </div>
