@@ -124,6 +124,7 @@ export default function VehicleWorkspaceLayout({ children }: { children: React.R
         {/* Vehicle identity strip */}
         <div className={styles.identity}>
 
+          <Link href={`/admin/fleet/${id}`} className={styles.identityLink} title="Vehicle details">
           {/* Photo */}
           {loading ? (
             <div className={styles.skeletonPhoto} />
@@ -181,6 +182,7 @@ export default function VehicleWorkspaceLayout({ children }: { children: React.R
               </>
             )}
           </div>
+          </Link>
 
           {/* Header actions */}
           {!loading && car && (

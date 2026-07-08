@@ -79,6 +79,19 @@
   font-size: 22px;
 }
 
+.identityLink {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.identityLink:hover .vehicleName {
+  text-decoration: underline;
+}
+
 .vehicleInfo {
   flex: 1;
   min-width: 0;

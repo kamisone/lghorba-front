@@ -230,7 +230,12 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
             <SourceBadge source={booking.source} />
           </div>
 
-          <div className={styles.modalCar}>
+          <Link
+            href={`/admin/fleet/${booking.carId}`}
+            className={`${styles.modalCar} ${styles.modalCarLink}`}
+            title="Vehicle details"
+            onClick={onClose}
+          >
             <div className={styles.modalCarThumb}>
               {booking.car?.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -243,7 +248,7 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
               <p className={styles.modalCarName}>{booking.car?.name ?? "—"}</p>
               <p className={styles.modalCarPlate}>{booking.car?.immatriculation ?? "—"}</p>
             </div>
-          </div>
+          </Link>
 
           <div className={styles.priceSummary}>
             <div className={styles.priceRow}>
@@ -945,7 +950,12 @@ export default function AdminBookings() {
                       onKeyDown={e => e.key === "Enter" && openBookingDetail(b)}
                     >
                       <td>
-                        <div className={styles.carCell}>
+                        <Link
+                          href={`/admin/fleet/${b.carId}`}
+                          className={`${styles.carCell} ${styles.carCellLink}`}
+                          title="Vehicle details"
+                          onClick={e => e.stopPropagation()}
+                        >
                           <div className={styles.carThumb}>
                             {b.car?.photo ? (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -955,7 +965,7 @@ export default function AdminBookings() {
                             )}
                           </div>
                           <span className={styles.carName}>{b.car?.name ?? "—"}</span>
-                        </div>
+                        </Link>
                       </td>
                       <td className={styles.mono}>{b.car?.immatriculation ?? "—"}</td>
                       <td className={styles.dateCell}>{fmtDT(b.startDateTime, tz)}</td>
