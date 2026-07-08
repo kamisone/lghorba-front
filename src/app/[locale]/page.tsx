@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
-import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import FleetCarousel, { type CarouselCar } from "@/components/FleetCarousel";
 import ResponsiveHeroVideo from "@/components/ResponsiveHeroVideo";
 import CarSearchForm from "@/components/CarSearchForm";
@@ -41,21 +40,19 @@ async function getPublicCars(locale: string): Promise<CarouselCar[]> {
     if (!res.ok) return [];
     const cars: CarouselCar[] = await res.json();
 
+    // nextAvailableDate comes from the API (revalidated via the "cars" tag)
     return Promise.all(
       cars.map(async (car) => {
         try {
-          const [photos, nextAvailableDate] = await Promise.all([
-            fetch(`${API_SERVER}/public/cars/${car.id}/photos`, {
-              cache: "force-cache",
-              next: { tags: [`car-photos-${car.id}`] },
-            })
-              .then(r => r.ok ? r.json() as Promise<{ id: string }[]> : [])
-              .catch(() => [] as { id: string }[]),
-            car.isAvailable ? Promise.resolve(null) : probeNextAvailableDate(car.id),
-          ]);
-          return { ...car, photoIds: (photos as { id: string }[]).map(p => p.id), nextAvailableDate };
+          const photos = await fetch(`${API_SERVER}/public/cars/${car.id}/photos`, {
+            cache: "force-cache",
+            next: { tags: [`car-photos-${car.id}`] },
+          })
+            .then(r => r.ok ? r.json() as Promise<{ id: string }[]> : [])
+            .catch(() => [] as { id: string }[]);
+          return { ...car, photoIds: photos.map(p => p.id) };
         } catch {
-          return { ...car, photoIds: [], nextAvailableDate: null };
+          return { ...car, photoIds: [] };
         }
       }),
     );
@@ -210,6 +207,7 @@ export default async function LandingPage({ params }: { params: { locale: string
             title:          t.featuredFleet.title,
             availableToday: t.fleet.availableToday,
             availableFrom:  t.fleet.availableFrom,
+            currentlyUnavailable: t.fleet.currentlyUnavailable,
             viewDetails:    t.carDetail.viewDetails,
             seats:          t.featuredFleet.seats,
             prevVehicles:   t.featuredFleet.prevVehicles,

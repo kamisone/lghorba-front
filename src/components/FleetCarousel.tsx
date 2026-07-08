@@ -28,6 +28,7 @@ interface Props {
     title:        string;
     availableToday: string;
     availableFrom:  string;
+    currentlyUnavailable: string;
     viewDetails:  string;
     seats:        string;
     prevVehicles: string;
@@ -214,7 +215,7 @@ export default function FleetCarousel({ cars, locale, labels }: Props) {
               ? labels.availableToday
               : car.nextAvailableDate
                 ? `${labels.availableFrom} ${new Date(car.nextAvailableDate + "T00:00:00Z").toLocaleDateString(locale, { day: "numeric", month: "short", timeZone: "UTC" })}`
-                : labels.availableFrom;
+                : labels.currentlyUnavailable;
 
             return (
             <div

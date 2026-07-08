@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { getTranslations } from "@/lib/i18n";
-import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import styles from "./fleet.module.css";
 import FleetGrid, { type FleetCar } from "./FleetGrid";
 import CarCard from "./CarCard";
@@ -20,15 +19,9 @@ async function getCars(lang: string): Promise<PublicCar[]> {
       { cache: "force-cache", next: { tags: ["cars"] } },
     );
     if (!res.ok) return [];
-    const cars: PublicCar[] = await res.json();
-
-    return Promise.all(
-      cars.map(async (car) => {
-        if (car.isAvailable) return car;
-        const nextAvailableDate = await probeNextAvailableDate(car.id).catch(() => null);
-        return { ...car, nextAvailableDate };
-      }),
-    );
+    // nextAvailableDate is computed by the API; the "cars" tag is revalidated
+    // on booking and availability-block mutations, so it stays fresh.
+    return res.json();
   } catch {
     return [];
   }

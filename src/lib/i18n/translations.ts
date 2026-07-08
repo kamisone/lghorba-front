@@ -86,6 +86,7 @@ export const en = {
     rented: "Rented",
     availableToday: "Available today",
     availableFrom: "Available from",
+    currentlyUnavailable: "Currently unavailable",
     city: {
       type: "City car",
       desc: "Compact & fuel-efficient. Perfect for urban trips and daily use.",
@@ -1097,6 +1098,7 @@ export const fr: Translations = {
     rented: "Loué",
     availableToday: "Disponible aujourd'hui",
     availableFrom: "Disponible à partir du",
+    currentlyUnavailable: "Indisponible actuellement",
     city: {
       type: "Citadine",
       desc: "Compacte et économique. Parfaite pour les trajets urbains et le quotidien.",

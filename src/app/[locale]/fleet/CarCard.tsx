@@ -20,7 +20,7 @@ export default function CarCard({ car, locale }: Props) {
         locale,
         { day: "numeric", month: "short", timeZone: "UTC" },
       )}`
-    : t.fleet.availableFrom;
+    : t.fleet.currentlyUnavailable;
 
   return (
     <Link href={`/${locale}/fleet/${car.id}`} className={styles.card}>
