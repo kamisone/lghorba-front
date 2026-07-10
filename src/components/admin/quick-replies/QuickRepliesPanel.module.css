@@ -1,0 +1,106 @@
+.panel { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Header ── */
+.header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.title { font-size: 17px; font-weight: 700; color: var(--color-text-heading, #001829); margin: 0 0 3px; }
+.subtitle { font-size: 12px; color: var(--color-text-muted, #64748b); margin: 0; }
+
+.manageLink {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px;
+  border: 1.5px solid var(--color-border, #e2e8f0);
+  background: #fff; font-size: 12px; font-weight: 600;
+  color: #475569; text-decoration: none; white-space: nowrap;
+}
+.manageLink:hover { border-color: #94a3b8; color: #0f172a; }
+
+/* ── Filters ── */
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+.searchWrap { position: relative; display: flex; align-items: center; }
+.searchIcon { position: absolute; left: 10px; color: #94a3b8; pointer-events: none; }
+.searchInput {
+  padding: 7px 30px 7px 32px;
+  border: 1.5px solid var(--color-border, #e2e8f0); border-radius: 8px;
+  font-size: 13px; color: var(--color-text-primary, #1e293b);
+  min-width: 230px; outline: none;
+}
+.searchInput:focus { border-color: var(--color-admin-primary, #001829); }
+.searchClear {
+  position: absolute; right: 8px;
+  background: none; border: none; cursor: pointer;
+  color: #94a3b8; display: flex; padding: 2px; border-radius: 4px;
+}
+.searchClear:hover { color: #0f172a; background: #f1f5f9; }
+
+.categoryChips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  padding: 4px 13px; border-radius: 20px; border: 1.5px solid var(--color-border, #e2e8f0);
+  background: #fff; font-size: 12px; font-weight: 500; color: #64748b; cursor: pointer;
+}
+.chip:hover { border-color: #94a3b8; }
+.chipActive { background: var(--color-admin-primary, #001829); border-color: var(--color-admin-primary, #001829); color: #fff; }
+
+/* ── List ── */
+.list { display: flex; flex-direction: column; gap: 10px; }
+
+.card {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: #fff; border: 1px solid var(--color-border, #e2e8f0); border-radius: 12px;
+  padding: 14px 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover { border-color: #cbd5e1; box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05); }
+
+.cardMain { flex: 1; min-width: 0; }
+.cardHead { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+.cardTitle { font-size: 13.5px; font-weight: 600; color: var(--color-text-heading, #001829); margin: 0; }
+.categoryBadge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 10.5px; font-weight: 600; }
+
+.cardBody { font-size: 13px; color: #475569; line-height: 1.55; margin: 0; white-space: pre-line; word-break: break-word; }
+
+.cardAction { flex-shrink: 0; }
+
+@media (max-width: 560px) {
+  .card { flex-direction: column; gap: 10px; }
+  .cardAction { align-self: flex-end; }
+  .searchWrap, .searchInput { width: 100%; min-width: 0; }
+}
+
+/* ── Empty ── */
+.empty {
+  text-align: center; padding: 50px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: #fff; border: 1px dashed var(--color-border, #e2e8f0); border-radius: 12px;
+}
+.emptyIcon { color: #cbd5e1; }
+.emptyTitle { font-size: 14px; font-weight: 600; color: var(--color-text-heading, #001829); margin: 0; }
+.emptyText { font-size: 13px; color: #64748b; margin: 0 0 6px; max-width: 380px; line-height: 1.55; }
+.emptyCta {
+  display: inline-flex; padding: 8px 18px; border-radius: 8px;
+  background: var(--color-admin-primary, #001829); color: #fff;
+  font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.emptyCta:hover { opacity: 0.9; }
+.retryBtn {
+  padding: 7px 16px; border-radius: 8px;
+  border: 1.5px solid var(--color-border, #e2e8f0); background: #fff;
+  font-size: 12px; font-weight: 500; color: #475569; cursor: pointer;
+}
+.retryBtn:hover { background: #f8fafc; }
+
+/* ── Skeletons ── */
+.skeletonCard {
+  background: #fff; border: 1px solid var(--color-border, #e2e8f0); border-radius: 12px;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 9px;
+}
+.skeletonLine {
+  height: 11px; border-radius: 6px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

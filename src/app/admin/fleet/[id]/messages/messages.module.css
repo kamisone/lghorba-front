@@ -1,0 +1,34 @@
+.page { padding: 24px; max-width: 960px; display: flex; flex-direction: column; gap: 16px; }
+
+@media (max-width: 640px) {
+  .page { padding: 16px; }
+}
+
+.subTabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  padding-bottom: 0;
+}
+
+.subTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.subTab:hover { color: #0f172a; }
+
+.subTabActive {
+  color: var(--color-admin-primary, #001829);
+  font-weight: 600;
+  border-bottom-color: var(--color-admin-primary, #001829);
+}

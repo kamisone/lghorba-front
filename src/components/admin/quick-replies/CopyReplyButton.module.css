@@ -1,0 +1,34 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.solid {
+  border: none;
+  background: var(--color-admin-primary, #001829);
+  color: #fff;
+}
+.solid:hover { opacity: 0.9; }
+
+.ghost {
+  border: 1.5px solid var(--color-border, #e2e8f0);
+  background: #fff;
+  color: #475569;
+}
+.ghost:hover { border-color: #94a3b8; color: #0f172a; }
+
+.copied,
+.copied:hover {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #16a34a;
+  opacity: 1;
+}

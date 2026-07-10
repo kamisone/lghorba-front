@@ -39,6 +39,7 @@ const HEALTH_LABEL: Record<HealthStatus, string> = {
 const TABS: { segment: string; label: string; icon: React.ReactNode }[] = [
   { segment: "management",  label: "Management",  icon: "⚙" },
   { segment: "rent",        label: "Rent",        icon: "📅" },
+  { segment: "messages",    label: "Messages",    icon: "💬" },
   { segment: "maintenance", label: "Maintenance", icon: "🔧" },
   { segment: "inspections", label: "Inspections", icon: "🔍" },
   { segment: "incidents",   label: "Incidents",   icon: <AlertTriangle size={16} strokeWidth={1.75} /> },
