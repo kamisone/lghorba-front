@@ -6,6 +6,9 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import ShopProductDetail from "./ShopProductDetail";
 import RelatedSection from "./RelatedSection";
+import StorySideGallery, { StoryGalleryItem } from "./StorySideGallery";
+import StoryNarrativeGallery from "./StoryNarrativeGallery";
+import storyStyles from "./StoryGallery.module.css";
 import RelatedProductsSkeleton from "@/components/shop/RelatedProductsSkeleton";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./ProductDetail.module.css";
@@ -130,6 +133,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   // FAQPage JSON-LD — backend already filters to active, non-empty FAQs
   const faqs: Array<{ question: string; answer: string }> = product.faqs ?? [];
+
+  // Story Gallery — backend already filters to active items with resolved URLs
+  const storyGallery: Array<StoryGalleryItem & { location: "side" | "narrative" }> = product.storyGallery ?? [];
+  const sideStory      = storyGallery.filter(s => s.location === "side");
+  const narrativeStory = storyGallery.filter(s => s.location === "narrative");
   const faqJsonLd = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -173,22 +181,33 @@ export default async function ProductPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {faqs.length > 0 && (
-        <div className={styles.faqSectionFull}>
-          <h2>{t.faqTitle}</h2>
-          <div className={styles.faqList}>
-            {faqs.map((faq, i) => (
-              <details key={i} className={styles.faqItem}>
-                <summary className={styles.faqToggle}>
-                  <span className={styles.faqQuestion}>{faq.question}</span>
-                  <span className={styles.faqChevron} aria-hidden="true" />
-                </summary>
-                <div className={styles.faqAnswer}>{faq.answer}</div>
-              </details>
-            ))}
+      {(faqs.length > 0 || sideStory.length > 0) && (() => {
+        const faqBlock = faqs.length > 0 && (
+          <>
+            <h2>{t.faqTitle}</h2>
+            <div className={styles.faqList}>
+              {faqs.map((faq, i) => (
+                <details key={i} className={styles.faqItem}>
+                  <summary className={styles.faqToggle}>
+                    <span className={styles.faqQuestion}>{faq.question}</span>
+                    <span className={styles.faqChevron} aria-hidden="true" />
+                  </summary>
+                  <div className={styles.faqAnswer}>{faq.answer}</div>
+                </details>
+              ))}
+            </div>
+          </>
+        );
+        // Location 1 — Creative Side Gallery sits to the right of the FAQ
+        return sideStory.length > 0 ? (
+          <div className={storyStyles.faqStoryRow}>
+            {faqBlock && <div className={storyStyles.faqStoryCol}>{faqBlock}</div>}
+            <StorySideGallery items={sideStory} ariaLabel={t.storySideAria} />
           </div>
-        </div>
-      )}
+        ) : (
+          <div className={styles.faqSectionFull}>{faqBlock}</div>
+        );
+      })()}
 
       {product.documents?.length > 0 && (
         <div className={styles.documentsSectionFull}>
@@ -217,6 +236,15 @@ export default async function ProductPage({ params, searchParams }: Props) {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Location 2 — Narrative Gallery, after all product sections */}
+      {narrativeStory.length > 0 && (
+        <StoryNarrativeGallery
+          items={narrativeStory}
+          ariaLabel={t.storyNarrativeAria}
+          overline={product.storyNarrativeTitle}
+        />
       )}
 
       <Suspense fallback={<RelatedProductsSkeleton />}>

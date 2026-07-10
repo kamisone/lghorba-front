@@ -8,13 +8,14 @@ import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/adm
 import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
 import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
 import ProductDocumentsManager, { ProductDocument } from "@/components/admin/shop/ProductDocumentsManager";
+import ProductStoryGalleryManager, { ProductStoryItem, ResolvedProductStoryItem } from "@/components/admin/shop/ProductStoryGalleryManager";
 import CollapsibleSection from "@/components/admin/shop/CollapsibleSection";
 import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
-import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette } from "lucide-react";
+import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,8 @@ interface Product {
   trustBadges: ProductTrustBadge[];
   faqs: ProductFaq[];
   documents: ProductDocument[];
+  storyGallery: ResolvedProductStoryItem[];
+  storyNarrativeTitle: string | null;
   primaryCategoryId: string | null;
   categories: Array<{ id: string; name: string }>;
   variants: DefaultVariant[];
@@ -92,6 +95,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [trustBadges, setTrustBadges] = useState<ProductTrustBadge[]>([]);
   const [faqs, setFaqs] = useState<ProductFaq[]>([]);
   const [documents, setDocuments] = useState<ProductDocument[]>([]);
+  const [storyGallery, setStoryGallery] = useState<ProductStoryItem[]>([]);
+  const [storyNarrativeTitle, setStoryNarrativeTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
@@ -135,6 +140,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setTrustBadges(p.trustBadges ?? []);
       setFaqs(p.faqs ?? []);
       setDocuments(p.documents ?? []);
+      setStoryGallery(p.storyGallery ?? []);
+      setStoryNarrativeTitle(p.storyNarrativeTitle ?? "");
       setCategories(Array.isArray(cats) ? cats : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
       setProductAttrs(Array.isArray(prodAttrs) ? prodAttrs : []);
@@ -320,6 +327,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         trustBadges,
         faqs,
         documents,
+        storyGallery,
+        storyNarrativeTitle: storyNarrativeTitle || null,
         ...(basePriceCents !== undefined ? { basePriceCents } : {}),
         compareAtPriceCents,
       }),
@@ -334,7 +343,10 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:title`, `trustBadge:${b.id}:subtitle`]);
       const faqFields = faqs.flatMap(f => [`faq:${f.id}:question`, `faq:${f.id}:answer`]);
       const documentFields = documents.map(d => `document:${d.id}:title`);
-      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields]);
+      const storyItemFields = storyGallery
+        .filter(s => s.location === "narrative")
+        .flatMap(s => [`storyItem:${s.id}:title`, `storyItem:${s.id}:description`]);
+      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', 'storyNarrativeTitle', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields, ...storyItemFields]);
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
@@ -342,6 +354,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setTrustBadges(p.trustBadges ?? []);
       setFaqs(p.faqs ?? []);
       setDocuments(p.documents ?? []);
+      setStoryGallery(p.storyGallery ?? []);
+      setStoryNarrativeTitle(p.storyNarrativeTitle ?? "");
       toast.success("Changes saved");
     }
     setSaving(false);
@@ -572,6 +586,25 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             {/* Documents */}
             <CollapsibleSection icon={<FileText size={14} strokeWidth={1.75} />} title="Documents (PDF)">
               <ProductDocumentsManager productId={params.id} documents={documents} onChange={setDocuments} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
+
+            {/* Story Gallery */}
+            <CollapsibleSection icon={<GalleryHorizontalEnd size={14} strokeWidth={1.75} />} title="Story Gallery">
+              <div style={{ marginBottom: 20 }}>
+                <BilingualField
+                  label="Narrative section title"
+                  frValue={storyNarrativeTitle}
+                  frOnChange={setStoryNarrativeTitle}
+                  frPlaceholder="e.g. L'histoire"
+                  enValue={enValues.storyNarrativeTitle ?? ""}
+                  enOnChange={v => setEn("storyNarrativeTitle", v)}
+                  enPlaceholder="e.g. The story"
+                />
+                <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 6 }}>
+                  Shown above the Narrative Gallery on the product page. Leave empty to hide it.
+                </p>
+              </div>
+              <ProductStoryGalleryManager initialItems={product.storyGallery ?? []} onChange={setStoryGallery} enValues={enValues} setEn={setEn} />
             </CollapsibleSection>
 
             {/* ── Variations ── */}
