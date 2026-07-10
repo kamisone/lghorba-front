@@ -607,3 +607,68 @@
 }
 .stickyBuyBtn:disabled { opacity: .6; cursor: not-allowed; }
 .stickyBuyBtn:hover:not(:disabled) { background: var(--color-brand-mid); }
+
+/* ── Sticky out-of-stock notice — whole product unavailable ─────────────────
+   Same visual language as the listing's outOfStockBadge (dark translucent
+   pill), scaled up with an explanatory line. Sticks below the site header. */
+.oosStickyNotice {
+  position: sticky;
+  /* Follows the auto-hiding header: --header-offset is the header's measured
+     height while visible and 0px while hidden. Same duration/easing as the
+     header's slide so both move together. */
+  top: calc(var(--header-offset, 64px) + 10px);
+  transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 30;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 20px auto -8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  box-shadow: 0 12px 32px -12px rgba(0, 12, 24, 0.5);
+}
+
+.oosStickyIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.oosStickyCopy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.oosStickyTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.oosStickyText {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+@media (max-width: 900px) {
+  .oosStickyNotice {
+    top: calc(var(--header-offset, 64px) + 8px);
+    margin: 12px auto -4px;
+    padding: 9px 16px;
+    gap: 10px;
+  }
+  /* Small screens: title only, no explanatory line */
+  .oosStickyText { display: none; }
+}

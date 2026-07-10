@@ -11,7 +11,7 @@ import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionB
 import { getTranslations } from "@/lib/i18n";
 import { formatStockError, stockCheckMessage } from "@/lib/shop/stockError";
 import { getTrustBadgeIcon } from "@/lib/shop/trustBadgeIcons";
-import { Lock, Truck, RotateCcw } from "lucide-react";
+import { Lock, Truck, RotateCcw, PackageX } from "lucide-react";
 import styles from "./ProductDetail.module.css";
 
 interface FlatVariant {
@@ -80,6 +80,8 @@ interface Product {
   documents: Array<{ id: string; title: string; url: string; originalFilename: string; sizeBytes: number }>;
   variants: FlatVariant[];
   categories: Array<{ name: string }>;
+  /** True when every variant's inventory is at 0 — same flag as the listing badge. */
+  outOfStock?: boolean;
 }
 
 interface ReviewStats { average: number; count: number }
@@ -279,6 +281,16 @@ export default function ShopProductDetail({
 
   const hasVariations = !!availabilityMatrix && availabilityMatrix.attributes.length > 0;
 
+  // Whole product unavailable: every purchasable variant is out of stock.
+  // Primary signal is the backend flag (same as the listing's outOfStock
+  // badge); the availability matrix doubles as a fallback. Drives the sticky
+  // notice and disables all buy CTAs up front.
+  const allOutOfStock =
+    product.outOfStock === true ||
+    (!!availabilityMatrix &&
+      availabilityMatrix.variants.length > 0 &&
+      availabilityMatrix.variants.every(v => !v.inStock));
+
   // Reset qty and cap whenever the active variant changes
   useEffect(() => {
     setQty(1);
@@ -339,7 +351,7 @@ export default function ShopProductDetail({
     scheduleStockCheck(next);
   }, [qty, scheduleStockCheck]);
 
-  const isOos         = resolveStatus === 'out_of_stock';
+  const isOos         = resolveStatus === 'out_of_stock' || allOutOfStock;
   const isUnavailable = resolveStatus === 'unavailable';
   const isBlocked     = isOos || isUnavailable;
   const verifying     = resolveStatus === 'loading' || stockChecking;
@@ -372,6 +384,19 @@ export default function ShopProductDetail({
     : null;
 
   return (
+    <>
+    {/* Sticky notice — whole product out of stock, no variation available */}
+    {allOutOfStock && (
+      <div className={styles.oosStickyNotice} role="status">
+        <span className={styles.oosStickyIcon} aria-hidden="true">
+          <PackageX size={18} strokeWidth={1.75} />
+        </span>
+        <span className={styles.oosStickyCopy}>
+          <span className={styles.oosStickyTitle}>{t.productOosTitle}</span>
+          <span className={styles.oosStickyText}>{t.productOosText}</span>
+        </span>
+      </div>
+    )}
     <div className={styles.container}>
       {/* Gallery */}
       <div className={styles.galleryCol} ref={galleryColRef}>
@@ -498,13 +523,15 @@ export default function ShopProductDetail({
           </button>
         </div>
 
-        <button
-          onClick={handleBuyNow}
-          disabled={mutating || buyingNow || !activeId || isBlocked || verifying}
-          className={styles.buyNowBtn}
-        >
-          {buyingNow ? t.redirecting : t.buyNow}
-        </button>
+        {!allOutOfStock && (
+          <button
+            onClick={handleBuyNow}
+            disabled={mutating || buyingNow || !activeId || isBlocked || verifying}
+            className={styles.buyNowBtn}
+          >
+            {buyingNow ? t.redirecting : t.buyNow}
+          </button>
+        )}
 
         {buyError && <p className={styles.addError}>{buyError}</p>}
 
@@ -551,10 +578,11 @@ export default function ShopProductDetail({
 
       </div>
 
-      {/* ── Sticky buy bar — mobile/tablet only ─────────────────────────────── */}
+      {/* ── Sticky buy bar — mobile/tablet only, hidden when the whole product
+             is out of stock (the sticky notice communicates the status) ────── */}
       <div
-        className={`${styles.stickyBuyBar} ${showStickyBar ? styles.stickyBuyBarVisible : ""}`}
-        aria-hidden={!showStickyBar}
+        className={`${styles.stickyBuyBar} ${showStickyBar && !allOutOfStock ? styles.stickyBuyBarVisible : ""}`}
+        aria-hidden={!showStickyBar || allOutOfStock}
       >
         {/* Row 1: price + selected variant title + stock status */}
         <div className={styles.stickyMeta}>
@@ -609,5 +637,6 @@ export default function ShopProductDetail({
         </div>
       </div>
     </div>
+    </>
   );
 }

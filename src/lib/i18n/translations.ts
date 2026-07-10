@@ -899,6 +899,8 @@ export const en = {
     // variant availability
     stockAvailable: "In stock",
     stockOutOfStock: "Out of stock",
+    productOosTitle: "Currently out of stock",
+    productOosText: "This product is temporarily unavailable. Check back soon.",
     stockUnavailable: "Combination not available",
     stockChecking: "Checking availability…",
     insufficientStock: "Not enough stock available",
@@ -1920,6 +1922,8 @@ export const fr: Translations = {
     // variant availability
     stockAvailable: "En stock",
     stockOutOfStock: "Rupture de stock",
+    productOosTitle: "Actuellement en rupture de stock",
+    productOosText: "Ce produit est temporairement indisponible. Revenez bientôt.",
     stockUnavailable: "Combinaison non disponible",
     stockChecking: "Vérification de disponibilité…",
     insufficientStock: "Stock insuffisant",

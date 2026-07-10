@@ -7,6 +7,7 @@ export default function ScrollAwareHeader({ children }: { children: React.ReactN
   const [hidden,   setHidden]   = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const lastY = useRef(0);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     lastY.current = window.scrollY;
@@ -28,15 +29,23 @@ export default function ScrollAwareHeader({ children }: { children: React.ReactN
 
   // Keep --header-offset in sync so sticky panels below the header
   // can transition their `top` value alongside the header hide/show animation.
+  // Uses the measured height — the commerce header is taller than the 64px
+  // main header (two rows), and both render through this component.
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--header-offset",
-      hidden ? "0px" : "64px",
-    );
+    const setOffset = () => {
+      document.documentElement.style.setProperty(
+        "--header-offset",
+        hidden ? "0px" : `${headerRef.current?.offsetHeight ?? 64}px`,
+      );
+    };
+    setOffset();
+    window.addEventListener("resize", setOffset, { passive: true });
+    return () => window.removeEventListener("resize", setOffset);
   }, [hidden]);
 
   return (
     <header
+      ref={headerRef}
       className={[
         styles.header,
         hidden   ? styles.headerHidden : "",
