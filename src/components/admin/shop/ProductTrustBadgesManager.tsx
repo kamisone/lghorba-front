@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { GripVertical, Trash2, Plus } from "lucide-react";
 import BilingualField from "@/components/admin/BilingualField";
-import { TRUST_BADGE_ICON_OPTIONS, getTrustBadgeIcon, type TrustBadgeIconName } from "@/lib/shop/trustBadgeIcons";
+import TrustBadgeIconSelect from "./TrustBadgeIconSelect";
+import { type TrustBadgeIconName } from "@/lib/shop/trustBadgeIcons";
 import styles from "./ProductTrustBadgesManager.module.css";
 
 /** A small icon+title trust signal shown near the PDP buy box (e.g. "Secure checkout"). */
@@ -65,7 +66,6 @@ export default function ProductTrustBadgesManager({ badges, onChange, enValues, 
 
       <div className={styles.list}>
         {badges.map((badge, i) => {
-          const Icon = getTrustBadgeIcon(badge.icon);
           return (
             <div
               key={badge.id}
@@ -78,14 +78,10 @@ export default function ProductTrustBadgesManager({ badges, onChange, enValues, 
             >
               <div className={styles.cardHead}>
                 <span className={styles.dragHandle}><GripVertical size={16} /></span>
-                <span className={styles.iconPreview}><Icon size={15} /></span>
-                <select
-                  className={styles.select}
+                <TrustBadgeIconSelect
                   value={badge.icon}
-                  onChange={e => update(i, { icon: e.target.value as TrustBadgeIconName })}
-                >
-                  {TRUST_BADGE_ICON_OPTIONS.map(opt => <option key={opt.name} value={opt.name}>{opt.name}</option>)}
-                </select>
+                  onChange={icon => update(i, { icon })}
+                />
                 <button type="button" className={styles.removeBtn} onClick={() => remove(i)} title="Remove">
                   <Trash2 size={15} />
                 </button>

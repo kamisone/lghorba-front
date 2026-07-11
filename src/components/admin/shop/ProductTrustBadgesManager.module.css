@@ -35,30 +35,6 @@
   flex-shrink: 0;
 }
 
-.iconPreview {
-  width: 28px; height: 28px; border-radius: 8px;
-  border: 1.5px solid var(--color-border);
-  background: var(--color-surface);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--color-text-primary);
-  flex-shrink: 0;
-}
-
-.select {
-  flex: 1;
-  padding: 7px 10px;
-  border: 1.5px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  background: var(--color-white);
-}
-.select:focus {
-  outline: none;
-  border-color: var(--color-admin-secondary);
-}
-
 .removeBtn {
   width: 28px; height: 28px; border-radius: 8px;
   border: none; background: transparent; color: #ef4444;
