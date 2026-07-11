@@ -139,6 +139,8 @@ export default function ReelsViewer({ videos, initialIndex = 0, onClose, ariaLab
             }}
           />
 
+          {active.title?.trim() && <span className={styles.frameBadge}>{active.title}</span>}
+
           {!playing && (
             <button
               type="button"
@@ -150,9 +152,8 @@ export default function ReelsViewer({ videos, initialIndex = 0, onClose, ariaLab
             </button>
           )}
 
-          {/* Bottom chrome: progress + controls + caption */}
+          {/* Bottom chrome: progress + controls */}
           <div className={styles.bottomChrome}>
-            {active.title?.trim() && <p className={styles.caption}>{active.title}</p>}
             <div className={styles.progressTrack} aria-hidden="true">
               <div className={styles.progressFill} style={{ width: `${progress * 100}%` }} />
             </div>

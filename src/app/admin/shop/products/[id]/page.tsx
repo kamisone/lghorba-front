@@ -355,7 +355,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       const storyItemFields = storyGallery
         .filter(s => s.location === "narrative")
         .flatMap(s => [`storyItem:${s.id}:title`, `storyItem:${s.id}:description`]);
-      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', 'storyNarrativeTitle', 'socialVideosTitle', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields, ...storyItemFields]);
+      const socialVideoFields = socialVideos.map(v => `socialVideo:${v.id}:title`);
+      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', 'storyNarrativeTitle', 'socialVideosTitle', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields, ...storyItemFields, ...socialVideoFields]);
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
@@ -634,7 +635,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   Shown above the social videos carousel. Leave empty to use the default localized title.
                 </p>
               </div>
-              <ProductSocialVideosManager initialItems={product.socialVideos ?? []} onChange={setSocialVideos} />
+              <ProductSocialVideosManager initialItems={product.socialVideos ?? []} onChange={setSocialVideos} enValues={enValues} setEn={setEn} />
             </CollapsibleSection>
 
             {/* ── Variations ── */}

@@ -78,13 +78,37 @@
   gap: 10px;
 }
 
-.caption {
-  margin: 0;
+/* Top-left title badge — matches the carousel card badge */
+.frameBadge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  max-width: calc(100% - 28px);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 13px 5px 11px;
+  border-radius: 999px;
+  background: rgba(0, 10, 18, .58);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, .22);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 1.4;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  letter-spacing: .01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+  z-index: 1;
+}
+.frameBadge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(141, 194, 32);
+  flex-shrink: 0;
 }
 
 .progressTrack {

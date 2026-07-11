@@ -113,7 +113,7 @@ function ReelCard({ video, suspended, onOpen }: {
         <span className={styles.cardDuration}>{formatDuration(video.durationSeconds)}</span>
       )}
 
-      {video.title?.trim() && <span className={styles.cardTitle}>{video.title}</span>}
+      {video.title?.trim() && <span className={styles.cardBadge}>{video.title}</span>}
     </div>
   );
 }

@@ -126,20 +126,36 @@
   font-weight: 600;
 }
 
-.cardTitle {
+/* Top-left title badge — frosted pill with a brand accent dot */
+.cardBadge {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 10px;
+  top: 10px;
+  left: 10px;
+  max-width: calc(100% - 70px); /* keep clear of the duration pill */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px 4px 9px;
+  border-radius: 999px;
+  background: rgba(0, 10, 18, .58);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, .22);
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  letter-spacing: .01em;
+  white-space: nowrap;
   overflow: hidden;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+.cardBadge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(141, 194, 32);
+  flex-shrink: 0;
 }
 
 @media (max-width: 640px) {

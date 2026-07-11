@@ -43,13 +43,16 @@ const MAX_VIDEOS = 10;
 interface Props {
   initialItems: ResolvedProductSocialVideo[];
   onChange: (items: ProductSocialVideo[]) => void;
+  /** EN translations map — badge titles live under `socialVideo:{id}:title`. */
+  enValues: Record<string, string>;
+  setEn: (field: string, value: string) => void;
 }
 
 /**
  * Admin manager for the PDP "Social Videos" reels section: pick videos from
  * the media library, drag to reorder, remove. Order = display order.
  */
-export default function ProductSocialVideosManager({ initialItems, onChange }: Props) {
+export default function ProductSocialVideosManager({ initialItems, onChange, enValues, setEn }: Props) {
   const [items, setItems] = useState<ResolvedProductSocialVideo[]>(initialItems);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -83,6 +86,10 @@ export default function ProductSocialVideosManager({ initialItems, onChange }: P
     notify(items.filter((_, i) => i !== index));
   }
 
+  function updateTitle(index: number, title: string) {
+    notify(items.map((v, i) => (i === index ? { ...v, title } : v)));
+  }
+
   function handleDrop(targetIndex: number) {
     if (dragIndex === null || dragIndex === targetIndex) { setDragIndex(null); return; }
     const next = [...items];
@@ -103,41 +110,70 @@ export default function ProductSocialVideosManager({ initialItems, onChange }: P
 
       <div className={styles.grid}>
         {items.map((item, i) => (
-          <div
-            key={item.id}
-            className={`${styles.tile} ${dragIndex === i ? styles.tileDragging : ""}`}
-            draggable
-            onDragStart={() => setDragIndex(i)}
-            onDragOver={e => e.preventDefault()}
-            onDrop={() => handleDrop(i)}
-            onDragEnd={() => setDragIndex(null)}
-          >
-            {item.posterUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.posterUrl} alt="" className={styles.tileMedia} />
-            ) : (
-              // eslint-disable-next-line jsx-a11y/media-has-caption
-              <video src={item.url} className={styles.tileMedia} muted preload="metadata" />
-            )}
+          <div key={item.id} className={styles.gridItem}>
+            <div
+              className={`${styles.tile} ${dragIndex === i ? styles.tileDragging : ""}`}
+              draggable
+              onDragStart={() => setDragIndex(i)}
+              onDragOver={e => e.preventDefault()}
+              onDrop={() => handleDrop(i)}
+              onDragEnd={() => setDragIndex(null)}
+            >
+              {item.posterUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.posterUrl} alt="" className={styles.tileMedia} />
+              ) : (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <video src={item.url} className={styles.tileMedia} muted preload="metadata" />
+              )}
 
-            <span className={styles.orderBadge}>{i + 1}</span>
-            {item.durationSeconds != null && (
-              <span className={styles.durationBadge}>{formatDuration(item.durationSeconds)}</span>
-            )}
+              <span className={styles.orderBadge}>{i + 1}</span>
+              {item.durationSeconds != null && (
+                <span className={styles.durationBadge}>{formatDuration(item.durationSeconds)}</span>
+              )}
 
-            <div className={styles.tileActions}>
-              <span className={styles.dragHandle} title="Drag to reorder">
-                <GripVertical size={14} />
-              </span>
-              <button
-                type="button"
-                className={styles.removeBtn}
-                onClick={() => remove(i)}
-                title="Remove video"
-                aria-label="Remove video"
-              >
-                <Trash2 size={14} />
-              </button>
+              {/* Live preview of the badge shown on the storefront card */}
+              {item.title?.trim() && <span className={styles.titleBadgePreview}>{item.title}</span>}
+
+              <div className={styles.tileActions}>
+                <span className={styles.dragHandle} title="Drag to reorder">
+                  <GripVertical size={14} />
+                </span>
+                <button
+                  type="button"
+                  className={styles.removeBtn}
+                  onClick={() => remove(i)}
+                  title="Remove video"
+                  aria-label="Remove video"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.badgeFields}>
+              <label className={styles.badgeInputRow}>
+                <span aria-hidden="true">🇫🇷</span>
+                <input
+                  className={styles.badgeInput}
+                  value={item.title ?? ""}
+                  onChange={e => updateTitle(i, e.target.value)}
+                  placeholder="Badge (FR)"
+                  maxLength={60}
+                  aria-label="Badge title (French)"
+                />
+              </label>
+              <label className={styles.badgeInputRow}>
+                <span aria-hidden="true">🇬🇧</span>
+                <input
+                  className={styles.badgeInput}
+                  value={enValues[`socialVideo:${item.id}:title`] ?? ""}
+                  onChange={e => setEn(`socialVideo:${item.id}:title`, e.target.value)}
+                  placeholder="Badge (EN)"
+                  maxLength={60}
+                  aria-label="Badge title (English)"
+                />
+              </label>
             </div>
           </div>
         ))}
