@@ -58,12 +58,12 @@
 .sideCanvas::before {
   content: "";
   position: absolute;
-  inset: 8%;
-  border-radius: 50% 42% 55% 45% / 46% 52% 44% 54%;
+  inset: 2%;
+  border-radius: 50%;
   background:
-    radial-gradient(circle at 30% 25%, rgba(141, 194, 32, .14), transparent 62%),
-    radial-gradient(circle at 72% 70%, rgba(0, 92, 143, .12), transparent 60%);
-  filter: blur(6px);
+    radial-gradient(circle at 32% 28%, rgba(141, 194, 32, .16), transparent 60%),
+    radial-gradient(circle at 70% 68%, rgba(0, 92, 143, .14), transparent 58%);
+  filter: blur(32px);
   pointer-events: none;
 }
 
@@ -75,39 +75,54 @@
 
 /* Inner card: rotation + reveal + hover, independent of the parallax translate.
    No background/border/box-shadow — the drop-shadow on the image itself
-   follows the pictured object's outline. */
+   follows the pictured object's outline.
+   The reveal runs as a one-shot animation (staggered via inline animationDelay)
+   so this transition stays free for instant hover feedback. */
 .sideCard {
   margin: 0;
   width: 100%;
   position: relative;
   isolation: isolate; /* keeps the ::before glow behind the image but inside the card */
+  cursor: zoom-in;
   opacity: 0;
-  transform: rotate(var(--story-rotate, 0deg)) translateY(28px) scale(.94);
+  transform: rotate(var(--story-rotate, 0deg));
   transition:
-    opacity .7s cubic-bezier(.22, .61, .36, 1),
-    transform .7s cubic-bezier(.22, .61, .36, 1);
+    opacity .35s ease,
+    transform .4s cubic-bezier(.22, .61, .36, 1),
+    filter .35s ease;
 }
 
-/* Wide brand-colored glow behind the pictured object */
+/* Wide brand-colored glow behind the pictured object.
+   A fixed 1:1 circle centered on the card — the glow keeps the same shape
+   whatever the card's aspect ratio, instead of stretching with it. */
 .sideCard::before {
   content: "";
   position: absolute;
-  inset: -16%;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
   z-index: 0;
   border-radius: 50%;
   background: radial-gradient(
-    ellipse at 50% 55%,
-    rgba(141, 194, 32, .32) 0%,
-    rgba(0, 92, 143, .2) 42%,
-    transparent 72%
+    circle,
+    rgba(141, 194, 32, .30) 0%,
+    rgba(0, 92, 143, .18) 44%,
+    transparent 70%
   );
-  filter: blur(26px);
+  filter: blur(30px);
   opacity: .85;
   transition: opacity .3s ease;
   pointer-events: none;
 }
 
-.sideCanvasRevealed .sideCard:hover::before { opacity: 1; }
+.sideCard:focus-visible,
+.narrativeMedia:focus-visible {
+  outline: 2px solid rgba(141, 194, 32, .95);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
 
 .sideCard .img {
   filter:
@@ -117,18 +132,45 @@
 
 .sideCanvasRevealed .sideCard {
   opacity: 1;
-  transform: rotate(var(--story-rotate, 0deg));
+  animation: storySideReveal .7s cubic-bezier(.22, .61, .36, 1) backwards;
 }
 
-.sideCanvasRevealed .sideCard:hover {
-  transform: rotate(0deg) scale(1.03);
-  z-index: 10;
+@keyframes storySideReveal {
+  from {
+    opacity: 0;
+    transform: rotate(var(--story-rotate, 0deg)) translateY(28px) scale(.94);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--story-rotate, 0deg));
+  }
 }
 
-.sideCanvasRevealed .sideCard:hover .img {
-  filter:
-    drop-shadow(0 5px 10px rgba(0, 24, 41, .16))
-    drop-shadow(0 24px 40px rgba(0, 24, 41, .3));
+/* ── Desktop hover showcase ──
+   The hovered card straightens and zooms up large while the rest of the
+   composition steps back; hover-capable fine pointers only. */
+@media (hover: hover) and (pointer: fine) {
+  .sideCanvasRevealed .sideCard:hover {
+    transform: rotate(0deg) scale(1.45);
+  }
+
+  .sideCanvasRevealed .sideCard:hover::before { opacity: 1; }
+
+  /* Each slot is its own stacking context (inline z-index + will-change),
+     so the whole slot must be lifted — !important beats the inline z-index. */
+  .sideSlot:has(.sideCard:hover) { z-index: 30 !important; }
+
+  /* Recede the neighbours so the enlarged card owns the focus */
+  .sideCanvasRevealed:has(.sideCard:hover) .sideCard:not(:hover) {
+    opacity: .4;
+    filter: saturate(.8);
+  }
+
+  .sideCanvasRevealed .sideCard:hover .img {
+    filter:
+      drop-shadow(0 6px 12px rgba(0, 24, 41, .18))
+      drop-shadow(0 32px 56px rgba(0, 24, 41, .32));
+  }
 }
 
 /* ── FAQ + side gallery two-column row (used by the PDP page) ── */
@@ -225,6 +267,7 @@
   aspect-ratio: 4 / 3;
   position: relative;
   isolation: isolate;
+  cursor: zoom-in;
   opacity: 0;
   transform: translateX(-32px);
   transition:
@@ -330,7 +373,14 @@
   .narrativeRowReversed .narrativeMedia,
   .narrativeCopy { transform: none; }
 
+  .sideCanvasRevealed .sideCard { animation: none; }
+
   .sideCanvasRevealed .sideCard:hover { transform: rotate(var(--story-rotate, 0deg)); }
+
+  .sideCanvasRevealed:has(.sideCard:hover) .sideCard:not(:hover) {
+    opacity: 1;
+    filter: none;
+  }
 
   .imgShell { animation: none; }
 }

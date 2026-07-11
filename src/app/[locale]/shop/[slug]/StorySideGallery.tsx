@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import StoryLazyImage from "./StoryLazyImage";
+import ImageLightbox from "@/components/shop/ImageLightbox";
 import styles from "./StoryGallery.module.css";
 
 export interface StoryGalleryItem {
@@ -38,6 +39,7 @@ export default function StorySideGallery({ items, ariaLabel }: { items: StoryGal
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [revealed, setRevealed] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const shown = items.slice(0, SLOTS.length);
   const slots = shown.length <= 2 ? SLOTS_SMALL : SLOTS;
@@ -104,34 +106,56 @@ export default function StorySideGallery({ items, ariaLabel }: { items: StoryGal
   if (shown.length === 0) return null;
 
   return (
-    <div
-      ref={containerRef}
-      className={`${styles.sideCanvas} ${revealed ? styles.sideCanvasRevealed : ""}`}
-      role="group"
-      aria-label={ariaLabel}
-    >
-      {shown.map((item, i) => {
-        const slot = slots[i % slots.length];
-        return (
-          <div
-            key={item.id}
-            ref={node => { cardRefs.current[i] = node; }}
-            className={styles.sideSlot}
-            style={{ top: slot.top, left: slot.left, width: slot.width, zIndex: slot.z }}
-          >
-            <figure
-              className={styles.sideCard}
-              style={{
-                "--story-rotate": `${slot.rotate}deg`,
-                aspectRatio: slot.ratio,
-                transitionDelay: `${i * 90}ms`,
-              } as React.CSSProperties}
+    <>
+      <div
+        ref={containerRef}
+        className={`${styles.sideCanvas} ${revealed ? styles.sideCanvasRevealed : ""}`}
+        role="group"
+        aria-label={ariaLabel}
+      >
+        {shown.map((item, i) => {
+          const slot = slots[i % slots.length];
+          return (
+            <div
+              key={item.id}
+              ref={node => { cardRefs.current[i] = node; }}
+              className={styles.sideSlot}
+              style={{ top: slot.top, left: slot.left, width: slot.width, zIndex: slot.z }}
             >
-              <StoryLazyImage src={item.url} alt={item.altText ?? ""} />
-            </figure>
-          </div>
-        );
-      })}
-    </div>
+              <figure
+                className={styles.sideCard}
+                style={{
+                  "--story-rotate": `${slot.rotate}deg`,
+                  aspectRatio: slot.ratio,
+                  animationDelay: `${i * 90}ms`,
+                } as React.CSSProperties}
+                role="button"
+                tabIndex={0}
+                aria-haspopup="dialog"
+                aria-label={item.title?.trim() || item.altText || `${i + 1} / ${shown.length}`}
+                onClick={() => setLightboxIndex(i)}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setLightboxIndex(i);
+                  }
+                }}
+              >
+                <StoryLazyImage src={item.url} alt={item.altText ?? ""} />
+              </figure>
+            </div>
+          );
+        })}
+      </div>
+
+      {lightboxIndex !== null && (
+        <ImageLightbox
+          images={shown}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          ariaLabel={ariaLabel}
+        />
+      )}
+    </>
   );
 }

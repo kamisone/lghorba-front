@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import StoryLazyImage from "./StoryLazyImage";
+import ImageLightbox from "@/components/shop/ImageLightbox";
 import type { StoryGalleryItem } from "./StorySideGallery";
 import styles from "./StoryGallery.module.css";
 
@@ -12,7 +13,7 @@ import styles from "./StoryGallery.module.css";
  * rows, with a per-row scroll reveal.
  */
 
-function NarrativeRow({ item, index }: { item: StoryGalleryItem; index: number }) {
+function NarrativeRow({ item, index, onOpen }: { item: StoryGalleryItem; index: number; onOpen: () => void }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [revealed, setRevealed] = useState(false);
 
@@ -44,7 +45,20 @@ function NarrativeRow({ item, index }: { item: StoryGalleryItem; index: number }
         revealed ? styles.narrativeRowRevealed : "",
       ].join(" ")}
     >
-      <figure className={styles.narrativeMedia}>
+      <figure
+        className={styles.narrativeMedia}
+        role="button"
+        tabIndex={0}
+        aria-haspopup="dialog"
+        aria-label={item.title?.trim() || item.altText || `${index + 1}`}
+        onClick={onOpen}
+        onKeyDown={e => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onOpen();
+          }
+        }}
+      >
         <StoryLazyImage src={item.url} alt={item.altText ?? item.title ?? ""} />
       </figure>
 
@@ -64,6 +78,8 @@ export default function StoryNarrativeGallery({ items, ariaLabel, overline }: {
   /** Admin-managed, localized section heading — hidden when empty. */
   overline?: string | null;
 }) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
   if (items.length === 0) return null;
 
   return (
@@ -71,9 +87,18 @@ export default function StoryNarrativeGallery({ items, ariaLabel, overline }: {
       <div className={styles.narrativeInner}>
         {overline?.trim() && <h2 className={styles.narrativeOverline}>{overline}</h2>}
         {items.map((item, i) => (
-          <NarrativeRow key={item.id} item={item} index={i} />
+          <NarrativeRow key={item.id} item={item} index={i} onOpen={() => setLightboxIndex(i)} />
         ))}
       </div>
+
+      {lightboxIndex !== null && (
+        <ImageLightbox
+          images={items}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          ariaLabel={ariaLabel}
+        />
+      )}
     </section>
   );
 }
