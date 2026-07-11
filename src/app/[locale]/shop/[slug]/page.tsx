@@ -8,6 +8,7 @@ import ShopProductDetail from "./ShopProductDetail";
 import RelatedSection from "./RelatedSection";
 import StorySideGallery, { StoryGalleryItem } from "./StorySideGallery";
 import StoryNarrativeGallery from "./StoryNarrativeGallery";
+import SocialVideosCarousel, { SocialVideoItem } from "@/components/shop/SocialVideosCarousel";
 import storyStyles from "./StoryGallery.module.css";
 import RelatedProductsSkeleton from "@/components/shop/RelatedProductsSkeleton";
 import { getTranslations } from "@/lib/i18n";
@@ -136,6 +137,8 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   // Story Gallery — backend already filters to active items with resolved URLs
   const storyGallery: Array<StoryGalleryItem & { location: "side" | "narrative" }> = product.storyGallery ?? [];
+  // Social Videos — backend filters to active items and resolves HLS/mp4/poster URLs
+  const socialVideos: SocialVideoItem[] = product.socialVideos ?? [];
   const sideStory      = storyGallery.filter(s => s.location === "side");
   const narrativeStory = storyGallery.filter(s => s.location === "narrative");
   const faqJsonLd = faqs.length > 0 ? {
@@ -167,18 +170,27 @@ export default async function ProductPage({ params, searchParams }: Props) {
         initialVariantSlug={initialVariantSlug}
       />
 
+      {/* ── Social Videos — reels carousel above the FAQ row ── */}
+      {socialVideos.length > 0 && (
+        <SocialVideosCarousel
+          videos={socialVideos}
+          title={product.socialVideosTitle?.trim() || t.socialVideosTitle}
+          ariaLabel={t.socialVideosAria}
+        />
+      )}
+
       {(product.infoSections?.length > 0 || faqs.length > 0 || product.documents?.length > 0 || sideStory.length > 0) && (() => {
         const specsBlock = product.infoSections?.length > 0 && (
           <>
             <h2>{t.specificationsTitle}</h2>
-            <div className={styles.specsGrid}>
+            <dl className={styles.specsTable}>
               {product.infoSections.map((section: { id: string; label: string; value: string }) => (
-                <div key={section.id} className={styles.specCard}>
-                  <span className={styles.specCardLabel}>{section.label}</span>
-                  <span className={styles.specCardValue}>{section.value}</span>
+                <div key={section.id} className={styles.specsRow}>
+                  <dt className={styles.specsLabel}>{section.label}</dt>
+                  <dd className={styles.specsValue}>{section.value}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
           </>
         );
         const faqBlock = faqs.length > 0 && (

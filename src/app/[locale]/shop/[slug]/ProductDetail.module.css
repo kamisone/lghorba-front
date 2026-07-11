@@ -331,35 +331,48 @@
 .specsSectionFull { max-width: 1280px; margin: 48px auto 0; padding: 0 16px; }
 .specsSectionFull h2 { font-size: 20px; font-weight: 700; color: var(--color-text-heading); margin: 0 0 16px; }
 
-.specsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-}
-
-.specCard {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: var(--color-surface);
+/* Full-width label/value spec table: tinted label column, hairline row dividers */
+.specsTable {
+  width: 100%;
+  margin: 0;
   border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-white);
 }
 
-.specCardLabel {
+.specsRow {
+  display: grid;
+  grid-template-columns: minmax(160px, 280px) 1fr;
+}
+.specsRow + .specsRow { border-top: 1px solid var(--color-border); }
+
+.specsLabel {
+  padding: 13px 18px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-muted);
-  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
 }
 
-.specCardValue {
+.specsValue {
+  margin: 0;
+  padding: 13px 18px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
+  line-height: 1.6;
   color: var(--color-text-heading);
-  text-align: right;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 560px) {
+  .specsRow { grid-template-columns: minmax(110px, 38%) 1fr; }
+  .specsLabel { padding: 11px 12px; font-size: 12.5px; }
+  .specsValue { padding: 11px 12px; font-size: 13.5px; }
 }
 
 /* ── FAQ section ──────────────────────────────────────────────────────────── */

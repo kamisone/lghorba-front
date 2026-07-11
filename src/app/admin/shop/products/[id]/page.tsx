@@ -9,13 +9,14 @@ import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin
 import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
 import ProductDocumentsManager, { ProductDocument } from "@/components/admin/shop/ProductDocumentsManager";
 import ProductStoryGalleryManager, { ProductStoryItem, ResolvedProductStoryItem } from "@/components/admin/shop/ProductStoryGalleryManager";
+import ProductSocialVideosManager, { ProductSocialVideo, ResolvedProductSocialVideo } from "@/components/admin/shop/ProductSocialVideosManager";
 import CollapsibleSection from "@/components/admin/shop/CollapsibleSection";
 import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
-import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd } from "lucide-react";
+import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd, Clapperboard } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,8 @@ interface Product {
   faqs: ProductFaq[];
   documents: ProductDocument[];
   storyGallery: ResolvedProductStoryItem[];
+  socialVideos: ResolvedProductSocialVideo[];
+  socialVideosTitle: string | null;
   storyNarrativeTitle: string | null;
   primaryCategoryId: string | null;
   categories: Array<{ id: string; name: string }>;
@@ -96,6 +99,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [faqs, setFaqs] = useState<ProductFaq[]>([]);
   const [documents, setDocuments] = useState<ProductDocument[]>([]);
   const [storyGallery, setStoryGallery] = useState<ProductStoryItem[]>([]);
+  const [socialVideos, setSocialVideos] = useState<ProductSocialVideo[]>([]);
+  const [socialVideosTitle, setSocialVideosTitle] = useState("");
   const [storyNarrativeTitle, setStoryNarrativeTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -141,6 +146,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setFaqs(p.faqs ?? []);
       setDocuments(p.documents ?? []);
       setStoryGallery(p.storyGallery ?? []);
+      setSocialVideos(p.socialVideos ?? []);
+      setSocialVideosTitle(p.socialVideosTitle ?? "");
       setStoryNarrativeTitle(p.storyNarrativeTitle ?? "");
       setCategories(Array.isArray(cats) ? cats : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
@@ -328,6 +335,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         faqs,
         documents,
         storyGallery,
+        socialVideos,
+        socialVideosTitle: socialVideosTitle || null,
         storyNarrativeTitle: storyNarrativeTitle || null,
         ...(basePriceCents !== undefined ? { basePriceCents } : {}),
         compareAtPriceCents,
@@ -346,7 +355,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       const storyItemFields = storyGallery
         .filter(s => s.location === "narrative")
         .flatMap(s => [`storyItem:${s.id}:title`, `storyItem:${s.id}:description`]);
-      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', 'storyNarrativeTitle', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields, ...storyItemFields]);
+      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', 'storyNarrativeTitle', 'socialVideosTitle', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields, ...storyItemFields]);
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
@@ -355,6 +364,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setFaqs(p.faqs ?? []);
       setDocuments(p.documents ?? []);
       setStoryGallery(p.storyGallery ?? []);
+      setSocialVideos(p.socialVideos ?? []);
+      setSocialVideosTitle(p.socialVideosTitle ?? "");
       setStoryNarrativeTitle(p.storyNarrativeTitle ?? "");
       toast.success("Changes saved");
     }
@@ -605,6 +616,25 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 </p>
               </div>
               <ProductStoryGalleryManager initialItems={product.storyGallery ?? []} onChange={setStoryGallery} enValues={enValues} setEn={setEn} />
+            </CollapsibleSection>
+
+            {/* ── Social Videos ── */}
+            <CollapsibleSection icon={<Clapperboard size={14} strokeWidth={1.75} />} title="Social videos">
+              <div style={{ marginBottom: 18 }}>
+                <BilingualField
+                  label="Section title"
+                  frValue={socialVideosTitle}
+                  frOnChange={setSocialVideosTitle}
+                  frPlaceholder="ex. En action"
+                  enValue={enValues.socialVideosTitle ?? ""}
+                  enOnChange={v => setEn("socialVideosTitle", v)}
+                  enPlaceholder="e.g. See it in action"
+                />
+                <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 6 }}>
+                  Shown above the social videos carousel. Leave empty to use the default localized title.
+                </p>
+              </div>
+              <ProductSocialVideosManager initialItems={product.socialVideos ?? []} onChange={setSocialVideos} />
             </CollapsibleSection>
 
             {/* ── Variations ── */}
