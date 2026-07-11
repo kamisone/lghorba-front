@@ -99,6 +99,8 @@ export default async function LandingPage({ params }: { params: { locale: string
         <ResponsiveHeroVideo
           desktopSrc="/assets/cars/rentals_hero.mp4"
           mobileSrc="/assets/cars/rentals_hero_mobile.mp4"
+          desktopHlsSrc="/assets/cars/hls/hero/master.m3u8"
+          mobileHlsSrc="/assets/cars/hls/hero_mobile/master.m3u8"
           className={styles.heroVideo}
         />
         <div className={styles.heroVideoOverlay} aria-hidden="true" />

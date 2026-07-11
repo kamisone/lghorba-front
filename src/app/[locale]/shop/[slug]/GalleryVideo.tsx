@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Maximize, Volume2, VolumeX } from "lucide-react";
+import useHls from "@/hooks/useHls";
 import styles from "./ProductGallery.module.css";
 
 interface Props {
   src: string;
+  /** HLS master playlist URL — preferred over `src` when the browser can play it. */
+  hlsSrc?: string | null;
   poster?: string | null;
   /** True when this is the slide currently shown — drives autoplay/pause. */
   active: boolean;
@@ -18,11 +21,33 @@ interface Props {
  * Custom-chrome video player for the gallery — no native browser controls,
  * so it reads as part of the product gallery rather than an embedded player.
  * Autoplays muted + looped when it becomes the active slide.
+ *
+ * When `hlsSrc` is set: Safari plays it natively; other browsers get hls.js
+ * (lazy-loaded, attached only once the slide has been active — mirrors the
+ * `preload="none"` behaviour of the mp4 path). Any fatal HLS error falls back
+ * to the progressive `src`.
  */
-export default function GalleryVideo({ src, poster, active, className, allowFullscreen }: Props) {
+export default function GalleryVideo({ src, hlsSrc, poster, active, className, allowFullscreen }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const activeRef = useRef(active);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
+  // Don't start fetching HLS data until the slide is first shown
+  const [loadStarted, setLoadStarted] = useState(active);
+
+  activeRef.current = active;
+
+  useEffect(() => {
+    if (active) setLoadStarted(true);
+  }, [active]);
+
+  const hlsFailed = useHls(videoRef, hlsSrc, {
+    enabled: loadStarted,
+    onReady: () => {
+      if (activeRef.current) videoRef.current?.play().catch(() => {});
+    },
+  });
+  const useHlsPlayback = !!hlsSrc && !hlsFailed;
 
   // `muted` isn't a settable JSX prop in React's video typings — set it imperatively
   // on mount so the element starts muted (required for autoplay to be allowed).
@@ -74,7 +99,7 @@ export default function GalleryVideo({ src, poster, active, className, allowFull
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <video
         ref={setVideoRef}
-        src={src}
+        src={useHlsPlayback ? undefined : src}
         poster={poster ?? undefined}
         className={className}
         playsInline

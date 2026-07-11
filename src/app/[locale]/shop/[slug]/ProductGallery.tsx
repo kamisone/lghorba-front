@@ -10,6 +10,8 @@ import styles from "./ProductGallery.module.css";
 export interface GalleryMediaItem {
   type:             "image" | "video";
   url:              string;
+  /** HLS master playlist URL — set when the video has a transcoded rendition */
+  hlsUrl?:          string | null;
   posterUrl?:       string | null;
   alt?:             string;
   durationSeconds?: number | null;
@@ -162,6 +164,7 @@ export default function ProductGallery({ media, title, compact }: Props) {
                   <div key={item.url} className={`${styles.slideLayer} ${isActive ? styles.slideActive : ""}`}>
                     <GalleryVideo
                       src={item.url}
+                      hlsSrc={item.hlsUrl}
                       poster={item.posterUrl}
                       active={isActive && !lightbox}
                       className={styles.mainVideo}
@@ -321,6 +324,7 @@ export default function ProductGallery({ media, title, compact }: Props) {
               <GalleryVideo
                 key={active.url}
                 src={active.url}
+                hlsSrc={active.hlsUrl}
                 poster={active.posterUrl}
                 active={lightbox}
                 className={styles.lightboxVideo}

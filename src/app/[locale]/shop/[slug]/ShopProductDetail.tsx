@@ -34,6 +34,7 @@ interface ResolvedProductMediaItem {
   isFeatured?:      boolean;
   url:              string;
   posterUrl:        string | null;
+  hlsUrl?:          string | null;
   durationSeconds?: number | null;
   mimeType?:        string | null;
 }
@@ -120,6 +121,7 @@ function buildProductGallery(product: Product): GalleryMediaItem[] {
     out.push({
       type:            m.type,
       url:             m.url,
+      hlsUrl:          m.hlsUrl ?? null,
       posterUrl:       m.posterUrl ?? null,
       durationSeconds: m.durationSeconds ?? null,
     });
