@@ -101,6 +101,8 @@ export default async function LandingPage({ params }: { params: { locale: string
           mobileSrc="/assets/cars/rentals_hero_mobile.mp4"
           desktopHlsSrc="/assets/cars/hls/hero/master.m3u8"
           mobileHlsSrc="/assets/cars/hls/hero_mobile/master.m3u8"
+          desktopPoster="/assets/cars/rentals_hero_poster.jpg"
+          mobilePoster="/assets/cars/rentals_hero_mobile_poster.jpg"
           className={styles.heroVideo}
         />
         <div className={styles.heroVideoOverlay} aria-hidden="true" />

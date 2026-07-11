@@ -25,6 +25,8 @@ const VIDEOS = [
   {
     source: "public/assets/cars/rentals_hero.mp4",
     outDir: "public/assets/cars/hls/hero",
+    // First frame of the video — the poster must match so playback start doesn't jump
+    poster: { out: "public/assets/cars/rentals_hero_poster.jpg", width: 1024 },
     rungs: [
       { height: 1080, maxrate: 1600, crf: 23 },
       { height: 540,  maxrate: 700,  crf: 24 },
@@ -33,6 +35,7 @@ const VIDEOS = [
   {
     source: "public/assets/cars/rentals_hero_mobile.mp4",
     outDir: "public/assets/cars/hls/hero_mobile",
+    poster: { out: "public/assets/cars/rentals_hero_mobile_poster.jpg", width: 640 },
     rungs: [
       { height: 1280, maxrate: 1200, crf: 23 },
       { height: 640,  maxrate: 500,  crf: 24 },
@@ -49,7 +52,7 @@ function ffprobeDims(file) {
   return { width: video.width, height: video.height };
 }
 
-for (const { source, outDir, rungs } of VIDEOS) {
+for (const { source, outDir, rungs, poster } of VIDEOS) {
   const src = path.join(FRONT, source);
   const dir = path.join(FRONT, outDir);
   fs.rmSync(dir, { recursive: true, force: true });
@@ -90,4 +93,16 @@ for (const { source, outDir, rungs } of VIDEOS) {
 
   const total = fs.readdirSync(dir).reduce((n, f) => n + fs.statSync(path.join(dir, f)).size, 0);
   console.log(`  → ${outDir}/master.m3u8 (${(total / 1024 / 1024).toFixed(1)} MB total)`);
+
+  if (poster) {
+    const posterPath = path.join(FRONT, poster.out);
+    execFileSync(ffmpegPath, [
+      "-y", "-i", src,
+      "-frames:v", "1",
+      "-vf", `scale=${poster.width}:-2`,
+      "-q:v", "5",
+      posterPath,
+    ], { stdio: ["ignore", "ignore", "pipe"] });
+    console.log(`  → ${poster.out} (${(fs.statSync(posterPath).size / 1024).toFixed(0)} KB)`);
+  }
 }
