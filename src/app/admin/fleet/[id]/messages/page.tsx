@@ -49,7 +49,7 @@ export default function VehicleMessagesPage({ params }: { params: { id: string }
         ))}
       </nav>
 
-      {tab === "replies" && <QuickRepliesPanel vars={vars} />}
+      {tab === "replies" && <QuickRepliesPanel vars={vars} carId={params.id} />}
     </div>
   );
 }

@@ -13,9 +13,11 @@ import styles from "./QuickRepliesPanel.module.css";
 interface Props {
   /** Vehicle context substituted into {{car_name}} / {{plate}} / {{phone}} on copy. */
   vars?: PlaceholderVars;
+  /** Restricts the list to global replies plus the ones linked to this car. */
+  carId?: string;
 }
 
-export default function QuickRepliesPanel({ vars }: Props) {
+export default function QuickRepliesPanel({ vars, carId }: Props) {
   const [replies,  setReplies]  = useState<QuickReply[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [loadFail, setLoadFail] = useState(false);
@@ -26,7 +28,9 @@ export default function QuickRepliesPanel({ vars }: Props) {
     setLoading(true);
     setLoadFail(false);
     try {
-      const res = await fetch("/next-api/quick-replies?active=true", { cache: "no-store" });
+      const params = new URLSearchParams({ active: "true" });
+      if (carId) params.set("carId", carId);
+      const res = await fetch(`/next-api/quick-replies?${params}`, { cache: "no-store" });
       if (!res.ok) throw new Error();
       setReplies(await res.json());
     } catch {
@@ -34,7 +38,7 @@ export default function QuickRepliesPanel({ vars }: Props) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [carId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -144,6 +148,7 @@ export default function QuickRepliesPanel({ vars }: Props) {
               <div className={styles.cardMain}>
                 <div className={styles.cardHead}>
                   <h3 className={styles.cardTitle}>{r.title}</h3>
+                  {r.carId && <span className={styles.carBadge}>This car</span>}
                   <span
                     className={styles.categoryBadge}
                     style={{ background: categoryColor(r.category) + "18", color: categoryColor(r.category) }}

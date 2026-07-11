@@ -4,6 +4,10 @@ export interface QuickReply {
   body: string;
   category: string;
   isActive: boolean;
+  /** Null = global (shown for every car); set = only shown on that car's Messages tab. */
+  carId: string | null;
+  /** Minimal linked-car info, present when carId is set. */
+  car?: { id: string; name: string } | null;
   usageCount: number;
   lastUsedAt: string | null;
   createdAt: string;

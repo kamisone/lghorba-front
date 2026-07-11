@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import { X } from "lucide-react";
 import { useToast } from "@/components/toast/ToastContext";
 import { categoryLabel, PLACEHOLDER_KEYS, type QuickReply } from "./types";
@@ -8,6 +8,13 @@ import styles from "./QuickReplyFormModal.module.css";
 
 const BODY_MAX = 4000;
 const NEW_CATEGORY = "__new__";
+const GLOBAL_CAR = "";
+
+interface CarOption {
+  id: string;
+  name: string;
+  immatriculation?: string | null;
+}
 
 interface Props {
   reply?: QuickReply;
@@ -40,9 +47,27 @@ export default function QuickReplyFormModal({ reply, categories, onClose, onSave
   const [body,        setBody]        = useState(reply?.body ?? "");
   const [category,    setCategory]    = useState(reply?.category ?? "general");
   const [newCategory, setNewCategory] = useState("");
+  const [carId,       setCarId]       = useState(reply?.carId ?? GLOBAL_CAR);
+  const [cars,        setCars]        = useState<CarOption[]>([]);
   const [isActive,    setIsActive]    = useState(reply?.isActive ?? true);
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState("");
+
+  // Fleet list for the car picker. On failure the picker just offers "All cars",
+  // plus the currently linked car (if any) so editing never silently unlinks it.
+  useEffect(() => {
+    fetch("/next-api/cars", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : []))
+      .then((data: CarOption[]) => setCars(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  const carOptions = useMemo(() => {
+    if (reply?.car && !cars.some(c => c.id === reply.car!.id)) {
+      return [reply.car as CarOption, ...cars];
+    }
+    return cars;
+  }, [cars, reply?.car]);
 
   const effectiveCategory = category === NEW_CATEGORY ? slugify(newCategory) : category;
   const valid =
@@ -71,6 +96,7 @@ export default function QuickReplyFormModal({ reply, categories, onClose, onSave
           body:     body.trim(),
           category: effectiveCategory,
           isActive,
+          carId:    carId || null,
         }),
       });
       if (!res.ok) {
@@ -144,6 +170,25 @@ export default function QuickReplyFormModal({ reply, categories, onClose, onSave
                 </label>
               )}
             </div>
+
+            <label className={styles.field}>
+              <span className={styles.label}>Show for</span>
+              <select
+                className={styles.input}
+                value={carId}
+                onChange={e => setCarId(e.target.value)}
+              >
+                <option value={GLOBAL_CAR}>All cars (global)</option>
+                {carOptions.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}{c.immatriculation ? ` — ${c.immatriculation}` : ""}
+                  </option>
+                ))}
+              </select>
+              <span className={styles.fieldHelp}>
+                Global replies appear on every vehicle&apos;s Messages tab; car-linked replies only on that car&apos;s.
+              </span>
+            </label>
 
             <label className={styles.field}>
               <div className={styles.labelRow}>

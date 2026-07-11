@@ -238,6 +238,11 @@ export default function QuickReplyList() {
                 >
                   {categoryLabel(r.category)}
                 </span>
+                {r.carId && (
+                  <span className={styles.carBadge} title="Only shown on this car's Messages tab">
+                    {r.car?.name ?? "Car-specific"}
+                  </span>
+                )}
                 {!r.isActive && <span className={styles.inactiveBadge}>Inactive</span>}
               </div>
 
