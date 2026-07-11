@@ -167,21 +167,20 @@ export default async function ProductPage({ params, searchParams }: Props) {
         initialVariantSlug={initialVariantSlug}
       />
 
-      {product.infoSections?.length > 0 && (
-        <div className={styles.specsSectionFull}>
-          <h2>{t.specificationsTitle}</h2>
-          <div className={styles.specsGrid}>
-            {product.infoSections.map((section: { id: string; label: string; value: string }) => (
-              <div key={section.id} className={styles.specCard}>
-                <span className={styles.specCardLabel}>{section.label}</span>
-                <span className={styles.specCardValue}>{section.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {(faqs.length > 0 || sideStory.length > 0) && (() => {
+      {(product.infoSections?.length > 0 || faqs.length > 0 || product.documents?.length > 0 || sideStory.length > 0) && (() => {
+        const specsBlock = product.infoSections?.length > 0 && (
+          <>
+            <h2>{t.specificationsTitle}</h2>
+            <div className={styles.specsGrid}>
+              {product.infoSections.map((section: { id: string; label: string; value: string }) => (
+                <div key={section.id} className={styles.specCard}>
+                  <span className={styles.specCardLabel}>{section.label}</span>
+                  <span className={styles.specCardValue}>{section.value}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        );
         const faqBlock = faqs.length > 0 && (
           <>
             <h2>{t.faqTitle}</h2>
@@ -198,45 +197,63 @@ export default async function ProductPage({ params, searchParams }: Props) {
             </div>
           </>
         );
-        // Location 1 — Creative Side Gallery sits to the right of the FAQ
-        return sideStory.length > 0 ? (
-          <div className={storyStyles.faqStoryRow}>
-            {faqBlock && <div className={storyStyles.faqStoryCol}>{faqBlock}</div>}
-            <StorySideGallery items={sideStory} ariaLabel={t.storySideAria} />
+        const documentsBlock = product.documents?.length > 0 && (
+          <div className={styles.documentsList}>
+            {product.documents.map((doc: { id: string; title: string; url: string; originalFilename: string; sizeBytes: number }) => (
+              <div key={doc.id} className={styles.documentCard}>
+                <div className={styles.documentIcon}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                </div>
+                <div className={styles.documentInfo}>
+                  <span className={styles.documentTitle}>{doc.title}</span>
+                  <span className={styles.documentMeta}>PDF · {(doc.sizeBytes / 1024).toFixed(0)} KB</span>
+                </div>
+                <a href={doc.url} target="_blank" rel="noopener noreferrer" download className={styles.documentDownload}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                </a>
+              </div>
+            ))}
           </div>
-        ) : (
-          <div className={styles.faqSectionFull}>{faqBlock}</div>
+        );
+        const hasLeft = !!(specsBlock || faqBlock || documentsBlock);
+
+        // Location 1 — Creative Side Gallery sits to the right of the
+        // Specifications, FAQ and Documents sections (sticky while they scroll).
+        if (sideStory.length > 0) {
+          return (
+            <div className={storyStyles.faqStoryRow}>
+              {hasLeft && (
+                <div className={storyStyles.faqStoryCol}>
+                  {specsBlock && <section>{specsBlock}</section>}
+                  {faqBlock && <section>{faqBlock}</section>}
+                  {documentsBlock && <section>{documentsBlock}</section>}
+                </div>
+              )}
+              <div className={storyStyles.sideStickyCol}>
+                <StorySideGallery items={sideStory} ariaLabel={t.storySideAria} />
+              </div>
+            </div>
+          );
+        }
+        // No side gallery — each section renders full-width as before.
+        return (
+          <>
+            {specsBlock && <div className={styles.specsSectionFull}>{specsBlock}</div>}
+            {faqBlock && <div className={styles.faqSectionFull}>{faqBlock}</div>}
+            {documentsBlock && <div className={styles.documentsSectionFull}>{documentsBlock}</div>}
+          </>
         );
       })()}
-
-      {product.documents?.length > 0 && (
-        <div className={styles.documentsSectionFull}>
-          {product.documents.map((doc: { id: string; title: string; url: string; originalFilename: string; sizeBytes: number }) => (
-            <div key={doc.id} className={styles.documentCard}>
-              <div className={styles.documentIcon}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                  <polyline points="10 9 9 9 8 9" />
-                </svg>
-              </div>
-              <div className={styles.documentInfo}>
-                <span className={styles.documentTitle}>{doc.title}</span>
-                <span className={styles.documentMeta}>PDF · {(doc.sizeBytes / 1024).toFixed(0)} KB</span>
-              </div>
-              <a href={doc.url} target="_blank" rel="noopener noreferrer" download className={styles.documentDownload}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-              </a>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Location 2 — Narrative Gallery, after all product sections */}
       {narrativeStory.length > 0 && (

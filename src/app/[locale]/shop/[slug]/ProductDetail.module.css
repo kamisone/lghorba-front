@@ -403,10 +403,8 @@
 }
 
 /* ── Documents section ─────────────────────────────────────────────────────── */
-.documentsSectionFull {
-  max-width: 1280px; margin: 0 auto; padding: 0 16px 48px;
-  display: flex; flex-direction: column; gap: 10px;
-}
+.documentsSectionFull { max-width: 1280px; margin: 0 auto; padding: 0 16px 48px; }
+.documentsList { display: flex; flex-direction: column; gap: 10px; }
 
 .documentCard {
   display: flex; align-items: center; gap: 14px;

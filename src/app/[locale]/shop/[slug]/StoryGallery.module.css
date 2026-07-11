@@ -173,7 +173,9 @@
   }
 }
 
-/* ── FAQ + side gallery two-column row (used by the PDP page) ── */
+/* ── Content + side gallery two-column row (used by the PDP page):
+   Specifications, FAQs and Documents stack on the left, the Creative Side
+   Gallery sits on the right and stays sticky while they scroll. ── */
 .faqStoryRow {
   max-width: 1280px;
   margin: 48px auto 0;
@@ -184,7 +186,7 @@
   align-items: start;
 }
 
-/* Side gallery shown alone (no FAQs): center a narrower canvas */
+/* Side gallery shown alone (no left-column sections): center a narrower canvas */
 .faqStoryRow > :only-child {
   grid-column: 1 / -1;
   max-width: 520px;
@@ -192,7 +194,12 @@
   width: 100%;
 }
 
-.faqStoryCol { min-width: 0; }
+.faqStoryCol {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
 .faqStoryCol h2 {
   font-size: 20px;
   font-weight: 700;
@@ -200,11 +207,19 @@
   margin: 0 0 16px;
 }
 
+.sideStickyCol {
+  min-width: 0;
+  position: sticky;
+  top: calc(var(--header-height, 64px) + 24px);
+}
+
 @media (max-width: 900px) {
   .faqStoryRow {
     grid-template-columns: 1fr;
     gap: 40px;
   }
+  /* Single column: gallery flows below the sections, no stickiness */
+  .sideStickyCol { position: static; }
   .sideCanvas {
     max-width: 440px;
     margin: 0 auto;
