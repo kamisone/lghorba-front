@@ -9,6 +9,7 @@ import RelatedSection from "./RelatedSection";
 import StorySideGallery, { StoryGalleryItem } from "./StorySideGallery";
 import StoryNarrativeGallery from "./StoryNarrativeGallery";
 import SocialVideosCarousel, { SocialVideoItem } from "@/components/shop/SocialVideosCarousel";
+import BackToTopButton from "@/components/BackToTopButton";
 import storyStyles from "./StoryGallery.module.css";
 import RelatedProductsSkeleton from "@/components/shop/RelatedProductsSkeleton";
 import { getTranslations } from "@/lib/i18n";
@@ -279,6 +280,8 @@ export default async function ProductPage({ params, searchParams }: Props) {
       <Suspense fallback={<RelatedProductsSkeleton />}>
         <RelatedSection slug={params.slug} locale={params.locale} />
       </Suspense>
+
+      <BackToTopButton ariaLabel={t.backToTop} />
     </>
   );
 }

@@ -1,0 +1,63 @@
+.btn {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 900; /* above page content, below the support widget (9000) */
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-brand-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 24, 41, .14);
+  /* Hidden state — fades/slides in when scrolled */
+  opacity: 0;
+  transform: translateY(14px) scale(.9);
+  pointer-events: none;
+  transition:
+    opacity .25s ease,
+    transform .25s cubic-bezier(.22, .61, .36, 1),
+    background .18s ease,
+    color .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease;
+}
+
+.btnVisible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.btn:hover {
+  background: var(--color-brand-mid);
+  border-color: var(--color-brand-mid);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(0, 92, 143, .3);
+  transform: translateY(-2px);
+}
+
+.btn:focus-visible {
+  outline: 2px solid rgba(141, 194, 32, .95);
+  outline-offset: 3px;
+}
+
+.btn:active { transform: translateY(0) scale(.96); }
+
+@media (max-width: 640px) {
+  .btn {
+    bottom: 16px;
+    left: 16px;
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: opacity .2s ease; }
+  .btn:hover { transform: none; }
+}
