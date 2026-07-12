@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
@@ -16,6 +16,8 @@ interface Product {
   slug: string;
   title: string;
   featuredImageUrl: string | null;
+  /** Featured + gallery images for the card's hover/arrow image switcher */
+  cardImageUrls?: string[];
   outOfStock?: boolean;
   defaultVariantOutOfStock?: boolean;
   variants: Array<{ id: string; priceCents: number; compareAtPriceCents: number | null; isDefault: boolean }>;
@@ -141,20 +143,89 @@ function ProductCard({
   const outOfStock = !!product.outOfStock;
   const defaultVariantOos = !!product.defaultVariantOutOfStock;
 
+  // Card image switcher: desktop scrubs by cursor position, mobile uses arrows
+  const images = product.cardImageUrls?.length
+    ? product.cardImageUrls
+    : product.featuredImageUrl ? [product.featuredImageUrl] : [];
+  const multiImage = images.length > 1;
+  const [imageIndex, setImageIndex] = useState(0);
+  // Secondary images mount (and load) only after the first interaction
+  const [imagesActivated, setImagesActivated] = useState(false);
+
+  // Pointer (not mouse) events: taps on touch screens fire synthetic mousemove/
+  // mouseleave on the link right before the arrow's click, which would scrub to
+  // the tap position and break the arrows. pointerType lets us scrub mice only.
+  function handleImageScrub(e: React.PointerEvent<HTMLElement>) {
+    if (!multiImage || e.pointerType !== "mouse") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    const idx = Math.min(images.length - 1, Math.max(0, Math.floor(ratio * images.length)));
+    setImagesActivated(true);
+    setImageIndex(idx);
+  }
+
+  function handleScrubEnd(e: React.PointerEvent<HTMLElement>) {
+    if (e.pointerType === "mouse") setImageIndex(0);
+  }
+
+  function stepImage(e: React.MouseEvent, direction: 1 | -1) {
+    e.preventDefault();
+    e.stopPropagation();
+    setImagesActivated(true);
+    setImageIndex(i => (i + direction + images.length) % images.length);
+  }
+
   return (
     <div className={styles.productCard}>
-      <Link href={`/${locale}/shop/${product.slug}`} className={styles.productImageLink}>
-        {product.featuredImageUrl ? (
-          <Image
-            src={product.featuredImageUrl}
-            alt={product.title}
-            fill
-            sizes="(max-width: 768px) 50vw, 25vw"
-            className={styles.productImage}
-            priority={priority}
-          />
+      <Link
+        href={`/${locale}/shop/${product.slug}`}
+        className={styles.productImageLink}
+        onPointerMove={multiImage ? handleImageScrub : undefined}
+        onPointerLeave={multiImage ? handleScrubEnd : undefined}
+      >
+        {images.length > 0 ? (
+          images.map((url, i) => (i === 0 || imagesActivated) && (
+            <Image
+              key={url}
+              src={url}
+              alt={i === 0 ? product.title : `${product.title} — ${i + 1}`}
+              fill
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className={`${styles.productImage} ${multiImage ? styles.productImageLayer : ""} ${i === imageIndex ? "" : styles.productImageHidden}`}
+              priority={priority && i === 0}
+            />
+          ))
         ) : (
           <div className={styles.productImagePlaceholder} />
+        )}
+
+        {multiImage && (
+          <span className={styles.imageDots} aria-hidden="true">
+            {images.map((_, i) => (
+              <span key={i} className={`${styles.imageDot} ${i === imageIndex ? styles.imageDotActive : ""}`} />
+            ))}
+          </span>
+        )}
+
+        {multiImage && (
+          <>
+            <button
+              type="button"
+              className={`${styles.imageArrow} ${styles.imageArrowLeft}`}
+              onClick={e => stepImage(e, -1)}
+              aria-label={t.prevImage}
+            >
+              <ChevronLeft size={16} strokeWidth={2.25} />
+            </button>
+            <button
+              type="button"
+              className={`${styles.imageArrow} ${styles.imageArrowRight}`}
+              onClick={e => stepImage(e, 1)}
+              aria-label={t.nextImage}
+            >
+              <ChevronRight size={16} strokeWidth={2.25} />
+            </button>
+          </>
         )}
 
         {outOfStock && <div className={styles.outOfStockOverlay} aria-hidden="true" />}

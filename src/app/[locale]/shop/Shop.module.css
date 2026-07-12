@@ -143,6 +143,71 @@
 .productCard:hover .productImage,
 .productCardLink:hover .productImage { transform: scale(1.04); }
 .productImagePlaceholder { width: 100%; height: 100%; background: #e9eef2; }
+
+/* ── Card image switcher: stacked crossfading layers ── */
+.productImageLayer { transition: transform .35s ease, opacity .28s ease; }
+.productImageHidden { opacity: 0; }
+
+/* Index bullets — frosted pill, brand-colored active bar */
+.imageDots {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .78);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 5px rgba(0, 24, 41, .14);
+  pointer-events: none;
+  z-index: 2;
+}
+.imageDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(0, 24, 41, .28);
+  transition: background .2s ease, width .2s ease;
+}
+.imageDotActive {
+  width: 15px;
+  background: var(--color-brand-mid);
+}
+/* Desktop: bullets appear on hover; mobile: always visible next to the arrows */
+@media (hover: hover) and (pointer: fine) {
+  .imageDots { opacity: 0; transition: opacity .2s ease; }
+  .productCard:hover .imageDots { opacity: 1; }
+}
+
+/* Prev/next arrows — small screens only (desktop scrubs by cursor position) */
+.imageArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(4px);
+  color: var(--color-text-heading);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 24, 41, .16);
+  z-index: 2;
+  transition: background .15s ease, transform .15s ease;
+}
+.imageArrow:active { transform: translateY(-50%) scale(.92); }
+.imageArrowLeft { left: 8px; }
+.imageArrowRight { right: 8px; }
+@media (max-width: 768px) {
+  .imageArrow { display: flex; }
+}
 .wishlistBtn {
   position: absolute; top: 10px; right: 10px;
   background: rgba(255,255,255,.88); backdrop-filter: blur(6px);
