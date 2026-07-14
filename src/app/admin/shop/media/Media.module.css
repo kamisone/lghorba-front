@@ -477,3 +477,128 @@
   cursor: pointer; transition: background 0.14s;
 }
 .deleteBtn:hover { background: #fecaca; }
+
+/* ─── Small screens ───────────────────────────────────────────────────────
+   Sidebar becomes a horizontally scrollable folder-chip strip, the detail
+   panel becomes a bottom sheet, grid/toolbar tighten up. */
+@media (max-width: 768px) {
+  .page { padding: 16px 12px 96px; }
+
+  .header { margin-bottom: 14px; }
+  .title { font-size: 19px; }
+  .uploadBtn { padding: 8px 14px; font-size: 13px; }
+
+  .body { flex-direction: column; min-height: 0; }
+
+  /* ── Folder strip: horizontal scroll, hidden scrollbar, snap chips ── */
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-right: none;
+    border: 1.5px solid var(--color-border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .sidebar > * { flex-shrink: 0; }
+
+  /* Flatten the recursive folder tree into the flex row */
+  .sidebarTreeGroup { display: contents; }
+
+  /* Rows → pill chips */
+  .sidebarAllMedia,
+  .sidebarItem {
+    width: auto;
+    padding: 6px 13px !important; /* beats the inline depth indentation */
+    border: 1.5px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-white);
+    white-space: nowrap;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+  .sidebarAllMedia:hover,
+  .sidebarItem:hover { background: var(--color-surface); }
+  .sidebarItemActive,
+  .sidebarAllMedia.sidebarItemActive {
+    border-color: var(--color-admin-secondary);
+    background: rgba(var(--rgb-admin-secondary), .08);
+    color: var(--color-admin-secondary);
+  }
+
+  /* Hover-only rename/delete actions can't work on touch — hide them */
+  .sidebarActions { display: none; }
+
+  /* "FOLDERS" section header → just the + chip */
+  .sidebarSection {
+    border-top: none;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+  }
+  .sidebarSectionLabel { display: none; }
+  .newFolderInlineBtn {
+    width: 30px; height: 30px;
+    border: 1.5px dashed var(--color-border);
+    border-radius: 999px;
+  }
+  .newFolderForm { flex-shrink: 0; }
+
+  /* ── Main column ── */
+  .main { padding: 0; }
+  .uploadZone { padding: 14px 16px; margin-bottom: 12px; }
+
+  .toolbar { gap: 6px; }
+  .searchWrap { max-width: none; min-width: 0; flex-basis: 100%; }
+  .toolbarRight { margin-left: 0; flex-basis: 100%; }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 8px;
+  }
+  .folderCard { padding: 14px 8px 10px; }
+
+  /* ── Detail panel → bottom sheet ── */
+  .detailPanel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: min(88dvh, 88vh);
+    border-left: none;
+    border-top: 1.5px solid var(--color-border);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -16px 48px rgba(0, 24, 41, .22);
+    animation: detailSheetIn .25s cubic-bezier(.22, .61, .36, 1);
+  }
+  .detailFoot { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+
+  /* ── Floating selection bar fits the viewport ── */
+  .selectionBar {
+    max-width: calc(100vw - 20px);
+    width: max-content;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    gap: 8px;
+    padding: 8px 10px 8px 14px;
+  }
+  .selectionCount { font-size: 12px; }
+  .selectionConvertBtn { padding: 7px 12px; font-size: 12px; }
+}
+
+@keyframes detailSheetIn {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detailPanel, .selectionBar { animation: none; }
+}

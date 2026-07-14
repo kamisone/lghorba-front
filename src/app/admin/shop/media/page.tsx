@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import styles from "./Media.module.css";
 import { X, Folder, FolderOpen, Pencil, Trash2, Check, ChevronRight, Plus, Play } from "lucide-react";
 import { formatDuration } from "@/components/admin/media/MediaPicker";
@@ -67,8 +68,21 @@ const LIMIT = 48;
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function MediaLibraryPage() {
-  // Navigation
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null); // null = All Media
+  // useSearchParams needs a Suspense boundary during prerender
+  return (
+    <Suspense fallback={null}>
+      <MediaLibrary />
+    </Suspense>
+  );
+}
+
+function MediaLibrary() {
+  // Navigation — the current folder lives in the URL (?folder=<id>) so a
+  // refresh, a shared link, or the back button lands on the same folder.
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentFolderId = searchParams.get("folder"); // null = All Media
 
   // Folders
   const [folders, setFolders]               = useState<Folder[]>([]);
@@ -134,7 +148,7 @@ export default function MediaLibraryPage() {
   // ── Navigation ─────────────────────────────────────────────────────────────
 
   function navigateTo(folderId: string | null) {
-    setCurrentFolderId(folderId);
+    router.push(folderId ? `${pathname}?folder=${folderId}` : pathname, { scroll: false });
     setOffset(0);
     setSelected(null);
   }
@@ -369,7 +383,9 @@ export default function MediaLibraryPage() {
     if (!children.length) return null;
 
     return children.map(folder => (
-      <div key={folder.id}>
+      // sidebarTreeGroup flattens (display: contents) on small screens so the
+      // nested tree becomes a flat horizontal chip strip
+      <div key={folder.id} className={styles.sidebarTreeGroup}>
         <div
           className={`${styles.sidebarItem} ${currentFolderId === folder.id ? styles.sidebarItemActive : ""} ${dragTarget === folder.id ? styles.sidebarItemDragOver : ""}`}
           style={{ paddingLeft: 12 + depth * 14 }}
