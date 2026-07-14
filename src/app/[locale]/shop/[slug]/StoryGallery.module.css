@@ -269,11 +269,15 @@
 
 .narrativeRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(32px, 6vw, 80px);
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 40px);
   align-items: center;
 }
 
+/* Media keeps the larger column on both sides — .narrativeMedia's order
+   moves it into the grid's 2nd track on reversed rows, so that track needs
+   to be the big one there instead. */
+.narrativeRowReversed { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
 .narrativeRowReversed .narrativeMedia { order: 2; }
 .narrativeRowReversed .narrativeCopy  { order: 1; }
 
@@ -307,10 +311,22 @@
   pointer-events: none;
 }
 
+/* Uniform card: every row sits in the same 4:3 rounded frame regardless of
+   the source image's own size. object-fit stays "contain" (no cropping),
+   so the card needs its own background + shadow — otherwise the rounded
+   corners would just clip a transparent-cornered picture invisibly. */
+.narrativeMedia .imgShell {
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--color-white);
+  box-shadow:
+    0 4px 10px rgba(0, 24, 41, .08),
+    0 24px 48px rgba(0, 24, 41, .14);
+}
+
 .narrativeMedia .img {
-  filter:
-    drop-shadow(0 4px 8px rgba(0, 24, 41, .1))
-    drop-shadow(0 24px 44px rgba(0, 24, 41, .2));
+  object-fit: contain;
+  object-position: center;
 }
 
 .narrativeRowReversed .narrativeMedia { transform: translateX(32px); }
@@ -361,7 +377,8 @@
     gap: 56px;
   }
 
-  .narrativeRow {
+  .narrativeRow,
+  .narrativeRowReversed {
     grid-template-columns: 1fr;
     gap: 22px;
   }
