@@ -52,6 +52,8 @@
   font-size: 17px;
   color: #f59e0b;
   margin-bottom: 14px;
+  text-decoration: none;
+  width: fit-content;
 }
 .ratingCount { font-size: 13px; color: var(--color-text-muted); margin-left: 6px; }
 

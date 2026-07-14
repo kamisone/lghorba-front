@@ -415,12 +415,12 @@ export default function ShopProductDetail({
         <h1 className={styles.title}>{product.title}</h1>
 
         {reviewStats.count > 0 && (
-          <div className={styles.rating}>
+          <a href="#reviews" className={styles.rating}>
             {Array.from({ length: 5 }, (_, i) => (
               <span key={i} style={{ opacity: i < Math.round(reviewStats.average) ? 1 : 0.25 }}>★</span>
             ))}
             <span className={styles.ratingCount}>({reviewStats.count})</span>
-          </div>
+          </a>
         )}
 
         <div className={styles.priceRow}>

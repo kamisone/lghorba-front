@@ -76,10 +76,33 @@
 .badge::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; }
 .badgePending   { background: #fef3c7; color: #92400e; }
 .badgePending::before   { background: #f59e0b; }
-.badgePublished { background: #d1fae5; color: #065f46; }
-.badgePublished::before { background: #10b981; }
+.badgeApproved  { background: #d1fae5; color: #065f46; }
+.badgeApproved::before  { background: #10b981; }
 .badgeRejected  { background: #fee2e2; color: #b91c1c; }
 .badgeRejected::before  { background: #ef4444; }
+.badgeHidden    { background: #e2e8f0; color: #475569; }
+.badgeHidden::before    { background: #94a3b8; }
+
+/* ── Verified purchase pill ── */
+.verifiedPill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 20px; margin-top: 4px;
+  background: rgba(141, 194, 32, .14); color: #4d7c0f;
+  font-size: 10.5px; font-weight: 700;
+}
+
+/* ── Product cell ── */
+.productLink { font-size: 13px; font-weight: 600; color: var(--color-admin-primary); text-decoration: none; }
+.productLink:hover { text-decoration: underline; }
+
+/* ── Media thumbnails ── */
+.mediaRow { display: flex; gap: 6px; margin-top: 6px; }
+.mediaThumb {
+  width: 36px; height: 36px; border-radius: 6px; overflow: hidden;
+  border: 1px solid var(--color-border); cursor: pointer; padding: 0;
+  position: relative; background: var(--color-surface-raised);
+}
+.mediaThumb img, .mediaThumb video { width: 100%; height: 100%; object-fit: cover; }
 
 /* ── Actions ── */
 .actions { display: flex; gap: 6px; align-items: center; }
@@ -89,10 +112,39 @@
   display: inline-flex; align-items: center; gap: 4px;
   transition: background 0.14s; white-space: nowrap;
 }
-.actionPublish { background: #d1fae5; color: #065f46; }
-.actionPublish:hover { background: #a7f3d0; }
+.actionApprove { background: #d1fae5; color: #065f46; }
+.actionApprove:hover { background: #a7f3d0; }
 .actionReject  { background: #fee2e2; color: #b91c1c; }
 .actionReject:hover { background: #fecaca; }
+.actionHide    { background: #e2e8f0; color: #475569; }
+.actionHide:hover { background: #cbd5e1; }
+.actionEdit    { background: var(--color-surface-raised); color: var(--color-text-primary); }
+.actionEdit:hover { background: var(--color-border-subtle); }
+.actionDelete  { background: #fee2e2; color: #b91c1c; }
+.actionDelete:hover { background: #fecaca; }
+
+/* ── Edit / reject modal ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, .5);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; z-index: 300;
+}
+.modal {
+  width: 100%; max-width: 460px; background: var(--color-white);
+  border-radius: 14px; padding: 24px; box-shadow: 0 24px 60px rgba(15, 23, 42, .3);
+}
+.modalTitle { font-size: 16px; font-weight: 800; color: var(--color-admin-primary); margin: 0 0 16px; }
+.modalField { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.modalLabel { font-size: 12px; font-weight: 700; color: var(--color-text-muted); }
+.modalInput, .modalTextarea {
+  border: 1.5px solid var(--color-border); border-radius: 8px; padding: 9px 11px;
+  font-size: 13.5px; font-family: inherit; color: var(--color-text-primary);
+}
+.modalTextarea { resize: vertical; min-height: 80px; }
+.modalActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.modalBtnCancel { padding: 8px 16px; border-radius: 8px; border: 1.5px solid var(--color-border); background: var(--color-white); font-weight: 600; font-size: 13px; cursor: pointer; }
+.modalBtnConfirm { padding: 8px 16px; border-radius: 8px; border: none; background: var(--color-admin-primary); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
+.modalBtnDanger { padding: 8px 16px; border-radius: 8px; border: none; background: #dc2626; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
 
 /* ── Empty state ── */
 .empty {

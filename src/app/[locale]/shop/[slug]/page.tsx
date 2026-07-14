@@ -8,6 +8,7 @@ import ShopProductDetail from "./ShopProductDetail";
 import RelatedSection from "./RelatedSection";
 import StorySideGallery, { StoryGalleryItem } from "./StorySideGallery";
 import StoryNarrativeGallery from "./StoryNarrativeGallery";
+import ReviewsSection from "./ReviewsSection";
 import SocialVideosCarousel, { SocialVideoItem } from "@/components/shop/SocialVideosCarousel";
 import BackToTopButton from "@/components/BackToTopButton";
 import storyStyles from "./StoryGallery.module.css";
@@ -34,7 +35,13 @@ async function fetchProduct(slug: string, locale: string) {
 
 async function fetchReviewStats(slug: string) {
   const res = await fetch(`${API}/public/shop/products/${slug}/review-stats`, { next: { revalidate: 60 } });
-  if (!res.ok) return { average: 0, count: 0 };
+  if (!res.ok) return { average: 0, count: 0, distribution: {} };
+  return res.json();
+}
+
+async function fetchInitialReviews(slug: string) {
+  const res = await fetch(`${API}/public/shop/products/${slug}/reviews`, { next: { revalidate: 60 } });
+  if (!res.ok) return { items: [], total: 0 };
   return res.json();
 }
 
@@ -94,9 +101,10 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 export default async function ProductPage({ params, searchParams }: Props) {
   const t = getTranslations(params.locale).shop;
-  const [product, reviewStats, availabilityMatrix] = await Promise.all([
+  const [product, reviewStats, initialReviews, availabilityMatrix] = await Promise.all([
     fetchProduct(params.slug, params.locale),
     fetchReviewStats(params.slug),
+    fetchInitialReviews(params.slug),
     fetchAvailabilityMatrix(params.slug, params.locale),
   ]);
 
@@ -131,6 +139,14 @@ export default async function ProductPage({ params, searchParams }: Props) {
       ratingValue: reviewStats.average,
       reviewCount: reviewStats.count,
     } : undefined,
+    review: (initialReviews.items ?? []).slice(0, 10).map((r: any) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: r.authorName },
+      datePublished: r.createdAt,
+      reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+      name: r.title ?? undefined,
+      reviewBody: r.body ?? undefined,
+    })),
   };
 
   // FAQPage JSON-LD — backend already filters to active, non-empty FAQs
@@ -276,6 +292,13 @@ export default async function ProductPage({ params, searchParams }: Props) {
           overline={product.storyNarrativeTitle}
         />
       )}
+
+      <ReviewsSection
+        productId={product.id}
+        locale={params.locale}
+        stats={reviewStats}
+        initialReviews={initialReviews}
+      />
 
       <Suspense fallback={<RelatedProductsSkeleton />}>
         <RelatedSection slug={params.slug} locale={params.locale} />
