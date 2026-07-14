@@ -18,6 +18,14 @@ export default function ClientFooter({ locale }: Props) {
 
   return (
     <footer className={styles.footer}>
+      <div className={styles.wave} aria-hidden="true">
+        <svg viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            className={styles.wavePath}
+            d="M0,58 C220,12 420,92 720,52 C1020,12 1220,88 1440,46 L1440,100 L0,100 Z"
+          />
+        </svg>
+      </div>
       <div className={styles.footerInner}>
 
         <div className={styles.footerGrid}>

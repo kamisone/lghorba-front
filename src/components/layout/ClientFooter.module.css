@@ -1,6 +1,30 @@
 .footer {
+  position: relative;
   background: var(--color-brand-darkest);
   padding: 2rem 0 1.5rem;
+}
+
+/* ── Wavy top edge ──
+   Sits just above the footer's flat top, overlapping the section before it,
+   so the curve reads as the boundary between page content and footer
+   instead of a hard horizontal line. */
+.wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.wave svg {
+  display: block;
+  width: 100%;
+  height: clamp(36px, 6vw, 84px);
+}
+
+.wavePath {
+  fill: var(--color-brand-darkest);
 }
 
 .footerInner {
