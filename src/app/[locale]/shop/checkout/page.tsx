@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { AlertCircle, Check } from "lucide-react";
+import { AlertCircle, Check, ShoppingBag } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useCart } from "@/components/shop/CartContext";
@@ -412,8 +412,16 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   if (!cart || cart.items.length === 0) {
     return (
       <div className={styles.empty}>
-        <h2>{t.checkoutEmpty}</h2>
-        <a href={`/${locale}/shop`}>{t.continueShopping}</a>
+        <div className={styles.emptyCard}>
+          <div className={styles.emptyIconBadge}>
+            <ShoppingBag size={30} strokeWidth={1.75} />
+          </div>
+          <h2 className={styles.emptyTitle}>{t.checkoutEmpty}</h2>
+          <p className={styles.emptySub}>{t.cartEmptySub}</p>
+          <a href={`/${locale}/shop`} className={styles.emptyCta}>
+            {t.continueShopping}
+          </a>
+        </div>
       </div>
     );
   }

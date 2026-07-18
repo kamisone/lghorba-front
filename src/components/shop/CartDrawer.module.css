@@ -122,6 +122,9 @@
   margin: 0;
 }
 .continueShoppingBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 8px;
   padding: 12px 24px;
   background: var(--color-brand-primary);
@@ -130,6 +133,7 @@
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
   transition: background .15s;
   min-height: 44px;

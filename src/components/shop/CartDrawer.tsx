@@ -127,9 +127,9 @@ export default function CartDrawer({ locale }: Props) {
               </svg>
               <p className={styles.emptyTitle}>{t.cartEmpty}</p>
               <p className={styles.emptySub}>{t.cartEmptySub}</p>
-              <button onClick={closeDrawer} className={styles.continueShoppingBtn}>
+              <Link href={`/${locale}/shop`} onClick={closeDrawer} className={styles.continueShoppingBtn}>
                 {t.continueShopping}
-              </button>
+              </Link>
             </div>
           ) : (
             cart!.items.map(item => (
