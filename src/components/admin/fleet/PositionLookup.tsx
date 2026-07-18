@@ -10,6 +10,13 @@ interface Props {
   onDelete: (positionId: string) => Promise<void>;
 }
 
+// The raw SMS reply is often just the maps link itself (or the link plus a
+// short caption) — the link is already rendered as "Open in Google Maps",
+// so strip any URL out of the raw text to avoid showing it twice.
+function stripUrls(text: string): string {
+  return text.replace(/https?:\/\/\S+/gi, "").trim();
+}
+
 export default function PositionLookup({ positions, onDelete }: Props) {
   const [query,    setQuery]    = useState("");
   const [error,    setError]    = useState("");
@@ -76,8 +83,8 @@ export default function PositionLookup({ positions, onDelete }: Props) {
             >
               Open in Google Maps
             </a>
-            {found.position.rawMessage && (
-              <p className={styles.cardRaw}>{found.position.rawMessage}</p>
+            {found.position.rawMessage && stripUrls(found.position.rawMessage) && (
+              <p className={styles.cardRaw}>{stripUrls(found.position.rawMessage)}</p>
             )}
           </div>
           <div className={styles.cardActions}>
