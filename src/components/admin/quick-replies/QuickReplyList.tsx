@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Copy, EyeOff, MessageSquareText, Pencil, Plus, Search, Trash2, X,
+  Copy, EyeOff, MessageSquareText, Pencil, Plus, Search, Settings2, Trash2, X,
 } from "lucide-react";
 import { useToast } from "@/components/toast/ToastContext";
 import CopyReplyButton from "./CopyReplyButton";
+import QuickReplyCategoryManager from "./QuickReplyCategoryManager";
 import QuickReplyFormModal from "./QuickReplyFormModal";
 import { categoryColor, categoryLabel, type QuickReply } from "./types";
 import styles from "./QuickReplyList.module.css";
@@ -27,9 +28,10 @@ export default function QuickReplyList() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter,   setStatusFilter]   = useState<StatusFilter>("all");
 
-  const [formOpen,     setFormOpen]     = useState(false);
-  const [editTarget,   setEditTarget]   = useState<QuickReply | null>(null);
-  const [confirmDelId, setConfirmDelId] = useState<string | null>(null);
+  const [formOpen,       setFormOpen]       = useState(false);
+  const [editTarget,     setEditTarget]     = useState<QuickReply | null>(null);
+  const [confirmDelId,   setConfirmDelId]   = useState<string | null>(null);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -103,6 +105,9 @@ export default function QuickReplyList() {
 
   const clearFilters = () => { setSearch(""); setCategoryFilter("all"); setStatusFilter("all"); };
 
+  // A rename/delete can invalidate the active category filter — fall back to "all".
+  const handleCategoriesChanged = () => { setCategoryFilter("all"); load(); };
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -114,9 +119,14 @@ export default function QuickReplyList() {
           <h1 className={styles.title}>Replies</h1>
           <p className={styles.subtitle}>Reusable guest messages — copy them in one click from any vehicle page</p>
         </div>
-        <button className={styles.primaryBtn} onClick={openCreate}>
-          <Plus size={16} strokeWidth={1.75} /> New reply
-        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.secondaryBtn} onClick={() => setCategoriesOpen(true)}>
+            <Settings2 size={14} strokeWidth={1.75} /> Manage categories
+          </button>
+          <button className={styles.primaryBtn} onClick={openCreate}>
+            <Plus size={16} strokeWidth={1.75} /> New reply
+          </button>
+        </div>
       </div>
 
       {/* ── Stats ── */}
@@ -292,13 +302,20 @@ export default function QuickReplyList() {
         </div>
       )}
 
-      {/* ── Modal ── */}
+      {/* ── Modals ── */}
       {formOpen && (
         <QuickReplyFormModal
           reply={editTarget ?? undefined}
           categories={categories}
           onClose={() => setFormOpen(false)}
           onSaved={handleSaved}
+        />
+      )}
+
+      {categoriesOpen && (
+        <QuickReplyCategoryManager
+          onClose={() => setCategoriesOpen(false)}
+          onChanged={handleCategoriesChanged}
         />
       )}
     </div>

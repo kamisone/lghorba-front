@@ -5,6 +5,8 @@
 .title { font-size: 22px; font-weight: 700; color: var(--color-text-heading, #001829); margin: 0 0 4px; }
 .subtitle { font-size: 13px; color: var(--color-text-muted, #64748b); margin: 0; }
 
+.headerActions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
 .primaryBtn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 18px; border-radius: 8px; border: none;
@@ -14,9 +16,10 @@
 .primaryBtn:hover { opacity: 0.9; }
 
 .secondaryBtn {
+  display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 18px; border-radius: 8px;
   border: 1.5px solid var(--color-border, #e2e8f0); background: #fff;
-  font-size: 13px; font-weight: 500; color: #475569; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; white-space: nowrap;
 }
 .secondaryBtn:hover { background: #f8fafc; }
 
