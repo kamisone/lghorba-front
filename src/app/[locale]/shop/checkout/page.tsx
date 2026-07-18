@@ -9,6 +9,7 @@ import { useCart } from "@/components/shop/CartContext";
 import PromoCodeInput from "@/components/shop/PromoCodeInput";
 import PriceBreakdown from "@/components/shop/PriceBreakdown";
 import { getTranslations } from "@/lib/i18n";
+import { pixelTrack, getMetaCookies } from "@/lib/metaPixel";
 import styles from "./Checkout.module.css";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "");
@@ -345,6 +346,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
         country:     form.country,
         couponCode:  appliedCoupon?.code ?? null,
         locale,
+        ...getMetaCookies(),
       }),
     });
 
@@ -358,6 +360,15 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
     const snap: CheckoutSnapshot = await res.json();
     setSnapshot(snap);
     orderIdRef.current = snap.orderId;
+
+    // Meta Pixel: value/currency/ids only — never add customer PII here.
+    pixelTrack("InitiateCheckout", {
+      value: snap.totalCents / 100,
+      currency: "EUR",
+      content_type: "product",
+      content_ids: cart.items.map(i => i.variantId),
+      num_items: cart.items.reduce((n, i) => n + i.quantity, 0),
+    });
 
     if (snap.shippingMethods.length > 0) {
       const firstId = snap.shippingMethods[0].id;

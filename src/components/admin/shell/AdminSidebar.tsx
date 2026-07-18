@@ -16,7 +16,7 @@ import {
   Zap, AlertCircle, TrendingUp, LineChart, BarChart2,
   BookOpen, Search, Store, ThumbsUp, Trophy,
   Flag, FileEdit, Hash, Wrench, Activity, ShieldCheck, MessageSquareText,
-  Settings, ChevronRight, ChevronLeft, ChevronDown,
+  Settings, ChevronRight, ChevronLeft, ChevronDown, Target,
 } from "lucide-react";
 import styles from "./AdminSidebar.module.css";
 
@@ -85,6 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/marketing/campaigns",   icon: Send,      label: "Campaigns"       },
       { href: "/admin/marketing/subscribers", icon: Users,     label: "Subscribers"     },
       { href: "/admin/marketing/analytics",   icon: BarChart3, label: "Email Analytics" },
+      { href: "/admin/marketing/pixel",       icon: Target,    label: "Meta Pixel"      },
     ],
   },
   {

@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { parseApiError, type CartMutationResult } from "@/lib/shop/stockError";
+import { pixelTrack } from "@/lib/metaPixel";
 
 export interface AppliedCoupon {
   code: string;
@@ -119,7 +120,17 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
         body: JSON.stringify({ variantId, quantity, selectedOptionValueIds }),
       });
       if (res.ok) {
-        applyCart(await res.json());
+        const data: Cart = await res.json();
+        applyCart(data);
+        // Meta Pixel: value/currency/ids only — never add customer PII here.
+        const addedItem = data.items.find(i => i.variantId === variantId);
+        pixelTrack("AddToCart", {
+          content_type: "product",
+          content_ids: [variantId],
+          value: (addedItem?.lineTotalCents ?? 0) / 100,
+          currency: "EUR",
+          num_items: quantity,
+        });
         return { ok: true };
       }
       const body = await res.json().catch(() => ({}));

@@ -2,13 +2,33 @@ import Link from "next/link";
 import Script from "next/script";
 import { Check, Package } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
+import PurchaseTracker from "@/components/tracking/PurchaseTracker";
 
 interface Props {
   params: { locale: string };
   searchParams?: { order?: string; id?: string; token?: string };
 }
 
-export default function CheckoutSuccessPage({ params, searchParams }: Props) {
+const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
+
+interface TrackedOrder {
+  totalCents: number;
+  items: { sku: string | null; productId?: string | null; variantId?: string | null; quantity: number; unitPriceCents: number }[];
+}
+
+async function fetchOrderForTracking(orderNumber: string, token: string): Promise<TrackedOrder | null> {
+  try {
+    const res = await fetch(`${API}/public/shop/orders/${orderNumber}/track?token=${encodeURIComponent(token)}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export default async function CheckoutSuccessPage({ params, searchParams }: Props) {
   const t = getTranslations(params.locale).shop;
   const orderNumber = searchParams?.order;
   const trackingToken = searchParams?.token;
@@ -17,11 +37,27 @@ export default function CheckoutSuccessPage({ params, searchParams }: Props) {
     ? `/${params.locale}/shop/orders/track/${orderNumber}${trackingToken ? `?token=${trackingToken}` : ""}`
     : null;
 
+  // Best-effort — never fire Purchase with guessed/zero values if this fails.
+  const order = orderNumber && trackingToken
+    ? await fetchOrderForTracking(orderNumber, trackingToken)
+    : null;
+
   return (
     <div style={{ maxWidth: 520, margin: "80px auto", textAlign: "center", padding: "0 16px" }}>
       <Script id="clear-cart" strategy="beforeInteractive">{`
         try{var o=localStorage.getItem("shop_cart_token");if(o)sessionStorage.removeItem("checkout:"+o);localStorage.setItem("shop_cart_token",crypto.randomUUID())}catch(e){}
       `}</Script>
+      {order && orderNumber && (
+        <PurchaseTracker
+          orderNumber={orderNumber}
+          totalCents={order.totalCents}
+          items={order.items.map(i => ({
+            id: i.variantId ?? i.productId ?? i.sku ?? "unknown",
+            quantity: i.quantity,
+            unitPriceCents: i.unitPriceCents,
+          }))}
+        />
+      )}
       <div style={{
         width: 72, height: 72, borderRadius: "50%",
         background: "var(--color-brand-accent)", margin: "0 auto 24px",

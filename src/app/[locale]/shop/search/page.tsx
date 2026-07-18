@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { X } from "lucide-react";
@@ -8,6 +8,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import shopStyles from "../Shop.module.css";
 import styles from "./Search.module.css";
 import { getTranslations } from "@/lib/i18n";
+import { pixelTrack } from "@/lib/metaPixel";
 
 interface Hit {
   id: string;
@@ -53,6 +54,15 @@ export default function ShopSearchPage({ params }: { params: { locale: string } 
   }, [q, brand, minPrice, maxPrice, page]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
+
+  // Meta Pixel: fires once per distinct non-empty query (not on every filter
+  // refetch of the same query). Value/currency/ids only — never customer PII.
+  const searchFiredForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!q.trim() || searchFiredForRef.current === q) return;
+    searchFiredForRef.current = q;
+    pixelTrack("Search", { search_string: q });
+  }, [q]);
 
   function pushQuery(updates: Record<string, string>) {
     const p = new URLSearchParams(searchParams.toString());

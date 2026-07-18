@@ -553,8 +553,8 @@ export const en = {
         body: "When you proceed to payment, Stripe — our payment processor — may set cookies to detect fraud, prevent abuse, and enable secure checkout. These cookies are governed by Stripe's own Privacy Policy (stripe.com/privacy). vitecamion has no access to or control over these cookies.",
       },
       {
-        title: "4. Cookies We Do Not Use",
-        body: "vitecamion does not use advertising, targeting, profiling, or third-party analytics cookies. We do not use Google Analytics, Facebook Pixel, or similar tracking technologies.",
+        title: "4. Marketing Cookies (Meta Pixel)",
+        body: "With your consent, vitecamion uses the Meta Pixel (Facebook/Instagram) to measure the performance of our advertising campaigns and build audiences for remarketing. The Meta Pixel is only loaded after you accept marketing cookies in the consent banner or cookie preferences panel; it never loads before you give consent, and stops sending new events as soon as you withdraw consent. Data sent to Meta is limited to page views, product views, cart actions, and purchase totals — we never send your name, email, phone number, or postal address to Meta through this pixel. Meta's own use of this data is governed by their Data Policy (facebook.com/policy.php). You can accept, reject, or change this choice at any time via \"Cookie settings\" below.",
       },
       {
         title: "5. Local Storage (Shop Cart & Wishlist)",
@@ -562,7 +562,7 @@ export const en = {
       },
       {
         title: "6. Managing Your Preferences",
-        body: "Because the only vitecamion cookie is strictly necessary for authentication, it cannot be disabled via a consent banner without preventing you from using the site. You may delete cookies at any time through your browser settings. Doing so will log you out of any active session.",
+        body: "The vitecamion_auth cookie is strictly necessary for authentication and cannot be disabled without breaking login. Marketing cookies (such as the Meta Pixel described above) are optional and can be enabled or disabled at any time using the \"Cookie settings\" button available on every page — disabling them takes effect immediately, without needing to reload the page. You may also delete any cookie at any time through your browser settings; doing so will log you out of any active session.",
       },
       {
         title: "7. Contact",
@@ -1614,8 +1614,8 @@ export const fr: Translations = {
         body: "Lors du passage au paiement, Stripe – notre prestataire de paiement – peut déposer des cookies pour détecter la fraude, prévenir les abus et sécuriser le paiement. Ces cookies sont régis par la propre politique de confidentialité de Stripe (stripe.com/privacy). vitecamion n'a pas accès à ces cookies et ne les contrôle pas.",
       },
       {
-        title: "4. Cookies que nous n'utilisons pas",
-        body: "vitecamion n'utilise pas de cookies publicitaires, de ciblage, de profilage ni d'analytics tiers. Nous n'utilisons pas Google Analytics, Facebook Pixel ni aucune technologie de suivi similaire.",
+        title: "4. Cookies marketing (Meta Pixel)",
+        body: "Avec votre consentement, vitecamion utilise le Pixel Meta (Facebook/Instagram) pour mesurer la performance de nos campagnes publicitaires et constituer des audiences de remarketing. Le Pixel Meta n'est chargé qu'après votre acceptation des cookies marketing dans le bandeau de consentement ou le panneau de préférences ; il ne se charge jamais avant votre consentement et cesse d'envoyer de nouveaux événements dès que vous retirez votre consentement. Les données transmises à Meta se limitent aux pages consultées, aux produits vus, aux actions du panier et aux montants d'achat — nous ne transmettons jamais votre nom, votre e-mail, votre téléphone ou votre adresse postale à Meta via ce pixel. L'utilisation de ces données par Meta est régie par leur politique de données (facebook.com/policy.php). Vous pouvez accepter, refuser ou modifier ce choix à tout moment via « Paramètres des cookies » ci-dessous.",
       },
       {
         title: "5. Stockage local (panier et liste de souhaits)",
@@ -1623,7 +1623,7 @@ export const fr: Translations = {
       },
       {
         title: "6. Gestion de vos préférences",
-        body: "Le seul cookie déposé par vitecamion étant strictement nécessaire à l'authentification, il ne peut pas être désactivé via un bandeau de consentement sans empêcher l'accès au site. Vous pouvez supprimer les cookies à tout moment depuis les paramètres de votre navigateur. Cela entraînera votre déconnexion de toute session en cours.",
+        body: "Le cookie vitecamion_auth est strictement nécessaire à l'authentification et ne peut pas être désactivé sans interrompre la connexion. Les cookies marketing (comme le Pixel Meta décrit ci-dessus) sont optionnels et peuvent être activés ou désactivés à tout moment via le bouton « Paramètres des cookies » présent sur chaque page — leur désactivation prend effet immédiatement, sans besoin de recharger la page. Vous pouvez également supprimer tout cookie à tout moment depuis les paramètres de votre navigateur ; cela entraînera votre déconnexion de toute session en cours.",
       },
       {
         title: "7. Contact",

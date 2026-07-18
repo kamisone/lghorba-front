@@ -9,6 +9,7 @@ import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVaria
 import ProductGallery, { type GalleryMediaItem } from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
+import { pixelTrack } from "@/lib/metaPixel";
 import { formatStockError, stockCheckMessage } from "@/lib/shop/stockError";
 import { getTrustBadgeIcon } from "@/lib/shop/trustBadgeIcons";
 import { Lock, Truck, RotateCcw, PackageX } from "lucide-react";
@@ -246,6 +247,23 @@ export default function ShopProductDetail({
   const activeSku        = resolvedVariant?.sku ?? defaultVariant?.sku ?? null;
 
   const selectedOptionValueIds = selectedVariant?.optionValueIds ?? [];
+
+  // Meta Pixel: value/currency/ids only — never add customer PII here. Fires once
+  // per distinct product (App Router can reuse this component across client-side
+  // navigations between products without a full remount).
+  const viewContentFiredForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (viewContentFiredForRef.current === product.id) return;
+    viewContentFiredForRef.current = product.id;
+    pixelTrack("ViewContent", {
+      content_type: "product",
+      content_ids: [product.id],
+      content_name: product.title,
+      value: activePriceCents / 100,
+      currency: "EUR",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
 
   // Prepend the variant-specific hero image to the gallery, always at index 0,
   // so ProductGallery can reliably snap to it on selection change. selectedVariant
