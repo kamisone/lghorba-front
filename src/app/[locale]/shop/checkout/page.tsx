@@ -43,7 +43,7 @@ interface CheckoutSnapshot {
 
 // ── Reservation countdown ──────────────────────────────────────────────────────
 
-function ReservationTimer({ expiresAt, locale }: { expiresAt: string; locale: string }) {
+function ReservationTimer({ expiresAt, locale, onExpire }: { expiresAt: string; locale: string; onExpire?: () => void }) {
   const t = getTranslations(locale).shop;
   const [remaining, setRemaining] = useState(() => {
     const diff = new Date(expiresAt).getTime() - Date.now();
@@ -55,6 +55,17 @@ function ReservationTimer({ expiresAt, locale }: { expiresAt: string; locale: st
     const id = setInterval(() => setRemaining(s => Math.max(0, s - 1)), 1000);
     return () => clearInterval(id);
   }, [remaining]);
+
+  // Fires once — including on first mount if a restored/stale snapshot is
+  // already expired — so the parent can clear the stale persisted session
+  // instead of leaving the user stuck looking at an old expired reservation.
+  const expiredFiredRef = useRef(false);
+  useEffect(() => {
+    if (remaining <= 0 && !expiredFiredRef.current) {
+      expiredFiredRef.current = true;
+      onExpire?.();
+    }
+  }, [remaining, onExpire]);
 
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
@@ -288,6 +299,19 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   function goToStep(s: Step) {
     setStep(s);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Reservation expired (live countdown reaching 0, or a stale restored session
+  // that was already expired on load) — clear the persisted session so it isn't
+  // restored again, and reset back to a clean address step so the customer can
+  // start a fresh order without having to leave the page.
+  function handleReservationExpired() {
+    clearSession(token);
+    setSnapshot(null);
+    setClientSecret(null);
+    setSelectedMethodId(null);
+    setFormError(t.reservationExpired);
+    goToStep("address");
   }
 
   function handleStepClick(s: Step) {
@@ -557,7 +581,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
             <form onSubmit={handleConfirmShipping}>
               <h2 className={styles.sectionTitle}>{t.shippingMethodTitle}</h2>
               {snapshot.reservationExpiresAt && (
-                <ReservationTimer expiresAt={snapshot.reservationExpiresAt} locale={locale} />
+                <ReservationTimer expiresAt={snapshot.reservationExpiresAt} locale={locale} onExpire={handleReservationExpired} />
               )}
               {shippingMethods.length === 0 && (
                 <p style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>
@@ -606,7 +630,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
             <div>
               <h2 className={styles.sectionTitle}>{t.paymentTitle}</h2>
               {snapshot.reservationExpiresAt && (
-                <ReservationTimer expiresAt={snapshot.reservationExpiresAt} locale={locale} />
+                <ReservationTimer expiresAt={snapshot.reservationExpiresAt} locale={locale} onExpire={handleReservationExpired} />
               )}
               {clientSecret && (
                 <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" }, locale: locale as any }}>
