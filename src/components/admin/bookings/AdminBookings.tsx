@@ -66,6 +66,13 @@ interface TimelineEvent {
   dateTime: string;
 }
 
+// Half-hour slots for the "renting at" time picker, e.g. "00:00", "00:30", … "23:30".
+const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
+  const h = String(Math.floor(i / 2)).padStart(2, "0");
+  const m = i % 2 === 0 ? "00" : "30";
+  return `${h}:${m}`;
+});
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function daysDiff(start: string, end: string): number {
@@ -514,6 +521,8 @@ export default function AdminBookings() {
   const [carFilter,     setCarFilter]     = useState<string>("all");
   const [dateFrom,      setDateFrom]      = useState("");
   const [dateTo,        setDateTo]        = useState("");
+  const [atDate,        setAtDate]        = useState("");
+  const [atHour,        setAtHour]        = useState("");
   const [selected,      setSelected]      = useState<AdminBooking | null>(null);
   const [editBooking,   setEditBooking]   = useState<AdminBooking | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -675,6 +684,13 @@ export default function AdminBookings() {
 
   // ── History tab: filter past + cancelled ──────────────────────────────────
 
+  // Instant the admin is probing for "which car was being rented then" — null when
+  // either half of the picker is empty.
+  const atMs = useMemo(() => {
+    if (!atDate || atHour === "") return null;
+    return new Date(localDTToISO(`${atDate}T${atHour}`, tz)).getTime();
+  }, [atDate, atHour, tz]);
+
   const history = useMemo(() => {
     const now = new Date();
     return bookings.filter(b => {
@@ -694,9 +710,17 @@ export default function AdminBookings() {
       if (carFilter !== "all" && b.carId !== carFilter) return false;
       if (dateFrom && b.startDateTime < `${dateFrom}T00:00:00`) return false;
       if (dateTo   && b.startDateTime > `${dateTo}T23:59:59`)   return false;
+      // A cancelled booking never actually had the car out, so it can't match
+      // "which car was being rented at this instant" regardless of its dates.
+      if (atMs !== null) {
+        if (isCancelledStatus(b.status)) return false;
+        const startMs = new Date(b.startDateTime).getTime();
+        const endMs   = new Date(b.endDateTime).getTime();
+        if (atMs < startMs || atMs > endMs) return false;
+      }
       return true;
     });
-  }, [bookings, search, statusFilter, sourceFilter, carFilter, dateFrom, dateTo]);
+  }, [bookings, search, statusFilter, sourceFilter, carFilter, dateFrom, dateTo, atMs]);
 
   // ── Counts for tab badges ─────────────────────────────────────────────────
 
@@ -760,9 +784,12 @@ export default function AdminBookings() {
   };
 
   const clearHistoryFilters = () => {
-    setSearch(""); setStatusFilter("all"); setSourceFilter("all"); setCarFilter("all"); setDateFrom(""); setDateTo("");
+    setSearch(""); setStatusFilter("all"); setSourceFilter("all"); setCarFilter("all");
+    setDateFrom(""); setDateTo(""); setAtDate(""); setAtHour("");
   };
-  const hasHistoryFilters = search || statusFilter !== "all" || sourceFilter !== "all" || carFilter !== "all" || dateFrom || dateTo;
+  const hasHistoryFilters =
+    search || statusFilter !== "all" || sourceFilter !== "all" || carFilter !== "all" ||
+    dateFrom || dateTo || atDate || atHour;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -914,6 +941,17 @@ export default function AdminBookings() {
             <label className={styles.dateField}>
               <span className={styles.dateFieldLabel}>To</span>
               <input type="date" className={styles.dateInput} value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            </label>
+            <label className={styles.dateField}>
+              <span className={styles.dateFieldLabel}>Renting at date</span>
+              <input type="date" className={styles.dateInput} value={atDate} onChange={e => setAtDate(e.target.value)} />
+            </label>
+            <label className={styles.dateField}>
+              <span className={styles.dateFieldLabel}>Time</span>
+              <select className={styles.select} value={atHour} onChange={e => setAtHour(e.target.value)}>
+                <option value="">--</option>
+                {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
             </label>
             {hasHistoryFilters && <button className={styles.clearBtn} onClick={clearHistoryFilters}>Clear filters</button>}
           </div>
