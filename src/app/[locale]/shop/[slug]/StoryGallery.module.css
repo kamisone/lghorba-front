@@ -312,9 +312,9 @@
 }
 
 /* Uniform card: every row sits in the same 4:3 rounded frame regardless of
-   the source image's own size. object-fit stays "contain" (no cropping),
-   so the card needs its own background + shadow — otherwise the rounded
-   corners would just clip a transparent-cornered picture invisibly. */
+   the source image's own size. object-fit is "cover", so the image always
+   fills the frame edge-to-edge (cropped as needed) — the card still keeps
+   its own background + shadow for the rounded corners. */
 .narrativeMedia .imgShell {
   border-radius: 20px;
   overflow: hidden;
@@ -325,7 +325,7 @@
 }
 
 .narrativeMedia .img {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
 }
 
