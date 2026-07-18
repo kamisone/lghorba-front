@@ -8,6 +8,7 @@ export interface RentPosition {
   lat: number;
   lng: number;
   recordedAt: string;
+  rawMessage?: string | null;
 }
 
 interface Props {

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import type { CalendarBooking, Car } from "./data";
 import RentMap, { type RentPosition } from "./RentMap";
+import PositionLookup from "./PositionLookup";
 import BookingAdminModal from "../bookings/BookingAdminModal";
 import { useToast } from "@/components/toast/ToastContext";
 import { useModalUrl } from "@/hooks/useModalUrl";
@@ -394,6 +395,25 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
     }
   };
 
+  // ── Delete a single GPS position ──────────────────────────────────────────
+
+  const deleteLivePosition = async (positionId: string) => {
+    if (!sessionId) return;
+    const res = await fetch(`/next-api/rent-sessions/${sessionId}/positions/${positionId}`, { method: "DELETE" });
+    if (res.ok || res.status === 204) {
+      setPositions(prev => prev.filter(p => p.id !== positionId));
+    }
+  };
+
+  const deleteSessionPosition = async (session: RentSession, positionId: string) => {
+    const res = await fetch(`/next-api/rent-sessions/${session.id}/positions/${positionId}`, { method: "DELETE" });
+    if (res.ok || res.status === 204) {
+      setSessions(prev => prev.map(s =>
+        s.id === session.id ? { ...s, positions: s.positions?.filter(p => p.id !== positionId) } : s,
+      ));
+    }
+  };
+
   // ── Expand / collapse session history row ────────────────────────────────
 
   const toggleSessionExpand = async (session: RentSession) => {
@@ -553,6 +573,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
               </div>
               <button className={styles.mapExpandBtn} onClick={() => setMapFullscreen(true)} title="Fullscreen">⛶</button>
             </div>
+            <PositionLookup positions={positions} onDelete={deleteLivePosition} />
             <RentMap positions={positions} />
           </div>
           {mapFullscreen && (
@@ -667,6 +688,10 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                             </div>
                             <button className={styles.mapExpandBtn} onClick={() => setFullscreenSessionId(session.id)} title="Fullscreen">⛶</button>
                           </div>
+                          <PositionLookup
+                            positions={session.positions}
+                            onDelete={(positionId) => deleteSessionPosition(session, positionId)}
+                          />
                           <RentMap positions={session.positions} height={220} />
                         </div>
                         {fullscreenSessionId === session.id && (
