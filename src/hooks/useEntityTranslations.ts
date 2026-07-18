@@ -28,7 +28,14 @@ export function useEntityTranslations(
   const [loadingEn, setLoadingEn] = useState(false);
 
   useEffect(() => {
-    if (!entityId) return;
+    if (!entityId) {
+      // No entity to load translations for (e.g. a "create new" form) — clear
+      // any leftover values from a previously-edited entity instead of leaving
+      // them stale in the EN fields.
+      setEnValues({});
+      setEnIds({});
+      return;
+    }
     setLoadingEn(true);
     fetch(`/next-api/translations/${entityType}/${entityId}?lang=en`)
       .then(r => r.ok ? r.json() as Promise<Translation[]> : [])

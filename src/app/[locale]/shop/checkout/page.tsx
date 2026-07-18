@@ -276,12 +276,13 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
   }, [token]);
 
   useEffect(() => {
-    fetch("/next-api/public/shop/countries")
+    const qs = locale !== 'fr' ? `?lang=${locale}` : '';
+    fetch(`/next-api/public/shop/countries${qs}`)
       .then(r => r.ok ? r.json() : [])
       .then(data => { if (Array.isArray(data)) setCountries(data); })
       .catch(() => {})
       .finally(() => setCountriesLoading(false));
-  }, []);
+  }, [locale]);
 
   function goToStep(s: Step) {
     setStep(s);

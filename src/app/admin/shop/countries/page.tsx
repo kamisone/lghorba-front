@@ -5,11 +5,12 @@ import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { X } from "lucide-react";
 import { EUROPEAN_FLAGS, getFlagSvgDataUrl } from "@/lib/european-flags";
+import BilingualField from "@/components/admin/BilingualField";
+import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 
 interface Country {
   isoCode: string;
   name: string;
-  nativeName: string | null;
   phonePrefix: string | null;
   currencyCode: string | null;
   isoCode3: string | null;
@@ -22,7 +23,6 @@ interface Country {
 interface CountryForm {
   isoCode: string;
   name: string;
-  nativeName: string;
   phonePrefix: string;
   currencyCode: string;
   isoCode3: string;
@@ -33,7 +33,7 @@ interface CountryForm {
 }
 
 const EMPTY_FORM: CountryForm = {
-  isoCode: "", name: "", nativeName: "", phonePrefix: "",
+  isoCode: "", name: "", phonePrefix: "",
   currencyCode: "", isoCode3: "", continentCode: "",
   isActive: true, isShippingEnabled: false, isEuVat: false,
 };
@@ -172,6 +172,9 @@ export default function CountriesPage() {
   const [form, setForm]     = useState<CountryForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
 
+  const { enValues: nameEn, setEn: setNameEn, saveEnTranslations: saveNameEn } =
+    useEntityTranslations("shop_country", modal ? form.isoCode || null : null);
+
   async function load() {
     setLoading(true);
     try {
@@ -186,7 +189,6 @@ export default function CountriesPage() {
     setForm({
       isoCode:          c.isoCode,
       name:             c.name,
-      nativeName:       c.nativeName ?? "",
       phonePrefix:      c.phonePrefix ?? "",
       currencyCode:     c.currencyCode ?? "",
       isoCode3:         c.isoCode3 ?? "",
@@ -207,7 +209,6 @@ export default function CountriesPage() {
     const body = {
       ...form,
       isoCode:       form.isoCode.toUpperCase().trim(),
-      nativeName:    form.nativeName    || null,
       phonePrefix:   form.phonePrefix   || null,
       currencyCode:  form.currencyCode.toUpperCase().trim() || null,
       isoCode3:      form.isoCode3.toUpperCase().trim()     || null,
@@ -225,6 +226,9 @@ export default function CountriesPage() {
     });
 
     if (res.ok) {
+      const saved = await res.json().catch(() => null);
+      const isoCode = saved?.isoCode ?? body.isoCode;
+      await saveNameEn(isoCode, ["name"]);
       toast.success(isCreate ? "Country added" : "Country updated");
       setModal(null);
       load();
@@ -330,12 +334,7 @@ export default function CountriesPage() {
             : countries.map(c => (
                 <tr key={c.isoCode}>
                   <td><FlagIcon code={c.isoCode} size={22} /></td>
-                  <td>
-                    <strong>{c.name}</strong>
-                    {c.nativeName && c.nativeName !== c.name && (
-                      <span style={{ color: "var(--color-text-muted)", fontSize: 12, marginLeft: 6 }}>({c.nativeName})</span>
-                    )}
-                  </td>
+                  <td><strong>{c.name}</strong></td>
                   <td style={{ color: "var(--color-text-muted)", fontSize: 13, fontFamily: "monospace" }}>{c.isoCode}</td>
                   <td style={{ color: "var(--color-text-muted)", fontSize: 13 }}>{c.currencyCode ?? "—"}</td>
                   <td>
@@ -429,8 +428,13 @@ export default function CountriesPage() {
                 {field("ISO Code (2-letter) *", "isoCode", { maxLength: 2, placeholder: "FR", upper: true })}
                 {field("ISO Code 3-letter", "isoCode3", { maxLength: 3, placeholder: "FRA", upper: true })}
               </div>
-              {field("Name (English) *", "name", { placeholder: "France" })}
-              {field("Native name", "nativeName", { placeholder: "France" })}
+              <BilingualField
+                label="Name" frRequired
+                frValue={form.name} frOnChange={v => setForm(f => ({ ...f, name: v }))}
+                frPlaceholder="France"
+                enValue={nameEn.name ?? ""} enOnChange={v => setNameEn("name", v)}
+                enPlaceholder="France"
+              />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {field("Phone prefix", "phonePrefix", { placeholder: "+33", maxLength: 10 })}
                 {field("Currency (ISO 4217)", "currencyCode", { placeholder: "EUR", maxLength: 3, upper: true })}
