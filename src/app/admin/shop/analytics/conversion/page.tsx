@@ -26,6 +26,14 @@ interface ProductConversion {
   conversionRatePct: number;
 }
 
+interface CountryBreakdown {
+  countryCode: string;
+  countryName: string;
+  views: number;
+  addsToCart: number;
+  purchases: number;
+}
+
 const FUNNEL_STEPS: Array<{ key: keyof Funnel; label: string; color: string }> = [
   { key: "views",            label: "Product Views",    color: "#1d4ed8" },
   { key: "addsToCart",       label: "Added to Cart",    color: "#0891b2" },
@@ -37,6 +45,7 @@ export default function ConversionAnalyticsPage() {
   const [days, setDays]         = useState(30);
   const [funnel, setFunnel]     = useState<Funnel | null>(null);
   const [products, setProducts] = useState<ProductConversion[]>([]);
+  const [countries, setCountries] = useState<CountryBreakdown[]>([]);
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
@@ -44,9 +53,11 @@ export default function ConversionAnalyticsPage() {
     Promise.all([
       fetch(`/next-api/admin/shop/analytics/conversion-funnel?days=${days}`).then(r => r.ok ? r.json() : null),
       fetch(`/next-api/admin/shop/analytics/conversion-by-product?days=${days}&limit=20`).then(r => r.ok ? r.json() : []),
-    ]).then(([funnelData, productData]) => {
+      fetch(`/next-api/admin/shop/analytics/country-breakdown?days=${days}&limit=20`).then(r => r.ok ? r.json() : []),
+    ]).then(([funnelData, productData, countryData]) => {
       setFunnel(funnelData);
       setProducts(Array.isArray(productData) ? productData : []);
+      setCountries(Array.isArray(countryData) ? countryData : []);
     }).finally(() => setLoading(false));
   }, [days]);
 
@@ -126,6 +137,27 @@ export default function ConversionAnalyticsPage() {
                 <td>{p.addsToCart}</td>
                 <td>{p.purchases}</td>
                 <td>{p.conversionRatePct}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <h2 style={{ fontSize: 16, fontWeight: 600, margin: "32px 0 12px" }}>By Country</h2>
+      {loading ? (
+        <span className={styles.skeleton} style={{ height: 200, width: "100%", borderRadius: 12, display: "block" }} />
+      ) : countries.length === 0 ? (
+        <p style={{ color: "#9ca3af", textAlign: "center", padding: 48 }}>No country data for this period.</p>
+      ) : (
+        <table className={styles.table}>
+          <thead><tr><th>Country</th><th>Views</th><th>Added to Cart</th><th>Purchases</th></tr></thead>
+          <tbody>
+            {countries.map(c => (
+              <tr key={c.countryCode}>
+                <td>{c.countryName} <span style={{ color: "#9ca3af", fontSize: 12 }}>({c.countryCode})</span></td>
+                <td>{c.views}</td>
+                <td>{c.addsToCart}</td>
+                <td>{c.purchases}</td>
               </tr>
             ))}
           </tbody>
