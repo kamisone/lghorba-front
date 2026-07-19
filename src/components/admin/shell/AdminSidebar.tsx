@@ -16,7 +16,7 @@ import {
   Zap, AlertCircle, TrendingUp, LineChart, BarChart2,
   BookOpen, Search, Store, ThumbsUp, Trophy,
   Flag, FileEdit, Hash, Wrench, Activity, ShieldCheck, MessageSquareText,
-  Settings, ChevronRight, ChevronLeft, ChevronDown, Target,
+  Settings, ChevronRight, ChevronLeft, ChevronDown, Target, CalendarClock,
 } from "lucide-react";
 import styles from "./AdminSidebar.module.css";
 
@@ -48,11 +48,12 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Operations",
     items: [
-      { href: "/admin/fleet",     icon: Car,           label: "Fleet"    },
-      { href: "/admin/calendar",  icon: CalendarDays,  label: "Calendar" },
-      { href: "/admin/bookings",  icon: CalendarCheck, label: "Bookings", badge: "pendingBookings" },
-      { href: "/admin/parkings",  icon: ParkingCircle, label: "Parkings" },
-      { href: "/admin/replies",   icon: MessageSquareText, label: "Replies" },
+      { href: "/admin/fleet",           icon: Car,               label: "Fleet"     },
+      { href: "/admin/fleet/idle-days", icon: CalendarClock,     label: "Idle Days" },
+      { href: "/admin/calendar",        icon: CalendarDays,      label: "Calendar"  },
+      { href: "/admin/bookings",        icon: CalendarCheck,     label: "Bookings", badge: "pendingBookings" },
+      { href: "/admin/parkings",        icon: ParkingCircle,     label: "Parkings" },
+      { href: "/admin/replies",         icon: MessageSquareText, label: "Replies" },
     ],
   },
   {

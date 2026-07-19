@@ -1,0 +1,105 @@
+.page { padding: 24px; max-width: 1200px; }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.title { font-size: 22px; font-weight: 700; color: #001829; margin: 0 0 4px; display: flex; align-items: center; gap: 9px; }
+.subtitle { font-size: 13px; color: #64748b; margin: 0; max-width: 560px; }
+
+.parkingSelect {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #001829;
+  cursor: pointer;
+}
+
+/* ── KPI Grid ── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) { .kpiGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .kpiGrid { grid-template-columns: 1fr; } }
+
+/* ── Two-column layout ── */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+.section {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle { font-size: 15px; font-weight: 700; color: #001829; margin: 0 0 16px; }
+
+/* ── Detail panel ── */
+.detailEmpty {
+  padding: 32px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.detailDate { font-size: 14px; font-weight: 700; color: #001829; }
+.detailCount { font-size: 12px; font-weight: 600; color: #16a34a; }
+
+.parkingGroup { margin-bottom: 14px; }
+.parkingGroup:last-child { margin-bottom: 0; }
+
+.parkingGroupTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  margin: 0 0 6px;
+}
+
+.carRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.carRow:last-child { border-bottom: none; }
+
+.carName { color: #001829; font-weight: 500; }
+.carPlate { color: #94a3b8; font-size: 11px; font-variant-numeric: tabular-nums; }
+
+.loadingState {
+  padding: 60px 40px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}

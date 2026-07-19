@@ -1,0 +1,56 @@
+.list { display: flex; flex-direction: column; gap: 0; }
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: 8px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13px;
+  cursor: pointer;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.row:last-child { border-bottom: none; }
+.row:hover { background: #f8fafc; }
+
+.rowActive { background: #f0fdf4; }
+
+.rank {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.date { color: #334155; font-weight: 500; flex: 1; }
+
+.count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #16a34a;
+  white-space: nowrap;
+}
+
+.countSub {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 400;
+  margin-left: 3px;
+}
+
+.emptyState {
+  padding: 24px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}

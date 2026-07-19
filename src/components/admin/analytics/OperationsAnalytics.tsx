@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import type { Car } from "../fleet/data";
 import styles from "./OperationsAnalytics.module.css";
+import KPICard from "./KPICard";
 import { Car as CarIcon, Navigation, Gauge, Zap, Clock, CreditCard, Warehouse, MapPin, BarChart2 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -370,33 +371,6 @@ export default function OperationsAnalytics() {
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
-
-function KPICard({
-  icon,
-  label,
-  value,
-  accent,
-  sub,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  accent: string;
-  sub: string;
-}) {
-  return (
-    <div className={styles.kpiCard} style={{ borderTopColor: accent }}>
-      <div className={styles.kpiHeader}>
-        <span className={styles.kpiIcon} style={{ color: accent }}>
-          {icon}
-        </span>
-        <span className={styles.kpiLabel}>{label}</span>
-      </div>
-      <div className={styles.kpiValue}>{value}</div>
-      <div className={styles.kpiSub}>{sub}</div>
-    </div>
-  );
-}
 
 function NavCard({
   href,
