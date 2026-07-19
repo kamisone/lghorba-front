@@ -9,7 +9,7 @@ import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVaria
 import ProductGallery, { type GalleryMediaItem } from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
-import { pixelTrack } from "@/lib/metaPixel";
+import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
 import { formatStockError, stockCheckMessage } from "@/lib/shop/stockError";
 import { getTrustBadgeIcon } from "@/lib/shop/trustBadgeIcons";
 import { Lock, Truck, RotateCcw, PackageX } from "lucide-react";
@@ -250,18 +250,22 @@ export default function ShopProductDetail({
 
   // Meta Pixel: value/currency/ids only — never add customer PII here. Fires once
   // per distinct product (App Router can reuse this component across client-side
-  // navigations between products without a full remount).
+  // navigations between products without a full remount). Same eventId shared
+  // between the browser pixel and the server-side Conversions API call for dedup.
   const viewContentFiredForRef = useRef<string | null>(null);
   useEffect(() => {
     if (viewContentFiredForRef.current === product.id) return;
     viewContentFiredForRef.current = product.id;
-    pixelTrack("ViewContent", {
+    const eventId = crypto.randomUUID();
+    const customData = {
       content_type: "product",
       content_ids: [product.id],
       content_name: product.title,
       value: activePriceCents / 100,
       currency: "EUR",
-    });
+    };
+    pixelTrack("ViewContent", customData, eventId);
+    trackServerEvent("ViewContent", eventId, customData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 

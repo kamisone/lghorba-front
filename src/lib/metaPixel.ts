@@ -67,3 +67,34 @@ function readCookie(name: string): string | null {
 export function getMetaCookies(): { fbc: string | null; fbp: string | null } {
   return { fbc: readCookie("_fbc"), fbp: readCookie("_fbp") };
 }
+
+/**
+ * Sends the matching server-side (Conversions API) event for view/query-type
+ * actions (ViewContent, Search) that have no natural backend mutation to hook
+ * into — AddToCart/InitiateCheckout/Purchase are sent from their own backend
+ * flows instead. Gated the same way as the browser pixel: only fires once
+ * fbq has loaded (i.e. after marketing consent was granted), so a customer
+ * who never consents never has this sent server-side either. Fire-and-forget
+ * — never blocks the UI, failures are silently swallowed (best-effort
+ * analytics, not a user-facing feature).
+ */
+export function trackServerEvent(
+  eventName: "ViewContent" | "Search",
+  eventId: string,
+  customData: Record<string, unknown>,
+): void {
+  if (typeof window === "undefined" || !window.fbq) return;
+  const { fbc, fbp } = getMetaCookies();
+  fetch("/next-api/public/shop/meta-capi/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      eventName,
+      eventId,
+      eventSourceUrl: window.location.href,
+      customData,
+      fbc,
+      fbp,
+    }),
+  }).catch(() => {});
+}

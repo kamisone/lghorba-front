@@ -120,17 +120,20 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
         body: JSON.stringify({ variantId, quantity, selectedOptionValueIds }),
       });
       if (res.ok) {
-        const data: Cart = await res.json();
+        const data: Cart & { metaAddToCartEventId?: string } = await res.json();
         applyCart(data);
         // Meta Pixel: value/currency/ids only — never add customer PII here.
+        // Value reflects what was just added (unit price × quantity added),
+        // not the line's accumulated total. eventId is shared with the
+        // server-side Conversions API call for this same action (dedup).
         const addedItem = data.items.find(i => i.variantId === variantId);
         pixelTrack("AddToCart", {
           content_type: "product",
           content_ids: [variantId],
-          value: (addedItem?.lineTotalCents ?? 0) / 100,
+          value: ((addedItem?.unitPriceCents ?? 0) * quantity) / 100,
           currency: "EUR",
           num_items: quantity,
-        });
+        }, data.metaAddToCartEventId);
         return { ok: true };
       }
       const body = await res.json().catch(() => ({}));

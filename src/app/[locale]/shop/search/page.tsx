@@ -8,7 +8,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import shopStyles from "../Shop.module.css";
 import styles from "./Search.module.css";
 import { getTranslations } from "@/lib/i18n";
-import { pixelTrack } from "@/lib/metaPixel";
+import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
 
 interface Hit {
   id: string;
@@ -57,11 +57,15 @@ export default function ShopSearchPage({ params }: { params: { locale: string } 
 
   // Meta Pixel: fires once per distinct non-empty query (not on every filter
   // refetch of the same query). Value/currency/ids only — never customer PII.
+  // Same eventId shared between the browser pixel and the server-side
+  // Conversions API call for dedup.
   const searchFiredForRef = useRef<string | null>(null);
   useEffect(() => {
     if (!q.trim() || searchFiredForRef.current === q) return;
     searchFiredForRef.current = q;
-    pixelTrack("Search", { search_string: q });
+    const eventId = crypto.randomUUID();
+    pixelTrack("Search", { search_string: q }, eventId);
+    trackServerEvent("Search", eventId, { search_string: q });
   }, [q]);
 
   function pushQuery(updates: Record<string, string>) {

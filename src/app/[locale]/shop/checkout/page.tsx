@@ -386,13 +386,15 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
     orderIdRef.current = snap.orderId;
 
     // Meta Pixel: value/currency/ids only — never add customer PII here.
+    // eventId shared with the server-side Conversions API call for this same
+    // order (sent from the backend's ORDER_CREATED listener) for dedup.
     pixelTrack("InitiateCheckout", {
       value: snap.totalCents / 100,
       currency: "EUR",
       content_type: "product",
       content_ids: cart.items.map(i => i.variantId),
       num_items: cart.items.reduce((n, i) => n + i.quantity, 0),
-    });
+    }, snap.orderNumber);
 
     if (snap.shippingMethods.length > 0) {
       const firstId = snap.shippingMethods[0].id;
