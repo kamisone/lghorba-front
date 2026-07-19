@@ -44,11 +44,40 @@ interface Customer {
   addresses: Address[];
 }
 
+interface TimelineEntry {
+  type: string;
+  date: string;
+  productId: string | null;
+  productTitle: string | null;
+  searchQuery: string | null;
+  resultCount: number | null;
+  quantity: number | null;
+  orderId: string | null;
+  orderNumber: string | null;
+  orderStatus: string | null;
+  totalCents: number | null;
+}
+
+function describeTimelineEntry(e: TimelineEntry): string {
+  switch (e.type) {
+    case "product_view":     return `Viewed ${e.productTitle ?? "a product"}`;
+    case "search":            return `Searched "${e.searchQuery}"${e.resultCount === 0 ? " — no results" : ` — ${e.resultCount} result(s)`}`;
+    case "add_to_cart":       return `Added ${e.productTitle ?? "a product"} to cart${e.quantity ? ` (×${e.quantity})` : ""}`;
+    case "update_cart_item":  return `Updated cart quantity for ${e.productTitle ?? "a product"}${e.quantity ? ` (→ ×${e.quantity})` : ""}`;
+    case "remove_from_cart":  return `Removed ${e.productTitle ?? "a product"} from cart`;
+    case "checkout_started":  return "Started checkout";
+    case "order":             return `Order ${e.orderNumber ?? ""} — ${e.orderStatus} (€${((e.totalCents ?? 0) / 100).toFixed(2)})`;
+    case "wishlist_add":      return `Added ${e.productTitle ?? "a product"} to wishlist`;
+    default:                  return e.type;
+  }
+}
+
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -56,10 +85,12 @@ export default function CustomerDetailPage() {
     Promise.all([
       fetch(`/next-api/admin/shop/customers/${id}`),
       fetch(`/next-api/admin/shop/payment-methods/customer/${id}`),
-    ]).then(async ([custRes, pmRes]) => {
+      fetch(`/next-api/admin/shop/customers/${id}/timeline`),
+    ]).then(async ([custRes, pmRes, timelineRes]) => {
       if (custRes.status === 404) { setNotFound(true); return; }
       if (custRes.ok) setCustomer(await custRes.json());
       if (pmRes.ok) setPaymentMethods(await pmRes.json());
+      if (timelineRes.ok) setTimeline(await timelineRes.json());
     }).finally(() => setLoading(false));
   }, [id]);
 
@@ -185,6 +216,30 @@ export default function CustomerDetailPage() {
                 <button className={`${styles.btn} ${styles.btnDanger}`} style={{ fontSize: 12, padding: "4px 10px" }} onClick={() => removePaymentMethod(pm.id)}>
                   Remove
                 </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Activity timeline */}
+      <section style={{ background: "#fff", borderRadius: 12, padding: 24, marginTop: 24, border: "1px solid #e5e7eb" }}>
+        <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Activity</h2>
+        {timeline.length === 0 ? (
+          <p style={{ color: "#9ca3af" }}>No tracked activity yet</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {timeline.map((e, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex", justifyContent: "space-between", gap: 16,
+                  padding: "10px 0", borderBottom: i < timeline.length - 1 ? "1px solid #f3f4f6" : "none",
+                  fontSize: 13,
+                }}
+              >
+                <span>{describeTimelineEntry(e)}</span>
+                <span style={{ color: "#9ca3af", whiteSpace: "nowrap" }}>{new Date(e.date).toLocaleString()}</span>
               </div>
             ))}
           </div>

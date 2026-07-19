@@ -10,6 +10,7 @@ import ProductGallery, { type GalleryMediaItem } from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
 import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
+import { trackShopBehavior } from "@/lib/shopBehavior";
 import { formatStockError, stockCheckMessage } from "@/lib/shop/stockError";
 import { getTrustBadgeIcon } from "@/lib/shop/trustBadgeIcons";
 import { Lock, Truck, RotateCcw, PackageX } from "lucide-react";
@@ -266,6 +267,7 @@ export default function ShopProductDetail({
     };
     pixelTrack("ViewContent", customData, eventId);
     trackServerEvent("ViewContent", eventId, customData);
+    trackShopBehavior("product_view", { productId: product.id });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 

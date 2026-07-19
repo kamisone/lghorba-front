@@ -18,6 +18,7 @@ interface WishlistContextValue {
 
 const WishlistContext = createContext<WishlistContextValue | null>(null);
 const STORAGE_KEY = "shop_wishlist";
+const SESSION_TOKEN_KEY = "shop_wishlist_session_token";
 
 function readWishlist(): WishlistItem[] {
   if (typeof window === "undefined") return [];
@@ -29,6 +30,34 @@ function readWishlist(): WishlistItem[] {
   }
 }
 
+function getSessionToken(): string {
+  let token = localStorage.getItem(SESSION_TOKEN_KEY);
+  if (!token) {
+    token = crypto.randomUUID();
+    localStorage.setItem(SESSION_TOKEN_KEY, token);
+  }
+  return token;
+}
+
+// Persists to the backend (admin analytics visibility — most-wishlisted
+// products, non-converting wishlists) alongside the localStorage copy that
+// actually drives this app's wishlist UI. Fire-and-forget: never blocks the
+// toggle or breaks the UI if it fails.
+function syncToBackend(added: boolean, productId: string): void {
+  const sessionToken = getSessionToken();
+  if (added) {
+    fetch("/next-api/public/shop/wishlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionToken, productId }),
+    }).catch(() => {});
+  } else {
+    fetch(`/next-api/public/shop/wishlist/${productId}?sessionToken=${encodeURIComponent(sessionToken)}`, {
+      method: "DELETE",
+    }).catch(() => {});
+  }
+}
+
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
 
@@ -36,10 +65,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const toggle = useCallback((item: WishlistItem) => {
     setWishlist(prev => {
-      const next = prev.some(i => i.productId === item.productId)
+      const wasWishlisted = prev.some(i => i.productId === item.productId);
+      const next = wasWishlisted
         ? prev.filter(i => i.productId !== item.productId)
         : [...prev, item];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      syncToBackend(!wasWishlisted, item.productId);
       return next;
     });
   }, []);

@@ -9,6 +9,7 @@ import shopStyles from "../Shop.module.css";
 import styles from "./Search.module.css";
 import { getTranslations } from "@/lib/i18n";
 import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
+import { trackShopBehavior } from "@/lib/shopBehavior";
 
 interface Hit {
   id: string;
@@ -67,6 +68,16 @@ export default function ShopSearchPage({ params }: { params: { locale: string } 
     pixelTrack("Search", { search_string: q }, eventId);
     trackServerEvent("Search", eventId, { search_string: q });
   }, [q]);
+
+  // Internal behavior tracking (admin analytics, independent of Meta): needs
+  // the actual result count, so it waits for the fetch to land rather than
+  // firing alongside the Meta event above.
+  const searchBehaviorFiredForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!q.trim() || loading || !data || searchBehaviorFiredForRef.current === q) return;
+    searchBehaviorFiredForRef.current = q;
+    trackShopBehavior("search", { searchQuery: q, resultCount: data.total });
+  }, [q, loading, data]);
 
   function pushQuery(updates: Record<string, string>) {
     const p = new URLSearchParams(searchParams.toString());

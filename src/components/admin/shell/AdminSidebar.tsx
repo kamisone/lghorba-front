@@ -14,7 +14,7 @@ import {
   Users, Wallet, History, Percent, Ticket, BarChart3,
   Truck, ClipboardCheck, Box, CreditCard, ArrowLeftRight,
   Zap, AlertCircle, TrendingUp, LineChart, BarChart2,
-  BookOpen, Search, Store, ThumbsUp, Trophy,
+  BookOpen, Search, Store, ThumbsUp, Trophy, Heart,
   Flag, FileEdit, Hash, Wrench, Activity, ShieldCheck, MessageSquareText,
   Settings, ChevronRight, ChevronLeft, ChevronDown, Target, CalendarClock,
 } from "lucide-react";
@@ -170,6 +170,8 @@ const NAV_GROUPS: NavGroup[] = [
           { href: "/admin/shop/analytics/revenue",    icon: TrendingUp, label: "Revenue Analytics"    },
           { href: "/admin/shop/analytics/products",   icon: LineChart,  label: "Product Performance"  },
           { href: "/admin/shop/analytics/conversion", icon: BarChart3,  label: "Conversion Metrics"   },
+          { href: "/admin/shop/analytics/search",     icon: Search,     label: "Search Insights"      },
+          { href: "/admin/shop/analytics/wishlists",  icon: Heart,      label: "Wishlist Insights"    },
           { href: "/admin/shop/analytics/customers",  icon: Users,      label: "Customer Insights"    },
           { href: "/admin/shop/analytics/promotions", icon: Percent,    label: "Promotion Performance" },
           { href: "/admin/shop/analytics/inventory",  icon: Warehouse,  label: "Inventory Analytics"  },
