@@ -12,6 +12,7 @@ interface Product {
   sku: string | null;
   status: string;
   featured: boolean;
+  isTestProduct: boolean;
   featuredImageUrl: string | null;
   createdAt: string;
   deletedAt?: string | null;
@@ -215,6 +216,9 @@ export default function AdminProductsPage() {
                   )}
                   {p.featured && (
                     <span className={styles.cardFeaturedBadge}>Featured</span>
+                  )}
+                  {p.isTestProduct && (
+                    <span className={styles.cardTestBadge} title="Cannot be sold — checkout is refused">Test</span>
                   )}
                 </div>
 

@@ -55,7 +55,7 @@ interface DefaultVariant {
 
 interface Product {
   id: string; title: string; sku: string | null; slug: string; status: string;
-  featured: boolean; shortDescription: string | null; description: string | null;
+  featured: boolean; isTestProduct: boolean; shortDescription: string | null; description: string | null;
   brand: string | null; basePriceCents: number | null;
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
@@ -81,7 +81,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [product, setProduct]       = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState({
-    title: "", slug: "", status: "draft", featured: false,
+    title: "", slug: "", status: "draft", featured: false, isTestProduct: false,
     brand: "", shortDescription: "", description: "",
     primaryCategoryId: "",
     categoryIds: [] as string[],
@@ -158,6 +158,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         slug:              p.slug,
         status:            p.status,
         featured:          p.featured ?? false,
+        isTestProduct:     p.isTestProduct ?? false,
         brand:             p.brand ?? "",
         shortDescription:  p.shortDescription ?? "",
         description:       p.description ?? "",
@@ -893,6 +894,24 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   </div>
                   <input type="checkbox" checked={form.featured} onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }} />
                 </div>
+                <div className={styles.divider} />
+                <div className={styles.toggleRow}>
+                  <div>
+                    <div className={styles.toggleLabel}>Test product</div>
+                    <div className={styles.toggleNote}>
+                      Measures demand before you order stock. Customers can browse, add to
+                      cart and enter shipping, but checkout fails at the payment step.
+                      Results appear under Analytics → Test Products.
+                    </div>
+                  </div>
+                  <input type="checkbox" checked={form.isTestProduct} onChange={e => setForm(f => ({ ...f, isTestProduct: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }} />
+                </div>
+                {form.isTestProduct && (
+                  <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.5, color: "#b45309", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 10px" }}>
+                    This product cannot be sold. The payment form never loads and no charge
+                    is ever created — customers see a generic error at the shipping step.
+                  </p>
+                )}
               </div>
             </div>
 

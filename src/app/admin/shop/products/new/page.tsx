@@ -25,6 +25,7 @@ export default function NewProductPage() {
     shortDescription: "", description: "",
     basePriceCents: "", initialStock: "0",
     featured: false,
+    isTestProduct: false,
     primaryCategoryId: "",
     categoryIds: [] as string[],
   });
@@ -73,6 +74,7 @@ export default function NewProductPage() {
         basePriceCents:    Math.round(parseFloat(form.basePriceCents) * 100),
         initialStock:      parseInt(form.initialStock, 10) || 0,
         featured:          form.featured,
+        isTestProduct:     form.isTestProduct,
         media,
         infoSections,
         trustBadges,
@@ -269,6 +271,21 @@ export default function NewProductPage() {
                     type="checkbox"
                     checked={form.featured}
                     onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
+                  />
+                </div>
+                <div className={styles.divider} />
+                <div className={styles.toggleRow}>
+                  <div>
+                    <div className={styles.toggleLabel}>Test product</div>
+                    <div className={styles.toggleNote}>
+                      Cannot be sold — measures demand before you order stock.
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.isTestProduct}
+                    onChange={e => setForm(f => ({ ...f, isTestProduct: e.target.checked }))}
                     style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
                   />
                 </div>

@@ -332,3 +332,18 @@
   border-color: var(--color-admin-primary);
 }
 .pageBtnActive:hover { background: var(--color-admin-primary); opacity: 0.9; }
+
+/* Test product marker. Sits opposite the Featured badge so they never collide. */
+.cardTestBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #b45309;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
