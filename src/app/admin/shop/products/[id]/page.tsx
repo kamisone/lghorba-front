@@ -30,8 +30,18 @@ interface OptionValue {
 
 interface VariantAttr {
   id: string; name: string; slug: string; displayType: string;
+  /** Admin-only disambiguator: attributes may share a customer-facing name. */
+  adminLabel: string | null;
   isActive: boolean; sortOrder: number;
   optionValues: OptionValue[];
+}
+
+/**
+ * Attributes can share a `name` (two different "Couleur" sets), so anywhere the
+ * admin has to tell them apart the internal label has to come along with it.
+ */
+function attrLabel(a: Pick<VariantAttr, "name" | "adminLabel">): string {
+  return a.adminLabel ? `${a.name} — ${a.adminLabel}` : a.name;
 }
 
 interface ProductAttr {
@@ -675,6 +685,14 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                               <span style={{ fontWeight: 700, fontSize: 13, color: "var(--color-text-primary)" }}>
                                 {pa.attribute.name}
                               </span>
+                              {pa.attribute.adminLabel && (
+                                <span style={{
+                                  fontSize: 11.5, fontWeight: 500,
+                                  color: "var(--color-text-muted)",
+                                }}>
+                                  {pa.attribute.adminLabel}
+                                </span>
+                              )}
                               <span style={{
                                 fontSize: 11, fontWeight: 600,
                                 background: "var(--color-surface-raised)",
@@ -688,7 +706,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                             </div>
                             <button
                               type="button"
-                              onClick={() => unlinkAttribute(pa.attributeId, pa.attribute.name)}
+                              onClick={() => unlinkAttribute(pa.attributeId, attrLabel(pa.attribute))}
                               style={{
                                 fontSize: 12, color: "var(--color-error)",
                                 background: "none", border: "none", cursor: "pointer",
@@ -823,7 +841,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         >
                           <option value="">— Add a variation (Color, Size…) —</option>
                           {unlinkedAttrs.map(a => (
-                            <option key={a.id} value={a.id}>{a.name}</option>
+                            <option key={a.id} value={a.id}>{attrLabel(a)}</option>
                           ))}
                         </select>
                         <button
