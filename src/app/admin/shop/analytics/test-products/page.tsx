@@ -292,7 +292,6 @@ function TestProductsAnalytics() {
               <thead>
                 <tr>
                   <th>Product</th>
-                  <th>Status</th>
                   {SORT_COLUMNS.map(col => (
                     <th
                       key={col.key}
