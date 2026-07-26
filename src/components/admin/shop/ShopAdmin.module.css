@@ -66,6 +66,7 @@
 .modalSubtitle { font-size: 12px; color: #6b7280; margin-top: 2px; }
 .modalClose { border: none; background: none; font-size: 22px; line-height: 1; color: #6b7280; cursor: pointer; padding: 0 4px; }
 .modalClose:hover { color: #111827; }
+.modalFilters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; padding: 12px 20px; border-bottom: 1px solid #f3f4f6; }
 .modalBody { padding: 8px 20px 20px; overflow-y: auto; }
 .modalEmpty { color: #9ca3af; text-align: center; padding: 40px; font-size: 14px; }
 .eventTypeTag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; background: #f3f4f6; color: #374151; }

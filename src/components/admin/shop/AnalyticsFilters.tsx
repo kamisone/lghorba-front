@@ -436,6 +436,20 @@ function fmtDateTime(iso: string): string {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
 }
 
+/** Full set of behavior event types, for the in-modal event-name filter. */
+export const EVENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "product_view", label: "Product view" },
+  { value: "add_to_cart", label: "Added to cart" },
+  { value: "checkout_started", label: "Checkout started" },
+  { value: "test_checkout_blocked", label: "Reached checkout (test)" },
+  { value: "update_cart_item", label: "Cart updated" },
+  { value: "remove_from_cart", label: "Removed from cart" },
+  { value: "search", label: "Search" },
+];
+
+// Scope params that are NOT the modal's own date/event controls.
+const SCOPE_KEYS = ["days", "startDate", "endDate", "eventType"];
+
 export function AnalyticsDetailModal({
   open,
   onClose,
@@ -443,6 +457,7 @@ export function AnalyticsDetailModal({
   subtitle,
   kind,
   params,
+  eventOptions = EVENT_TYPE_OPTIONS,
 }: {
   open: boolean;
   onClose: () => void;
@@ -450,21 +465,58 @@ export function AnalyticsDetailModal({
   subtitle?: string;
   kind: DetailKind;
   params: Record<string, string>;
+  /** Event types selectable in the modal's event-name filter. */
+  eventOptions?: Array<{ value: string; label: string }>;
 }) {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<(EventDetailRow | PurchaseDetailRow)[]>([]);
-  const paramsKey = new URLSearchParams(params).toString();
 
+  // The modal owns its own date + event filters, seeded from the clicked scope.
+  const [range, setRange] = useState("30");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [eventType, setEventType] = useState("");
+
+  const seedKey = new URLSearchParams(params).toString();
+  useEffect(() => {
+    if (!open) return;
+    if (params.startDate || params.endDate) {
+      setRange("custom");
+      setStartDate(params.startDate ?? "");
+      setEndDate(params.endDate ?? "");
+    } else {
+      setRange(params.days ?? "30");
+      setStartDate("");
+      setEndDate("");
+    }
+    // A single incoming type preselects it; a comma-list (e.g. a product row)
+    // starts as "All" so every relevant event type shows.
+    setEventType(params.eventType && !params.eventType.includes(",") ? params.eventType : "");
+  }, [open, seedKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Effective fetch params: scope (productId/country/limit) + modal date + event.
+  const effParams = useMemo(() => {
+    const p: Record<string, string> = {};
+    for (const [k, v] of Object.entries(params)) {
+      if (!SCOPE_KEYS.includes(k)) p[k] = v;
+    }
+    Object.assign(p, dateRangeToQuery(range, startDate, endDate));
+    // Empty eventType ("All events") sends no filter, so every type is returned.
+    if (kind === "event" && eventType) p.eventType = eventType;
+    return p;
+  }, [params, range, startDate, endDate, eventType, kind]);
+
+  const effKey = new URLSearchParams(effParams).toString();
   useEffect(() => {
     if (!open) return;
     setLoading(true);
     const endpoint = kind === "event" ? "event-details" : "purchase-details";
-    fetch(`/next-api/admin/shop/analytics/${endpoint}?${paramsKey}`)
+    fetch(`/next-api/admin/shop/analytics/${endpoint}?${effKey}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setRows(Array.isArray(data) ? data : []))
       .catch(() => setRows([]))
       .finally(() => setLoading(false));
-  }, [open, kind, paramsKey]);
+  }, [open, kind, effKey]);
 
   // Escape to close + lock body scroll while open.
   useEffect(() => {
@@ -493,6 +545,38 @@ export function AnalyticsDetailModal({
             ×
           </button>
         </div>
+
+        {/* In-modal filters: date range (+ presets) and, for events, event name. */}
+        <div className={styles.modalFilters}>
+          <DateRangeFilter
+            range={range}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(patch) => {
+              if (patch.range !== undefined) setRange(patch.range);
+              if (patch.startDate !== undefined) setStartDate(patch.startDate);
+              if (patch.endDate !== undefined) setEndDate(patch.endDate);
+            }}
+          />
+          {kind === "event" && (
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Event</label>
+              <select
+                className={styles.filterSelect}
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value)}
+              >
+                <option value="">All events</option>
+                {eventOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
         <div className={styles.modalBody}>
           {loading ? (
             <span className={styles.skeleton} style={{ height: 180, width: "100%", borderRadius: 10, display: "block" }} />

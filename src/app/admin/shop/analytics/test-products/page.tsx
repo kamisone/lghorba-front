@@ -262,7 +262,7 @@ function TestProductsAnalytics() {
                     onClick={() =>
                       setModal({
                         title: r.title,
-                        subtitle: "Events for this product with exact date & time",
+                        subtitle: "Events for this product with details",
                         kind: "event",
                         params: { ...windowParams, productId: r.productId, eventType: TEST_EVENT_TYPES, limit: "200" },
                       })

@@ -205,7 +205,7 @@ function ConversionAnalytics() {
                   onClick={() =>
                     setModal(
                       step.eventType
-                        ? { title: step.label, subtitle: "Individual events with exact date & time", kind: "event", params: { ...baseParams, eventType: step.eventType, limit: "200" } }
+                        ? { title: step.label, subtitle: "Individual events with details", kind: "event", params: { ...baseParams, eventType: step.eventType, limit: "200" } }
                         : { title: "Purchases", subtitle: "Paid orders in this period", kind: "purchase", params: { ...baseParams, limit: "200" } },
                     )
                   }
@@ -244,7 +244,7 @@ function ConversionAnalytics() {
                 onClick={() =>
                   setModal({
                     title: p.title,
-                    subtitle: "Events for this product with exact date & time",
+                    subtitle: "Events for this product with details",
                     kind: "event",
                     params: { ...baseParams, productId: p.productId, limit: "200" },
                   })
