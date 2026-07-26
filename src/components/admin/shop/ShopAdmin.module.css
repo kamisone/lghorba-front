@@ -30,6 +30,31 @@
 .filterInput { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
 .filterSelect { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
 
+/* ── Analytics filter bar ── */
+.filterBar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: flex-end; }
+.filterGroup { display: flex; flex-direction: column; gap: 4px; }
+.filterLabel { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
+.filterToggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #374151; cursor: pointer; height: 36px; }
+.filterToggle input { width: 15px; height: 15px; cursor: pointer; }
+.filterReset { background: none; border: none; color: #1d4ed8; font-size: 13px; cursor: pointer; height: 36px; padding: 0 4px; }
+.filterReset:hover { text-decoration: underline; }
+.sortableTh { cursor: pointer; user-select: none; white-space: nowrap; }
+.sortableTh:hover { color: #1d4ed8; }
+.sortArrow { color: #9ca3af; font-size: 11px; margin-left: 3px; }
+
+/* ── Product typeahead ── */
+.productPicker { position: relative; }
+.productPickerControl { display: flex; align-items: center; gap: 6px; }
+.productPickerInput { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; min-width: 220px; }
+.productPickerChip { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 8px; font-size: 14px; color: #1e3a8a; min-width: 220px; }
+.productPickerChip span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.productPickerClear { border: none; background: none; color: #1d4ed8; cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+.productPickerMenu { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0; max-height: 260px; overflow-y: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.productPickerItem { padding: 8px 12px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #f3f4f6; }
+.productPickerItem:last-child { border-bottom: none; }
+.productPickerItem:hover { background: #eff6ff; }
+.productPickerEmpty { padding: 10px 12px; font-size: 13px; color: #9ca3af; }
+
 .pagination { display: flex; gap: 8px; margin-top: 16px; align-items: center; justify-content: flex-end; }
 .pageInfo { font-size: 14px; color: #6b7280; margin-right: 8px; }
 

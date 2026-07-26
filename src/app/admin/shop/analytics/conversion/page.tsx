@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
+import {
+  DateRangeFilter,
+  FilterSelect,
+  ProductPicker,
+  dateRangeToQuery,
+  useUrlFilters,
+} from "@/components/admin/shop/AnalyticsFilters";
 
 interface Funnel {
   days: number;
@@ -34,6 +41,12 @@ interface CountryBreakdown {
   purchases: number;
 }
 
+interface CountryOption {
+  isoCode: string;
+  name: string;
+  continentCode: string | null;
+}
+
 const FUNNEL_STEPS: Array<{ key: keyof Funnel; label: string; color: string }> = [
   { key: "views",            label: "Product Views",    color: "#1d4ed8" },
   { key: "addsToCart",       label: "Added to Cart",    color: "#0891b2" },
@@ -41,37 +54,110 @@ const FUNNEL_STEPS: Array<{ key: keyof Funnel; label: string; color: string }> =
   { key: "purchases",        label: "Purchased",        color: "#7c3aed" },
 ];
 
+const CONTINENTS: Array<{ value: string; label: string }> = [
+  { value: "AF", label: "Africa" },
+  { value: "AS", label: "Asia" },
+  { value: "EU", label: "Europe" },
+  { value: "NA", label: "North America" },
+  { value: "SA", label: "South America" },
+  { value: "OC", label: "Oceania" },
+  { value: "AN", label: "Antarctica" },
+];
+
+// Stable default reference for useUrlFilters.
+const DEFAULTS = {
+  range: "30",
+  startDate: "",
+  endDate: "",
+  country: "",
+  continent: "",
+  product: "",
+};
+
 export default function ConversionAnalyticsPage() {
-  const [days, setDays]         = useState(30);
+  return (
+    <Suspense fallback={null}>
+      <ConversionAnalytics />
+    </Suspense>
+  );
+}
+
+function ConversionAnalytics() {
+  const [filters, setFilters] = useUrlFilters(DEFAULTS);
   const [funnel, setFunnel]     = useState<Funnel | null>(null);
   const [products, setProducts] = useState<ProductConversion[]>([]);
   const [countries, setCountries] = useState<CountryBreakdown[]>([]);
+  const [countryOptions, setCountryOptions] = useState<CountryOption[]>([]);
   const [loading, setLoading]   = useState(true);
+
+  // Country dropdown options (loaded once).
+  useEffect(() => {
+    fetch("/next-api/admin/shop/countries")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setCountryOptions(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  // Build the shared query string from the current filters.
+  const query = useMemo(() => {
+    const params = new URLSearchParams(
+      dateRangeToQuery(filters.range, filters.startDate, filters.endDate),
+    );
+    if (filters.country) params.set("countryCode", filters.country);
+    else if (filters.continent) params.set("continent", filters.continent);
+    if (filters.product) params.set("productId", filters.product);
+    return params.toString();
+  }, [filters]);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch(`/next-api/admin/shop/analytics/conversion-funnel?days=${days}`).then(r => r.ok ? r.json() : null),
-      fetch(`/next-api/admin/shop/analytics/conversion-by-product?days=${days}&limit=20`).then(r => r.ok ? r.json() : []),
-      fetch(`/next-api/admin/shop/analytics/country-breakdown?days=${days}&limit=20`).then(r => r.ok ? r.json() : []),
+      fetch(`/next-api/admin/shop/analytics/conversion-funnel?${query}`).then(r => r.ok ? r.json() : null),
+      fetch(`/next-api/admin/shop/analytics/conversion-by-product?${query}&limit=20`).then(r => r.ok ? r.json() : []),
+      fetch(`/next-api/admin/shop/analytics/country-breakdown?${query}&limit=20`).then(r => r.ok ? r.json() : []),
     ]).then(([funnelData, productData, countryData]) => {
       setFunnel(funnelData);
       setProducts(Array.isArray(productData) ? productData : []);
       setCountries(Array.isArray(countryData) ? countryData : []);
     }).finally(() => setLoading(false));
-  }, [days]);
+  }, [query]);
 
   const maxCount = funnel ? Math.max(funnel.views, 1) : 1;
+
+  const countrySelectOptions = useMemo(
+    () => countryOptions.map((c) => ({ value: c.isoCode, label: c.name })),
+    [countryOptions],
+  );
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Conversion Analytics</h1>
-        <select className={styles.filterSelect} value={days} onChange={e => setDays(Number(e.target.value))}>
-          <option value={7}>Last 7 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
-        </select>
+      </div>
+
+      <div className={styles.filterBar}>
+        <DateRangeFilter
+          range={filters.range}
+          startDate={filters.startDate}
+          endDate={filters.endDate}
+          onChange={setFilters}
+        />
+        <ProductPicker value={filters.product} onChange={(v) => setFilters({ product: v })} />
+        {/* Selecting a country clears the continent scope and vice versa. */}
+        <FilterSelect
+          label="Continent"
+          value={filters.continent}
+          onChange={(v) => setFilters({ continent: v, country: "" })}
+          options={CONTINENTS}
+          allLabel="All continents"
+        />
+        <FilterSelect
+          label="Country"
+          value={filters.country}
+          onChange={(v) => setFilters({ country: v, continent: "" })}
+          options={countrySelectOptions}
+          allLabel="All countries"
+        />
       </div>
 
       <div className={styles.kpiGrid} style={{ marginBottom: 32 }}>
