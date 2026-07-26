@@ -14,12 +14,6 @@ import {
   useUrlFilters,
 } from "@/components/admin/shop/AnalyticsFilters";
 
-interface ProductCountry {
-  countryCode: string;
-  countryName: string;
-  events: number;
-}
-
 interface TestProductDemand {
   productId: string;
   title: string;
@@ -31,7 +25,6 @@ interface TestProductDemand {
   viewToCartRatePct: number;
   cartToCheckoutRatePct: number;
   viewToCheckoutRatePct: number;
-  countries: ProductCountry[];
 }
 
 interface CountryOption {
@@ -49,23 +42,6 @@ const CONTINENTS: Array<{ value: string; label: string }> = [
   { value: "OC", label: "Oceania" },
   { value: "AN", label: "Antarctica" },
 ];
-
-// How many countries to name in a row before collapsing the rest into "+N".
-const COUNTRIES_SHOWN = 2;
-
-/** Busiest countries for a product, truncated to keep the row readable. */
-function countriesLabel(countries: ProductCountry[]): string {
-  if (!countries.length) return "—";
-  const shown = countries.slice(0, COUNTRIES_SHOWN).map((c) => c.countryCode).join(", ");
-  const rest = countries.length - COUNTRIES_SHOWN;
-  return rest > 0 ? `${shown} +${rest}` : shown;
-}
-
-/** Full breakdown for the cell's tooltip. */
-function countriesTitle(countries: ProductCountry[]): string {
-  if (!countries.length) return "No geolocated events in this period";
-  return countries.map((c) => `${c.countryName}: ${c.events}`).join("\n");
-}
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Draft" },
@@ -317,7 +293,6 @@ function TestProductsAnalytics() {
                 <tr>
                   <th>Product</th>
                   <th>Status</th>
-                  <th>Countries</th>
                   {SORT_COLUMNS.map(col => (
                     <th
                       key={col.key}
@@ -349,9 +324,6 @@ function TestProductsAnalytics() {
                       <Link href={`/admin/shop/products/${r.productId}`} className={styles.link} onClick={(e) => e.stopPropagation()}>
                         {r.title}
                       </Link>
-                    </td>
-                    <td style={{ color: "#6b7280", whiteSpace: "nowrap" }} title={countriesTitle(r.countries)}>
-                      {countriesLabel(r.countries)}
                     </td>
                     <td>{r.views}</td>
                     <td>{r.addsToCart}</td>
