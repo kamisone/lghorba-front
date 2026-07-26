@@ -29,6 +29,8 @@ export interface CartItem {
   quantity: number;
   unitPriceCents: number;
   lineTotalCents: number;
+  /** This product carries free delivery; one such item frees the whole basket. */
+  freeShipping?: boolean;
   optionsSnapshot: CartItemOption[] | null;
 }
 
@@ -38,6 +40,8 @@ export interface Cart {
   items: CartItem[];
   subtotalCents: number;
   itemCount: number;
+  /** At least one item ships free, so the order does. Set by the backend. */
+  freeShipping?: boolean;
 }
 
 interface CartContextValue {

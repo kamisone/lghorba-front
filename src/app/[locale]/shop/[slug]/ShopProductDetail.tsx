@@ -85,6 +85,8 @@ interface Product {
   categories: Array<{ name: string }>;
   /** True when every variant's inventory is at 0 — same flag as the listing badge. */
   outOfStock?: boolean;
+  /** Delivery offered on this product; frees the whole basket. */
+  freeShipping?: boolean;
 }
 
 interface ReviewStats { average: number; count: number }
@@ -464,6 +466,21 @@ export default function ShopProductDetail({
             <span className={styles.discountBadge}>−{discount}%</span>
           ) : null}
         </div>
+
+        {product.freeShipping && (
+          <div className={styles.freeShippingBanner}>
+            <svg className={styles.freeShippingIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 7h11v8H3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+              <path d="M14 10h3.5L21 13v2h-7z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+              <circle cx="7" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
+              <circle cx="17" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
+            </svg>
+            <span className={styles.freeShippingText}>
+              <strong>{t.freeShippingBadge}</strong>
+              <span>{t.freeShippingProductNote}</span>
+            </span>
+          </div>
+        )}
 
         {activePromotion && (
           <p style={{ fontSize: 13, color: "#16a34a", fontWeight: 500, marginBottom: 12 }}>

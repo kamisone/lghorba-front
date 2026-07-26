@@ -26,6 +26,7 @@ export default function NewProductPage() {
     basePriceCents: "", initialStock: "0",
     featured: false,
     isTestProduct: false,
+    freeShipping: false,
     primaryCategoryId: "",
     categoryIds: [] as string[],
   });
@@ -75,6 +76,7 @@ export default function NewProductPage() {
         initialStock:      parseInt(form.initialStock, 10) || 0,
         featured:          form.featured,
         isTestProduct:     form.isTestProduct,
+        freeShipping:      form.freeShipping,
         media,
         infoSections,
         trustBadges,
@@ -287,6 +289,23 @@ export default function NewProductPage() {
                     checked={form.isTestProduct}
                     onChange={e => setForm(f => ({ ...f, isTestProduct: e.target.checked }))}
                     style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
+                  />
+                </div>
+
+                <div className={styles.divider} />
+                <div className={styles.toggleRow}>
+                  <div>
+                    <div className={styles.toggleLabel}>Free shipping</div>
+                    <div className={styles.toggleNote}>
+                      Delivery offered — applies when the basket contains only
+                      free-shipping products.
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.freeShipping}
+                    onChange={e => setForm(f => ({ ...f, freeShipping: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: "#059669", cursor: "pointer" }}
                   />
                 </div>
               </div>

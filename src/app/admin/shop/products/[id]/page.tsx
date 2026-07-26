@@ -65,7 +65,7 @@ interface DefaultVariant {
 
 interface Product {
   id: string; title: string; sku: string | null; slug: string; status: string;
-  featured: boolean; isTestProduct: boolean; shortDescription: string | null; description: string | null;
+  featured: boolean; isTestProduct: boolean; freeShipping: boolean; shortDescription: string | null; description: string | null;
   brand: string | null; basePriceCents: number | null;
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
@@ -91,7 +91,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [product, setProduct]       = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState({
-    title: "", slug: "", status: "draft", featured: false, isTestProduct: false,
+    title: "", slug: "", status: "draft", featured: false, isTestProduct: false, freeShipping: false,
     brand: "", shortDescription: "", description: "",
     primaryCategoryId: "",
     categoryIds: [] as string[],
@@ -169,6 +169,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         status:            p.status,
         featured:          p.featured ?? false,
         isTestProduct:     p.isTestProduct ?? false,
+        freeShipping:      p.freeShipping ?? false,
         brand:             p.brand ?? "",
         shortDescription:  p.shortDescription ?? "",
         description:       p.description ?? "",
@@ -928,6 +929,28 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.5, color: "#b45309", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 10px" }}>
                     This product cannot be sold. The payment form never loads and no charge
                     is ever created — customers see a generic error at the shipping step.
+                  </p>
+                )}
+
+                <div className={styles.divider} />
+                <div className={styles.toggleRow}>
+                  <div>
+                    <div className={styles.toggleLabel}>Free shipping</div>
+                    <div className={styles.toggleNote}>
+                      Delivery is offered on this product, whatever the order total.
+                      A &ldquo;Free shipping&rdquo; badge appears on the listing, the product
+                      page and the cart. Applies when the basket contains only
+                      free-shipping products.
+                    </div>
+                  </div>
+                  <input type="checkbox" checked={form.freeShipping} onChange={e => setForm(f => ({ ...f, freeShipping: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "#059669", cursor: "pointer" }} />
+                </div>
+                {form.freeShipping && (
+                  <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.5, color: "#065f46", background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 8, padding: "8px 10px" }}>
+                    Shipping is charged once per order, so it is all or nothing:
+                    the order ships free only when <strong>every product in the basket</strong>
+                    {" "}has free shipping. Add one product with paid delivery and normal
+                    shipping applies to the whole order.
                   </p>
                 )}
               </div>

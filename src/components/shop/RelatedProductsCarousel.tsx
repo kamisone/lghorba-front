@@ -16,6 +16,7 @@ export interface RelatedProduct {
   compareAtPriceCents?: number | null;
   averageRating?: number | null;
   reviewCount?: number;
+  freeShipping?: boolean;
 }
 
 interface Labels {
@@ -27,6 +28,7 @@ interface Labels {
   goToProduct: string;
   addToWishlist: string;
   removeFromWishlist: string;
+  freeShipping: string;
 }
 
 interface Props {
@@ -76,6 +78,10 @@ function ProductCard({
             <span className={styles.saleBadge}>
               -{Math.round((1 - item.minPriceCents! / item.compareAtPriceCents!) * 100)}%
             </span>
+          )}
+
+          {item.freeShipping && (
+            <span className={styles.freeShipBadge}>{labels.freeShipping}</span>
           )}
 
           <button

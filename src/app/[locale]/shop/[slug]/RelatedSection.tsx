@@ -83,6 +83,7 @@ export default async function RelatedSection({ slug, locale }: Props) {
             goToProduct: t.goToProduct,
             addToWishlist: t.addToWishlist,
             removeFromWishlist: t.removeFromWishlist,
+            freeShipping: t.freeShippingBadge,
           }}
         />
       )}

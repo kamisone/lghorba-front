@@ -84,9 +84,13 @@ export default function PriceBreakdown({
       <div className={`${styles.row} ${shippingFree ? styles.rowDiscount : styles.rowShipping}`}>
         <span className={styles.label}>{t.shipping}</span>
         <span className={styles.value}>
-          {!shippingKnown
-            ? <em style={{ fontWeight: 400, color: "var(--color-text-muted)", fontStyle: "normal" }}>{t.shippingCalc}</em>
-            : shippingFree ? t.free : fmt(shippingCents!)}
+          {/* A known-free order says so in the cart already, before an address
+              is entered and the exact shipping cost is resolvable. */}
+          {shippingFree
+            ? t.free
+            : !shippingKnown
+              ? <em style={{ fontWeight: 400, color: "var(--color-text-muted)", fontStyle: "normal" }}>{t.shippingCalc}</em>
+              : fmt(shippingCents!)}
         </span>
       </div>
 

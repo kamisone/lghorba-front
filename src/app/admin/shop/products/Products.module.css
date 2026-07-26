@@ -333,6 +333,28 @@
 }
 .pageBtnActive:hover { background: var(--color-admin-primary); opacity: 0.9; }
 
+/*
+ * Free-shipping marker. Bottom-left of the thumbnail, so it never collides with
+ * Featured (top-left) or Test (top-right) — a product can carry all three.
+ */
+.cardFreeShipBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #059669;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+}
+
 /* Test product marker. Sits opposite the Featured badge so they never collide. */
 .cardTestBadge {
   position: absolute;

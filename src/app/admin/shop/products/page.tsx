@@ -13,6 +13,7 @@ interface Product {
   status: string;
   featured: boolean;
   isTestProduct: boolean;
+  freeShipping: boolean;
   featuredImageUrl: string | null;
   createdAt: string;
   deletedAt?: string | null;
@@ -219,6 +220,11 @@ export default function AdminProductsPage() {
                   )}
                   {p.isTestProduct && (
                     <span className={styles.cardTestBadge} title="Cannot be sold — checkout is refused">Test</span>
+                  )}
+                  {p.freeShipping && (
+                    <span className={styles.cardFreeShipBadge} title="Delivery offered — the whole basket ships free with this product">
+                      ✓ Free shipping
+                    </span>
                   )}
                 </div>
 

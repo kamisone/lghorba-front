@@ -20,6 +20,7 @@ interface Product {
   cardImageUrls?: string[];
   outOfStock?: boolean;
   defaultVariantOutOfStock?: boolean;
+  freeShipping?: boolean;
   variants: Array<{ id: string; priceCents: number; compareAtPriceCents: number | null; isDefault: boolean }>;
 }
 interface Category { id: string; name: string; slug: string; parentId?: string | null }
@@ -240,6 +241,12 @@ function ProductCard({
         ) : isOnSale ? (
           <span className={styles.saleBadge}>{t.sale}</span>
         ) : null}
+
+        {/* Own corner rather than the priority chain above: free delivery is a
+            different promise from a discount, and the two should both be visible. */}
+        {product.freeShipping && !outOfStock && (
+          <span className={styles.freeShipBadge}>{t.freeShippingBadge}</span>
+        )}
 
         <button
           className={`${styles.wishlistBtn} ${wishlisted ? styles.wishlisted : ""}`}

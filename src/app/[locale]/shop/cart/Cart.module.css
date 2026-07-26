@@ -113,6 +113,36 @@
 }
 .summary h3 { font-size: 18px; font-weight: 700; color: var(--color-text-heading); margin-bottom: 20px; }
 .summaryRow { display: flex; justify-content: space-between; font-size: 14px; color: var(--color-text-secondary); margin-bottom: 12px; }
+/*
+ * Confirms the free delivery the breakdown already shows as "Free", in words —
+ * a zero on a line is easy to miss, and delivery cost is a common reason carts
+ * are abandoned at this exact point.
+ */
+.freeShippingNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.freeShippingNote svg { width: 20px; height: 20px; flex-shrink: 0; color: #059669; }
+
+@media (prefers-color-scheme: dark) {
+  .freeShippingNote {
+    border-color: #065f46;
+    background: rgb(6 78 59 / 0.3);
+    color: #6ee7b7;
+  }
+  .freeShippingNote svg { color: #34d399; }
+}
+
 .summaryTotal {
   display: flex; justify-content: space-between;
   font-weight: 700; font-size: 18px;

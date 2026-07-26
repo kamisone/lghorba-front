@@ -150,10 +150,23 @@ export default function CartPage({ params }: { params: { locale: string } }) {
 
           <PriceBreakdown
             subtotalCents={cart.subtotalCents}
+            freeShipping={cart.freeShipping}
             couponDiscountCents={previewDiscount}
             couponCode={appliedCoupon?.code}
             totalCents={previewTotal}
           />
+
+          {cart.freeShipping && (
+            <p className={styles.freeShippingNote}>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 7h11v8H3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                <path d="M14 10h3.5L21 13v2h-7z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                <circle cx="7" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
+                <circle cx="17" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
+              </svg>
+              {t.freeShippingCartNote}
+            </p>
+          )}
 
           <div className={styles.couponSection}>
             <PromoCodeInput

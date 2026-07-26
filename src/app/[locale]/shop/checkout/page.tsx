@@ -17,7 +17,13 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 function centsToEuros(c: number) { return (c / 100).toFixed(2); }
 
 interface CountryOption { isoCode: string; name: string; }
-interface ShippingMethod { id: string; name: string; priceCents: number; estimatedDaysMin: number; estimatedDaysMax: number; }
+interface ShippingMethod {
+  id: string; name: string; priceCents: number;
+  /** What the method costs without the free-shipping benefit, for strike-through. */
+  originalPriceCents?: number;
+  isFree?: boolean;
+  estimatedDaysMin: number; estimatedDaysMax: number;
+}
 interface CheckoutSnapshot {
   orderId: string;
   orderNumber: string;
@@ -39,6 +45,8 @@ interface CheckoutSnapshot {
   } | null;
   reservationExpiresAt: string | null;
   trackingToken: string | null;
+  freeShipping?: boolean;
+  freeShippingReason?: "product" | "promotion" | "coupon" | null;
 }
 
 // ── Reservation countdown ──────────────────────────────────────────────────────
@@ -590,6 +598,19 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                   {t.noShippingOptions}
                 </p>
               )}
+              {snapshot.freeShipping && (
+                <div className={styles.freeShippingBanner}>
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 7h11v8H3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                    <path d="M14 10h3.5L21 13v2h-7z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                    <circle cx="7" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
+                    <circle cx="17" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
+                  </svg>
+                  <span>
+                    <strong>{t.freeShippingBadge}</strong> — {t.freeShippingCartNote}
+                  </span>
+                </div>
+              )}
               <div className={styles.shippingMethods}>
                 {shippingMethods.map(m => (
                   <label key={m.id} className={`${styles.shippingOption} ${selectedMethodId === m.id ? styles.shippingOptionSelected : ""}`}>
@@ -601,7 +622,16 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                     <span className={styles.shippingName}>{m.name}</span>
                     <span className={styles.shippingDays}>{m.estimatedDaysMin}–{m.estimatedDaysMax} {t.days}</span>
                     <span className={styles.shippingPrice}>
-                      {m.priceCents === 0 ? <span style={{ color: "#16a34a", fontWeight: 700 }}>{t.free}</span> : `€${centsToEuros(m.priceCents)}`}
+                      {m.priceCents === 0 ? (
+                        <>
+                          {/* Show what was waived, not just a zero — the saving is
+                              the point, and a bare "Free" understates it. */}
+                          {m.originalPriceCents ? (
+                            <span className={styles.shippingPriceStruck}>€{centsToEuros(m.originalPriceCents)}</span>
+                          ) : null}
+                          <span style={{ color: "#16a34a", fontWeight: 700 }}>{t.free}</span>
+                        </>
+                      ) : `€${centsToEuros(m.priceCents)}`}
                     </span>
                   </label>
                 ))}
@@ -717,6 +747,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
             <PriceBreakdown
               subtotalCents={breakdownSubtotal}
               shippingCents={breakdownShipping}
+              freeShipping={snapshot?.freeShipping ?? cart?.freeShipping}
               categoryDiscountCents={breakdownCategoryDiscount}
               couponDiscountCents={breakdownCouponDiscount}
               couponCode={breakdownCouponCode}

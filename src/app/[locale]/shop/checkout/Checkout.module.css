@@ -165,7 +165,51 @@
 }
 .shippingName  { font-weight: 600; font-size: 14px; color: var(--color-text-heading); }
 .shippingDays  { font-size: 12px; color: var(--color-text-muted); }
-.shippingPrice { font-size: 14px; font-weight: 700; color: var(--color-text-heading); white-space: nowrap; }
+.shippingPrice {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+/* The waived price, kept visible so the customer sees what they saved. */
+.shippingPriceStruck {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+/*
+ * Sits above the method list: by the time a customer is choosing a carrier,
+ * "how much is delivery" is the open question, so answer it before they ask.
+ */
+.freeShippingBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 11px 13px;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%);
+  color: #065f46;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+.freeShippingBanner svg { width: 21px; height: 21px; flex-shrink: 0; color: #059669; }
+.freeShippingBanner strong { font-weight: 700; }
+
+@media (prefers-color-scheme: dark) {
+  .freeShippingBanner {
+    border-color: #065f46;
+    background: linear-gradient(180deg, rgb(6 78 59 / 0.35) 0%, rgb(6 95 70 / 0.25) 100%);
+    color: #6ee7b7;
+  }
+  .freeShippingBanner svg { color: #34d399; }
+}
 
 /* ── Action row ── */
 .actionRow { display: flex; gap: 12px; margin-top: 8px; }

@@ -912,6 +912,11 @@ export const en = {
     stockOnlyN: "Only {n} available",
     variantOos: "(out of stock)",
     orderSummary: "Order Summary",
+    // free shipping (per-product)
+    freeShippingBadge: "Free shipping",
+    freeShippingProductNote: "Delivery offered — unless your basket also contains items with paid shipping.",
+    freeShippingCartNote: "Your order ships free.",
+    freeShippingIncluded: "Free",
     savingsPrefix: "Savings of ",
     savingsSuffix: " will be confirmed at checkout.",
     proceedToCheckout: "Proceed to Checkout",
@@ -1978,6 +1983,11 @@ export const fr: Translations = {
     stockOnlyN: "Seulement {n} disponible(s)",
     variantOos: "(rupture de stock)",
     orderSummary: "Récapitulatif",
+    // free shipping (per-product)
+    freeShippingBadge: "Livraison offerte",
+    freeShippingProductNote: "Livraison offerte — sauf si votre panier contient aussi des articles avec livraison payante.",
+    freeShippingCartNote: "La livraison de votre commande est offerte.",
+    freeShippingIncluded: "Offerte",
     savingsPrefix: "Une économie de ",
     savingsSuffix: " sera confirmée à la caisse.",
     proceedToCheckout: "Passer à la caisse",
