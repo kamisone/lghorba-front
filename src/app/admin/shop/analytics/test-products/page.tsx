@@ -21,8 +21,10 @@ interface TestProductDemand {
   status: string;
   views: number;
   addsToCart: number;
+  reachedShipping: number;
   reachedCheckout: number;
   viewToCartRatePct: number;
+  cartToShippingRatePct: number;
   cartToCheckoutRatePct: number;
   viewToCheckoutRatePct: number;
 }
@@ -59,16 +61,20 @@ const LIMIT_OPTIONS = [
 
 // Sortable numeric columns → server sort keys.
 const SORT_COLUMNS: Array<{ key: keyof TestProductDemand; label: string; accent?: boolean }> = [
-  { key: "views",                label: "Views" },
-  { key: "addsToCart",           label: "Added to Cart" },
-  { key: "reachedCheckout",      label: "Reached Checkout", accent: true },
-  { key: "viewToCartRatePct",    label: "View → Cart" },
-  { key: "cartToCheckoutRatePct",label: "Cart → Checkout" },
-  { key: "viewToCheckoutRatePct",label: "View → Checkout" },
+  { key: "views",                 label: "Views" },
+  { key: "addsToCart",            label: "Added to Cart" },
+  // Address submitted, now on the shipping step — one step before payment.
+  { key: "reachedShipping",       label: "Reached Shipping" },
+  { key: "reachedCheckout",       label: "Reached Checkout", accent: true },
+  { key: "viewToCartRatePct",     label: "View → Cart" },
+  { key: "cartToShippingRatePct", label: "Cart → Shipping" },
+  { key: "cartToCheckoutRatePct", label: "Cart → Checkout" },
+  { key: "viewToCheckoutRatePct", label: "View → Checkout" },
 ];
 
 // Event types that make up a test product's demand.
-const TEST_EVENT_TYPES = "product_view,add_to_cart,test_checkout_blocked";
+const TEST_EVENT_TYPES =
+  "product_view,add_to_cart,checkout_started,test_checkout_blocked";
 
 interface ModalState {
   title: string;
@@ -176,9 +182,10 @@ function TestProductsAnalytics() {
     (acc, r) => ({
       views: acc.views + r.views,
       addsToCart: acc.addsToCart + r.addsToCart,
+      reachedShipping: acc.reachedShipping + r.reachedShipping,
       reachedCheckout: acc.reachedCheckout + r.reachedCheckout,
     }),
-    { views: 0, addsToCart: 0, reachedCheckout: 0 },
+    { views: 0, addsToCart: 0, reachedShipping: 0, reachedCheckout: 0 },
   );
 
   // Toggle sort: same column flips direction; a new column starts descending.
@@ -243,10 +250,13 @@ function TestProductsAnalytics() {
 
       <p style={{ marginTop: -8, marginBottom: 20, fontSize: 13, color: "#6b7280", maxWidth: 760, lineHeight: 1.6 }}>
         Test products behave like real products until checkout, which is refused before the
-        payment form loads. <strong>Reached checkout</strong> counts customers who entered
-        their address, chose a shipping method and clicked through to payment — the furthest
-        the product can be taken, and the people who would have bought it. Counted once per
-        customer, so retries after the error do not inflate it.
+        payment form loads. <strong>Reached shipping</strong> counts customers who submitted
+        their address and landed on the shipping step; <strong>reached checkout</strong>
+        counts those who then chose a shipping method and clicked through to payment — the
+        furthest the product can be taken, and the people who would have bought it. The gap
+        between the two is customers lost on the shipping step itself, usually to price or
+        delay rather than the product. Both are counted once per customer, so retries after
+        the error do not inflate them.
       </p>
 
       {loading ? (
@@ -277,6 +287,10 @@ function TestProductsAnalytics() {
             <div className={styles.kpiCard}>
               <div className={styles.kpiLabel}>Added to Cart</div>
               <div className={styles.kpiValue}>{totals.addsToCart}</div>
+            </div>
+            <div className={styles.kpiCard}>
+              <div className={styles.kpiLabel}>Reached Shipping</div>
+              <div className={styles.kpiValue}>{totals.reachedShipping}</div>
             </div>
             <div className={styles.kpiCard}>
               <div className={styles.kpiLabel}>Reached Checkout</div>
@@ -326,8 +340,10 @@ function TestProductsAnalytics() {
                     </td>
                     <td>{r.views}</td>
                     <td>{r.addsToCart}</td>
+                    <td>{r.reachedShipping}</td>
                     <td style={{ fontWeight: 700, color: "#b45309" }}>{r.reachedCheckout}</td>
                     <td>{r.viewToCartRatePct}%</td>
+                    <td>{r.cartToShippingRatePct}%</td>
                     <td>{r.cartToCheckoutRatePct}%</td>
                     <td>{r.viewToCheckoutRatePct}%</td>
                   </tr>

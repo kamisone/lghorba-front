@@ -52,7 +52,8 @@ interface CountryOption {
 const FUNNEL_STEPS: Array<{ key: keyof Funnel; label: string; color: string; eventType?: string }> = [
   { key: "views",            label: "Product Views",    color: "#1d4ed8", eventType: "product_view" },
   { key: "addsToCart",       label: "Added to Cart",    color: "#0891b2", eventType: "add_to_cart" },
-  { key: "checkoutsStarted", label: "Checkout Started", color: "#059669", eventType: "checkout_started" },
+  // Address form submitted → landed on the shipping step, one step before payment.
+  { key: "checkoutsStarted", label: "Reached Shipping",  color: "#059669", eventType: "checkout_started" },
   { key: "purchases",        label: "Purchased",        color: "#7c3aed" }, // no eventType → orders
 ];
 
