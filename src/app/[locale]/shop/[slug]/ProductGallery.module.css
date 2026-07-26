@@ -10,25 +10,116 @@
 }
 
 /* ── Vertical thumbnail strip (desktop) ──────────────────────────────────── */
-.thumbStrip {
+/* Column wrapper owns the absolute placement so the scrollable strip and its
+   edge cues (fade + chevrons) can be layered within the same footprint. */
+.thumbColumn {
   position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   width: 76px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
   z-index: 1;
 }
 
-.thumbStrip + .mainImage {
+.thumbStrip {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  /* A soft mask fades whichever end still has hidden thumbnails, so the strip
+     visibly "continues" past the edge instead of ending in a hard cut. Each end
+     is opaque (#000) by default and only turns transparent when its direction
+     can still scroll, toggled via .fadeTop / .fadeBottom. */
+  --fade-top: #000;
+  --fade-bottom: #000;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    var(--fade-top) 0,
+    #000 var(--fade-size, 0px),
+    #000 calc(100% - var(--fade-size, 0px)),
+    var(--fade-bottom) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    var(--fade-top) 0,
+    #000 var(--fade-size, 0px),
+    #000 calc(100% - var(--fade-size, 0px)),
+    var(--fade-bottom) 100%
+  );
+}
+.thumbStrip.fadeTop    { --fade-top: transparent;    --fade-size: 28px; }
+.thumbStrip.fadeBottom { --fade-bottom: transparent; --fade-size: 28px; }
+/* When both ends overflow, the shorthand above already covers it because each
+   class sets only its own side; --fade-size is shared and identical. */
+
+.thumbColumn + .mainImage {
   margin-left: 88px;
 }
 .thumbStrip::-webkit-scrollbar { display: none; }
+
+/* ── Edge scroll cues (chevrons) ─────────────────────────────────────────── */
+.thumbEdge {
+  position: absolute;
+  left: 0;
+  width: 76px;
+  height: 40px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0);
+  transition: opacity .2s ease;
+  z-index: 3;
+}
+.thumbEdgeVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.thumbEdge > svg {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.25));
+}
+.thumbEdgeTop {
+  top: 0;
+  align-items: flex-start;
+  padding-top: 3px;
+  background: linear-gradient(to bottom, var(--color-background, #fff) 30%, transparent);
+  border-radius: 10px 10px 0 0;
+}
+.thumbEdgeBottom {
+  bottom: 0;
+  align-items: flex-end;
+  padding-bottom: 3px;
+  background: linear-gradient(to top, var(--color-background, #fff) 30%, transparent);
+  border-radius: 0 0 10px 10px;
+}
+/* Gentle bob to draw the eye toward the hidden thumbnails. */
+.thumbEdgeVisible > svg { animation: thumbEdgeHint 1.6s ease-in-out infinite; }
+.thumbEdgeTop:hover, .thumbEdgeBottom:hover { color: var(--color-brand-primary); }
+.thumbEdge:hover > svg { animation-play-state: paused; }
+.thumbEdge:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: -2px; border-radius: 8px; }
+@keyframes thumbEdgeHint {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(2px); }
+}
+.thumbEdgeTop.thumbEdgeVisible > svg { animation-name: thumbEdgeHintUp; }
+@keyframes thumbEdgeHintUp {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thumbStrip { scroll-behavior: auto; }
+  .thumbEdgeVisible > svg,
+  .thumbEdgeTop.thumbEdgeVisible > svg { animation: none; }
+}
 
 .thumb {
   position: relative;
@@ -280,16 +371,43 @@
 }
 .dotActive { background: var(--color-brand-primary); transform: scale(1.3); }
 
-/* Mobile horizontal thumbnail row */
-.mobileStrip {
-  display: none;
+/* Mobile horizontal thumbnail row — arrow-paged, shown ≤640px */
+.mobileStripWrap {
+  display: none; /* revealed as flex in the ≤640px block */
+  align-items: center;
   gap: 8px;
-  margin-top: 12px;
+}
+.mobileStrip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
   scrollbar-width: none;
+  scroll-behavior: smooth;
 }
 .mobileStrip::-webkit-scrollbar { display: none; }
+
+/* Left / right paging arrows */
+.mobileArrow {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgba(0, 24, 41, .10);
+  transition: background .15s, color .15s, transform .1s, opacity .18s;
+}
+.mobileArrow:active { transform: scale(.9); background: var(--color-brand-primary); color: #fff; border-color: var(--color-brand-primary); }
+/* At an end: dim rather than remove, so the row width stays stable while paging. */
+.mobileArrow:disabled { opacity: .32; cursor: default; box-shadow: none; }
 .mobileThumbs {
   position: relative;
   width: 64px;
@@ -519,7 +637,7 @@
   .navBtn { pointer-events: all; background: rgba(255,255,255,.88); backdrop-filter: blur(4px); }
   /* Mobile strip sits below the image in normal flow but is clipped by
      galleryCol overflow:hidden — hide it explicitly for clarity */
-  .mobileStrip { display: none; }
+  .mobileStripWrap { display: none; }
 }
 
 /* ─ Mobile ≤640px: single-column flex; galleryCol is height:auto so the
@@ -534,8 +652,8 @@
     overflow: hidden;
   }
   .gallery    { flex-direction: column; gap: 0; }
-  .thumbStrip { display: none; }
-  .thumbStrip + .mainImage { margin-left: 0; }
+  .thumbColumn { display: none; }
+  .thumbColumn + .mainImage { margin-left: 0; }
   /* Hide arrow nav on touch — swipe + dots handle navigation */
   .navRow { display: none; }
   /* Dots overlaid at the bottom of the constrained image area */
@@ -550,8 +668,9 @@
   }
   .dot { pointer-events: all; }
   /* Horizontal thumbnail strip — visible below galleryWrap in normal flow */
-  .mobileStrip {
+  .mobileStripWrap {
     display: flex;
-    padding: 8px 12px 4px;
+    padding: 8px 10px 4px;
   }
+  .mobileStrip { padding: 2px 0; }
 }

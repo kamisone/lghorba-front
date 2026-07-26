@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Play, Maximize2 } from "lucide-react";
+import { Play, Maximize2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import GalleryVideo from "./GalleryVideo";
 import styles from "./ProductGallery.module.css";
 
@@ -57,10 +57,77 @@ export default function ProductGallery({ media, title, compact }: Props) {
   const [current, setCurrent] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [mounted, setMounted]  = useState(false);
+  // Whether the vertical thumbnail strip has hidden thumbs above / below the
+  // current scroll position — drives the fade cue and the edge chevrons.
+  const [canScrollUp, setCanScrollUp]     = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+  // Horizontal strip (mobile): arrow-driven paging, no hover auto-scroll.
+  const [mobileOverflow, setMobileOverflow]   = useState(false);
+  const [canScrollLeft, setCanScrollLeft]     = useState(false);
+  const [canScrollRight, setCanScrollRight]   = useState(false);
   const touchStartX = useRef<number | null>(null);
-  const stripRef    = useRef<HTMLDivElement>(null);
+  const stripRef       = useRef<HTMLDivElement>(null);
+  const mobileStripRef = useRef<HTMLDivElement>(null);
+  const autoScrollRef = useRef<number | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Recompute whether the strip can still scroll up/down. Cheap; runs on scroll,
+  // resize, and whenever the media set changes.
+  const syncScrollCues = useCallback(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const EPS = 2; // absorb sub-pixel rounding so the cue doesn't flicker at the ends
+    setCanScrollUp(el.scrollTop > EPS);
+    setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - EPS);
+  }, []);
+
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollRef.current !== null) {
+      cancelAnimationFrame(autoScrollRef.current);
+      autoScrollRef.current = null;
+    }
+  }, []);
+
+  // Continuously glide the strip while the cursor rests on an edge chevron, so
+  // hovering the bottom reveals the hidden thumbnails without any click.
+  const startAutoScroll = useCallback((dir: 1 | -1) => {
+    stopAutoScroll();
+    const SPEED = 8; // px per frame — smooth but unhurried
+    const step = () => {
+      const el = stripRef.current;
+      if (!el) return;
+      el.scrollTop += dir * SPEED;
+      const atEnd = dir === 1
+        ? el.scrollTop + el.clientHeight >= el.scrollHeight - 1
+        : el.scrollTop <= 0;
+      if (atEnd) { autoScrollRef.current = null; return; }
+      autoScrollRef.current = requestAnimationFrame(step);
+    };
+    autoScrollRef.current = requestAnimationFrame(step);
+  }, [stopAutoScroll]);
+
+  // Keyboard / tap fallback: nudge by roughly two thumbnails.
+  const nudgeStrip = useCallback((dir: 1 | -1) => {
+    stripRef.current?.scrollBy({ top: dir * 168, behavior: "smooth" });
+  }, []);
+
+  // Mobile: whether the horizontal strip overflows and in which directions.
+  const syncMobileCues = useCallback(() => {
+    const el = mobileStripRef.current;
+    if (!el) return;
+    const EPS = 2;
+    setMobileOverflow(el.scrollWidth - el.clientWidth > EPS);
+    setCanScrollLeft(el.scrollLeft > EPS);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - EPS);
+  }, []);
+
+  // Mobile arrows page by ~75% of the visible width, one tap at a time.
+  const pageMobileStrip = useCallback((dir: 1 | -1) => {
+    const el = mobileStripRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.75, behavior: "smooth" });
+  }, []);
 
   const goTo = useCallback((index: number) => {
     if (index === current || !media.length) return;
@@ -86,6 +153,39 @@ export default function ProductGallery({ media, title, compact }: Props) {
     const active = strip.children[current] as HTMLElement | undefined;
     active?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [current]);
+
+  // Keep the "more thumbnails" cues in sync with the strip's scroll position and
+  // size. ResizeObserver covers viewport/layout changes; the media dependency
+  // re-measures when the thumbnail count changes (e.g. a new variant's media).
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    syncScrollCues();
+    strip.addEventListener("scroll", syncScrollCues, { passive: true });
+    const ro = new ResizeObserver(syncScrollCues);
+    ro.observe(strip);
+    return () => {
+      strip.removeEventListener("scroll", syncScrollCues);
+      ro.disconnect();
+    };
+  }, [syncScrollCues, media.length]);
+
+  // Same cue-syncing for the mobile horizontal strip.
+  useEffect(() => {
+    const strip = mobileStripRef.current;
+    if (!strip) return;
+    syncMobileCues();
+    strip.addEventListener("scroll", syncMobileCues, { passive: true });
+    const ro = new ResizeObserver(syncMobileCues);
+    ro.observe(strip);
+    return () => {
+      strip.removeEventListener("scroll", syncMobileCues);
+      ro.disconnect();
+    };
+  }, [syncMobileCues, media.length]);
+
+  // Never leave an animation frame pending after unmount.
+  useEffect(() => stopAutoScroll, [stopAutoScroll]);
 
   // Keyboard navigation (active when lightbox is open)
   useEffect(() => {
@@ -132,17 +232,54 @@ export default function ProductGallery({ media, title, compact }: Props) {
         <div className={styles.gallery}>
           {/* Vertical thumbnail strip — desktop only */}
           {hasMany && (
-            <div ref={stripRef} className={styles.thumbStrip}>
-              {media.map((item, i) => (
-                <button
-                  key={i}
-                  onClick={() => goTo(i)}
-                  className={`${styles.thumb} ${current === i ? styles.thumbActive : ""}`}
-                  aria-label={`View ${item.type === "video" ? "video" : "image"} ${i + 1} of ${media.length}`}
-                >
-                  <MediaThumb item={item} sizes="76px" />
-                </button>
-              ))}
+            <div className={styles.thumbColumn}>
+              <div
+                ref={stripRef}
+                className={`${styles.thumbStrip} ${canScrollUp ? styles.fadeTop : ""} ${canScrollDown ? styles.fadeBottom : ""}`}
+              >
+                {media.map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goTo(i)}
+                    className={`${styles.thumb} ${current === i ? styles.thumbActive : ""}`}
+                    aria-label={`View ${item.type === "video" ? "video" : "image"} ${i + 1} of ${media.length}`}
+                  >
+                    <MediaThumb item={item} sizes="76px" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Top edge cue — hover to auto-scroll up, click/Enter to nudge. */}
+              <button
+                type="button"
+                className={`${styles.thumbEdge} ${styles.thumbEdgeTop} ${canScrollUp ? styles.thumbEdgeVisible : ""}`}
+                aria-label="Show previous thumbnails"
+                aria-hidden={!canScrollUp}
+                tabIndex={canScrollUp ? 0 : -1}
+                onMouseEnter={() => startAutoScroll(-1)}
+                onMouseLeave={stopAutoScroll}
+                onFocus={() => startAutoScroll(-1)}
+                onBlur={stopAutoScroll}
+                onClick={() => nudgeStrip(-1)}
+              >
+                <ChevronUp size={16} strokeWidth={2.5} />
+              </button>
+
+              {/* Bottom edge cue — hover to auto-scroll down and reveal the rest. */}
+              <button
+                type="button"
+                className={`${styles.thumbEdge} ${styles.thumbEdgeBottom} ${canScrollDown ? styles.thumbEdgeVisible : ""}`}
+                aria-label="Show more thumbnails"
+                aria-hidden={!canScrollDown}
+                tabIndex={canScrollDown ? 0 : -1}
+                onMouseEnter={() => startAutoScroll(1)}
+                onMouseLeave={stopAutoScroll}
+                onFocus={() => startAutoScroll(1)}
+                onBlur={stopAutoScroll}
+                onClick={() => nudgeStrip(1)}
+              >
+                <ChevronDown size={16} strokeWidth={2.5} />
+              </button>
             </div>
           )}
 
@@ -238,19 +375,48 @@ export default function ProductGallery({ media, title, compact }: Props) {
         )}
       </div>
 
-      {/* Horizontal thumbnail row — mobile only (via CSS) */}
+      {/* Horizontal thumbnail row — mobile only (via CSS). Arrows page the strip
+          on tap; there is deliberately no hover auto-scroll on touch. */}
       {hasMany && (
-        <div className={styles.mobileStrip} aria-hidden="true">
-          {media.map((item, i) => (
+        <div className={styles.mobileStripWrap}>
+          {mobileOverflow && (
             <button
-              key={i}
-              onClick={() => goTo(i)}
-              className={`${styles.mobileThumbs} ${current === i ? styles.mobileThumbActive : ""}`}
+              type="button"
+              className={styles.mobileArrow}
+              aria-label="Show previous thumbnails"
+              disabled={!canScrollLeft}
               tabIndex={-1}
+              onClick={() => pageMobileStrip(-1)}
             >
-              <MediaThumb item={item} sizes="64px" />
+              <ChevronLeft size={18} strokeWidth={2.5} />
             </button>
-          ))}
+          )}
+
+          <div ref={mobileStripRef} className={styles.mobileStrip} aria-hidden="true">
+            {media.map((item, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`${styles.mobileThumbs} ${current === i ? styles.mobileThumbActive : ""}`}
+                tabIndex={-1}
+              >
+                <MediaThumb item={item} sizes="64px" />
+              </button>
+            ))}
+          </div>
+
+          {mobileOverflow && (
+            <button
+              type="button"
+              className={styles.mobileArrow}
+              aria-label="Show more thumbnails"
+              disabled={!canScrollRight}
+              tabIndex={-1}
+              onClick={() => pageMobileStrip(1)}
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
       )}
 
