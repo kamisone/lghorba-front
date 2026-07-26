@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import styles from "./ShopAdmin.module.css";
 
@@ -260,6 +261,11 @@ interface ProductOption {
   title: string;
 }
 
+/** Cap a product title at 20 chars, appending "..." when longer. */
+function truncateTitle(title: string, max = 20): string {
+  return title.length > max ? `${title.slice(0, max)}...` : title;
+}
+
 export function ProductPicker({
   value,
   onChange,
@@ -350,7 +356,9 @@ export function ProductPicker({
       <div className={styles.productPicker} ref={boxRef}>
         {value ? (
           <div className={styles.productPickerChip}>
-            <span>{selectedTitle || "Selected product"}</span>
+            <span title={selectedTitle || undefined}>
+              {selectedTitle ? truncateTitle(selectedTitle) : "Selected product"}
+            </span>
             <button type="button" className={styles.productPickerClear} onClick={clear} aria-label="Clear product">
               ×
             </button>
@@ -378,8 +386,13 @@ export function ProductPicker({
               </div>
             ) : (
               results.map((opt) => (
-                <div key={opt.id} className={styles.productPickerItem} onClick={() => select(opt)}>
-                  {opt.title}
+                <div
+                  key={opt.id}
+                  className={styles.productPickerItem}
+                  onClick={() => select(opt)}
+                  title={opt.title}
+                >
+                  {truncateTitle(opt.title)}
                 </div>
               ))
             )}
@@ -387,5 +400,142 @@ export function ProductPicker({
         )}
       </div>
     </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Detail modal
+ *
+ * Click-through drill-down for a funnel step / product row / country. Fetches
+ * the raw underlying rows (behavior events or paid orders) with their exact
+ * timestamps and shows them in a table.
+ * ────────────────────────────────────────────────────────────────────────── */
+export type DetailKind = "event" | "purchase";
+
+interface EventDetailRow {
+  id: string;
+  eventType: string;
+  createdAt: string;
+  productTitle: string | null;
+  countryName: string | null;
+  cartToken: string | null;
+  quantity: number | null;
+}
+
+interface PurchaseDetailRow {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  status: string;
+  totalCents: number;
+  countryName: string | null;
+}
+
+function fmtDateTime(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
+}
+
+export function AnalyticsDetailModal({
+  open,
+  onClose,
+  title,
+  subtitle,
+  kind,
+  params,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  subtitle?: string;
+  kind: DetailKind;
+  params: Record<string, string>;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [rows, setRows] = useState<(EventDetailRow | PurchaseDetailRow)[]>([]);
+  const paramsKey = new URLSearchParams(params).toString();
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    const endpoint = kind === "event" ? "event-details" : "purchase-details";
+    fetch(`/next-api/admin/shop/analytics/${endpoint}?${paramsKey}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setRows(Array.isArray(data) ? data : []))
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false));
+  }, [open, kind, paramsKey]);
+
+  // Escape to close + lock body scroll while open.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalPanel} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div>
+            <h3 className={styles.modalTitle}>{title}</h3>
+            {subtitle && <div className={styles.modalSubtitle}>{subtitle}</div>}
+          </div>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+        <div className={styles.modalBody}>
+          {loading ? (
+            <span className={styles.skeleton} style={{ height: 180, width: "100%", borderRadius: 10, display: "block" }} />
+          ) : rows.length === 0 ? (
+            <div className={styles.modalEmpty}>No records for this selection.</div>
+          ) : kind === "event" ? (
+            <table className={styles.table}>
+              <thead>
+                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Qty</th></tr>
+              </thead>
+              <tbody>
+                {(rows as EventDetailRow[]).map((r) => (
+                  <tr key={r.id}>
+                    <td style={{ whiteSpace: "nowrap" }}>{fmtDateTime(r.createdAt)}</td>
+                    <td><span className={styles.eventTypeTag}>{r.eventType}</span></td>
+                    <td title={r.productTitle ?? undefined}>{r.productTitle ? truncateTitle(r.productTitle, 30) : "—"}</td>
+                    <td>{r.countryName ?? "—"}</td>
+                    <td>{r.quantity ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <table className={styles.table}>
+              <thead>
+                <tr><th>Date &amp; time</th><th>Order</th><th>Status</th><th>Total</th><th>Country</th></tr>
+              </thead>
+              <tbody>
+                {(rows as PurchaseDetailRow[]).map((r) => (
+                  <tr key={r.id}>
+                    <td style={{ whiteSpace: "nowrap" }}>{fmtDateTime(r.createdAt)}</td>
+                    <td>{r.orderNumber}</td>
+                    <td>{r.status}</td>
+                    <td>{(r.totalCents / 100).toFixed(2)}</td>
+                    <td>{r.countryName ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }

@@ -4,7 +4,9 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import {
+  AnalyticsDetailModal,
   DateRangeFilter,
+  DetailKind,
   FilterSelect,
   FilterToggle,
   ProductPicker,
@@ -49,6 +51,16 @@ const SORT_COLUMNS: Array<{ key: keyof TestProductDemand; label: string; accent?
   { key: "viewToCheckoutRatePct",label: "View → Checkout" },
 ];
 
+// Event types that make up a test product's demand.
+const TEST_EVENT_TYPES = "product_view,add_to_cart,test_checkout_blocked";
+
+interface ModalState {
+  title: string;
+  subtitle?: string;
+  kind: DetailKind;
+  params: Record<string, string>;
+}
+
 const DEFAULTS = {
   range: "30",
   startDate: "",
@@ -80,6 +92,13 @@ function TestProductsAnalytics() {
   const [rows, setRows]       = useState<TestProductDemand[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
+  const [modal, setModal]     = useState<ModalState | null>(null);
+
+  // Date-window params only, for the per-product detail modal.
+  const windowParams = useMemo(
+    () => dateRangeToQuery(filters.range, filters.startDate, filters.endDate),
+    [filters.range, filters.startDate, filters.endDate],
+  );
 
   useEffect(() => {
     fetch("/next-api/admin/shop/categories")
@@ -236,9 +255,21 @@ function TestProductsAnalytics() {
               </thead>
               <tbody>
                 {rows.map(r => (
-                  <tr key={r.productId}>
+                  <tr
+                    key={r.productId}
+                    className={styles.clickableRow}
+                    title="Click for details"
+                    onClick={() =>
+                      setModal({
+                        title: r.title,
+                        subtitle: "Events for this product with exact date & time",
+                        kind: "event",
+                        params: { ...windowParams, productId: r.productId, eventType: TEST_EVENT_TYPES, limit: "200" },
+                      })
+                    }
+                  >
                     <td>
-                      <Link href={`/admin/shop/products/${r.productId}`} className={styles.link}>
+                      <Link href={`/admin/shop/products/${r.productId}`} className={styles.link} onClick={(e) => e.stopPropagation()}>
                         {r.title}
                       </Link>
                     </td>
@@ -255,6 +286,17 @@ function TestProductsAnalytics() {
             </table>
           </div>
         </>
+      )}
+
+      {modal && (
+        <AnalyticsDetailModal
+          open
+          onClose={() => setModal(null)}
+          title={modal.title}
+          subtitle={modal.subtitle}
+          kind={modal.kind}
+          params={modal.params}
+        />
       )}
     </div>
   );

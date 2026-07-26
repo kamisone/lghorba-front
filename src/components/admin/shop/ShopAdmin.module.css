@@ -55,6 +55,21 @@
 .productPickerItem:hover { background: #eff6ff; }
 .productPickerEmpty { padding: 10px 12px; font-size: 13px; color: #9ca3af; }
 
+/* ── Clickable analytics rows + detail modal ── */
+.clickableRow { cursor: pointer; }
+.clickableRow:hover td { background: #eff6ff; }
+.clickableBar { cursor: pointer; }
+.modalOverlay { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.modalPanel { background: #fff; border-radius: 14px; width: 100%; max-width: 760px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.modalHeader { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
+.modalTitle { font-size: 16px; font-weight: 700; margin: 0; }
+.modalSubtitle { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.modalClose { border: none; background: none; font-size: 22px; line-height: 1; color: #6b7280; cursor: pointer; padding: 0 4px; }
+.modalClose:hover { color: #111827; }
+.modalBody { padding: 8px 20px 20px; overflow-y: auto; }
+.modalEmpty { color: #9ca3af; text-align: center; padding: 40px; font-size: 14px; }
+.eventTypeTag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; background: #f3f4f6; color: #374151; }
+
 .pagination { display: flex; gap: 8px; margin-top: 16px; align-items: center; justify-content: flex-end; }
 .pageInfo { font-size: 14px; color: #6b7280; margin-right: 8px; }
 

@@ -4,7 +4,9 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import {
+  AnalyticsDetailModal,
   DateRangeFilter,
+  DetailKind,
   FilterSelect,
   ProductPicker,
   dateRangeToQuery,
@@ -47,12 +49,19 @@ interface CountryOption {
   continentCode: string | null;
 }
 
-const FUNNEL_STEPS: Array<{ key: keyof Funnel; label: string; color: string }> = [
-  { key: "views",            label: "Product Views",    color: "#1d4ed8" },
-  { key: "addsToCart",       label: "Added to Cart",    color: "#0891b2" },
-  { key: "checkoutsStarted", label: "Checkout Started", color: "#059669" },
-  { key: "purchases",        label: "Purchased",        color: "#7c3aed" },
+const FUNNEL_STEPS: Array<{ key: keyof Funnel; label: string; color: string; eventType?: string }> = [
+  { key: "views",            label: "Product Views",    color: "#1d4ed8", eventType: "product_view" },
+  { key: "addsToCart",       label: "Added to Cart",    color: "#0891b2", eventType: "add_to_cart" },
+  { key: "checkoutsStarted", label: "Checkout Started", color: "#059669", eventType: "checkout_started" },
+  { key: "purchases",        label: "Purchased",        color: "#7c3aed" }, // no eventType → orders
 ];
+
+interface ModalState {
+  title: string;
+  subtitle?: string;
+  kind: DetailKind;
+  params: Record<string, string>;
+}
 
 const CONTINENTS: Array<{ value: string; label: string }> = [
   { value: "AF", label: "Africa" },
@@ -89,6 +98,7 @@ function ConversionAnalytics() {
   const [countries, setCountries] = useState<CountryBreakdown[]>([]);
   const [countryOptions, setCountryOptions] = useState<CountryOption[]>([]);
   const [loading, setLoading]   = useState(true);
+  const [modal, setModal]       = useState<ModalState | null>(null);
 
   // Country dropdown options (loaded once).
   useEffect(() => {
@@ -98,16 +108,17 @@ function ConversionAnalytics() {
       .catch(() => {});
   }, []);
 
-  // Build the shared query string from the current filters.
-  const query = useMemo(() => {
-    const params = new URLSearchParams(
-      dateRangeToQuery(filters.range, filters.startDate, filters.endDate),
-    );
-    if (filters.country) params.set("countryCode", filters.country);
-    else if (filters.continent) params.set("continent", filters.continent);
-    if (filters.product) params.set("productId", filters.product);
-    return params.toString();
+  // Shared filter params, reused by the section fetches and the detail modals.
+  const baseParams = useMemo(() => {
+    const p: Record<string, string> = {
+      ...dateRangeToQuery(filters.range, filters.startDate, filters.endDate),
+    };
+    if (filters.country) p.countryCode = filters.country;
+    else if (filters.continent) p.continent = filters.continent;
+    if (filters.product) p.productId = filters.product;
+    return p;
   }, [filters]);
+  const query = useMemo(() => new URLSearchParams(baseParams).toString(), [baseParams]);
 
   useEffect(() => {
     setLoading(true);
@@ -187,7 +198,18 @@ function ConversionAnalytics() {
               const prevCount = i > 0 ? (funnel[FUNNEL_STEPS[i - 1].key] as number) : null;
               const stepRatePct = prevCount ? Math.round((count / prevCount) * 1000) / 10 : null;
               return (
-                <div key={step.key}>
+                <div
+                  key={step.key}
+                  className={styles.clickableBar}
+                  title="Click for details"
+                  onClick={() =>
+                    setModal(
+                      step.eventType
+                        ? { title: step.label, subtitle: "Individual events with exact date & time", kind: "event", params: { ...baseParams, eventType: step.eventType, limit: "200" } }
+                        : { title: "Purchases", subtitle: "Paid orders in this period", kind: "purchase", params: { ...baseParams, limit: "200" } },
+                    )
+                  }
+                >
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
                     <span style={{ fontWeight: 500 }}>{step.label}</span>
                     <span style={{ color: "#6b7280" }}>
@@ -215,9 +237,21 @@ function ConversionAnalytics() {
           <thead><tr><th>Product</th><th>Views</th><th>Added to Cart</th><th>Purchases</th><th>Conversion Rate</th></tr></thead>
           <tbody>
             {products.map(p => (
-              <tr key={p.productId}>
+              <tr
+                key={p.productId}
+                className={styles.clickableRow}
+                title="Click for details"
+                onClick={() =>
+                  setModal({
+                    title: p.title,
+                    subtitle: "Events for this product with exact date & time",
+                    kind: "event",
+                    params: { ...baseParams, productId: p.productId, limit: "200" },
+                  })
+                }
+              >
                 <td>
-                  {p.slug ? <Link href={`/shop/${p.slug}`} className={styles.link} target="_blank">{p.title}</Link> : p.title}
+                  {p.slug ? <Link href={`/shop/${p.slug}`} className={styles.link} target="_blank" onClick={(e) => e.stopPropagation()}>{p.title}</Link> : p.title}
                 </td>
                 <td>{p.views}</td>
                 <td>{p.addsToCart}</td>
@@ -248,6 +282,17 @@ function ConversionAnalytics() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {modal && (
+        <AnalyticsDetailModal
+          open
+          onClose={() => setModal(null)}
+          title={modal.title}
+          subtitle={modal.subtitle}
+          kind={modal.kind}
+          params={modal.params}
+        />
       )}
     </div>
   );
