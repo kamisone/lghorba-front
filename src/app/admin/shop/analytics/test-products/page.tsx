@@ -14,6 +14,12 @@ import {
   useUrlFilters,
 } from "@/components/admin/shop/AnalyticsFilters";
 
+interface ProductCountry {
+  countryCode: string;
+  countryName: string;
+  events: number;
+}
+
 interface TestProductDemand {
   productId: string;
   title: string;
@@ -25,6 +31,40 @@ interface TestProductDemand {
   viewToCartRatePct: number;
   cartToCheckoutRatePct: number;
   viewToCheckoutRatePct: number;
+  countries: ProductCountry[];
+}
+
+interface CountryOption {
+  isoCode: string;
+  name: string;
+  continentCode: string | null;
+}
+
+const CONTINENTS: Array<{ value: string; label: string }> = [
+  { value: "AF", label: "Africa" },
+  { value: "AS", label: "Asia" },
+  { value: "EU", label: "Europe" },
+  { value: "NA", label: "North America" },
+  { value: "SA", label: "South America" },
+  { value: "OC", label: "Oceania" },
+  { value: "AN", label: "Antarctica" },
+];
+
+// How many countries to name in a row before collapsing the rest into "+N".
+const COUNTRIES_SHOWN = 2;
+
+/** Busiest countries for a product, truncated to keep the row readable. */
+function countriesLabel(countries: ProductCountry[]): string {
+  if (!countries.length) return "—";
+  const shown = countries.slice(0, COUNTRIES_SHOWN).map((c) => c.countryCode).join(", ");
+  const rest = countries.length - COUNTRIES_SHOWN;
+  return rest > 0 ? `${shown} +${rest}` : shown;
+}
+
+/** Full breakdown for the cell's tooltip. */
+function countriesTitle(countries: ProductCountry[]): string {
+  if (!countries.length) return "No geolocated events in this period";
+  return countries.map((c) => `${c.countryName}: ${c.events}`).join("\n");
 }
 
 const STATUS_OPTIONS = [
@@ -66,6 +106,8 @@ const DEFAULTS = {
   startDate: "",
   endDate: "",
   product: "",
+  country: "",
+  continent: "",
   status: "",
   category: "",
   minPrice: "",
@@ -92,13 +134,25 @@ function TestProductsAnalytics() {
   const [rows, setRows]       = useState<TestProductDemand[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
+  const [countryOptions, setCountryOptions] = useState<CountryOption[]>([]);
   const [modal, setModal]     = useState<ModalState | null>(null);
 
-  // Date-window params only, for the per-product detail modal.
-  const windowParams = useMemo(
-    () => dateRangeToQuery(filters.range, filters.startDate, filters.endDate),
-    [filters.range, filters.startDate, filters.endDate],
-  );
+  // Date window + country scope, so the detail modal opens on the same
+  // population the row was computed from.
+  const windowParams = useMemo(() => {
+    const params = dateRangeToQuery(filters.range, filters.startDate, filters.endDate);
+    if (filters.country) params.countryCode = filters.country;
+    if (filters.continent) params.continent = filters.continent;
+    return params;
+  }, [filters.range, filters.startDate, filters.endDate, filters.country, filters.continent]);
+
+  // Country dropdown options (loaded once).
+  useEffect(() => {
+    fetch("/next-api/admin/shop/countries")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setCountryOptions(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/next-api/admin/shop/categories")
@@ -115,6 +169,8 @@ function TestProductsAnalytics() {
       dateRangeToQuery(filters.range, filters.startDate, filters.endDate),
     );
     if (filters.product) params.set("productId", filters.product);
+    if (filters.country) params.set("countryCode", filters.country);
+    if (filters.continent) params.set("continent", filters.continent);
     if (filters.status) params.set("productStatus", filters.status);
     if (filters.category) params.set("categoryId", filters.category);
     if (filters.minPrice) params.set("minPriceCents", String(Math.round(Number(filters.minPrice) * 100)));
@@ -134,6 +190,11 @@ function TestProductsAnalytics() {
       .then(data => setRows(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false));
   }, [query]);
+
+  const countrySelectOptions = useMemo(
+    () => countryOptions.map((c) => ({ value: c.isoCode, label: c.name })),
+    [countryOptions],
+  );
 
   const totals = rows.reduce(
     (acc, r) => ({
@@ -170,6 +231,21 @@ function TestProductsAnalytics() {
           onChange={setFilters}
         />
         <ProductPicker value={filters.product} onChange={(v) => setFilters({ product: v })} testOnly />
+        {/* Selecting a country clears the continent scope and vice versa. */}
+        <FilterSelect
+          label="Continent"
+          value={filters.continent}
+          onChange={(v) => setFilters({ continent: v, country: "" })}
+          options={CONTINENTS}
+          allLabel="All continents"
+        />
+        <FilterSelect
+          label="Country"
+          value={filters.country}
+          onChange={(v) => setFilters({ country: v, continent: "" })}
+          options={countrySelectOptions}
+          allLabel="All countries"
+        />
         <FilterSelect label="Status" value={filters.status} onChange={(v) => setFilters({ status: v })} options={STATUS_OPTIONS} allLabel="Any status" />
         <FilterSelect label="Category" value={filters.category} onChange={(v) => setFilters({ category: v })} options={categories} allLabel="All categories" />
         <div className={styles.filterGroup}>
@@ -241,6 +317,7 @@ function TestProductsAnalytics() {
                 <tr>
                   <th>Product</th>
                   <th>Status</th>
+                  <th>Countries</th>
                   {SORT_COLUMNS.map(col => (
                     <th
                       key={col.key}
@@ -273,7 +350,9 @@ function TestProductsAnalytics() {
                         {r.title}
                       </Link>
                     </td>
-                    <td style={{ color: "#6b7280" }}>{r.status}</td>
+                    <td style={{ color: "#6b7280", whiteSpace: "nowrap" }} title={countriesTitle(r.countries)}>
+                      {countriesLabel(r.countries)}
+                    </td>
                     <td>{r.views}</td>
                     <td>{r.addsToCart}</td>
                     <td style={{ fontWeight: 700, color: "#b45309" }}>{r.reachedCheckout}</td>
