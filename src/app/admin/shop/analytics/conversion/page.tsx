@@ -117,6 +117,9 @@ function ConversionAnalytics() {
     if (filters.country) p.countryCode = filters.country;
     else if (filters.continent) p.continent = filters.continent;
     if (filters.product) p.productId = filters.product;
+    // This report covers the real catalogue only, so its drill-downs must not
+    // surface test-product events the counts above them exclude.
+    p.productScope = "real";
     return p;
   }, [filters]);
   const query = useMemo(() => new URLSearchParams(baseParams).toString(), [baseParams]);
@@ -154,7 +157,7 @@ function ConversionAnalytics() {
           endDate={filters.endDate}
           onChange={setFilters}
         />
-        <ProductPicker value={filters.product} onChange={(v) => setFilters({ product: v })} />
+        <ProductPicker value={filters.product} onChange={(v) => setFilters({ product: v })} scope="real" />
         {/* Selecting a country clears the continent scope and vice versa. */}
         <FilterSelect
           label="Continent"

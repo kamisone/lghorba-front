@@ -253,8 +253,9 @@ export function FilterToggle({
  *
  * Searches the admin product list as the user types (debounced). When a product
  * is already selected (e.g. restored from the URL), its title is resolved by id
- * so the chip shows a name rather than a bare UUID. `testOnly` restricts the
- * search to test products.
+ * so the chip shows a name rather than a bare UUID. `scope` restricts the search
+ * to test products or to the real catalogue — the two analytics reports each
+ * cover one and must not offer products from the other.
  * ────────────────────────────────────────────────────────────────────────── */
 interface ProductOption {
   id: string;
@@ -271,11 +272,14 @@ export function ProductPicker({
   onChange,
   label = "Product",
   testOnly = false,
+  scope,
 }: {
   value: string;
   onChange: (productId: string) => void;
   label?: string;
+  /** Deprecated alias for scope="test"; kept so existing callers keep working. */
   testOnly?: boolean;
+  scope?: "test" | "real";
 }) {
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<ProductOption[]>([]);
@@ -313,7 +317,9 @@ export function ProductPicker({
     const handle = setTimeout(() => {
       const params = new URLSearchParams({ limit: "10" });
       if (q.length >= 1) params.set("search", q);
-      if (testOnly) params.set("isTestProduct", "true");
+      const effectiveScope = scope ?? (testOnly ? "test" : undefined);
+      if (effectiveScope === "test") params.set("isTestProduct", "true");
+      else if (effectiveScope === "real") params.set("isTestProduct", "false");
       fetch(`/next-api/shop/products?${params.toString()}`)
         .then((r) => (r.ok ? r.json() : { items: [] }))
         .then((data) => {
@@ -323,7 +329,7 @@ export function ProductPicker({
         .catch(() => setResults([]));
     }, q ? 250 : 0);
     return () => clearTimeout(handle);
-  }, [term, testOnly, value, open]);
+  }, [term, testOnly, scope, value, open]);
 
   // Close the dropdown on outside click.
   useEffect(() => {
@@ -369,7 +375,7 @@ export function ProductPicker({
               type="search"
               className={styles.productPickerInput}
               value={term}
-              placeholder={testOnly ? "Search test products…" : "Search products…"}
+              placeholder={(scope ?? (testOnly ? "test" : undefined)) === "test" ? "Search test products…" : "Search products…"}
               onChange={(e) => {
                 setTerm(e.target.value);
                 setOpen(true);
