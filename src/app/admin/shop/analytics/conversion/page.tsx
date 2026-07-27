@@ -182,7 +182,8 @@ function ConversionAnalytics() {
           <>
             <div className={styles.kpiCard}><div className={styles.kpiLabel}>Product Views</div><div className={styles.kpiValue}>{funnel.views}</div></div>
             <div className={styles.kpiCard}><div className={styles.kpiLabel}>Added to Cart</div><div className={styles.kpiValue}>{funnel.addsToCart}</div></div>
-            <div className={styles.kpiCard}><div className={styles.kpiLabel}>Checkouts Started</div><div className={styles.kpiValue}>{funnel.checkoutsStarted}</div></div>
+            {/* Same figure as the funnel's "Reached Shipping" bar — one name for it. */}
+            <div className={styles.kpiCard}><div className={styles.kpiLabel}>Reached Shipping</div><div className={styles.kpiValue}>{funnel.checkoutsStarted}</div></div>
             <div className={styles.kpiCard}><div className={styles.kpiLabel}>Purchases</div><div className={styles.kpiValue}>{funnel.purchases}</div></div>
             <div className={styles.kpiCard}><div className={styles.kpiLabel}>Overall Conversion</div><div className={styles.kpiValue}>{funnel.overallConversionRatePct}%</div></div>
           </>

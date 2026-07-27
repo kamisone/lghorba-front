@@ -23,6 +23,33 @@ export type ProxyOptions = {
   passRedirect?: boolean;
 };
 
+/**
+ * Carry the caller's address through to the backend.
+ *
+ * Storefront calls do not reach the backend directly — the browser hits a
+ * /next-api route and this helper makes a fresh server-to-server request. Without
+ * forwarding these headers the backend sees the Next.js pod's own cluster IP for
+ * every visitor, so geo-IP resolves to null (no country on behaviour events) and
+ * IP rate limiting buckets everyone into one counter.
+ *
+ * Passed through unchanged rather than appended: Next.js does not expose the
+ * socket peer, and the backend's `trust proxy` already walks past private hops to
+ * the first public address.
+ */
+function forwardedClientHeaders(req: NextRequest): Record<string, string> {
+  const out: Record<string, string> = {};
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) out["x-forwarded-for"] = xff;
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) out["x-real-ip"] = realIp;
+  // Set by the edge nginx and untouched by the k8s ingress, so it survives when
+  // the standard X-Forwarded-* headers have been rewritten. See
+  // back/src/common/utils/client-ip.util.ts.
+  const originalIp = req.headers.get("x-original-client-ip");
+  if (originalIp) out["x-original-client-ip"] = originalIp;
+  return out;
+}
+
 function extractBearer(req: NextRequest): Record<string, string> {
   const token = req.cookies.get("vitecamion_auth")?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -70,7 +97,8 @@ export async function proxyRequest(
     const res = await fetch(url, {
       method,
       cache: "no-store",
-      headers: { ...authHeaders, ...contentTypeHeader, ...extraHeaders },
+      // extraHeaders last so an explicit caller can still override.
+      headers: { ...authHeaders, ...contentTypeHeader, ...forwardedClientHeaders(req), ...extraHeaders },
       ...(fetchBody !== undefined ? { body: fetchBody } : {}),
       ...(passRedirect ? { redirect: "manual" } : {}),
     });

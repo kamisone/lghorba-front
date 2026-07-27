@@ -440,12 +440,20 @@ function fmtDateTime(iso: string): string {
 export const EVENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "product_view", label: "Product view" },
   { value: "add_to_cart", label: "Added to cart" },
-  { value: "checkout_started", label: "Checkout started" },
+  // Same wording as the funnel bar and the test-product table columns: these are
+  // two different steps, and calling one of them by its raw event name made them
+  // read as duplicates of each other.
+  { value: "checkout_started", label: "Reached shipping" },
   { value: "test_checkout_blocked", label: "Reached checkout (test)" },
   { value: "update_cart_item", label: "Cart updated" },
   { value: "remove_from_cart", label: "Removed from cart" },
   { value: "search", label: "Search" },
 ];
+
+/** Raw event name -> the wording used everywhere else in the analytics UI. */
+export function eventTypeLabel(value: string): string {
+  return EVENT_TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+}
 
 // Scope params that are NOT the modal's own date/event controls.
 const SCOPE_KEYS = ["days", "startDate", "endDate", "eventType"];
@@ -591,7 +599,7 @@ export function AnalyticsDetailModal({
                 {(rows as EventDetailRow[]).map((r) => (
                   <tr key={r.id}>
                     <td style={{ whiteSpace: "nowrap" }}>{fmtDateTime(r.createdAt)}</td>
-                    <td><span className={styles.eventTypeTag}>{r.eventType}</span></td>
+                    <td><span className={styles.eventTypeTag} title={r.eventType}>{eventTypeLabel(r.eventType)}</span></td>
                     <td title={r.productTitle ?? undefined}>{r.productTitle ? truncateTitle(r.productTitle, 30) : "—"}</td>
                     <td>{r.countryName ?? "—"}</td>
                     <td>{r.quantity ?? "—"}</td>
