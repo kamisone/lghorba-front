@@ -67,6 +67,7 @@ interface Product {
   id: string; title: string; sku: string | null; slug: string; status: string;
   featured: boolean; isTestProduct: boolean; freeShipping: boolean;
   freeShippingUpgradeMethods: Array<{ id: string }> | null;
+  freeShippingDaysMin: number | null; freeShippingDaysMax: number | null;
   shortDescription: string | null; description: string | null;
   brand: string | null; basePriceCents: number | null;
   media: ResolvedProductMediaItem[];
@@ -102,6 +103,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [form, setForm] = useState({
     title: "", slug: "", status: "draft", featured: false, isTestProduct: false, freeShipping: false,
     freeShippingUpgradeMethodIds: [] as string[],
+    freeShippingDaysMin: "",
+    freeShippingDaysMax: "",
     brand: "", shortDescription: "", description: "",
     primaryCategoryId: "",
     categoryIds: [] as string[],
@@ -183,6 +186,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         isTestProduct:     p.isTestProduct ?? false,
         freeShipping:      p.freeShipping ?? false,
         freeShippingUpgradeMethodIds: (p.freeShippingUpgradeMethods ?? []).map((m: { id: string }) => m.id),
+        freeShippingDaysMin: p.freeShippingDaysMin != null ? String(p.freeShippingDaysMin) : "",
+        freeShippingDaysMax: p.freeShippingDaysMax != null ? String(p.freeShippingDaysMax) : "",
         brand:             p.brand ?? "",
         shortDescription:  p.shortDescription ?? "",
         description:       p.description ?? "",
@@ -354,6 +359,10 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         brand:             form.brand || null,
         primaryCategoryId: form.primaryCategoryId || null,
         freeShippingUpgradeMethodIds: form.freeShipping ? form.freeShippingUpgradeMethodIds : [],
+        // Empty means "no promise" — send null so the backend falls back to a
+        // zone method's estimate rather than advertising 0 days.
+        freeShippingDaysMin: form.freeShipping && form.freeShippingDaysMin !== "" ? Number(form.freeShippingDaysMin) : null,
+        freeShippingDaysMax: form.freeShipping && form.freeShippingDaysMax !== "" ? Number(form.freeShippingDaysMax) : null,
         categoryIds,
         media,
         infoSections,
@@ -959,6 +968,37 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   </div>
                   <input type="checkbox" checked={form.freeShipping} onChange={e => setForm(f => ({ ...f, freeShipping: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }} />
                 </div>
+                {form.freeShipping && (
+                  <div className={styles.field} style={{ marginTop: 12, marginBottom: 0 }}>
+                    <label className={styles.label}>
+                      Free delivery time <span className={styles.hint} style={{ fontWeight: 400 }}>(optional)</span>
+                    </label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <input
+                        type="number" min={0} max={365}
+                        className={styles.input}
+                        style={{ width: 80 }}
+                        value={form.freeShippingDaysMin}
+                        onChange={e => setForm(f => ({ ...f, freeShippingDaysMin: e.target.value }))}
+                        placeholder="min"
+                      />
+                      <span style={{ color: "var(--color-text-muted)" }}>–</span>
+                      <input
+                        type="number" min={0} max={365}
+                        className={styles.input}
+                        style={{ width: 80 }}
+                        value={form.freeShippingDaysMax}
+                        onChange={e => setForm(f => ({ ...f, freeShippingDaysMax: e.target.value }))}
+                        placeholder="max"
+                      />
+                      <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>days</span>
+                    </div>
+                    <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--color-text-muted)" }}>
+                      Shown next to &ldquo;Free shipping&rdquo; at checkout. Leave empty to use the
+                      delivery estimate of the customer&rsquo;s shipping zone.
+                    </p>
+                  </div>
+                )}
                 {form.freeShipping && (
                   <div className={styles.field} style={{ marginTop: 12, marginBottom: 0 }}>
                     <label className={styles.label}>
