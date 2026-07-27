@@ -87,48 +87,44 @@
 /* ── Free shipping ── */
 /*
  * Sits directly under the price, where delivery cost is the next thing a
- * customer asks about. Deliberately calmer than the red discount badge: a
- * tinted panel rather than a second competing pill.
+ * customer asks about. Same recipe as the shop's other soft info panels
+ * (.variantActive here, .reservationTimer in checkout): a faint brand-navy wash
+ * on a neutral border. Deliberately quiet — the lime accent belongs to the
+ * Add-to-cart CTA and the red pill to the discount, so a delivery note must not
+ * compete with either.
  */
 .freeShippingBanner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: -6px 0 18px;
-  padding: 10px 12px;
-  border: 1px solid #a7f3d0;
+  gap: 11px;
+  margin: -4px 0 18px;
+  padding: 11px 14px;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%);
-  color: #065f46;
+  background: rgba(0, 70, 110, .05);
 }
 .freeShippingIcon {
-  width: 22px;
-  height: 22px;
+  width: 21px;
+  height: 21px;
   flex-shrink: 0;
-  color: #059669;
+  color: var(--color-brand-primary);
 }
 .freeShippingText {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  font-size: 13px;
-  line-height: 1.35;
+  gap: 2px;
+  line-height: 1.4;
 }
 .freeShippingText strong {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--color-brand-primary);
 }
-.freeShippingText span { color: #047857; }
-
-@media (prefers-color-scheme: dark) {
-  .freeShippingBanner {
-    border-color: #065f46;
-    background: linear-gradient(180deg, rgb(6 78 59 / 0.35) 0%, rgb(6 95 70 / 0.25) 100%);
-    color: #6ee7b7;
-  }
-  .freeShippingIcon { color: #34d399; }
-  .freeShippingText span { color: #a7f3d0; }
+/* The caveat is a footnote, not the message — kept small and muted. */
+.freeShippingText span {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
 }
 
 /* ── Stock status badge ── */

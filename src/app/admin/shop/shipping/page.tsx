@@ -34,6 +34,7 @@ interface ShippingMethod {
   estimatedDaysMax: number;
   isActive: boolean;
   sortOrder: number;
+  availableForFreeShipping: boolean;
 }
 
 type ZoneForm = {
@@ -46,6 +47,7 @@ type MethodForm = {
   price: string; freeAbove: string;
   estimatedDaysMin: number; estimatedDaysMax: number;
   isActive: boolean; sortOrder: number;
+  availableForFreeShipping: boolean;
 };
 
 const EMPTY_ZONE: ZoneForm = {
@@ -58,6 +60,7 @@ const EMPTY_METHOD: MethodForm = {
   price: "0", freeAbove: "",
   estimatedDaysMin: 2, estimatedDaysMax: 5,
   isActive: true, sortOrder: 0,
+  availableForFreeShipping: false,
 };
 
 const centsToEur = (c: number) => (c / 100).toFixed(2);
@@ -267,6 +270,7 @@ export default function ShippingPage() {
       price: centsToEur(m.priceCents), freeAbove: m.freeAboveCents != null ? centsToEur(m.freeAboveCents) : "",
       estimatedDaysMin: m.estimatedDaysMin, estimatedDaysMax: m.estimatedDaysMax,
       isActive: m.isActive, sortOrder: m.sortOrder,
+      availableForFreeShipping: m.availableForFreeShipping ?? false,
     });
     setEditMethodId(m.id);
     setMethodModal("edit");
@@ -285,6 +289,7 @@ export default function ShippingPage() {
       estimatedDaysMax: methodForm.estimatedDaysMax,
       isActive:       methodForm.isActive,
       sortOrder:      methodForm.sortOrder,
+      availableForFreeShipping: methodForm.availableForFreeShipping,
     };
     const url    = methodModal === "create" ? "/next-api/admin/shop/shipping/methods" : `/next-api/admin/shop/shipping/methods/${editMethodId}`;
     const method = methodModal === "create" ? "POST" : "PATCH";
@@ -570,6 +575,26 @@ export default function ShippingPage() {
                 </select>
               </div>
             </div>
+
+            {/* Eligibility only — a product still has to pick this method. */}
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 18, padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: 10, background: "rgba(var(--rgb-admin-secondary), 0.05)", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={methodForm.availableForFreeShipping}
+                onChange={e => setMethodForm(f => ({ ...f, availableForFreeShipping: e.target.checked }))}
+                style={{ width: 16, height: 16, marginTop: 1, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
+              />
+              <span>
+                <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--color-admin-primary)" }}>
+                  Used for free shipping
+                </span>
+                <span style={{ display: "block", fontSize: 12, lineHeight: 1.5, color: "var(--color-text-muted)", marginTop: 2 }}>
+                  Makes this method selectable as the paid faster option on a free-shipping
+                  product — for customers who want to pay to receive it sooner. It is offered
+                  only on products where an admin picks it.
+                </span>
+              </span>
+            </label>
             <div style={{ display: "flex", gap: 12, marginTop: 24, justifyContent: "flex-end" }}>
               <button className={`${styles.btn} ${styles.btnSecondary}`} onClick={() => setMethodModal(null)}>Cancel</button>
               <button className={`${styles.btn} ${styles.btnPrimary}`} disabled={saving || !methodForm.zoneId || !methodForm.name} onClick={saveMethod}>

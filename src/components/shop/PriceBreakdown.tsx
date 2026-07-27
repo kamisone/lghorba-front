@@ -34,7 +34,14 @@ export default function PriceBreakdown({
   const locale = useLocale();
   const t = getTranslations(locale).shop;
   const shippingKnown = shippingCents !== undefined;
-  const shippingFree  = freeShipping || shippingCents === 0;
+  /**
+   * Once a shipping method has been applied, what was actually charged decides —
+   * never the eligibility flag. An order that qualified for free shipping but
+   * bought the paid faster option is not free, and must not be labelled as such
+   * while its total includes the fee. The flag only previews "Free" earlier, in
+   * the cart, where no method has been chosen and the cost is not yet known.
+   */
+  const shippingFree = shippingKnown ? shippingCents === 0 : !!freeShipping;
 
   if (loading) {
     return (

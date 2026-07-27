@@ -914,7 +914,7 @@ export const en = {
     orderSummary: "Order Summary",
     // free shipping (per-product)
     freeShippingBadge: "Free shipping",
-    freeShippingProductNote: "Delivery offered — unless your basket also contains items with paid shipping.",
+    freeShippingProductNote: "Delivery is on us for this product.",
     freeShippingCartNote: "Your order ships free.",
     freeShippingIncluded: "Free",
     savingsPrefix: "Savings of ",
@@ -1985,7 +1985,7 @@ export const fr: Translations = {
     orderSummary: "Récapitulatif",
     // free shipping (per-product)
     freeShippingBadge: "Livraison offerte",
-    freeShippingProductNote: "Livraison offerte — sauf si votre panier contient aussi des articles avec livraison payante.",
+    freeShippingProductNote: "La livraison est offerte pour ce produit.",
     freeShippingCartNote: "La livraison de votre commande est offerte.",
     freeShippingIncluded: "Offerte",
     savingsPrefix: "Une économie de ",

@@ -183,32 +183,64 @@
 }
 
 /*
- * Sits above the method list: by the time a customer is choosing a carrier,
- * "how much is delivery" is the open question, so answer it before they ask.
+ * Free-shipping option. Shown with no price at all — "Free shipping" already
+ * says it, and a 0 or a struck-through figure just invites arithmetic. Sits in
+ * the same list as .shippingOption so the two line up when a paid upgrade is
+ * offered; when there is no upgrade it carries no radio and reads as a
+ * statement rather than a choice.
  */
-.freeShippingBanner {
-  display: flex;
+.freeShippingCard {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 13px;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 14px;
-  padding: 11px 13px;
-  border: 1px solid #a7f3d0;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%);
-  color: #065f46;
-  font-size: 13.5px;
-  line-height: 1.4;
+  padding: 14px 16px;
+  /* Neutral until chosen — matches .shippingOption, so exactly one option in the
+     list is ever emphasised. Highlighting the free card unconditionally made it
+     look picked even while the customer had a paid method selected. */
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
 }
-.freeShippingBanner svg { width: 21px; height: 21px; flex-shrink: 0; color: #059669; }
-.freeShippingBanner strong { font-weight: 700; }
+.freeShippingCard input[type=radio] {
+  accent-color: var(--color-brand-primary);
+  width: 16px; height: 16px;
+}
+/*
+ * No radio means there is nothing to choose between, so the card is a statement
+ * rather than an option and keeps the emphasis.
+ */
+.freeShippingCard:not(:has(input)) {
+  grid-template-columns: auto 1fr;
+  border-color: var(--color-brand-primary);
+  background: rgba(0, 70, 110, .05);
+}
+.freeShippingCardSelected {
+  border-color: var(--color-brand-primary);
+  background: rgba(0, 70, 110, .05);
+}
 
-@media (prefers-color-scheme: dark) {
-  .freeShippingBanner {
-    border-color: #065f46;
-    background: linear-gradient(180deg, rgb(6 78 59 / 0.35) 0%, rgb(6 95 70 / 0.25) 100%);
-    color: #6ee7b7;
-  }
-  .freeShippingBanner svg { color: #34d399; }
+.freeShippingCardIcon {
+  width: 38px; height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-white);
+  color: var(--color-brand-primary);
+  box-shadow: 0 1px 3px rgba(0, 24, 41, .1);
+}
+.freeShippingCardIcon svg { width: 20px; height: 20px; }
+.freeShippingCardBody { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.freeShippingCardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+  letter-spacing: -.01em;
+}
+.freeShippingCardMeta {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
 }
 
 /* ── Action row ── */

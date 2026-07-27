@@ -22,6 +22,8 @@ interface ShippingMethod {
   /** What the method costs without the free-shipping benefit, for strike-through. */
   originalPriceCents?: number;
   isFree?: boolean;
+  /** The paid faster option offered alongside free shipping. */
+  isFreeShippingUpgrade?: boolean;
   estimatedDaysMin: number; estimatedDaysMax: number;
 }
 interface CheckoutSnapshot {
@@ -47,6 +49,7 @@ interface CheckoutSnapshot {
   trackingToken: string | null;
   freeShipping?: boolean;
   freeShippingReason?: "product" | "promotion" | "coupon" | null;
+  freeShippingUpgradeMethodIds?: string[];
 }
 
 // ── Reservation countdown ──────────────────────────────────────────────────────
@@ -430,6 +433,22 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
     setShippingUpdating(false);
   }
 
+  /**
+   * Free shipping hides the radio list, which removes the customer's only way to
+   * pick a method. If the selection is ever missing at that point — a resumed
+   * session, back-navigation, a failed PATCH — the Continue button would stay
+   * disabled with nothing on screen to fix it. Apply the standard method itself.
+   */
+  useEffect(() => {
+    if (step !== "shipping" || !snapshot?.freeShipping) return;
+    if (selectedMethodId || shippingUpdating) return;
+    const standard = snapshot.shippingMethods[0];
+    if (!standard) return;
+    setSelectedMethodId(standard.id);
+    applyShippingMethod(snapshot.orderId, standard.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, snapshot, selectedMethodId, shippingUpdating]);
+
   async function handleConfirmShipping(e: React.FormEvent) {
     e.preventDefault();
     if (!snapshot || !selectedMethodId) return;
@@ -493,6 +512,25 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
     : (snapshot?.totalCents ?? Math.max(0, cart.subtotalCents - breakdownCouponDiscount));
   const shippingMethods            = snapshot?.shippingMethods ?? [];
   const checkoutInitiated          = !onAddressStep;
+
+  /**
+   * When the order ships free there is nothing to choose between — every method
+   * costs 0 — so the picker is replaced by a single card describing the standard
+   * option. Prefer the already-selected method, else the first, which the API
+   * returns ordered by `sortOrder` (standard first).
+   */
+  /**
+   * On a free-shipping order the API returns the free option plus whichever
+   * paid upgrades the admin attached AND that belong to this customer's zone.
+   * Split them so the free one shows without a price and the upgrades with
+   * theirs.
+   */
+  const freeShippingUpgrades = snapshot?.freeShipping
+    ? shippingMethods.filter(m => m.isFreeShippingUpgrade)
+    : [];
+  const freeShippingMethod = snapshot?.freeShipping
+    ? shippingMethods.find(m => !m.isFreeShippingUpgrade) ?? null
+    : null;
 
   return (
     <div className={styles.container}>
@@ -598,19 +636,51 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                   {t.noShippingOptions}
                 </p>
               )}
-              {snapshot.freeShipping && (
-                <div className={styles.freeShippingBanner}>
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M3 7h11v8H3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-                    <path d="M14 10h3.5L21 13v2h-7z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-                    <circle cx="7" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
-                    <circle cx="17" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
-                  </svg>
-                  <span>
-                    <strong>{t.freeShippingBadge}</strong> — {t.freeShippingCartNote}
-                  </span>
+              {/* Free shipping: there is nothing to choose, so the picker is
+                  replaced by a single confirmation card. The method is still
+                  applied to the order underneath (see the effect above). */}
+              {freeShippingMethod ? (
+                <div className={styles.shippingMethods}>
+                  {/* Free option: no price shown at all — "Free shipping" says it. */}
+                  <label className={`${styles.freeShippingCard} ${selectedMethodId === freeShippingMethod.id ? styles.freeShippingCardSelected : ""}`}>
+                    {freeShippingUpgrades.length > 0 && (
+                      <input
+                        type="radio" name="shipping" value={freeShippingMethod.id}
+                        checked={selectedMethodId === freeShippingMethod.id}
+                        onChange={() => { setSelectedMethodId(freeShippingMethod.id); applyShippingMethod(snapshot.orderId, freeShippingMethod.id); }}
+                      />
+                    )}
+                    <span className={styles.freeShippingCardIcon} aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M3 7h11v8H3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                        <path d="M14 10h3.5L21 13v2h-7z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                        <circle cx="7" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
+                        <circle cx="17" cy="17.5" r="1.8" stroke="currentColor" strokeWidth="1.7" />
+                      </svg>
+                    </span>
+                    <span className={styles.freeShippingCardBody}>
+                      <span className={styles.freeShippingCardTitle}>{t.freeShippingBadge}</span>
+                      <span className={styles.freeShippingCardMeta}>
+                        {freeShippingMethod.name} · {freeShippingMethod.estimatedDaysMin}–{freeShippingMethod.estimatedDaysMax} {t.days}
+                      </span>
+                    </span>
+                  </label>
+
+                  {/* Paid upgrades the admin attached, narrowed to this zone. */}
+                  {freeShippingUpgrades.map(up => (
+                    <label key={up.id} className={`${styles.shippingOption} ${selectedMethodId === up.id ? styles.shippingOptionSelected : ""}`}>
+                      <input
+                        type="radio" name="shipping" value={up.id}
+                        checked={selectedMethodId === up.id}
+                        onChange={() => { setSelectedMethodId(up.id); applyShippingMethod(snapshot.orderId, up.id); }}
+                      />
+                      <span className={styles.shippingName}>{up.name}</span>
+                      <span className={styles.shippingDays}>{up.estimatedDaysMin}–{up.estimatedDaysMax} {t.days}</span>
+                      <span className={styles.shippingPrice}>€{centsToEuros(up.priceCents)}</span>
+                    </label>
+                  ))}
                 </div>
-              )}
+              ) : (
               <div className={styles.shippingMethods}>
                 {shippingMethods.map(m => (
                   <label key={m.id} className={`${styles.shippingOption} ${selectedMethodId === m.id ? styles.shippingOptionSelected : ""}`}>
@@ -636,6 +706,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
                   </label>
                 ))}
               </div>
+              )}
 
               <div className={styles.actionRow}>
                 <button type="button" onClick={() => handleStepClick("address")} className={styles.backBtn}>{t.back}</button>

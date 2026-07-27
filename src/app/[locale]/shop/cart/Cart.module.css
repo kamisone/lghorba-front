@@ -121,26 +121,20 @@
 .freeShippingNote {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   margin: 12px 0 0;
-  padding: 10px 12px;
-  border: 1px solid #a7f3d0;
-  border-radius: 10px;
-  background: #ecfdf5;
-  color: #065f46;
+  padding: 10px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: rgba(0, 70, 110, .05);
+  color: var(--color-brand-primary);
   font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
 }
-.freeShippingNote svg { width: 20px; height: 20px; flex-shrink: 0; color: #059669; }
-
-@media (prefers-color-scheme: dark) {
-  .freeShippingNote {
-    border-color: #065f46;
-    background: rgb(6 78 59 / 0.3);
-    color: #6ee7b7;
-  }
-  .freeShippingNote svg { color: #34d399; }
+.freeShippingNote svg {
+  width: 20px; height: 20px; flex-shrink: 0;
+  color: var(--color-brand-primary);
 }
 
 .summaryTotal {

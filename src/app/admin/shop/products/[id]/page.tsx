@@ -65,7 +65,9 @@ interface DefaultVariant {
 
 interface Product {
   id: string; title: string; sku: string | null; slug: string; status: string;
-  featured: boolean; isTestProduct: boolean; freeShipping: boolean; shortDescription: string | null; description: string | null;
+  featured: boolean; isTestProduct: boolean; freeShipping: boolean;
+  freeShippingUpgradeMethods: Array<{ id: string }> | null;
+  shortDescription: string | null; description: string | null;
   brand: string | null; basePriceCents: number | null;
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
@@ -90,8 +92,16 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   // Product & categories
   const [product, setProduct]       = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [freeShipMethods, setFreeShipMethods] = useState<
+    Array<{
+      id: string; name: string; priceCents: number;
+      estimatedDaysMin: number; estimatedDaysMax: number;
+      zoneName: string; zoneCountryCodes: string[];
+    }>
+  >([]);
   const [form, setForm] = useState({
     title: "", slug: "", status: "draft", featured: false, isTestProduct: false, freeShipping: false,
+    freeShippingUpgradeMethodIds: [] as string[],
     brand: "", shortDescription: "", description: "",
     primaryCategoryId: "",
     categoryIds: [] as string[],
@@ -144,10 +154,11 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     Promise.all([
       fetch(`/next-api/shop/products/${params.id}`).then(r => r.json()),
       fetch("/next-api/admin/shop/categories").then(r => r.ok ? r.json() : []),
+      fetch("/next-api/admin/shop/shipping/free-shipping-methods").then(r => r.ok ? r.json() : []),
       fetch("/next-api/admin/shop/variant-attributes").then(r => r.ok ? r.json() : []),
       fetch(`/next-api/shop/products/${params.id}/attributes`).then(r => r.ok ? r.json() : []),
       fetch(`/next-api/shop/products/${params.id}/option-images`).then(r => r.ok ? r.json() : []),
-    ]).then(([p, cats, attrs, prodAttrs, optImages]) => {
+    ]).then(([p, cats, freeShipMs, attrs, prodAttrs, optImages]) => {
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
@@ -160,6 +171,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setSocialVideosTitle(p.socialVideosTitle ?? "");
       setStoryNarrativeTitle(p.storyNarrativeTitle ?? "");
       setCategories(Array.isArray(cats) ? cats : []);
+      setFreeShipMethods(Array.isArray(freeShipMs) ? freeShipMs : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
       setProductAttrs(Array.isArray(prodAttrs) ? prodAttrs : []);
       setOptionImages(Array.isArray(optImages) ? optImages : []);
@@ -170,6 +182,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         featured:          p.featured ?? false,
         isTestProduct:     p.isTestProduct ?? false,
         freeShipping:      p.freeShipping ?? false,
+        freeShippingUpgradeMethodIds: (p.freeShippingUpgradeMethods ?? []).map((m: { id: string }) => m.id),
         brand:             p.brand ?? "",
         shortDescription:  p.shortDescription ?? "",
         description:       p.description ?? "",
@@ -340,6 +353,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         ...form,
         brand:             form.brand || null,
         primaryCategoryId: form.primaryCategoryId || null,
+        freeShippingUpgradeMethodIds: form.freeShipping ? form.freeShippingUpgradeMethodIds : [],
         categoryIds,
         media,
         infoSections,
@@ -943,10 +957,61 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                       free-shipping products.
                     </div>
                   </div>
-                  <input type="checkbox" checked={form.freeShipping} onChange={e => setForm(f => ({ ...f, freeShipping: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "#059669", cursor: "pointer" }} />
+                  <input type="checkbox" checked={form.freeShipping} onChange={e => setForm(f => ({ ...f, freeShipping: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }} />
                 </div>
                 {form.freeShipping && (
-                  <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.5, color: "#065f46", background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 8, padding: "8px 10px" }}>
+                  <div className={styles.field} style={{ marginTop: 12, marginBottom: 0 }}>
+                    <label className={styles.label}>
+                      Paid faster options <span className={styles.hint} style={{ fontWeight: 400 }}>(optional)</span>
+                    </label>
+                    {freeShipMethods.length === 0 ? (
+                      <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--color-text-muted)" }}>
+                        No method is marked &ldquo;Used for free shipping&rdquo; yet — enable that
+                        switch on a method in Shop → Shipping to offer one here.
+                      </p>
+                    ) : (
+                      <>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, border: "1px solid var(--color-border)", borderRadius: 10, padding: "10px 12px", maxHeight: 220, overflowY: "auto" }}>
+                          {freeShipMethods.map(m => {
+                            const checked = form.freeShippingUpgradeMethodIds.includes(m.id);
+                            return (
+                              <label key={m.id} style={{ display: "flex", alignItems: "flex-start", gap: 9, cursor: "pointer", fontSize: 13 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => setForm(f => ({
+                                    ...f,
+                                    freeShippingUpgradeMethodIds: checked
+                                      ? f.freeShippingUpgradeMethodIds.filter(id => id !== m.id)
+                                      : [...f.freeShippingUpgradeMethodIds, m.id],
+                                  }))}
+                                  style={{ width: 15, height: 15, marginTop: 2, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
+                                />
+                                <span>
+                                  <span style={{ fontWeight: 600, color: "var(--color-admin-primary)" }}>{m.name}</span>
+                                  <span style={{ color: "var(--color-text-muted)" }}>
+                                    {" "}— €{(m.priceCents / 100).toFixed(2)} · {m.estimatedDaysMin}–{m.estimatedDaysMax} days
+                                  </span>
+                                  <span style={{ display: "block", fontSize: 11.5, color: "var(--color-text-muted)" }}>
+                                    Zone: {m.zoneName}
+                                    {m.zoneCountryCodes.length > 0 && ` (${m.zoneCountryCodes.join(", ")})`}
+                                  </span>
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--color-text-muted)" }}>
+                          Offered next to free shipping at checkout, for customers willing to pay
+                          for quicker delivery. Each customer only sees the ones belonging to the
+                          shipping zone of their delivery address.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
+                {form.freeShipping && (
+                  <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--color-admin-indigo)", background: "rgba(var(--rgb-admin-secondary), 0.07)", border: "1px solid rgba(var(--rgb-admin-secondary), 0.28)", borderRadius: 8, padding: "8px 10px" }}>
                     Shipping is charged once per order, so it is all or nothing:
                     the order ships free only when <strong>every product in the basket</strong>
                     {" "}has free shipping. Add one product with paid delivery and normal
