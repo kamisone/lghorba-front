@@ -14,6 +14,7 @@ interface Folder {
   name: string;
   parentId: string | null;
   assetCount: number;
+  thumbnailUrl: string | null;
   createdAt: string;
 }
 
@@ -627,7 +628,20 @@ function MediaLibrary() {
                 onDrop={e => onDropToFolder(e, folder.id)}
               >
                 <div className={styles.folderCardIcon}>
-                  <Folder size={32} strokeWidth={1.5} />
+                  {/* Cover image so the grid is scannable without opening each
+                      folder; the icon remains the fallback for empty ones. */}
+                  {folder.thumbnailUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={folder.thumbnailUrl}
+                      alt=""
+                      className={styles.folderCardThumb}
+                      loading="lazy"
+                      draggable={false}
+                    />
+                  ) : (
+                    <Folder size={32} strokeWidth={1.5} />
+                  )}
                 </div>
                 <div className={styles.folderCardMeta}>
                   <div className={styles.folderCardName}>{folder.name}</div>

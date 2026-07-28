@@ -213,6 +213,16 @@
 }
 .folderCardIcon { color: #1d4ed8; opacity: 0.7; margin-bottom: 8px; }
 .folderCard:hover .folderCardIcon { opacity: 1; }
+/* Folder cover image — fixed box so cards stay aligned with icon-only ones. */
+.folderCardThumb {
+  width: 100%;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 7px;
+  display: block;
+  background: #f1f5f9;
+}
+.folderCard:hover .folderCardThumb { opacity: 1; }
 .folderCardName {
   font-size: 12.5px; font-weight: 600; color: #374151;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

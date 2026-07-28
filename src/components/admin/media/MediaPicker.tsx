@@ -36,6 +36,7 @@ interface FolderItem {
   name:       string;
   parentId:   string | null;
   assetCount: number;
+  thumbnailUrl: string | null;
 }
 
 interface Props {
@@ -283,7 +284,18 @@ export default function MediaPicker({ open, onClose, onSelect, onSelectMulti, mu
                 title={folder.name}
               >
                 <div className={styles.folderCardIcon}>
-                  <Folder size={30} strokeWidth={1.5} />
+                  {folder.thumbnailUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={folder.thumbnailUrl}
+                      alt=""
+                      className={styles.folderCardThumb}
+                      loading="lazy"
+                      draggable={false}
+                    />
+                  ) : (
+                    <Folder size={30} strokeWidth={1.5} />
+                  )}
                 </div>
                 <div className={styles.folderCardName}>{folder.name}</div>
                 <div className={styles.folderCardCount}>

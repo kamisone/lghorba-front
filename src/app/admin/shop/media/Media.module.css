@@ -282,6 +282,21 @@
 }
 .folderCardIcon { color: var(--color-admin-secondary); opacity: 0.75; margin-bottom: 10px; }
 .folderCard:hover .folderCardIcon { opacity: 1; }
+/*
+ * Folder cover image. Fixed box so a folder with a cover and one without still
+ * line up on the same row — a thumbnail that resized the card would make the
+ * grid ragged. The icon keeps its own opacity rule; the image stays full
+ * strength so it is legible at this size.
+ */
+.folderCardThumb {
+  width: 100%;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  background: var(--color-surface-raised);
+}
+.folderCard:hover .folderCardThumb { opacity: 1; }
 .folderCardMeta { width: 100%; }
 .folderCardName {
   font-size: 12.5px; font-weight: 600; color: var(--color-text-primary);
