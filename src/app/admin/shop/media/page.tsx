@@ -6,6 +6,7 @@ import styles from "./Media.module.css";
 import { X, Folder, FolderOpen, Pencil, Trash2, Check, ChevronRight, Plus, Play } from "lucide-react";
 import { formatDuration } from "@/components/admin/media/MediaPicker";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import BilingualField from "@/components/admin/BilingualField";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -108,7 +109,7 @@ function MediaLibrary() {
   const [title, setTitle]         = useState("");
   const [movingToFolder, setMovingToFolder] = useState<string>("__current__");
   const [saving, setSaving]       = useState(false);
-  const { enValues, setEn, saveEnTranslations } = useEntityTranslations('media_asset', selected?.id ?? null);
+  const { translations, setTranslation, saveTranslations } = useEntityTranslations('media_asset', selected?.id ?? null);
 
   // Upload
   const [uploading, setUploading] = useState(false);
@@ -231,7 +232,7 @@ function MediaLibrary() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ altText, title }),
     }).then(r => r.json());
-    await saveEnTranslations(selected.id, ['altText', 'title']);
+    await saveTranslations(selected.id, ['altText', 'title']);
     setSelected({ ...selected, ...updated });
     setAssets(prev => prev.map(a => a.id === selected.id ? { ...a, altText, title } : a));
     setSaving(false);
@@ -812,23 +813,28 @@ function MediaLibrary() {
             <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
               <div className={styles.detailLabel} style={{ fontWeight: 700, fontSize: 12, marginBottom: -4 }}>SEO &amp; Accessibility</div>
 
-              <div>
-                <div className={styles.detailLabel}>Alt Text (FR)</div>
-                <textarea className={styles.altTextarea} value={altText} onChange={e => setAltText(e.target.value)} rows={2} placeholder="Description de l'image" />
-              </div>
-              <div>
-                <div className={styles.detailLabel}>Alt Text (EN)</div>
-                <textarea className={styles.altTextarea} value={enValues.altText ?? ""} onChange={e => setEn("altText", e.target.value)} rows={2} placeholder="Image description" />
-              </div>
+              <BilingualField
+                label="Alt Text"
+                field="altText"
+                frValue={altText}
+                frOnChange={setAltText}
+                frPlaceholder="Description de l'image"
+                translations={translations}
+                onTranslationChange={setTranslation}
+                overlayPlaceholder="Image description"
+                multiline rows={2}
+              />
 
-              <div>
-                <div className={styles.detailLabel}>Title (FR)</div>
-                <input className={styles.altTextarea} style={{ resize: "none", height: "auto", padding: "7px 10px" }} value={title} onChange={e => setTitle(e.target.value)} placeholder="Titre de l'image" />
-              </div>
-              <div>
-                <div className={styles.detailLabel}>Title (EN)</div>
-                <input className={styles.altTextarea} style={{ resize: "none", height: "auto", padding: "7px 10px" }} value={enValues.title ?? ""} onChange={e => setEn("title", e.target.value)} placeholder="Image title" />
-              </div>
+              <BilingualField
+                label="Title"
+                field="title"
+                frValue={title}
+                frOnChange={setTitle}
+                frPlaceholder="Titre de l'image"
+                translations={translations}
+                onTranslationChange={setTranslation}
+                overlayPlaceholder="Image title"
+              />
 
               <button className={styles.saveAltBtn} onClick={saveSeoFields} disabled={saving}>
                 {saving ? "Saving…" : "Save SEO Fields"}

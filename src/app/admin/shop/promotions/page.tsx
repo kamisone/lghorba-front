@@ -79,7 +79,7 @@ export default function PromotionsPage() {
   const [form, setForm]     = useState<Partial<Promotion>>(EMPTY);
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const { enValues: promoEn, setEn: setPromoEn, saveEnTranslations: savePromoEn } =
+  const { translations: promoTr, setTranslation: setPromoTr, saveTranslations: savePromoTr } =
     useEntityTranslations('shop_promotion', editId);
 
   // Reference data
@@ -174,7 +174,7 @@ export default function PromotionsPage() {
     if (res.ok) {
       const saved = await res.json().catch(() => ({}));
       const id = saved?.id ?? editId;
-      if (id) await savePromoEn(id, ['name', 'description', 'marketingLabel', 'bannerText']);
+      if (id) await savePromoTr(id, ['name', 'description', 'marketingLabel', 'bannerText']);
       toast.success(modal === "create" ? "Promotion created" : "Promotion updated");
     } else {
       const err = await res.json().catch(() => null);
@@ -375,18 +375,20 @@ export default function PromotionsPage() {
 
             <BilingualField
               label="Name"
+              field="name"
               frRequired
               frValue={form.name ?? ""}
               frOnChange={v => setForm(f => ({ ...f, name: v }))}
-              enValue={promoEn.name ?? ""}
-              enOnChange={v => setPromoEn('name', v)}
+              translations={promoTr}
+              onTranslationChange={setPromoTr}
             />
             <BilingualField
               label="Description"
+              field="description"
               frValue={form.description ?? ""}
               frOnChange={v => setForm(f => ({ ...f, description: v || null }))}
-              enValue={promoEn.description ?? ""}
-              enOnChange={v => setPromoEn('description', v)}
+              translations={promoTr}
+              onTranslationChange={setPromoTr}
               multiline rows={2}
             />
 

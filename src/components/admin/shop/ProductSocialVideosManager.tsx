@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { GripVertical, Trash2, Film, Plus } from "lucide-react";
 import MediaPicker, { MediaAsset, formatDuration } from "@/components/admin/media/MediaPicker";
+import BilingualField from "@/components/admin/BilingualField";
+import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductSocialVideosManager.module.css";
 
 /** A social/reels video attached to a product — shown in a vertical carousel on the PDP. */
@@ -43,16 +45,16 @@ const MAX_VIDEOS = 10;
 interface Props {
   initialItems: ResolvedProductSocialVideo[];
   onChange: (items: ProductSocialVideo[]) => void;
-  /** EN translations map — badge titles live under `socialVideo:{id}:title`. */
-  enValues: Record<string, string>;
-  setEn: (field: string, value: string) => void;
+  /** Overlay-language translations map — badge titles live under `socialVideo:{id}:title`. */
+  translations: Record<OverlayLang, Record<string, string>>;
+  setTranslation: (lang: OverlayLang, field: string, value: string) => void;
 }
 
 /**
  * Admin manager for the PDP "Social Videos" reels section: pick videos from
  * the media library, drag to reorder, remove. Order = display order.
  */
-export default function ProductSocialVideosManager({ initialItems, onChange, enValues, setEn }: Props) {
+export default function ProductSocialVideosManager({ initialItems, onChange, translations, setTranslation }: Props) {
   const [items, setItems] = useState<ResolvedProductSocialVideo[]>(initialItems);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -152,28 +154,17 @@ export default function ProductSocialVideosManager({ initialItems, onChange, enV
             </div>
 
             <div className={styles.badgeFields}>
-              <label className={styles.badgeInputRow}>
-                <span aria-hidden="true">🇫🇷</span>
-                <input
-                  className={styles.badgeInput}
-                  value={item.title ?? ""}
-                  onChange={e => updateTitle(i, e.target.value)}
-                  placeholder="Badge (FR)"
-                  maxLength={60}
-                  aria-label="Badge title (French)"
-                />
-              </label>
-              <label className={styles.badgeInputRow}>
-                <span aria-hidden="true">🇬🇧</span>
-                <input
-                  className={styles.badgeInput}
-                  value={enValues[`socialVideo:${item.id}:title`] ?? ""}
-                  onChange={e => setEn(`socialVideo:${item.id}:title`, e.target.value)}
-                  placeholder="Badge (EN)"
-                  maxLength={60}
-                  aria-label="Badge title (English)"
-                />
-              </label>
+              <BilingualField
+                label="Badge"
+                field={`socialVideo:${item.id}:title`}
+                frValue={item.title ?? ""}
+                frOnChange={val => updateTitle(i, val)}
+                frPlaceholder="Badge (FR)"
+                translations={translations}
+                onTranslationChange={setTranslation}
+                overlayPlaceholder="Badge"
+                maxLength={60}
+              />
             </div>
           </div>
         ))}

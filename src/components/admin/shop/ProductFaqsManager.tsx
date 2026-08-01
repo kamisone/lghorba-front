@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { GripVertical, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import BilingualField from "@/components/admin/BilingualField";
+import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductFaqsManager.module.css";
 
 /** A product-specific FAQ entry shown near the bottom of the PDP and in FAQPage JSON-LD. */
@@ -23,11 +24,11 @@ function genId(): string {
 interface Props {
   faqs: ProductFaq[];
   onChange: (faqs: ProductFaq[]) => void;
-  enValues: Record<string, string>;
-  setEn: (field: string, value: string) => void;
+  translations: Record<OverlayLang, Record<string, string>>;
+  setTranslation: (lang: OverlayLang, field: string, value: string) => void;
 }
 
-export default function ProductFaqsManager({ faqs, onChange, enValues, setEn }: Props) {
+export default function ProductFaqsManager({ faqs, onChange, translations, setTranslation }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   function notify(next: ProductFaq[]) {
@@ -92,24 +93,26 @@ export default function ProductFaqsManager({ faqs, onChange, enValues, setEn }: 
             <div className={styles.cardBody}>
               <BilingualField
                 label="Question"
+                field={`faq:${faq.id}:question`}
                 frValue={faq.question}
                 frOnChange={val => update(i, { question: val })}
                 frPlaceholder="e.g. How long does delivery take?"
                 frRequired
-                enValue={enValues[`faq:${faq.id}:question`] ?? ""}
-                enOnChange={val => setEn(`faq:${faq.id}:question`, val)}
-                enPlaceholder="e.g. How long does delivery take?"
+                translations={translations}
+                onTranslationChange={setTranslation}
+                overlayPlaceholder="e.g. How long does delivery take?"
               />
               <BilingualField
                 label="Answer"
+                field={`faq:${faq.id}:answer`}
                 frValue={faq.answer}
                 frOnChange={val => update(i, { answer: val })}
                 frPlaceholder="e.g. Orders ship within 2-3 business days."
                 multiline
                 rows={3}
-                enValue={enValues[`faq:${faq.id}:answer`] ?? ""}
-                enOnChange={val => setEn(`faq:${faq.id}:answer`, val)}
-                enPlaceholder="e.g. Orders ship within 2-3 business days."
+                translations={translations}
+                onTranslationChange={setTranslation}
+                overlayPlaceholder="e.g. Orders ship within 2-3 business days."
               />
             </div>
           </div>

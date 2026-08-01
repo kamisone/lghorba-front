@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import BilingualField from "./BilingualField";
+import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 import styles from "./VehicleFaqFormModal.module.css";
 import { X } from "lucide-react";
 
@@ -21,33 +22,15 @@ interface Props {
 }
 
 const TRANSLATABLE_FIELDS = ["question", "answer"] as const;
-type TField = typeof TRANSLATABLE_FIELDS[number];
 
 export default function VehicleFaqFormModal({ carId, faq, onClose, onSaved }: Props) {
   const isEdit = !!faq;
 
   const [frQuestion, setFrQuestion] = useState(faq?.question ?? "");
   const [frAnswer,   setFrAnswer]   = useState(faq?.answer   ?? "");
-  const [enQuestion, setEnQuestion] = useState("");
-  const [enAnswer,   setEnAnswer]   = useState("");
-  const [enIds,      setEnIds]      = useState<Partial<Record<TField, string>>>({});
+  const { translations, setTranslation, saveTranslations } = useEntityTranslations("vehicle_faq", faq?.id ?? null);
   const [saving,     setSaving]     = useState(false);
   const [error,      setError]      = useState("");
-
-  useEffect(() => {
-    if (!faq?.id) return;
-    fetch(`/next-api/translations/vehicle_faq/${faq.id}?lang=en`)
-      .then(r => r.ok ? r.json() : [])
-      .then((rows: { id: string; field: string; value: string }[]) => {
-        const ids: Partial<Record<TField, string>> = {};
-        for (const row of rows) {
-          if (row.field === "question") { setEnQuestion(row.value); ids.question = row.id; }
-          if (row.field === "answer")   { setEnAnswer(row.value);   ids.answer   = row.id; }
-        }
-        setEnIds(ids);
-      })
-      .catch(() => {});
-  }, [faq?.id]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -66,26 +49,7 @@ export default function VehicleFaqFormModal({ carId, faq, onClose, onSaved }: Pr
       if (!res.ok) throw new Error();
       const saved: VehicleFaq = await res.json();
 
-      const toUpsert: { entityType: string; entityId: string; field: string; value: string; lang: string }[] = [];
-      const toDelete: string[] = [];
-      const enValues: Record<TField, string> = { question: enQuestion.trim(), answer: enAnswer.trim() };
-      for (const field of TRANSLATABLE_FIELDS) {
-        if (enValues[field]) {
-          toUpsert.push({ entityType: "vehicle_faq", entityId: saved.id, field, value: enValues[field], lang: "en" });
-        } else if (enIds[field]) {
-          toDelete.push(enIds[field]!);
-        }
-      }
-      await Promise.all([
-        toUpsert.length
-          ? fetch("/next-api/translations/bulk", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ items: toUpsert }),
-            })
-          : null,
-        ...toDelete.map(id => fetch(`/next-api/translations/entry/${id}`, { method: "DELETE" })),
-      ].filter(Boolean));
+      await saveTranslations(saved.id, [...TRANSLATABLE_FIELDS]);
 
       onSaved();
     } catch {
@@ -107,22 +71,24 @@ export default function VehicleFaqFormModal({ carId, faq, onClose, onSaved }: Pr
           <div className={styles.fields}>
             <BilingualField
               label="Question"
+              field="question"
               frValue={frQuestion}
               frOnChange={setFrQuestion}
               frPlaceholder="ex. Comment récupérer le véhicule ?"
-              enValue={enQuestion}
-              enOnChange={setEnQuestion}
-              enPlaceholder="e.g. How do I pick up the vehicle?"
+              translations={translations}
+              onTranslationChange={setTranslation}
+              overlayPlaceholder="e.g. How do I pick up the vehicle?"
               frRequired
             />
             <BilingualField
               label="Answer"
+              field="answer"
               frValue={frAnswer}
               frOnChange={setFrAnswer}
               frPlaceholder="ex. Le véhicule est disponible à l'adresse indiquée…"
-              enValue={enAnswer}
-              enOnChange={setEnAnswer}
-              enPlaceholder="e.g. The vehicle is available at the address listed…"
+              translations={translations}
+              onTranslationChange={setTranslation}
+              overlayPlaceholder="e.g. The vehicle is available at the address listed…"
               multiline
               rows={4}
               frRequired

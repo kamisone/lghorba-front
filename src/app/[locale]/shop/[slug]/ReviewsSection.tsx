@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Star, BadgeCheck, Play, X } from "lucide-react";
-import { getTranslations } from "@/lib/i18n";
+import { getTranslations, toBcp47 } from "@/lib/i18n";
 import WriteReviewForm from "./WriteReviewForm";
 import styles from "./ReviewsSection.module.css";
 
@@ -40,7 +40,7 @@ function Stars({ value, size = 15 }: { value: number; size?: number }) {
 }
 
 function formatDate(iso: string, locale: string) {
-  return new Date(iso).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString(toBcp47(locale), { day: "2-digit", month: "short", year: "numeric" });
 }
 
 export default function ReviewsSection({ productId, locale, stats, initialReviews }: Props) {

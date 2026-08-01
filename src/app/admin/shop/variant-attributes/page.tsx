@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import styles from "./VariantAttributes.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import BilingualField from "@/components/admin/BilingualField";
 import { slugify } from "@/lib/slugify";
 import { X, ChevronDown } from "lucide-react";
 
@@ -30,20 +31,20 @@ interface VariantAttribute {
 }
 
 interface AttrForm {
-  name: string; nameEn: string; slug: string; adminLabel: string;
+  name: string; slug: string; adminLabel: string;
   displayType: "swatch" | "button" | "dropdown";
   sortOrder: number; isActive: boolean;
 }
 
 interface ValueForm {
-  value: string; displayValue: string; displayValueEn: string; swatchValue: string;
+  value: string; displayValue: string; swatchValue: string;
   swatchType: "color" | "image" | "";
   priceAdjustmentEuros: string;
   sortOrder: number; isActive: boolean;
 }
 
-const ATTR_EMPTY: AttrForm  = { name: "", nameEn: "", slug: "", adminLabel: "", displayType: "button", sortOrder: 0, isActive: true };
-const VALUE_EMPTY: ValueForm = { value: "", displayValue: "", displayValueEn: "", swatchValue: "", swatchType: "", priceAdjustmentEuros: "", sortOrder: 0, isActive: true };
+const ATTR_EMPTY: AttrForm  = { name: "", slug: "", adminLabel: "", displayType: "button", sortOrder: 0, isActive: true };
+const VALUE_EMPTY: ValueForm = { value: "", displayValue: "", swatchValue: "", swatchType: "", priceAdjustmentEuros: "", sortOrder: 0, isActive: true };
 
 
 const DISPLAY_LABEL: Record<string, string> = { button: "Button", swatch: "Swatch", dropdown: "Dropdown" };
@@ -71,8 +72,10 @@ export default function VariantAttributesPage() {
   const [valAttrId, setValAttrId]   = useState<string | null>(null);
   const [valSaving, setValSaving]   = useState(false);
 
-  const attrTranslations = useEntityTranslations("shop_variant_attribute", attrEditId);
-  const valTranslations  = useEntityTranslations("shop_variation_option",  valEditId);
+  const { translations: attrTr, setTranslation: setAttrTr, saveTranslations: saveAttrTr } =
+    useEntityTranslations("shop_variant_attribute", attrEditId);
+  const { translations: valTr, setTranslation: setValTr, saveTranslations: saveValTr } =
+    useEntityTranslations("shop_variation_option", valEditId);
 
   async function load() {
     setLoading(true);
@@ -83,50 +86,23 @@ export default function VariantAttributesPage() {
   }
   useEffect(() => { load(); }, []);
 
-  // Sync EN translations into form fields once the hook loads them
-  useEffect(() => {
-    if (attrModal === "edit" && attrTranslations.enValues["name"] !== undefined) {
-      setAttrForm(f => ({ ...f, nameEn: attrTranslations.enValues["name"] ?? "" }));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attrTranslations.enValues]);
-
-  useEffect(() => {
-    if (valModal === "edit" && valTranslations.enValues["displayValue"] !== undefined) {
-      setValForm(f => ({ ...f, displayValueEn: valTranslations.enValues["displayValue"] ?? "" }));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valTranslations.enValues]);
-
   function openAttrCreate() { setAttrForm(ATTR_EMPTY); setAttrEditId(null); setAttrModal("create"); }
   function openAttrEdit(a: VariantAttribute) {
     setAttrEditId(a.id);
-    setAttrForm({ name: a.name, nameEn: "", slug: a.slug, adminLabel: a.adminLabel ?? "", displayType: a.displayType, sortOrder: a.sortOrder, isActive: a.isActive });
+    setAttrForm({ name: a.name, slug: a.slug, adminLabel: a.adminLabel ?? "", displayType: a.displayType, sortOrder: a.sortOrder, isActive: a.isActive });
     setAttrModal("edit");
   }
 
   async function saveAttr() {
     setAttrSaving(true);
-    const { nameEn, ...rest } = attrForm;
-    const body = { ...rest, slug: attrForm.slug || slugify(attrForm.name), adminLabel: attrForm.adminLabel.trim() || null };
+    const body = { ...attrForm, slug: attrForm.slug || slugify(attrForm.name), adminLabel: attrForm.adminLabel.trim() || null };
     const url    = attrModal === "create" ? "/next-api/admin/shop/variant-attributes" : `/next-api/admin/shop/variant-attributes/${attrEditId}`;
     const method = attrModal === "create" ? "POST" : "PATCH";
     const res    = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.ok) {
       const saved = await res.json();
       const entityId = attrModal === "create" ? saved.id : attrEditId!;
-      // Save EN translation for name
-      const enItems = nameEn.trim()
-        ? [{ entityType: "shop_variant_attribute", entityId, field: "name", lang: "en", value: nameEn.trim() }]
-        : [];
-      if (enItems.length) {
-        await fetch("/next-api/translations/bulk", {
-          method: "PUT", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: enItems }),
-        });
-      } else if (attrTranslations.enIds["name"]) {
-        await fetch(`/next-api/translations/entry/${attrTranslations.enIds["name"]}`, { method: "DELETE" });
-      }
+      await saveAttrTr(entityId, ["name"]);
       toast.success(attrModal === "create" ? "Attribute created" : "Attribute updated");
       setAttrModal(null); load();
     } else {
@@ -152,7 +128,7 @@ export default function VariantAttributesPage() {
   function openValEdit(v: OptionValue, attributeId: string) {
     setValEditId(v.id);
     const form: ValueForm = {
-      value: v.value, displayValue: v.displayValue ?? "", displayValueEn: "",
+      value: v.value, displayValue: v.displayValue ?? "",
       swatchValue: v.swatchValue ?? "", swatchType: (v.swatchType ?? "") as ValueForm["swatchType"],
       priceAdjustmentEuros: v.priceAdjustmentCents != null ? (v.priceAdjustmentCents / 100).toFixed(2) : "",
       sortOrder: v.sortOrder, isActive: v.isActive,
@@ -163,7 +139,7 @@ export default function VariantAttributesPage() {
 
   async function saveVal() {
     setValSaving(true);
-    const { displayValueEn, priceAdjustmentEuros, ...rest } = valForm;
+    const { priceAdjustmentEuros, ...rest } = valForm;
     const priceAdjustmentCents = priceAdjustmentEuros.trim()
       ? Math.round(parseFloat(priceAdjustmentEuros) * 100)
       : null;
@@ -180,17 +156,7 @@ export default function VariantAttributesPage() {
     if (res.ok) {
       const saved = await res.json();
       const entityId = valModal === "create" ? saved.id : valEditId!;
-      const enItems = displayValueEn.trim()
-        ? [{ entityType: "shop_variation_option", entityId, field: "displayValue", lang: "en", value: displayValueEn.trim() }]
-        : [];
-      if (enItems.length) {
-        await fetch("/next-api/translations/bulk", {
-          method: "PUT", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: enItems }),
-        });
-      } else if (valTranslations.enIds["displayValue"]) {
-        await fetch(`/next-api/translations/entry/${valTranslations.enIds["displayValue"]}`, { method: "DELETE" });
-      }
+      await saveValTr(entityId, ["displayValue"]);
       toast.success(valModal === "create" ? "Value added" : "Value updated");
     } else {
       toast.error("Failed to save value");
@@ -383,20 +349,17 @@ export default function VariantAttributesPage() {
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>
-                <div className={styles.formField}>
-                  <label>🇫🇷 Name (FR) *</label>
-                  <input
-                    value={attrForm.name}
-                    onChange={e => setAttrForm(f => ({ ...f, name: e.target.value, slug: slugify(e.target.value) }))}
-                    placeholder="e.g. Couleur, Taille"
-                  />
-                </div>
-                <div className={styles.formField}>
-                  <label>🇬🇧 Name (EN)</label>
-                  <input
-                    value={attrForm.nameEn}
-                    onChange={e => setAttrForm(f => ({ ...f, nameEn: e.target.value }))}
-                    placeholder="e.g. Color, Size"
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <BilingualField
+                    label="Name"
+                    field="name"
+                    frRequired
+                    frValue={attrForm.name}
+                    frOnChange={v => setAttrForm(f => ({ ...f, name: v, slug: slugify(v) }))}
+                    frPlaceholder="e.g. Couleur, Taille"
+                    translations={attrTr}
+                    onTranslationChange={setAttrTr}
+                    overlayPlaceholder="e.g. Color, Size"
                   />
                 </div>
                 <div className={styles.formField}>
@@ -458,13 +421,17 @@ export default function VariantAttributesPage() {
                   <label>Value * <span style={{ textTransform: "none", fontWeight: 400, letterSpacing: 0 }}>(machine key)</span></label>
                   <input value={valForm.value} onChange={e => setValForm(f => ({ ...f, value: e.target.value }))} placeholder="Black" />
                 </div>
-                <div className={styles.formField}>
-                  <label>🇫🇷 Display label (FR) <span style={{ textTransform: "none", fontWeight: 400, letterSpacing: 0 }}>(optional)</span></label>
-                  <input value={valForm.displayValue} onChange={e => setValForm(f => ({ ...f, displayValue: e.target.value }))} placeholder="Noir" />
-                </div>
-                <div className={styles.formField}>
-                  <label>🇬🇧 Display label (EN)</label>
-                  <input value={valForm.displayValueEn} onChange={e => setValForm(f => ({ ...f, displayValueEn: e.target.value }))} placeholder="Black" />
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <BilingualField
+                    label="Display label (optional)"
+                    field="displayValue"
+                    frValue={valForm.displayValue}
+                    frOnChange={v => setValForm(f => ({ ...f, displayValue: v }))}
+                    frPlaceholder="Noir"
+                    translations={valTr}
+                    onTranslationChange={setValTr}
+                    overlayPlaceholder="Black"
+                  />
                 </div>
                 <div className={styles.formField}>
                   <label>Swatch type</label>

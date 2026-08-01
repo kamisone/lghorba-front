@@ -192,7 +192,7 @@ export default function ShippingPage() {
   const [editZoneId,   setEditZoneId]   = useState<string | null>(null);
   const [editMethodId, setEditMethodId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const { enValues: methodEn, setEn: setMethodEn, saveEnTranslations: saveMethodEn } =
+  const { translations: methodTr, setTranslation: setMethodTr, saveTranslations: saveMethodTr } =
     useEntityTranslations('shop_shipping_method', editMethodId);
 
   async function load() {
@@ -297,7 +297,7 @@ export default function ShippingPage() {
     if (res.ok) {
       const saved = await res.json().catch(() => ({}));
       const id = saved?.id ?? editMethodId;
-      if (id) await saveMethodEn(id, ['name', 'description']);
+      if (id) await saveMethodTr(id, ['name', 'description']);
       toast.success(methodModal === "create" ? "Method created" : "Method updated");
     } else {
       toast.error("Failed to save method");
@@ -526,20 +526,22 @@ export default function ShippingPage() {
             </div>
             <BilingualField
               label="Name"
+              field="name"
               frRequired
               frValue={methodForm.name}
               frOnChange={v => setMethodForm(f => ({ ...f, name: v }))}
               frPlaceholder="Livraison standard"
-              enValue={methodEn.name ?? ""}
-              enOnChange={v => setMethodEn('name', v)}
-              enPlaceholder="Standard Delivery"
+              translations={methodTr}
+              onTranslationChange={setMethodTr}
+              overlayPlaceholder="Standard Delivery"
             />
             <BilingualField
               label="Description"
+              field="description"
               frValue={methodForm.description}
               frOnChange={v => setMethodForm(f => ({ ...f, description: v }))}
-              enValue={methodEn.description ?? ""}
-              enOnChange={v => setMethodEn('description', v)}
+              translations={methodTr}
+              onTranslationChange={setMethodTr}
               multiline rows={2}
             />
             <div className={styles.formGrid}>

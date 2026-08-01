@@ -6,6 +6,7 @@ import { X, MapPin } from "lucide-react";
 import styles from "./CarFormModal.module.css";
 import BilingualField from "./BilingualField";
 import AddressAutocomplete, { type SelectedAddress } from "@/components/AddressAutocomplete";
+import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 
 interface ParkingOption {
   id: string;
@@ -46,10 +47,6 @@ const EMPTY: FormValues = {
   vehicleCondition: "", basePricePerDay: "", basePricePerWeekendDay: "",
 };
 
-type EnTranslations = Record<TranslatableField, string>;
-type EnTranslationIds = Partial<Record<TranslatableField, string>>;
-const EMPTY_EN: EnTranslations = { description: "", vehicleCondition: "", color: "" };
-
 export interface DeliveryLocation {
   id?: string;
   label: string;
@@ -66,8 +63,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
   const isEdit = !!car;
 
   const [form, setForm]                           = useState<FormValues>(EMPTY);
-  const [enTranslations, setEnTranslations]       = useState<EnTranslations>(EMPTY_EN);
-  const [enTranslationIds, setEnTranslationIds]   = useState<EnTranslationIds>({});
+  const { translations, setTranslation, saveTranslations } = useEntityTranslations("car", car?.id ?? null);
   const [loading, setLoading]                     = useState(false);
   const [error, setError]                         = useState("");
 
@@ -147,32 +143,9 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
     }
   }, [car]);
 
-  // Load EN translations
-  useEffect(() => {
-    if (!car?.id) return;
-    fetch(`/next-api/translations/car/${car.id}?lang=en`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((rows: { id: string; field: string; value: string }[]) => {
-        const values: EnTranslations = { ...EMPTY_EN };
-        const ids: EnTranslationIds  = {};
-        for (const row of rows) {
-          if ((TRANSLATABLE_FIELDS as readonly string[]).includes(row.field)) {
-            values[row.field as TranslatableField] = row.value;
-            ids[row.field as TranslatableField]    = row.id;
-          }
-        }
-        setEnTranslations(values);
-        setEnTranslationIds(ids);
-      })
-      .catch(() => {});
-  }, [car?.id]);
-
   const set = (field: keyof FormValues) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
-
-  const setEn = (field: TranslatableField) => (val: string) =>
-    setEnTranslations((prev) => ({ ...prev, [field]: val }));
 
   const addLocation = () => {
     if (!newLocation || deliveryLocations.length >= MAX_LOCATIONS) return;
@@ -240,27 +213,7 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
       if (!res.ok) throw new Error();
       const savedCar: Car = await res.json();
 
-      // Handle EN translations
-      const toUpsert: { entityType: string; entityId: string; field: string; value: string; lang: string }[] = [];
-      const toDelete: string[] = [];
-      for (const field of TRANSLATABLE_FIELDS) {
-        const val = enTranslations[field].trim();
-        if (val) {
-          toUpsert.push({ entityType: "car", entityId: savedCar.id, field, value: val, lang: "en" });
-        } else if (enTranslationIds[field]) {
-          toDelete.push(enTranslationIds[field]!);
-        }
-      }
-      await Promise.all([
-        toUpsert.length
-          ? fetch("/next-api/translations/bulk", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ items: toUpsert }),
-            })
-          : null,
-        ...toDelete.map((id) => fetch(`/next-api/translations/entry/${id}`, { method: "DELETE" })),
-      ].filter(Boolean));
+      await saveTranslations(savedCar.id, [...TRANSLATABLE_FIELDS]);
 
       onSaved(savedCar);
     } catch {
@@ -296,12 +249,13 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
           </div>
           <BilingualField
             label="Description"
+            field="description"
             frValue={form.description}
             frOnChange={(v) => setForm((p) => ({ ...p, description: v }))}
             frPlaceholder="Notes sur le véhicule…"
-            enValue={enTranslations.description}
-            enOnChange={setEn("description")}
-            enPlaceholder="Notes about the vehicle…"
+            translations={translations}
+            onTranslationChange={setTranslation}
+            overlayPlaceholder="Notes about the vehicle…"
             multiline rows={2}
           />
 
@@ -336,12 +290,13 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
           </div>
           <BilingualField
             label="Color"
+            field="color"
             frValue={form.color}
             frOnChange={(v) => setForm((p) => ({ ...p, color: v }))}
             frPlaceholder="Blanc"
-            enValue={enTranslations.color}
-            enOnChange={setEn("color")}
-            enPlaceholder="White"
+            translations={translations}
+            onTranslationChange={setTranslation}
+            overlayPlaceholder="White"
             frRequired
           />
 
@@ -615,12 +570,13 @@ export default function CarFormModal({ car, onClose, onSaved }: Props) {
           </div>
           <BilingualField
             label="Vehicle condition"
+            field="vehicleCondition"
             frValue={form.vehicleCondition}
             frOnChange={(v) => setForm((p) => ({ ...p, vehicleCondition: v }))}
             frPlaceholder="ex. Bon état, légères rayures sur le pare-chocs arrière"
-            enValue={enTranslations.vehicleCondition}
-            enOnChange={setEn("vehicleCondition")}
-            enPlaceholder="e.g. Good, minor scratches on rear bumper"
+            translations={translations}
+            onTranslationChange={setTranslation}
+            overlayPlaceholder="e.g. Good, minor scratches on rear bumper"
           />
 
           {error && <p className={styles.error}>{error}</p>}

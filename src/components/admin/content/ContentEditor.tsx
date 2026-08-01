@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import RichTextEditor from "./RichTextEditor";
 import styles from "./ContentEditor.module.css";
 import { ChevronUp, ChevronDown, X } from "lucide-react";
+import { LOCALES, type Locale } from "@/lib/i18n";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,11 @@ interface PageContentData {
 }
 
 type Slug = "about" | "privacy" | "legal" | "cookies";
-type Locale = "fr" | "en";
+
+const LOCALE_LABEL: Record<Locale, string> = {
+  fr: "🇫🇷 Français", en: "🇬🇧 English", es: "🇪🇸 Español",
+  it: "🇮🇹 Italiano", de: "🇩🇪 Deutsch", nl: "🇳🇱 Nederlands", pl: "🇵🇱 Polski",
+};
 
 const PAGES: { slug: Slug; label: string }[] = [
   { slug: "about",   label: "À propos"        },
@@ -157,14 +162,14 @@ export default function ContentEditor() {
 
       {/* ── Locale switcher ── */}
       <div className={styles.localeBar}>
-        {(["fr", "en"] as Locale[]).map(l => (
+        {LOCALES.map(l => (
           <button
             key={l}
             type="button"
             className={`${styles.localeBtn} ${locale === l ? styles.localeBtnActive : ""}`}
             onClick={() => setLocale(l)}
           >
-            {l === "fr" ? "🇫🇷 Français" : "🇬🇧 English"}
+            {LOCALE_LABEL[l]}
           </button>
         ))}
         <span className={styles.localeNote}>

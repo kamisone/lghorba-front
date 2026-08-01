@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { MapPin, Truck } from "lucide-react";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { getTranslations, type Locale } from "@/lib/i18n";
+import { getTranslations, toOgLocale, type Locale } from "@/lib/i18n";
 import { probeNextAvailableDate } from "@/lib/probeNextAvailable";
 import CarSlider from "@/components/CarSlider";
 import BookingPanel from "./BookingPanel";
@@ -150,7 +150,7 @@ export async function generateMetadata({
   const siteUrl = resolveSiteUrl();
   const pageUrl = `${siteUrl}/${params.locale}/fleet/${params.id}`;
   const ogImage = `${siteUrl}/next-api/public/cars/${params.id}/photo`;
-  const ogLocale = params.locale === "fr" ? "fr_FR" : "en_US";
+  const ogLocale = toOgLocale(params.locale);
 
   return {
     title: `${title} — Vitecamion`,

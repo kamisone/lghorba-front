@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { FileText, GripVertical, Plus, Trash2, Upload } from "lucide-react";
 import BilingualField from "@/components/admin/BilingualField";
+import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductFaqsManager.module.css";
 
 export interface ProductDocument {
@@ -31,11 +32,11 @@ interface Props {
   productId: string;
   documents: ProductDocument[];
   onChange: (documents: ProductDocument[]) => void;
-  enValues: Record<string, string>;
-  setEn: (field: string, value: string) => void;
+  translations: Record<OverlayLang, Record<string, string>>;
+  setTranslation: (lang: OverlayLang, field: string, value: string) => void;
 }
 
-export default function ProductDocumentsManager({ productId, documents, onChange, enValues, setEn }: Props) {
+export default function ProductDocumentsManager({ productId, documents, onChange, translations, setTranslation }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -126,13 +127,14 @@ export default function ProductDocumentsManager({ productId, documents, onChange
             <div className={styles.cardBody}>
               <BilingualField
                 label="Section title"
+                field={`document:${doc.id}:title`}
                 frValue={doc.title}
                 frOnChange={val => update(i, { title: val })}
                 frPlaceholder="e.g. Notice d'utilisation, Fiche technique"
                 frRequired
-                enValue={enValues[`document:${doc.id}:title`] ?? ""}
-                enOnChange={val => setEn(`document:${doc.id}:title`, val)}
-                enPlaceholder="e.g. User manual, Technical sheet"
+                translations={translations}
+                onTranslationChange={setTranslation}
+                overlayPlaceholder="e.g. User manual, Technical sheet"
               />
             </div>
           </div>

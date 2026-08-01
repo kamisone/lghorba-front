@@ -5,6 +5,7 @@ import { GripVertical, Trash2, Plus } from "lucide-react";
 import BilingualField from "@/components/admin/BilingualField";
 import TrustBadgeIconSelect from "./TrustBadgeIconSelect";
 import { type TrustBadgeIconName } from "@/lib/shop/trustBadgeIcons";
+import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductTrustBadgesManager.module.css";
 
 /** A small icon+title trust signal shown near the PDP buy box (e.g. "Secure checkout"). */
@@ -26,11 +27,11 @@ function genId(): string {
 interface Props {
   badges: ProductTrustBadge[];
   onChange: (badges: ProductTrustBadge[]) => void;
-  enValues: Record<string, string>;
-  setEn: (field: string, value: string) => void;
+  translations: Record<OverlayLang, Record<string, string>>;
+  setTranslation: (lang: OverlayLang, field: string, value: string) => void;
 }
 
-export default function ProductTrustBadgesManager({ badges, onChange, enValues, setEn }: Props) {
+export default function ProductTrustBadgesManager({ badges, onChange, translations, setTranslation }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   function notify(next: ProductTrustBadge[]) {
@@ -90,22 +91,24 @@ export default function ProductTrustBadgesManager({ badges, onChange, enValues, 
               <div className={styles.cardBody}>
                 <BilingualField
                   label="Badge title"
+                  field={`trustBadge:${badge.id}:title`}
                   frValue={badge.title}
                   frOnChange={val => update(i, { title: val })}
                   frPlaceholder="e.g. Secure checkout"
                   frRequired
-                  enValue={enValues[`trustBadge:${badge.id}:title`] ?? ""}
-                  enOnChange={val => setEn(`trustBadge:${badge.id}:title`, val)}
-                  enPlaceholder="e.g. Secure checkout"
+                  translations={translations}
+                  onTranslationChange={setTranslation}
+                  overlayPlaceholder="e.g. Secure checkout"
                 />
                 <BilingualField
                   label="Subtitle (optional)"
+                  field={`trustBadge:${badge.id}:subtitle`}
                   frValue={badge.subtitle ?? ""}
                   frOnChange={val => update(i, { subtitle: val })}
                   frPlaceholder="e.g. Paiement 100% sécurisé"
-                  enValue={enValues[`trustBadge:${badge.id}:subtitle`] ?? ""}
-                  enOnChange={val => setEn(`trustBadge:${badge.id}:subtitle`, val)}
-                  enPlaceholder="e.g. 100% secure payment"
+                  translations={translations}
+                  onTranslationChange={setTranslation}
+                  overlayPlaceholder="e.g. 100% secure payment"
                 />
                 <label className={styles.linkField}>
                   <span className={styles.linkLabel}>Link (optional)</span>

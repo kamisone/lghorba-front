@@ -30,7 +30,7 @@ export default function NewProductPage() {
     primaryCategoryId: "",
     categoryIds: [] as string[],
   });
-  const { enValues, setEn, saveEnTranslations } = useEntityTranslations('shop_product', null);
+  const { translations, setTranslation, saveTranslations } = useEntityTranslations('shop_product', null);
 
   const [media, setMedia]               = useState<ProductMediaItem[]>([]);
   const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
@@ -97,7 +97,7 @@ export default function NewProductPage() {
     const infoSectionFields = infoSections.flatMap(s => [`infoSection:${s.id}:label`, `infoSection:${s.id}:value`]);
     const trustBadgeFields = trustBadges.flatMap(b => [`trustBadge:${b.id}:title`, `trustBadge:${b.id}:subtitle`]);
     const faqFields = faqs.flatMap(f => [`faq:${f.id}:question`, `faq:${f.id}:answer`]);
-    await saveEnTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields]);
+    await saveTranslations(product.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', ...infoSectionFields, ...trustBadgeFields, ...faqFields]);
     toast.success("Product created");
     router.push(`/admin/shop/products/${product.id}`);
   }
@@ -139,13 +139,14 @@ export default function NewProductPage() {
               <div className={styles.sectionBody}>
                 <BilingualField
                   label="Title"
+                  field="title"
                   frRequired
                   frValue={form.title}
                   frOnChange={v => setForm(f => ({ ...f, title: v }))}
                   frPlaceholder="Titre du produit"
-                  enValue={enValues.title ?? ""}
-                  enOnChange={v => setEn('title', v)}
-                  enPlaceholder="Product title"
+                  translations={translations}
+                  onTranslationChange={setTranslation}
+                  overlayPlaceholder="Product title"
                 />
                 <div className={styles.fieldRow}>
                   <div className={styles.field}>
@@ -168,18 +169,20 @@ export default function NewProductPage() {
                 </div>
                 <BilingualField
                   label="Short description"
+                  field="shortDescription"
                   frValue={form.shortDescription}
                   frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))}
-                  enValue={enValues.shortDescription ?? ""}
-                  enOnChange={v => setEn('shortDescription', v)}
+                  translations={translations}
+                  onTranslationChange={setTranslation}
                   multiline rows={2}
                 />
                 <BilingualField
                   label="Description"
+                  field="description"
                   frValue={form.description}
                   frOnChange={v => setForm(f => ({ ...f, description: v }))}
-                  enValue={enValues.description ?? ""}
-                  enOnChange={v => setEn('description', v)}
+                  translations={translations}
+                  onTranslationChange={setTranslation}
                   richText
                   collapsible
                 />
@@ -199,17 +202,17 @@ export default function NewProductPage() {
 
             {/* Specifications */}
             <CollapsibleSection icon="📋" title="Specifications">
-              <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
+              <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
 
             {/* Trust badges */}
             <CollapsibleSection icon="🛡️" title="Trust badges">
-              <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
+              <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
 
             {/* FAQs */}
             <CollapsibleSection icon="❓" title="FAQs" last>
-              <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
+              <ProductFaqsManager faqs={faqs} onChange={setFaqs} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
           </div>
 

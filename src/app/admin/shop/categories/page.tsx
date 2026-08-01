@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import BilingualField from "@/components/admin/BilingualField";
+import { OVERLAY_LANGS, type OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./Categories.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { slugify } from "@/lib/slugify";
 import { X } from "lucide-react";
 
 interface Translations {
-  name?: { fr?: string; en?: string };
+  name?: Partial<Record<"fr" | OverlayLang, string>>;
   slug?: { fr?: string; en?: string };
   seoTitle?: { fr?: string; en?: string };
 }
@@ -35,23 +36,31 @@ interface FormState {
   sortOrder: number;
   isActive: boolean;
   nameFr: string;
-  nameEn: string;
+  /** Overlay-language name translations, keyed by lang (en/es/it/de/nl/pl) */
+  nameOverlay: Record<OverlayLang, string>;
   slugFr: string;
   slugEn: string;
 }
 
+function emptyOverlay(): Record<OverlayLang, string> {
+  return Object.fromEntries(OVERLAY_LANGS.map(l => [l, ""])) as Record<OverlayLang, string>;
+}
+
 const EMPTY: FormState = {
   name: "", slug: "", description: "", parentId: "", sortOrder: 0, isActive: true,
-  nameFr: "", nameEn: "", slugFr: "", slugEn: "",
+  nameFr: "", nameOverlay: emptyOverlay(), slugFr: "", slugEn: "",
 };
 
 
 function formToBody(form: FormState) {
   const translations: Translations = {};
-  if (form.nameFr || form.nameEn) {
+  const hasNameOverlay = form.nameFr || OVERLAY_LANGS.some(l => form.nameOverlay[l]);
+  if (hasNameOverlay) {
     translations.name = {};
     if (form.nameFr) translations.name.fr = form.nameFr;
-    if (form.nameEn) translations.name.en = form.nameEn;
+    for (const l of OVERLAY_LANGS) {
+      if (form.nameOverlay[l]) translations.name[l] = form.nameOverlay[l];
+    }
   }
   if (form.slugFr || form.slugEn) {
     translations.slug = {};
@@ -78,7 +87,7 @@ function categoryToForm(c: Category): FormState {
     sortOrder:   c.sortOrder,
     isActive:    c.isActive,
     nameFr:      c.translations?.name?.fr ?? "",
-    nameEn:      c.translations?.name?.en ?? "",
+    nameOverlay: Object.fromEntries(OVERLAY_LANGS.map(l => [l, c.translations?.name?.[l] ?? ""])) as Record<OverlayLang, string>,
     slugFr:      c.translations?.slug?.fr ?? "",
     slugEn:      c.translations?.slug?.en ?? "",
   };
@@ -292,6 +301,7 @@ export default function CategoriesPage() {
                 <p className={styles.modalSectionTitle}>Content</p>
                 <BilingualField
                   label="Name"
+                  field="name"
                   frRequired
                   frValue={form.name}
                   frOnChange={v => setForm(f => ({
@@ -301,9 +311,13 @@ export default function CategoriesPage() {
                     nameFr: v,
                   }))}
                   frPlaceholder="Nom de la catégorie"
-                  enValue={form.nameEn}
-                  enOnChange={v => setForm(f => ({ ...f, nameEn: v }))}
-                  enPlaceholder="Category name"
+                  translations={Object.fromEntries(
+                    OVERLAY_LANGS.map(l => [l, { name: form.nameOverlay[l] }]),
+                  ) as unknown as Record<OverlayLang, Record<string, string>>}
+                  onTranslationChange={(lang, _field, value) =>
+                    setForm(f => ({ ...f, nameOverlay: { ...f.nameOverlay, [lang]: value } }))
+                  }
+                  overlayPlaceholder="Category name"
                 />
                 <div className={styles.fieldRow}>
                   <div className={styles.field}>

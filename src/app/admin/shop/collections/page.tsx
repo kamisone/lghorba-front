@@ -32,7 +32,7 @@ export default function CollectionsPage() {
   const [search, setSearch]   = useState("");
   const [filter, setFilter]   = useState("");
 
-  const { enValues, setEn, saveEnTranslations } = useEntityTranslations('shop_collection', editId);
+  const { translations, setTranslation, saveTranslations } = useEntityTranslations('shop_collection', editId);
 
   async function load() {
     setLoading(true);
@@ -66,7 +66,7 @@ export default function CollectionsPage() {
       const saved = await res.json().catch(() => ({}));
       const id = saved?.id ?? editId;
       if (id) {
-        await saveEnTranslations(id, ['name', 'description', 'heroTitle', 'heroSubtitle', 'seoTitle', 'seoDescription']);
+        await saveTranslations(id, ['name', 'description', 'heroTitle', 'heroSubtitle', 'seoTitle', 'seoDescription']);
       }
       toast.success(modal === "create" ? "Collection created" : "Collection updated");
     } else {
@@ -232,18 +232,20 @@ export default function CollectionsPage() {
 
             <BilingualField
               label="Name"
+              field="name"
               frRequired
               frValue={form.name ?? ""}
               frOnChange={v => setForm(f => ({ ...f, name: v, slug: modal === "create" ? slugify(v) : f.slug }))}
-              enValue={enValues.name ?? ""}
-              enOnChange={v => setEn('name', v)}
+              translations={translations}
+              onTranslationChange={setTranslation}
             />
             <BilingualField
               label="Description"
+              field="description"
               frValue={form.description ?? ""}
               frOnChange={v => setForm(f => ({ ...f, description: v || null }))}
-              enValue={enValues.description ?? ""}
-              enOnChange={v => setEn('description', v)}
+              translations={translations}
+              onTranslationChange={setTranslation}
               multiline rows={3}
             />
 

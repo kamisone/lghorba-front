@@ -32,9 +32,9 @@ const nextConfig = {
   async redirects() {
     return [
       // /cart and /checkout moved under /shop to keep ecommerce routes in one namespace.
-      { source: "/:locale(fr|en)/cart",              destination: "/:locale/shop/cart",              permanent: true },
-      { source: "/:locale(fr|en)/checkout",          destination: "/:locale/shop/checkout",          permanent: true },
-      { source: "/:locale(fr|en)/checkout/success",  destination: "/:locale/shop/checkout/success",  permanent: true },
+      { source: "/:locale(fr|en|es|it|de|nl|pl)/cart",              destination: "/:locale/shop/cart",              permanent: true },
+      { source: "/:locale(fr|en|es|it|de|nl|pl)/checkout",          destination: "/:locale/shop/checkout",          permanent: true },
+      { source: "/:locale(fr|en|es|it|de|nl|pl)/checkout/success",  destination: "/:locale/shop/checkout/success",  permanent: true },
     ];
   },
   async headers() {

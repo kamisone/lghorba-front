@@ -4,6 +4,7 @@ import { useState } from "react";
 import MediaPicker, { MediaAsset } from "@/components/admin/media/MediaPicker";
 import BilingualField from "@/components/admin/BilingualField";
 import { GripVertical, Trash2, Eye, EyeOff, ImagePlus, PanelRight, BookOpen } from "lucide-react";
+import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductStoryGalleryManager.module.css";
 
 export type StoryGalleryLocation = "side" | "narrative";
@@ -51,11 +52,11 @@ const MAX_PER_LOCATION = 8;
 interface Props {
   initialItems: ResolvedProductStoryItem[];
   onChange: (items: ProductStoryItem[]) => void;
-  enValues: Record<string, string>;
-  setEn: (field: string, value: string) => void;
+  translations: Record<OverlayLang, Record<string, string>>;
+  setTranslation: (lang: OverlayLang, field: string, value: string) => void;
 }
 
-export default function ProductStoryGalleryManager({ initialItems, onChange, enValues, setEn }: Props) {
+export default function ProductStoryGalleryManager({ initialItems, onChange, translations, setTranslation }: Props) {
   const [items, setItems] = useState<ResolvedProductStoryItem[]>(initialItems);
   const [pickerTarget, setPickerTarget] = useState<StoryGalleryLocation | null>(null);
   const [drag, setDrag] = useState<{ location: StoryGalleryLocation; index: number } | null>(null);
@@ -237,24 +238,26 @@ export default function ProductStoryGalleryManager({ initialItems, onChange, enV
               <div className={styles.narrativeFields}>
                 <BilingualField
                   label="Title"
+                  field={`storyItem:${item.id}:title`}
                   frValue={item.title}
                   frOnChange={val => update("narrative", i, { title: val })}
                   frPlaceholder="e.g. Pensé pour la route"
                   frRequired
-                  enValue={enValues[`storyItem:${item.id}:title`] ?? ""}
-                  enOnChange={val => setEn(`storyItem:${item.id}:title`, val)}
-                  enPlaceholder="e.g. Designed for the road"
+                  translations={translations}
+                  onTranslationChange={setTranslation}
+                  overlayPlaceholder="e.g. Designed for the road"
                 />
                 <BilingualField
                   label="Description"
+                  field={`storyItem:${item.id}:description`}
                   frValue={item.description}
                   frOnChange={val => update("narrative", i, { description: val })}
                   frPlaceholder="Racontez l'histoire derrière cette image…"
                   multiline
                   rows={3}
-                  enValue={enValues[`storyItem:${item.id}:description`] ?? ""}
-                  enOnChange={val => setEn(`storyItem:${item.id}:description`, val)}
-                  enPlaceholder="Tell the story behind this image…"
+                  translations={translations}
+                  onTranslationChange={setTranslation}
+                  overlayPlaceholder="Tell the story behind this image…"
                 />
               </div>
             </div>

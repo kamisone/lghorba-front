@@ -8,8 +8,8 @@ function detectLocale(request: NextRequest): Locale {
   const saved = request.cookies.get("vitecamion_locale")?.value as Locale | undefined;
   if (saved && LOCALES.includes(saved)) return saved;
   const lang = (request.headers.get("accept-language") ?? "").toLowerCase();
-  if (lang.startsWith("fr") || lang.includes(",fr")) return "fr";
-  return DEFAULT_LOCALE;
+  const detected = LOCALES.find((l) => l !== DEFAULT_LOCALE && (lang.startsWith(l) || lang.includes(`,${l}`)));
+  return detected ?? DEFAULT_LOCALE;
 }
 
 /**

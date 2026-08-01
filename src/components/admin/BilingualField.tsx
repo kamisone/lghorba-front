@@ -3,13 +3,21 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { ChevronDown } from "lucide-react";
+import { OVERLAY_LANGS, type OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./BilingualField.module.css";
 
 // TipTap/ProseMirror needs browser globals — load client-side only.
 const RichTextEditor = dynamic(() => import("./content/RichTextEditor"), { ssr: false });
 
+const LANG_LABEL: Record<OverlayLang, string> = {
+  en: "English", es: "Español", it: "Italiano", de: "Deutsch", nl: "Nederlands", pl: "Polski",
+};
+const LANG_FLAG: Record<OverlayLang, string> = {
+  en: "🇬🇧", es: "🇪🇸", it: "🇮🇹", de: "🇩🇪", nl: "🇳🇱", pl: "🇵🇱",
+};
+
 interface LangRowProps {
-  lang: "fr" | "en";
+  lang: "fr" | OverlayLang;
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
@@ -17,22 +25,22 @@ interface LangRowProps {
   rows?: number;
   required?: boolean;
   richText?: boolean;
+  maxLength?: number;
 }
 
-const LANG_LABEL = { fr: "Français", en: "English" } as const;
-const LANG_FLAG  = { fr: "🇫🇷",      en: "🇬🇧"     } as const;
-
-function LangRow({ lang, value, onChange, placeholder, multiline, rows = 2, required = false, richText = false }: LangRowProps) {
+function LangRow({ lang, value, onChange, placeholder, multiline, rows = 2, required = false, richText = false, maxLength }: LangRowProps) {
+  const label = lang === "fr" ? "Français" : LANG_LABEL[lang];
+  const flag = lang === "fr" ? "🇫🇷" : LANG_FLAG[lang];
   const badge = required
     ? { text: lang === "fr" ? "Requis" : "Required", cls: styles.badgeRequired }
     : { text: lang === "fr" ? "Optionnel" : "Optional", cls: styles.badgeOptional };
   return (
-    <div className={`${styles.langRow} ${styles[lang]}`}>
+    <div className={`${styles.langRow} ${lang === "fr" ? styles.fr : styles.overlay}`}>
       <div className={styles.langAccent} />
       <div className={styles.langBody}>
         <div className={styles.langMeta}>
-          <span className={styles.langFlag}>{LANG_FLAG[lang]}</span>
-          <span className={styles.langName}>{LANG_LABEL[lang]}</span>
+          <span className={styles.langFlag}>{flag}</span>
+          <span className={styles.langName}>{label}</span>
           <span className={`${styles.langBadge} ${badge.cls}`}>{badge.text}</span>
         </div>
         {richText ? (
@@ -45,6 +53,7 @@ function LangRow({ lang, value, onChange, placeholder, multiline, rows = 2, requ
             placeholder={placeholder}
             rows={rows}
             required={required}
+            maxLength={maxLength}
           />
         ) : (
           <input
@@ -53,6 +62,7 @@ function LangRow({ lang, value, onChange, placeholder, multiline, rows = 2, requ
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             required={required}
+            maxLength={maxLength}
           />
         )}
       </div>
@@ -62,19 +72,24 @@ function LangRow({ lang, value, onChange, placeholder, multiline, rows = 2, requ
 
 interface BilingualFieldProps {
   label: string;
+  /** Key into the translations record (e.g. "title", "description") */
+  field: string;
   frValue: string;
   frOnChange: (val: string) => void;
   frPlaceholder?: string;
-  enValue: string;
-  enOnChange: (val: string) => void;
-  enPlaceholder?: string;
+  /** Overlay-language values, keyed by lang then field — pass the hook's `translations` as-is */
+  translations: Record<OverlayLang, Record<string, string>>;
+  /** Call with (lang, field, value) when an overlay-language input changes — pass the hook's `setTranslation` as-is */
+  onTranslationChange: (lang: OverlayLang, field: string, value: string) => void;
+  overlayPlaceholder?: string;
   multiline?: boolean;
   rows?: number;
-  /** Mark the FR input as required (EN is always optional) */
+  maxLength?: number;
+  /** Mark the FR input as required (overlay languages are always optional) */
   frRequired?: boolean;
   /** Render a rich text (HTML) editor instead of a plain textarea */
   richText?: boolean;
-  /** Collapse the FR/EN inputs behind a clickable label */
+  /** Collapse the FR/overlay inputs behind a clickable label */
   collapsible?: boolean;
   /** When collapsible, whether the field starts expanded */
   defaultOpen?: boolean;
@@ -82,16 +97,20 @@ interface BilingualFieldProps {
 
 export default function BilingualField({
   label,
+  field,
   frValue, frOnChange, frPlaceholder,
-  enValue, enOnChange, enPlaceholder,
+  translations, onTranslationChange,
+  overlayPlaceholder,
   multiline = false,
   rows = 2,
+  maxLength,
   frRequired = false,
   richText = false,
   collapsible = false,
   defaultOpen = false,
 }: BilingualFieldProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const [activeLang, setActiveLang] = useState<OverlayLang>("en");
   const isOpen = !collapsible || open;
 
   const labelContent = (
@@ -127,18 +146,39 @@ export default function BilingualField({
             rows={rows}
             required={frRequired}
             richText={richText}
+            maxLength={maxLength}
           />
           <div className={styles.langSep} />
-          <LangRow
-            lang="en"
-            value={enValue}
-            onChange={enOnChange}
-            placeholder={enPlaceholder}
-            multiline={multiline}
-            rows={rows}
-            required={false}
-            richText={richText}
-          />
+          <div className={styles.overlayColumn}>
+            <div className={styles.overlayTabs} role="tablist">
+              {OVERLAY_LANGS.map(l => (
+                <button
+                  key={l}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeLang === l}
+                  className={`${styles.overlayTab} ${activeLang === l ? styles.overlayTabActive : ""}`}
+                  onClick={() => setActiveLang(l)}
+                  title={LANG_LABEL[l]}
+                >
+                  <span className={styles.overlayTabFlag}>{LANG_FLAG[l]}</span>
+                  {l.toUpperCase()}
+                  {translations[l]?.[field]?.trim() && <span className={styles.overlayTabDot} />}
+                </button>
+              ))}
+            </div>
+            <LangRow
+              lang={activeLang}
+              value={translations[activeLang]?.[field] ?? ""}
+              onChange={(v) => onTranslationChange(activeLang, field, v)}
+              placeholder={overlayPlaceholder}
+              multiline={multiline}
+              rows={rows}
+              required={false}
+              richText={richText}
+              maxLength={maxLength}
+            />
+          </div>
         </div>
       )}
     </div>

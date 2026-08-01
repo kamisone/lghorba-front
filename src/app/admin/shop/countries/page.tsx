@@ -172,7 +172,7 @@ export default function CountriesPage() {
   const [form, setForm]     = useState<CountryForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
 
-  const { enValues: nameEn, setEn: setNameEn, saveEnTranslations: saveNameEn } =
+  const { translations: nameTr, setTranslation: setNameTr, saveTranslations: saveNameTr } =
     useEntityTranslations("shop_country", modal ? form.isoCode || null : null);
 
   async function load() {
@@ -228,7 +228,7 @@ export default function CountriesPage() {
     if (res.ok) {
       const saved = await res.json().catch(() => null);
       const isoCode = saved?.isoCode ?? body.isoCode;
-      await saveNameEn(isoCode, ["name"]);
+      await saveNameTr(isoCode, ["name"]);
       toast.success(isCreate ? "Country added" : "Country updated");
       setModal(null);
       load();
@@ -429,11 +429,11 @@ export default function CountriesPage() {
                 {field("ISO Code 3-letter", "isoCode3", { maxLength: 3, placeholder: "FRA", upper: true })}
               </div>
               <BilingualField
-                label="Name" frRequired
+                label="Name" field="name" frRequired
                 frValue={form.name} frOnChange={v => setForm(f => ({ ...f, name: v }))}
                 frPlaceholder="France"
-                enValue={nameEn.name ?? ""} enOnChange={v => setNameEn("name", v)}
-                enPlaceholder="France"
+                translations={nameTr} onTranslationChange={setNameTr}
+                overlayPlaceholder="France"
               />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {field("Phone prefix", "phonePrefix", { placeholder: "+33", maxLength: 10 })}

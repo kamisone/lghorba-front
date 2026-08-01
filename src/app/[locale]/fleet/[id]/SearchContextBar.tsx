@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CalendarDays, ArrowRight } from "lucide-react";
 import { useResolvedBookingDates } from "@/hooks/useResolvedBookingDates";
+import { toBcp47 } from "@/lib/i18n";
 import styles from "./car-public.module.css";
 
 interface Props {
@@ -16,7 +17,7 @@ interface Props {
 }
 
 function fmtDate(iso: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
+  return new Intl.DateTimeFormat(toBcp47(locale), {
     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
     timeZone: "Europe/Paris",
   }).format(new Date(iso));

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { GripVertical, Trash2, Plus } from "lucide-react";
 import BilingualField from "@/components/admin/BilingualField";
+import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductInfoSectionsManager.module.css";
 
 /** A structured, translatable spec block shown on the product page (Composition, Care, Target audience...). */
@@ -23,11 +24,11 @@ function genId(): string {
 interface Props {
   sections: ProductInfoSection[];
   onChange: (sections: ProductInfoSection[]) => void;
-  enValues: Record<string, string>;
-  setEn: (field: string, value: string) => void;
+  translations: Record<OverlayLang, Record<string, string>>;
+  setTranslation: (lang: OverlayLang, field: string, value: string) => void;
 }
 
-export default function ProductInfoSectionsManager({ sections, onChange, enValues, setEn }: Props) {
+export default function ProductInfoSectionsManager({ sections, onChange, translations, setTranslation }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   function notify(next: ProductInfoSection[]) {
@@ -83,24 +84,26 @@ export default function ProductInfoSectionsManager({ sections, onChange, enValue
             <div className={styles.cardBody}>
               <BilingualField
                 label="Section title"
+                field={`infoSection:${section.id}:label`}
                 frValue={section.label}
                 frOnChange={val => update(i, { label: val })}
                 frPlaceholder="e.g. Composition"
                 frRequired
-                enValue={enValues[`infoSection:${section.id}:label`] ?? ""}
-                enOnChange={val => setEn(`infoSection:${section.id}:label`, val)}
-                enPlaceholder="e.g. Composition"
+                translations={translations}
+                onTranslationChange={setTranslation}
+                overlayPlaceholder="e.g. Composition"
               />
               <BilingualField
                 label="Content"
+                field={`infoSection:${section.id}:value`}
                 frValue={section.value}
                 frOnChange={val => update(i, { value: val })}
                 frPlaceholder="e.g. 100% organic cotton"
                 multiline
                 rows={3}
-                enValue={enValues[`infoSection:${section.id}:value`] ?? ""}
-                enOnChange={val => setEn(`infoSection:${section.id}:value`, val)}
-                enPlaceholder="e.g. 100% organic cotton"
+                translations={translations}
+                onTranslationChange={setTranslation}
+                overlayPlaceholder="e.g. 100% organic cotton"
               />
             </div>
           </div>

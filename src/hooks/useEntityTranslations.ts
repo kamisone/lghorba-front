@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+// Overlay languages stored in the translations table on top of the FR base entity fields.
+export const OVERLAY_LANGS = ["en", "es", "it", "de", "nl", "pl"] as const;
+export type OverlayLang = typeof OVERLAY_LANGS[number];
+
 interface Translation {
   id: string;
   entityType: string;
@@ -11,60 +15,73 @@ interface Translation {
   value: string;
 }
 
+type ValuesByLang = Record<OverlayLang, Record<string, string>>;
+type IdsByLang = Record<OverlayLang, Record<string, string>>;
+
+function emptyByLang<T>(): Record<OverlayLang, Record<string, T>> {
+  return Object.fromEntries(OVERLAY_LANGS.map(l => [l, {}])) as Record<OverlayLang, Record<string, T>>;
+}
+
 interface UseEntityTranslationsReturn {
-  enValues: Record<string, string>;
-  enIds: Record<string, string>;   // field → translation row ID (for deletion)
-  setEn: (field: string, value: string) => void;
-  loadingEn: boolean;
-  saveEnTranslations: (entityId: string, fields: string[]) => Promise<void>;
+  translations: ValuesByLang;
+  setTranslation: (lang: OverlayLang, field: string, value: string) => void;
+  loading: boolean;
+  saveTranslations: (entityId: string, fields: string[]) => Promise<void>;
 }
 
 export function useEntityTranslations(
   entityType: string,
   entityId: string | null,
 ): UseEntityTranslationsReturn {
-  const [enValues, setEnValues] = useState<Record<string, string>>({});
-  const [enIds,    setEnIds]    = useState<Record<string, string>>({});
-  const [loadingEn, setLoadingEn] = useState(false);
+  const [translations, setTranslations] = useState<ValuesByLang>(emptyByLang);
+  const [ids, setIds] = useState<IdsByLang>(emptyByLang);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!entityId) {
       // No entity to load translations for (e.g. a "create new" form) — clear
       // any leftover values from a previously-edited entity instead of leaving
-      // them stale in the EN fields.
-      setEnValues({});
-      setEnIds({});
+      // them stale in the overlay-language fields.
+      setTranslations(emptyByLang());
+      setIds(emptyByLang());
       return;
     }
-    setLoadingEn(true);
-    fetch(`/next-api/translations/${entityType}/${entityId}?lang=en`)
+    setLoading(true);
+    fetch(`/next-api/translations/${entityType}/${entityId}`)
       .then(r => r.ok ? r.json() as Promise<Translation[]> : [])
       .then(rows => {
-        const vals: Record<string, string> = {};
-        const ids:  Record<string, string> = {};
+        const vals = emptyByLang<string>();
+        const rowIds = emptyByLang<string>();
         for (const row of rows) {
-          if (row.lang === 'en') {
-            vals[row.field] = row.value;
-            ids[row.field]  = row.id;
+          if ((OVERLAY_LANGS as readonly string[]).includes(row.lang)) {
+            const lang = row.lang as OverlayLang;
+            vals[lang][row.field] = row.value;
+            rowIds[lang][row.field] = row.id;
           }
         }
-        setEnValues(vals);
-        setEnIds(ids);
+        setTranslations(vals);
+        setIds(rowIds);
       })
       .catch(() => {})
-      .finally(() => setLoadingEn(false));
+      .finally(() => setLoading(false));
   }, [entityType, entityId]);
 
-  const setEn = useCallback((field: string, value: string) => {
-    setEnValues(prev => ({ ...prev, [field]: value }));
+  const setTranslation = useCallback((lang: OverlayLang, field: string, value: string) => {
+    setTranslations(prev => ({ ...prev, [lang]: { ...prev[lang], [field]: value } }));
   }, []);
 
-  const saveEnTranslations = useCallback(async (id: string, fields: string[]) => {
-    const toUpsert = fields
-      .filter(f => enValues[f]?.trim())
-      .map(f => ({ entityType, entityId: id, field: f, lang: 'en', value: enValues[f].trim() }));
+  const saveTranslations = useCallback(async (id: string, fields: string[]) => {
+    const toUpsert = OVERLAY_LANGS.flatMap(lang =>
+      fields
+        .filter(f => translations[lang][f]?.trim())
+        .map(f => ({ entityType, entityId: id, field: f, lang, value: translations[lang][f].trim() })),
+    );
 
-    const toDelete = fields.filter(f => !enValues[f]?.trim() && enIds[f]);
+    const toDelete = OVERLAY_LANGS.flatMap(lang =>
+      fields
+        .filter(f => !translations[lang][f]?.trim() && ids[lang][f])
+        .map(f => ids[lang][f]),
+    );
 
     await Promise.all([
       toUpsert.length > 0
@@ -74,11 +91,11 @@ export function useEntityTranslations(
             body: JSON.stringify({ items: toUpsert }),
           })
         : Promise.resolve(),
-      ...toDelete.map(f =>
-        fetch(`/next-api/translations/entry/${enIds[f]}`, { method: 'DELETE' }),
+      ...toDelete.map(rowId =>
+        fetch(`/next-api/translations/entry/${rowId}`, { method: 'DELETE' }),
       ),
     ]);
-  }, [entityType, enValues, enIds]);
+  }, [entityType, translations, ids]);
 
-  return { enValues, enIds, setEn, loadingEn, saveEnTranslations };
+  return { translations, setTranslation, loading, saveTranslations };
 }

@@ -129,7 +129,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [publishing, setPublishing] = useState(false);
 
   // Bilingual
-  const { enValues, setEn, saveEnTranslations } = useEntityTranslations('shop_product', params.id);
+  const { translations, setTranslation, saveTranslations } = useEntityTranslations('shop_product', params.id);
 
   // ── Product-level variation attributes ──────────────────────────────────────
   const [productAttrs, setProductAttrs] = useState<ProductAttr[]>([]);
@@ -391,7 +391,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         .filter(s => s.location === "narrative")
         .flatMap(s => [`storyItem:${s.id}:title`, `storyItem:${s.id}:description`]);
       const socialVideoFields = socialVideos.map(v => `socialVideo:${v.id}:title`);
-      await saveEnTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', 'storyNarrativeTitle', 'socialVideosTitle', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields, ...storyItemFields, ...socialVideoFields]);
+      await saveTranslations(params.id, ['title', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'featuredImageAlt', 'storyNarrativeTitle', 'socialVideosTitle', ...infoSectionFields, ...trustBadgeFields, ...faqFields, ...documentFields, ...storyItemFields, ...socialVideoFields]);
       setProduct(p);
       setMedia(p.media ?? []);
       setResolvedMedia(p.media ?? []);
@@ -555,7 +555,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 <span className={styles.sectionTitle}>Content</span>
               </div>
               <div className={styles.sectionBody}>
-                <BilingualField label="Title" frRequired frValue={form.title} frOnChange={v => setForm(f => ({ ...f, title: v }))} enValue={enValues.title ?? ""} enOnChange={v => setEn('title', v)} />
+                <BilingualField label="Title" field="title" frRequired frValue={form.title} frOnChange={v => setForm(f => ({ ...f, title: v }))} translations={translations} onTranslationChange={setTranslation} />
                 <div className={styles.fieldRow}>
                   <div className={styles.field}>
                     <label className={styles.label}>Slug</label>
@@ -566,8 +566,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     <input className={styles.input} value={form.brand} onChange={e => setForm(f => ({ ...f, brand: e.target.value }))} />
                   </div>
                 </div>
-                <BilingualField label="Short description" frValue={form.shortDescription} frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))} enValue={enValues.shortDescription ?? ""} enOnChange={v => setEn('shortDescription', v)} multiline rows={2} />
-                <BilingualField label="Description" frValue={form.description} frOnChange={v => setForm(f => ({ ...f, description: v }))} enValue={enValues.description ?? ""} enOnChange={v => setEn('description', v)} richText collapsible />
+                <BilingualField label="Short description" field="shortDescription" frValue={form.shortDescription} frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))} translations={translations} onTranslationChange={setTranslation} multiline rows={2} />
+                <BilingualField label="Description" field="description" frValue={form.description} frOnChange={v => setForm(f => ({ ...f, description: v }))} translations={translations} onTranslationChange={setTranslation} richText collapsible />
               </div>
             </div>
 
@@ -617,22 +617,22 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
             {/* Specifications */}
             <CollapsibleSection icon={<ClipboardList size={14} strokeWidth={1.75} />} title="Specifications">
-              <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} enValues={enValues} setEn={setEn} />
+              <ProductInfoSectionsManager sections={infoSections} onChange={setInfoSections} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
 
             {/* Trust badges */}
             <CollapsibleSection icon={<Shield size={14} strokeWidth={1.75} />} title="Trust badges">
-              <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} enValues={enValues} setEn={setEn} />
+              <ProductTrustBadgesManager badges={trustBadges} onChange={setTrustBadges} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
 
             {/* FAQs */}
             <CollapsibleSection icon={<HelpCircle size={14} strokeWidth={1.75} />} title="FAQs">
-              <ProductFaqsManager faqs={faqs} onChange={setFaqs} enValues={enValues} setEn={setEn} />
+              <ProductFaqsManager faqs={faqs} onChange={setFaqs} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
 
             {/* Documents */}
             <CollapsibleSection icon={<FileText size={14} strokeWidth={1.75} />} title="Documents (PDF)">
-              <ProductDocumentsManager productId={params.id} documents={documents} onChange={setDocuments} enValues={enValues} setEn={setEn} />
+              <ProductDocumentsManager productId={params.id} documents={documents} onChange={setDocuments} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
 
             {/* Story Gallery */}
@@ -640,18 +640,19 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               <div style={{ marginBottom: 20 }}>
                 <BilingualField
                   label="Narrative section title"
+                  field="storyNarrativeTitle"
                   frValue={storyNarrativeTitle}
                   frOnChange={setStoryNarrativeTitle}
                   frPlaceholder="e.g. L'histoire"
-                  enValue={enValues.storyNarrativeTitle ?? ""}
-                  enOnChange={v => setEn("storyNarrativeTitle", v)}
-                  enPlaceholder="e.g. The story"
+                  translations={translations}
+                  onTranslationChange={setTranslation}
+                  overlayPlaceholder="e.g. The story"
                 />
                 <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 6 }}>
                   Shown above the Narrative Gallery on the product page. Leave empty to hide it.
                 </p>
               </div>
-              <ProductStoryGalleryManager initialItems={product.storyGallery ?? []} onChange={setStoryGallery} enValues={enValues} setEn={setEn} />
+              <ProductStoryGalleryManager initialItems={product.storyGallery ?? []} onChange={setStoryGallery} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
 
             {/* ── Social Videos ── */}
@@ -659,18 +660,19 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               <div style={{ marginBottom: 18 }}>
                 <BilingualField
                   label="Section title"
+                  field="socialVideosTitle"
                   frValue={socialVideosTitle}
                   frOnChange={setSocialVideosTitle}
                   frPlaceholder="ex. En action"
-                  enValue={enValues.socialVideosTitle ?? ""}
-                  enOnChange={v => setEn("socialVideosTitle", v)}
-                  enPlaceholder="e.g. See it in action"
+                  translations={translations}
+                  onTranslationChange={setTranslation}
+                  overlayPlaceholder="e.g. See it in action"
                 />
                 <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 6 }}>
                   Shown above the social videos carousel. Leave empty to use the default localized title.
                 </p>
               </div>
-              <ProductSocialVideosManager initialItems={product.socialVideos ?? []} onChange={setSocialVideos} enValues={enValues} setEn={setEn} />
+              <ProductSocialVideosManager initialItems={product.socialVideos ?? []} onChange={setSocialVideos} translations={translations} setTranslation={setTranslation} />
             </CollapsibleSection>
 
             {/* ── Variations ── */}

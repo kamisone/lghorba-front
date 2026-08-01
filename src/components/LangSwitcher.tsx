@@ -30,13 +30,66 @@ function FlagFR() {
   );
 }
 
+function FlagES() {
+  return (
+    <svg className={styles.flagSvg} viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="20" height="15" fill="#AA151B"/>
+      <rect y="3.75" width="20" height="7.5" fill="#F1BF00"/>
+    </svg>
+  );
+}
+
+function FlagIT() {
+  return (
+    <svg className={styles.flagSvg} viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="20" height="15" fill="#CE2B37"/>
+      <rect width="13.33" height="15" fill="#fff"/>
+      <rect width="6.67" height="15" fill="#008C45"/>
+    </svg>
+  );
+}
+
+function FlagDE() {
+  return (
+    <svg className={styles.flagSvg} viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="20" height="15" fill="#FFCE00"/>
+      <rect width="20" height="10" fill="#DD0000"/>
+      <rect width="20" height="5" fill="#000"/>
+    </svg>
+  );
+}
+
+function FlagNL() {
+  return (
+    <svg className={styles.flagSvg} viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="20" height="15" fill="#21468B"/>
+      <rect width="20" height="10" fill="#FFF"/>
+      <rect width="20" height="5" fill="#AE1C28"/>
+    </svg>
+  );
+}
+
+function FlagPL() {
+  return (
+    <svg className={styles.flagSvg} viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="20" height="15" fill="#DC143C"/>
+      <rect width="20" height="7.5" fill="#fff"/>
+    </svg>
+  );
+}
+
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 type FlagComponent = () => React.ReactElement;
 
 const META: Record<string, { label: string; short: string; Flag: FlagComponent }> = {
-  en: { label: "English",  short: "EN", Flag: FlagGB },
-  fr: { label: "Français", short: "FR", Flag: FlagFR },
+  en: { label: "English",    short: "EN", Flag: FlagGB },
+  fr: { label: "Français",   short: "FR", Flag: FlagFR },
+  es: { label: "Español",    short: "ES", Flag: FlagES },
+  it: { label: "Italiano",   short: "IT", Flag: FlagIT },
+  de: { label: "Deutsch",    short: "DE", Flag: FlagDE },
+  nl: { label: "Nederlands", short: "NL", Flag: FlagNL },
+  pl: { label: "Polski",     short: "PL", Flag: FlagPL },
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
