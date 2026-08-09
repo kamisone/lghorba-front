@@ -486,10 +486,23 @@ export function AnalyticsDetailModal({
   const [rows, setRows] = useState<(EventDetailRow | PurchaseDetailRow)[]>([]);
 
   // The modal owns its own date + event filters, seeded from the clicked scope.
-  const [range, setRange] = useState("30");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [eventType, setEventType] = useState("");
+  // Seeded lazily from `params` (not a plain "30"/""/"" default) so the very
+  // first render — and therefore the very first fetch below — already uses the
+  // clicked scope's date range. The component fully unmounts/remounts on every
+  // open (callers render it behind `{modal && <AnalyticsDetailModal .../>}`),
+  // so this is a fresh mount every time and lazy state is safe. Without this,
+  // the first fetch fired with the "30" default before the seed effect below
+  // could apply its setState calls, then a *second* fetch fired with the
+  // correct seeded range — and with no ordering guard, the wider/slower
+  // default-range request could resolve after the correct one and silently
+  // overwrite it, showing unfiltered results until something else (e.g. the
+  // event dropdown) triggered another fetch.
+  const [range, setRange] = useState(() => (params.startDate || params.endDate) ? "custom" : (params.days ?? "30"));
+  const [startDate, setStartDate] = useState(() => params.startDate ?? "");
+  const [endDate, setEndDate] = useState(() => params.endDate ?? "");
+  const [eventType, setEventType] = useState(() =>
+    params.eventType && !params.eventType.includes(",") ? params.eventType : "",
+  );
 
   const seedKey = new URLSearchParams(params).toString();
   useEffect(() => {
@@ -523,13 +536,18 @@ export function AnalyticsDetailModal({
   const effKey = new URLSearchParams(effParams).toString();
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     setLoading(true);
     const endpoint = kind === "event" ? "event-details" : "purchase-details";
     fetch(`/next-api/admin/shop/analytics/${endpoint}?${effKey}`)
       .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setRows(Array.isArray(data) ? data : []))
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false));
+      .then((data) => { if (!cancelled) setRows(Array.isArray(data) ? data : []); })
+      .catch(() => { if (!cancelled) setRows([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    // A newer effKey (date/event/scope change) cancels this request's effect
+    // on the way out, so an in-flight response from a now-superseded filter
+    // can never land after — and overwrite — a more recent one.
+    return () => { cancelled = true; };
   }, [open, kind, effKey]);
 
   // Escape to close + lock body scroll while open.
