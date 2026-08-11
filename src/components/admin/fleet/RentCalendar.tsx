@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import type { CalendarBooking, Car } from "./data";
 import BookingAdminModal from "../bookings/BookingAdminModal";
 import { useModalUrl } from "@/hooks/useModalUrl";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import styles from "./RentCalendar.module.css";
 
 // Re-export so RentTracker can still import without changes to its type alias
@@ -117,15 +117,18 @@ export default function RentCalendar({ car, bookings, excludeBookingIds, endedBo
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionIcon}><CalendarDays size={18} strokeWidth={1.75} /></span>
+        <span className={styles.sectionIconBadge}><CalendarDays size={18} strokeWidth={1.75} /></span>
         <span className={styles.sectionLabel}>Rent Schedule</span>
       </div>
 
       <div className={styles.calWrap}>
         <div className={styles.calNav}>
-          <button className={styles.navBtn} onClick={() => setViewDate(new Date(year, month - 1, 1))}>‹</button>
           <span className={styles.monthLabel}>{monthLabel}</span>
-          <button className={styles.navBtn} onClick={() => setViewDate(new Date(year, month + 1, 1))}>›</button>
+          <div className={styles.calNavGroup}>
+            <button className={styles.todayBtn} onClick={() => setViewDate(new Date())}>Today</button>
+            <button className={styles.navBtn} aria-label="Previous month" onClick={() => setViewDate(new Date(year, month - 1, 1))}><ChevronLeft size={16} strokeWidth={1.75} /></button>
+            <button className={styles.navBtn} aria-label="Next month" onClick={() => setViewDate(new Date(year, month + 1, 1))}><ChevronRight size={16} strokeWidth={1.75} /></button>
+          </div>
         </div>
         <div className={styles.calGrid}>
           {DAYS.map(d => <span key={d} className={styles.dayHeader}>{d}</span>)}

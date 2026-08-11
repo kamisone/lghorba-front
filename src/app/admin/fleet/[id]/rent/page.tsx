@@ -40,8 +40,8 @@ export default function RentPage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <Link href={`/admin/fleet/${id}`} className={styles.back}>← Back to car</Link>
-        <div className={styles.loadingRow}><span className={styles.loadingSpinner} /></div>
+        <div className={styles.skeletonCard} />
+        <div className={styles.skeletonCard} />
       </div>
     );
   }
@@ -57,13 +57,6 @@ export default function RentPage() {
 
   return (
     <div className={styles.page}>
-      <Link href={`/admin/fleet/${car.id}`} className={styles.back}>← Back to {car.name}</Link>
-
-      <div className={styles.carHeader}>
-        <h1 className={styles.carName}>{car.name}</h1>
-        <p className={styles.immat}>{car.immatriculation}</p>
-      </div>
-
       <RentTracker
         car={car}
         onBookingUpdate={handleBookingUpdate}

@@ -1,66 +1,97 @@
 .section {
-  margin-top: 2rem;
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  padding: 1rem 1.2rem 1.2rem;
+  padding: 1.1rem 1.3rem 1.3rem;
+  box-shadow: 0 1px 2px rgba(var(--rgb-admin-primary), 0.04);
 }
 
 /* ── Header ── */
 .sectionHeader {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
+  gap: 0.8rem;
+  margin-bottom: 1.1rem;
 }
 
-.sectionIcon { font-size: 1.2rem; line-height: 1; }
+.sectionIconBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(var(--rgb-admin-secondary), 0.1);
+  color: var(--color-admin-secondary);
+  flex-shrink: 0;
+}
 
 .sectionLabel {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--color-text-heading);
 }
 
 /* ── Calendar nav ── */
-.calWrap { margin-bottom: 1rem; }
+.calWrap { margin-bottom: 0.2rem; }
 
 .calNav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.6rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.calNavGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .navBtn {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: none;
+  border-radius: 8px;
+  background: var(--color-white);
   color: var(--color-text-muted);
-  font-size: 1.1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.15s, color 0.15s;
-  line-height: 1;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.navBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }
+.navBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); background: rgba(var(--rgb-admin-secondary), 0.06); }
+
+.todayBtn {
+  padding: 0 0.7rem;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.todayBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); background: rgba(var(--rgb-admin-secondary), 0.06); }
 
 .monthLabel {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--color-text-primary);
+  min-width: 130px;
+  text-align: center;
 }
 
 /* ── Grid ── */
 .calGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 3px;
 }
 
 .dayHeader {
@@ -69,16 +100,17 @@
   font-weight: 700;
   color: var(--color-text-placeholder);
   text-transform: uppercase;
-  padding-bottom: 0.3rem;
+  letter-spacing: 0.04em;
+  padding-bottom: 0.4rem;
 }
 
 .day {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 30px;
-  border-radius: 6px;
-  font-size: 0.78rem;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--color-text-strong);
 }
@@ -86,8 +118,7 @@
 .dayToday {
   font-weight: 800;
   color: var(--color-admin-secondary);
-  outline: 1.5px solid var(--color-admin-secondary);
-  outline-offset: -1.5px;
+  box-shadow: inset 0 0 0 1.5px var(--color-admin-secondary);
 }
 
 .dayRented {
@@ -97,138 +128,13 @@
   border-radius: 0;
 }
 
-.dayStart { border-radius: 6px 0 0 6px; }
-.dayEnd   { border-radius: 0 6px 6px 0; }
-.dayStart.dayEnd { border-radius: 6px; }
-
-/* ── Schedule list ── */
-.scheduleList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.85rem;
-}
-
-.scheduleItem {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 8px;
-  border: 1px solid #e8ecf0;
-  background: #fafafa;
-}
-
-.scheduleNow {
-  border-color: var(--color-success-light);
-  background: var(--color-success-bg);
-}
-
-.scheduleFuture {
-  border-color: var(--color-info-border);
-  background: var(--color-info-bg);
-}
-
-.scheduleMain {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.scheduleStatus { font-size: 0.88rem; flex-shrink: 0; }
-
-.scheduleDates {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  min-width: 0;
-  font-size: 0.77rem;
-  font-weight: 600;
-  color: var(--color-text-strong);
-}
-
-.scheduleArrow { color: var(--color-text-placeholder); font-size: 0.7rem; }
-
-.scheduleItemActions {
-  display: flex;
-  gap: 0.3rem;
-  flex-shrink: 0;
-}
-
-.editBtn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-white);
-  color: var(--color-text-placeholder);
-  font-size: 0.72rem;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: border-color 0.15s, color 0.15s;
-}
-.editBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }
-
-.deleteBtn {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-white);
-  color: var(--color-text-placeholder);
-  font-size: 0.85rem;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: border-color 0.15s, color 0.15s;
-}
-.deleteBtn:hover:not(:disabled) { border-color: var(--color-error-light); color: var(--color-error-light); }
-
-/* ── Schedule info pills ── */
-.scheduleInfo {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.infoPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
-
-.infoPillEarning {
-  background: var(--color-success-bg);
-  border-color: var(--color-success-border);
-  color: var(--color-success);
-}
-
-.infoPillTracking {
-  background: var(--color-info-bg);
-  border-color: var(--color-info-border);
-  color: var(--color-info);
-}
+.dayStart { border-radius: 8px 0 0 8px; }
+.dayEnd   { border-radius: 0 8px 8px 0; }
+.dayStart.dayEnd { border-radius: 8px; }
 
 /* ── Day click ── */
-.dayClickable { cursor: pointer; }
+.dayClickable { cursor: pointer; transition: filter 0.12s; }
+.dayClickable:hover { filter: brightness(1.08); }
 
 /* ── Multi-schedule split cell ── */
 .dayMulti {
@@ -237,7 +143,7 @@
   align-items: stretch;
   justify-content: flex-start;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 0;
 }
 
@@ -246,7 +152,7 @@
   display: block;
   transition: opacity 0.15s;
 }
-.daySlice.dayClickable:hover { opacity: 0.72; }
+.daySlice.dayClickable:hover { opacity: 0.72; filter: none; }
 
 .dayNum {
   position: absolute;
@@ -260,202 +166,3 @@
   text-shadow: 0 1px 3px rgba(var(--rgb-black), 0.35);
   pointer-events: none;
 }
-
-/* ── Info modal ── */
-.infoOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9000;
-  background: rgba(var(--rgb-black), 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.infoModal {
-  background: var(--color-white);
-  border-radius: 14px;
-  box-shadow: 0 16px 48px rgba(var(--rgb-black), 0.18);
-  width: 100%;
-  max-width: 420px;
-  overflow: hidden;
-}
-
-.infoHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--color-surface-raised);
-  border-top-left-radius: 14px;
-  border-top-right-radius: 14px;
-}
-
-.infoHeaderDates {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  min-width: 0;
-}
-
-.infoArrow { color: var(--color-text-placeholder); font-size: 0.72rem; }
-
-.infoClose {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: none;
-  color: var(--color-text-placeholder);
-  font-size: 0.8rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.15s, color 0.15s;
-}
-.infoClose:hover { border-color: var(--color-error-light); color: var(--color-error-light); }
-
-.infoBody {
-  padding: 0.85rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.infoKm {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
-.infoPills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.infoPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
-
-.infoPillEarning {
-  background: var(--color-success-bg);
-  border-color: var(--color-success-border);
-  color: var(--color-success);
-}
-
-.infoPillTracking {
-  background: var(--color-info-bg);
-  border-color: var(--color-info-border);
-  color: var(--color-info);
-}
-
-.infoActions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--color-surface-raised);
-}
-
-.infoEditBtn {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1.5px solid var(--color-admin-secondary);
-  border-radius: 8px;
-  background: none;
-  color: var(--color-admin-secondary);
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.infoEditBtn:hover { background: var(--color-admin-secondary); color: var(--color-white); }
-
-.infoDeleteBtn {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1.5px solid var(--color-error-light);
-  border-radius: 8px;
-  background: none;
-  color: var(--color-error-light);
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.infoDeleteBtn:hover { background: var(--color-error-light); color: var(--color-white); }
-
-.infoConfirmRow {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.infoConfirmLabel {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-error-light);
-  flex-shrink: 0;
-}
-
-.infoConfirmYes {
-  flex: 1;
-  padding: 0.45rem 0.6rem;
-  border: none;
-  border-radius: 7px;
-  background: var(--color-error-light);
-  color: var(--color-white);
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-.infoConfirmYes:disabled { opacity: 0.6; cursor: default; }
-
-.infoConfirmNo {
-  padding: 0.45rem 0.6rem;
-  border: 1.5px solid var(--color-border);
-  border-radius: 7px;
-  background: none;
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-.infoConfirmNo:hover { border-color: var(--color-text-placeholder); }
-
-/* ── Add button ── */
-.addBtn {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1.5px dashed var(--color-border-subtle);
-  border-radius: 8px;
-  background: none;
-  color: var(--color-text-muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-.addBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }

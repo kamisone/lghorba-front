@@ -1,9 +1,9 @@
 .section {
-  margin-top: 2rem;
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(var(--rgb-admin-primary), 0.04);
 }
 
 /* ── Header row ── */
@@ -11,65 +11,91 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.2rem;
+  gap: 1rem;
+  padding: 1.1rem 1.3rem;
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.8rem;
+  min-width: 0;
 }
 
-.icon {
-  font-size: 1.5rem;
-  line-height: 1;
+.iconBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(var(--rgb-admin-secondary), 0.1);
+  color: var(--color-admin-secondary);
+  flex-shrink: 0;
 }
 
 .label {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--color-text-heading);
   margin: 0;
+  line-height: 1.3;
 }
 
 .meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.78rem;
-  color: var(--color-text-placeholder);
-  margin: 0.1rem 0 0;
+  color: var(--color-text-muted);
+  margin: 0.15rem 0 0;
 }
 
 .countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(var(--rgb-admin-secondary), 0.1);
   color: var(--color-admin-secondary);
-  font-weight: 600;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.noRentMsg {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin: 0.15rem 0 0;
 }
 
 /* ── Header right cluster ── */
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.7rem;
   flex-shrink: 0;
 }
 
 .endRentBtn {
-  padding: 0.3rem 0.75rem;
-  border-radius: 7px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
   border: 1.5px solid var(--color-error-border);
-  background: var(--color-error-bg);
+  background: var(--color-white);
   color: var(--color-error);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s, border-color 0.15s;
 }
-.endRentBtn:hover { background: #fee2e2; border-color: var(--color-error-border); }
+.endRentBtn:hover { background: var(--color-error-bg); border-color: var(--color-error-light); }
 
 /* ── Toggle switch ── */
 .toggle {
   position: relative;
-  width: 48px;
-  height: 27px;
+  width: 46px;
+  height: 26px;
   border-radius: 999px;
   border: none;
   background: var(--color-border);
@@ -91,8 +117,8 @@
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 21px;
-  height: 21px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--color-white);
   box-shadow: 0 1px 4px rgba(var(--rgb-black), 0.2);
@@ -100,57 +126,67 @@
 }
 
 .toggleOn .thumb {
-  transform: translateX(21px);
+  transform: translateX(20px);
 }
 
 /* ── Inline stop confirmation ── */
 .confirmRow {
   display: flex;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   flex-shrink: 0;
 }
 
+.confirmLabel {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-error);
+  white-space: nowrap;
+}
+
 .confirmBtn {
-  padding: 0.28rem 0.65rem;
-  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
   border: none;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.74rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s;
+  transition: background 0.15s, opacity 0.15s;
 }
 
 .confirmEnd {
-  background: #fee2e2;
-  color: var(--color-error);
+  background: var(--color-error);
+  color: var(--color-white);
 }
-
-.confirmEnd:hover {
-  background: var(--color-error-border);
-}
+.confirmEnd:hover { opacity: 0.88; }
 
 .confirmPause {
-  background: var(--color-surface-raised);
+  background: transparent;
   color: var(--color-text-muted);
 }
+.confirmPause:hover { color: var(--color-text-primary); }
 
-.confirmPause:hover {
-  background: var(--color-border);
-}
-
-/* ── Active badge ── */
+/* ── Active badge strip ── */
 .activeBadge {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 1.2rem 0.7rem;
+  gap: 0.5rem;
+  margin: 0 1.3rem 0.9rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  background: var(--color-success-bg);
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-success);
 }
 
 .activeBadgePaused {
+  background: var(--color-warning-bg);
   color: #92400e;
 }
 
@@ -165,6 +201,7 @@
   border-radius: 50%;
   background: var(--color-success-light);
   animation: pulse 1.6s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 @keyframes pulse {
@@ -172,9 +209,61 @@
   50%       { opacity: 0.4; transform: scale(0.8); }
 }
 
+/* ── Empty state (no active rent) ── */
+.emptyState {
+  margin: 0 1.3rem 1.3rem;
+  padding: 1.6rem 1.3rem;
+  border: 1.5px dashed var(--color-border-subtle);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+  color: var(--color-text-muted);
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  color: var(--color-text-placeholder);
+  margin-bottom: 0.4rem;
+}
+
+.emptyTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.emptyText {
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.emptyNextBooking {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  color: var(--color-info);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
 /* ── Map wrapper ── */
 .mapWrap {
-  padding: 0 1.2rem 1.2rem;
+  padding: 0 1.3rem 1.3rem;
   isolation: isolate;
 }
 
@@ -182,7 +271,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.6rem;
 }
 
 .mapRange {
@@ -229,18 +318,17 @@
   width: 28px;
   height: 28px;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--color-white);
   color: var(--color-text-muted);
-  font-size: 0.95rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.mapExpandBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }
+.mapExpandBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); background: rgba(var(--rgb-admin-secondary), 0.06); }
 
 /* ── Fullscreen overlay ── */
 .mapFullscreenOverlay {
@@ -269,6 +357,9 @@
 }
 
 .mapFullscreenClose {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.35rem 0.85rem;
   border-radius: 7px;
   border: 1px solid rgba(var(--rgb-white), 0.2);
@@ -290,7 +381,7 @@
 /* ── History ── */
 .history {
   border-top: 1px solid var(--color-surface-raised);
-  padding: 0.75rem 1.2rem 1rem;
+  padding: 1rem 1.3rem 1.2rem;
 }
 
 .historyTitle {
@@ -299,121 +390,117 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-placeholder);
-  margin: 0 0 0.6rem;
+  margin: 0 0 0.7rem;
+}
+
+.sessionBlock {
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.sessionBlockOpen {
+  border-color: var(--color-border-subtle);
+}
+
+.sessionBlockTracking {
+  border-color: var(--color-warning-border);
 }
 
 .sessionRow {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 0.55rem 0.6rem 0.55rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid #e8ecf0;
+  padding: 0.65rem 0.7rem 0.65rem 0.85rem;
   background: var(--color-white);
-  margin-bottom: 0.4rem;
-  gap: 0.4rem;
-  transition: border-color 0.15s, background 0.15s;
+  gap: 0.5rem;
+  transition: background 0.15s;
 }
 
 .sessionRow:hover {
-  border-color: #c7d5e8;
-  background: #f8faff;
+  background: var(--color-surface);
 }
 
 .sessionRowActive {
-  border-color: var(--color-admin-secondary);
-  background: #f0f5ff;
+  background: var(--color-surface);
 }
 
 .sessionRowMain {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   cursor: pointer;
   min-width: 0;
 }
 
 .sessionRowActions {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.35rem;
   flex-shrink: 0;
 }
 
-.sessionEditBtn {
-  width: 22px;
-  height: 22px;
+/* ── Unified small icon button (edit / link / delete) ── */
+.iconBtn {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: 1px solid var(--color-border);
   background: var(--color-white);
   color: var(--color-text-placeholder);
-  font-size: 0.72rem;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: border-color 0.15s, color 0.15s;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.sessionEditBtn:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }
+.iconBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.sessionDeleteBtn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-white);
-  color: var(--color-text-placeholder);
-  font-size: 0.85rem;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: border-color 0.15s, color 0.15s;
+.iconBtnNeutral:hover:not(:disabled) {
+  border-color: var(--color-admin-secondary);
+  color: var(--color-admin-secondary);
+  background: rgba(var(--rgb-admin-secondary), 0.06);
 }
-.sessionDeleteBtn:hover:not(:disabled) { border-color: var(--color-error-light); color: var(--color-error-light); }
-.sessionDeleteBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.iconBtnDanger:hover:not(:disabled) {
+  border-color: var(--color-error-light);
+  color: var(--color-error-light);
+  background: var(--color-error-bg);
+}
 
 .sessionDate {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--color-text-primary);
   white-space: nowrap;
-}
-
-.sessionPositions {
-  font-size: 0.72rem;
-  color: var(--color-text-placeholder);
-  font-weight: 500;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .sessionChevron {
-  font-size: 0.65rem;
   color: var(--color-text-placeholder);
-}
-
-/* ── No active rent message ── */
-.noRentMsg {
-  font-size: 0.78rem;
-  color: var(--color-text-placeholder);
-  margin: 0.1rem 0 0;
-  font-style: italic;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 /* ── Active schedule info card ── */
 .scheduleCard {
-  margin: 0 1.2rem 0.75rem;
-  padding: 0.6rem 0.85rem;
+  margin: 0 1.3rem 1rem;
+  padding: 0.75rem 0.9rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 9px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.5rem;
 }
 
 .scheduleCardHeader {
@@ -427,7 +514,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text-strong);
   flex-wrap: wrap;
@@ -436,30 +523,31 @@
 
 .scheduleCardArrow {
   color: var(--color-text-placeholder);
-  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
 }
 
 .scheduleCardActions {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.35rem;
   flex-shrink: 0;
 }
 
 .scheduleCardMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .scheduleCardPill {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.12rem 0.42rem;
+  gap: 0.25rem;
+  padding: 0.18rem 0.5rem;
   border-radius: 999px;
-  background: var(--color-surface-raised);
+  background: var(--color-white);
   border: 1px solid var(--color-border);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-text-secondary);
   white-space: nowrap;
@@ -478,48 +566,26 @@
 }
 
 .scheduleCardPillUser:hover {
-  background: #e8f1f8;
+  background: rgba(var(--rgb-admin-secondary), 0.08);
   border-color: var(--color-admin-secondary);
   color: var(--color-admin-secondary);
-}
-
-.scheduleCardPillTracking {
-  background: var(--color-info-bg);
-  border-color: var(--color-info-border);
-  color: var(--color-info);
-}
-
-/* ── Session block (row + inline map) ── */
-.sessionBlock {
-  margin-bottom: 0.4rem;
 }
 
 .sessionInfo {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   min-width: 0;
   flex-wrap: wrap;
 }
 
-.sessionRight {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-}
-
-.sessionGuest {
-  font-size: 0.72rem;
-  color: var(--color-text-secondary);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
 /* User name in session history — navigates to user profile */
 .sessionGuestLink {
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
   color: var(--color-admin-secondary);
   font-weight: 500;
   white-space: nowrap;
@@ -534,54 +600,33 @@
 }
 
 .sessionRes {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--color-text-placeholder);
   font-weight: 500;
   white-space: nowrap;
 }
 
-.sessionKm {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.sessionEarning {
-  font-size: 0.72rem;
-  color: var(--color-success);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 /* ── Session expanded detail ── */
 .sessionDetail {
-  padding: 0.5rem 0.6rem 0.6rem;
+  padding: 0.7rem 0.85rem 0.85rem;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .sessionDetailPills {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-/* ── Inline session map ── */
-.sessionMap {
-  margin-top: 0.3rem;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  isolation: isolate;
+  gap: 0.35rem;
 }
 
 .sessionNoMap {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--color-text-placeholder);
   text-align: center;
-  padding: 0.75rem;
+  padding: 0.9rem;
   margin: 0;
 }
 
@@ -591,13 +636,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.5rem 0.9rem;
-  background: rgba(var(--rgb-warning-light), 0.1);
-  border-top: 1px solid rgba(var(--rgb-warning-light), 0.25);
-  border-bottom: 1px solid rgba(var(--rgb-warning-light), 0.25);
+  padding: 0.55rem 0.9rem;
+  background: var(--color-warning-bg);
+  border-top: 1px solid var(--color-warning-border);
 }
 
 .manualTrackingLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-warning-light);
@@ -605,12 +652,12 @@
 
 .stopTrackingBtn {
   flex-shrink: 0;
-  padding: 0.25rem 0.7rem;
+  padding: 0.3rem 0.75rem;
   border: 1px solid var(--color-warning-light);
-  border-radius: 6px;
+  border-radius: 7px;
   background: transparent;
   color: var(--color-warning-light);
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -624,25 +671,4 @@
 .stopTrackingBtn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-.sessionLinkBtn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-white);
-  color: var(--color-text-placeholder);
-  font-size: 0.72rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  transition: border-color 0.15s, color 0.15s;
-  flex-shrink: 0;
-}
-.sessionLinkBtn:hover {
-  border-color: var(--color-brand-primary);
-  color: var(--color-brand-primary);
 }

@@ -10,7 +10,7 @@ import { useToast } from "@/components/toast/ToastContext";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import { useBusinessTz } from "@/contexts/TzContext";
 import { fmtDateTime } from "@/lib/dateUtils";
-import { Car as CarIcon, User, ClipboardList, MapPin, Banknote, Ruler, ExternalLink, Pencil, X, Radio, ChevronUp, ChevronDown, ArrowRight } from "lucide-react";
+import { Car as CarIcon, User, ClipboardList, MapPin, Banknote, Ruler, ExternalLink, Pencil, X, Radio, ChevronUp, ChevronDown, ArrowRight, Maximize2, CalendarClock } from "lucide-react";
 import styles from "./RentTracker.module.css";
 
 interface RentSession {
@@ -468,17 +468,20 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
       {/* ── Header row ── */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.icon}><CarIcon size={20} strokeWidth={1.75} /></span>
+          <span className={styles.iconBadge}><CarIcon size={19} strokeWidth={1.75} /></span>
           <div>
-            <p className={styles.label}>Rent Tracking</p>
-            {tracking && (
+            <p className={styles.label}>Live Tracking</p>
+            {hasSession ? (
               <p className={styles.meta}>
                 {positions.length} position{positions.length !== 1 ? "s" : ""}
-                <span className={styles.countdown}> · next in {fmt(nextIn)}</span>
+                {tracking && (
+                  <span className={styles.countdown}>
+                    <Radio size={11} strokeWidth={2} /> next in {fmt(nextIn)}
+                  </span>
+                )}
               </p>
-            )}
-            {!hasSession && (
-              <p className={styles.noRentMsg}>No active rent</p>
+            ) : (
+              <p className={styles.noRentMsg}>Not currently tracking</p>
             )}
           </div>
         </div>
@@ -486,6 +489,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
         {hasSession && (
           confirmingEnd ? (
             <div className={styles.confirmRow}>
+              <span className={styles.confirmLabel}>End this rent?</span>
               <button className={`${styles.confirmBtn} ${styles.confirmEnd}`} onClick={endRent}>End rent</button>
               <button className={`${styles.confirmBtn} ${styles.confirmPause}`} onClick={() => setConfirmingEnd(false)}>Cancel</button>
             </div>
@@ -507,6 +511,21 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
         )}
       </div>
 
+      {/* ── Empty state: no active rent ── */}
+      {!hasSession && (
+        <div className={styles.emptyState}>
+          <span className={styles.emptyIcon}><Radio size={18} strokeWidth={1.75} /></span>
+          <p className={styles.emptyTitle}>No active rent</p>
+          <p className={styles.emptyText}>This vehicle isn&apos;t currently being tracked.</p>
+          {car.nextBookingStart && car.nextBookingEnd && (
+            <span className={styles.emptyNextBooking}>
+              <CalendarClock size={13} strokeWidth={1.75} />
+              Next booking {fmtDT(car.nextBookingStart)} → {fmtDT(car.nextBookingEnd)}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* ── Active booking info ── */}
       {activeBooking && hasSession && (
         <div className={styles.scheduleCard}>
@@ -519,17 +538,17 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
             <div className={styles.scheduleCardActions}>
               <Link
                 href={`/admin/bookings?modal=booking&id=${activeBooking.id}`}
-                className={styles.sessionLinkBtn}
+                className={`${styles.iconBtn} ${styles.iconBtnNeutral}`}
                 title="View booking details"
-              ><ExternalLink size={14} strokeWidth={1.75} /></Link>
-              <button className={styles.sessionEditBtn} onClick={() => openEditBooking(activeBooking)} aria-label="Edit"><Pencil size={14} strokeWidth={1.75} /></button>
+              ><ExternalLink size={13} strokeWidth={1.75} /></Link>
+              <button className={`${styles.iconBtn} ${styles.iconBtnNeutral}`} onClick={() => openEditBooking(activeBooking)} aria-label="Edit"><Pencil size={13} strokeWidth={1.75} /></button>
               <button
-                className={styles.sessionDeleteBtn}
+                className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
                 onClick={() => handleBookingDelete(activeBooking)}
                 disabled={deletingBookingId === activeBooking.id}
                 aria-label="Delete"
               >
-                {deletingBookingId === activeBooking.id ? "…" : <X size={14} strokeWidth={1.75} />}
+                {deletingBookingId === activeBooking.id ? "…" : <X size={13} strokeWidth={1.75} />}
               </button>
             </div>
           </div>
@@ -571,7 +590,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                 </span>
                 <span className={styles.mapRangeEnd}>● {positions.length}</span>
               </div>
-              <button className={styles.mapExpandBtn} onClick={() => setMapFullscreen(true)} title="Fullscreen">⛶</button>
+              <button className={styles.mapExpandBtn} onClick={() => setMapFullscreen(true)} title="Fullscreen"><Maximize2 size={14} strokeWidth={1.75} /></button>
             </div>
             <PositionLookup positions={positions} onDelete={deleteLivePosition} />
             <RentMap positions={positions} />
@@ -597,8 +616,9 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
           {pastSessions.map(session => {
             const linked = session.booking;
             const isOpen = expandedSessionId === session.id;
+            const stillTracking = !session.trackingPaused && session.booking?.gpsStopMode === "manual";
             return (
-              <div key={session.id} className={styles.sessionBlock}>
+              <div key={session.id} className={`${styles.sessionBlock} ${isOpen ? styles.sessionBlockOpen : ""} ${stillTracking ? styles.sessionBlockTracking : ""}`}>
                 <div className={`${styles.sessionRow} ${isOpen ? styles.sessionRowActive : ""}`}>
                   <div
                     className={styles.sessionRowMain}
@@ -608,7 +628,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                   >
                     <div className={styles.sessionInfo}>
                       <span className={styles.sessionDate}>
-                        {fmtShort(session.startedAt)} <ArrowRight size={14} strokeWidth={1.75} /> {session.endedAt ? fmtShort(session.endedAt) : "…"}
+                        {fmtShort(session.startedAt)} <ArrowRight size={13} strokeWidth={1.75} /> {session.endedAt ? fmtShort(session.endedAt) : "…"}
                       </span>
                       {linked?.user?.name && (
                         <Link
@@ -616,7 +636,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                           className={styles.sessionGuestLink}
                           title={`View profile: ${linked.user.name}`}
                         >
-                          <User size={14} strokeWidth={1.75} /> {linked.user.name}
+                          <User size={13} strokeWidth={1.75} /> {linked.user.name}
                         </Link>
                       )}
                       {linked?.reservationNumber && <span className={styles.sessionRes}>#{linked.reservationNumber}</span>}
@@ -627,21 +647,21 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                     {linked && (
                       <Link
                         href={`/admin/bookings?modal=booking&id=${linked.id}`}
-                        className={styles.sessionLinkBtn}
+                        className={`${styles.iconBtn} ${styles.iconBtnNeutral}`}
                         title="View booking details"
-                      ><ExternalLink size={14} strokeWidth={1.75} /></Link>
+                      ><ExternalLink size={13} strokeWidth={1.75} /></Link>
                     )}
                     <button
-                      className={styles.sessionDeleteBtn}
+                      className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
                       onClick={() => handleSessionDelete(session)}
                       disabled={deletingSessionId === session.id}
                       aria-label="Delete"
                     >
-                      {deletingSessionId === session.id ? "…" : <X size={14} strokeWidth={1.75} />}
+                      {deletingSessionId === session.id ? "…" : <X size={13} strokeWidth={1.75} />}
                     </button>
                   </div>
                 </div>
-                {!session.trackingPaused && session.booking?.gpsStopMode === "manual" && (
+                {stillTracking && (
                   <div className={styles.manualTrackingBanner}>
                     <span className={styles.manualTrackingLabel}>
                       <Radio size={14} strokeWidth={1.75} /> GPS tracking still active
@@ -686,7 +706,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                               </span>
                               <span className={styles.mapRangeEnd}>● {session.positions.length}</span>
                             </div>
-                            <button className={styles.mapExpandBtn} onClick={() => setFullscreenSessionId(session.id)} title="Fullscreen">⛶</button>
+                            <button className={styles.mapExpandBtn} onClick={() => setFullscreenSessionId(session.id)} title="Fullscreen"><Maximize2 size={14} strokeWidth={1.75} /></button>
                           </div>
                           <PositionLookup
                             positions={session.positions}
