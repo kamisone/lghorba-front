@@ -359,17 +359,20 @@
 
 /* ─── Loading ──────────────────────────────────────────────────────────────── */
 
-.loadingRow { display: flex; justify-content: center; padding: 4.5rem 0; }
-
-.spinner {
+/* Skeleton table (first load for a given filter combo only — SWR's
+   keepPreviousData keeps the previous results on screen while refetching
+   for a filter change, so this only appears once per session). */
+.skeletonCell {
   display: inline-block;
-  width: 30px; height: 30px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-admin-secondary);
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--color-surface-raised);
+  animation: skeletonPulse 1.4s ease-in-out infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
 
 /* ─── Empty state ──────────────────────────────────────────────────────────── */
 

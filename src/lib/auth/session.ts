@@ -34,18 +34,47 @@ export interface SessionResult {
 
 type CheckResult = "valid" | "invalid" | "network_error";
 
+// Every admin navigation resolves its session through this check — middleware
+// -> /next-api/auth/session -> here -> backend /auth/me — with no caching that
+// meant two full network round trips on every single request, including
+// client-side <Link> navigations and prefetches. A short positive-result cache
+// keeps the backend as the source of truth (still re-checked at least every
+// 30s, and immediately on any request that doesn't hit the cache) while
+// cutting the dominant cost for the common case: an admin actively clicking
+// around with a token that's still obviously valid.
+//
+// Deliberately caches "valid" only — an "invalid" token still falls through
+// to the refresh-token path every time, so nothing about that flow changes.
+const VALID_TOKEN_CACHE_TTL_MS = 30_000;
+const validTokenCache = new Map<string, number>(); // token -> validUntil epoch ms
+
+function sweepExpiredTokenCacheEntries(now: number): void {
+  validTokenCache.forEach((validUntil, token) => {
+    if (validUntil <= now) validTokenCache.delete(token);
+  });
+}
+
 /**
- * Asks the backend whether the access token is still valid.
+ * Asks the backend whether the access token is still valid, short-circuiting
+ * via `validTokenCache` when a recent check already confirmed it.
  * Returns "network_error" on any fetch failure so callers can distinguish
  * a transient outage from an explicitly rejected token.
  */
 async function checkAccessToken(token: string, backendUrl: string): Promise<CheckResult> {
+  const now = Date.now();
+  const cachedValidUntil = validTokenCache.get(token);
+  if (cachedValidUntil !== undefined && cachedValidUntil > now) return "valid";
+
   try {
     const res = await fetch(`${backendUrl}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
       cache:   "no-store",
     });
-    return res.ok ? "valid" : "invalid";
+    if (!res.ok) return "invalid";
+
+    if (validTokenCache.size > 500) sweepExpiredTokenCacheEntries(now);
+    validTokenCache.set(token, now + VALID_TOKEN_CACHE_TTL_MS);
+    return "valid";
   } catch {
     return "network_error";
   }

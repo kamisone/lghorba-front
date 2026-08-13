@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import type { Car } from "@/components/admin/fleet/data";
 import CarFormModal from "@/components/admin/fleet/CarFormModal";
 import { api } from "@/lib/api";
 import styles from "./cars.module.css";
 import { Car as CarIcon } from "lucide-react";
+
+const CARS_KEY = "admin:cars";
+const fetchCars = () => api.admin.cars.list() as Promise<Car[]>;
 
 interface SmsMessage {
   id: number;
@@ -53,27 +57,20 @@ function useLastMessages(cars: Car[]) {
 }
 
 export default function CarsPage() {
-  const [cars, setCars] = useState<Car[]>([]);
-  const [loading, setLoading] = useState(true);
+  // SWR keeps this cached across navigations — revisiting /admin/fleet
+  // shows the last-known list instantly while revalidating in the
+  // background, instead of re-fetching from scratch and re-showing the
+  // loading state every single time.
+  const { data: cars, isLoading, mutate } = useSWR<Car[]>(CARS_KEY, fetchCars);
   const [showForm, setShowForm] = useState(false);
-  const lastMessages = useLastMessages(cars);
-
-  const fetchCars = async () => {
-    try {
-      setCars(await api.admin.cars.list() as Car[]);
-    } catch { /* leave state empty */ }
-    finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchCars(); }, []);
+  const lastMessages = useLastMessages(cars ?? []);
 
   const handleSaved = (saved: Car) => {
-    setCars((prev) => {
-      const exists = prev.find((c) => c.id === saved.id);
-      return exists ? prev.map((c) => (c.id === saved.id ? saved : c)) : [...prev, saved];
-    });
+    mutate((prev) => {
+      const list = prev ?? [];
+      const exists = list.find((c) => c.id === saved.id);
+      return exists ? list.map((c) => (c.id === saved.id ? saved : c)) : [...list, saved];
+    }, { revalidate: false });
     setShowForm(false);
   };
 
@@ -84,11 +81,19 @@ export default function CarsPage() {
         <button className={styles.addBtn} onClick={() => setShowForm(true)}>+ Add Car</button>
       </div>
 
-      {loading ? (
-        <div className={styles.loadingRow}>
-          <span className={styles.loadingSpinner} />
+      {isLoading ? (
+        <div className={styles.grid}>
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className={styles.skeletonCard}>
+              <div className={styles.skeletonPhoto} />
+              <div className={styles.skeletonBody}>
+                <div className={styles.skeletonLine} style={{ width: "70%" }} />
+                <div className={styles.skeletonLine} style={{ width: "45%" }} />
+              </div>
+            </div>
+          ))}
         </div>
-      ) : cars.length === 0 ? (
+      ) : !cars || cars.length === 0 ? (
         <p className={styles.empty}>No cars yet. Add your first one!</p>
       ) : (
         <div className={styles.grid}>

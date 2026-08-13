@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import styles from "./users.module.css";
 import CreateUserModal from "@/components/admin/users/CreateUserModal";
@@ -120,52 +121,48 @@ function RangeField({ label, minVal, maxVal, onMin, onMax, type = "number", min,
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const usersFetcher = (params: string) =>
+  fetch(`/next-api/users?${params}`, { cache: "no-store" }).then(r => (r.ok ? r.json() : []));
+
 export default function UsersPage() {
   const { openModal, closeModal } = useModalUrl();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<Filters>(EMPTY);
+  // Both start pre-hydrated from the URL (not EMPTY) so the very first SWR
+  // key is already the right one — no wasted unfiltered fetch before the
+  // real, filtered one.
+  const [filters,          setFilters]          = useState<Filters>(() => fromUrl());
+  const [debouncedFilters, setDebouncedFilters]  = useState<Filters>(() => fromUrl());
   const [showCreate, setShowCreate] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const suppressNextFetch = useRef(false);
   const isFirstFilterEffect = useRef(true);
 
-  const fetchUsers = useCallback((f: Filters) => {
-    if (abortRef.current) abortRef.current.abort();
-    abortRef.current = new AbortController();
-    const { signal } = abortRef.current;
-    setLoading(true);
-    fetch(`/next-api/users?${toApiParams(f)}`, { cache: "no-store", signal })
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setUsers(Array.isArray(data) ? data : []))
-      .catch(e => { if (e?.name !== "AbortError") setUsers([]); })
-      .finally(() => setLoading(false));
-  }, []);
+  const params = toApiParams(debouncedFilters);
+  // keepPreviousData: switching filters keeps showing the current results
+  // (with isValidating true) instead of blanking the table on every change;
+  // isLoading only turns on the very first time. Different filter
+  // combinations cache independently, so returning to one you already used
+  // this session is instant.
+  const { data: users, isLoading, mutate } = useSWR<User[]>(
+    `admin:users?${params}`,
+    () => usersFetcher(params),
+    { keepPreviousData: true },
+  );
 
-  // Mount: hydrate filters from URL, run initial fetch
+  // Mount-only: open the create modal / filter panel if the URL asks for it.
   useEffect(() => {
-    const f = fromUrl();
     if (new URLSearchParams(window.location.search).get("modal") === "user-create") {
       setShowCreate(true);
     }
-    if (ADVANCED_KEYS.some(k => f[k])) setFiltersOpen(true);
-    suppressNextFetch.current = true;
-    setFilters(f);
-    fetchUsers(f);
+    if (ADVANCED_KEYS.some(k => filters[k])) setFiltersOpen(true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // When filters change: sync URL + debounced re-fetch
+  // When filters change: sync URL + debounce before it becomes a new SWR key
   useEffect(() => {
     if (isFirstFilterEffect.current) { isFirstFilterEffect.current = false; return; }
-    if (suppressNextFetch.current) { suppressNextFetch.current = false; return; }
     toUrl(filters);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => fetchUsers(filters), 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+    const t = setTimeout(() => setDebouncedFilters(filters), 300);
+    return () => clearTimeout(t);
+  }, [filters]);
 
   const set = useCallback(<K extends keyof Filters>(k: K, v: string) => {
     setFilters(p => ({ ...p, [k]: v }));
@@ -236,7 +233,7 @@ export default function UsersPage() {
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.title}>Users</h1>
-          {!loading && (
+          {users && (
             <p className={styles.subtitle}>
               {users.length} {users.length === 1 ? "user" : "users"}
               {nActive > 0 ? " matching filters" : ""}
@@ -346,9 +343,34 @@ export default function UsersPage() {
       )}
 
       {/* ── Results ── */}
-      {loading ? (
-        <div className={styles.loadingRow}><span className={styles.spinner} /></div>
-      ) : users.length === 0 ? (
+      {isLoading ? (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Rents</th>
+                <th>Score</th>
+                <th>Joined</th>
+                <th><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 8 }, (_, i) => (
+                <tr key={i}>
+                  <td><span className={styles.skeletonCell} style={{ width: "60%" }} /></td>
+                  <td><span className={styles.skeletonCell} style={{ width: "70%" }} /></td>
+                  <td><span className={styles.skeletonCell} style={{ width: "24px" }} /></td>
+                  <td><span className={styles.skeletonCell} style={{ width: "40px" }} /></td>
+                  <td><span className={styles.skeletonCell} style={{ width: "80px" }} /></td>
+                  <td><span className={styles.skeletonCell} style={{ width: "40px" }} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : !users || users.length === 0 ? (
         <div className={styles.emptyState}>
           <UserSearch size={48} strokeWidth={1.75} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>
@@ -417,7 +439,7 @@ export default function UsersPage() {
       {showCreate && (
         <CreateUserModal
           onClose={() => { setShowCreate(false); closeModal(); }}
-          onCreated={() => { setShowCreate(false); closeModal(); fetchUsers(filters); }}
+          onCreated={() => { setShowCreate(false); closeModal(); mutate(); }}
         />
       )}
     </div>

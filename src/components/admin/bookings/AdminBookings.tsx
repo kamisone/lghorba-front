@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import type { Car, CalendarBooking } from "../fleet/data";
 import BookingAdminModal from "./BookingAdminModal";
@@ -74,6 +75,12 @@ const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+async function fetchBookingsList(): Promise<AdminBooking[]> {
+  const res = await fetch("/next-api/bookings", { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load bookings.");
+  return res.json();
+}
 
 function daysDiff(start: string, end: string): number {
   return Math.max(1, Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / 86_400_000));
@@ -511,9 +518,11 @@ function EventCard({ event, onOpen, tz }: { event: TimelineEvent; onOpen: (b: Ad
 
 export default function AdminBookings() {
   const tz = useBusinessTz();
-  const [bookings,      setBookings]      = useState<AdminBooking[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState<string | null>(null);
+  // SWR: revisiting /admin/bookings shows the cached list instantly instead
+  // of re-fetching and blanking to a spinner every time.
+  const { data: bookingsData, error: bookingsError, isLoading, mutate } =
+    useSWR<AdminBooking[]>("admin:bookings", fetchBookingsList);
+  const bookings = useMemo(() => bookingsData ?? [], [bookingsData]);
   const [tab,           setTab]           = useState<Tab>("active");
   const [search,        setSearch]        = useState("");
   const [statusFilter,  setStatusFilter]  = useState<StatusFilter>("all");
@@ -549,19 +558,19 @@ export default function AdminBookings() {
 
   // Restore booking detail modal once bookings are loaded
   useEffect(() => {
-    if (loading || !restoreBookingId) return;
+    if (isLoading || !restoreBookingId) return;
     const b = bookings.find(b => b.id === restoreBookingId);
     if (b) setSelected(b);
     setRestoreBookingId(null);
-  }, [loading, restoreBookingId, bookings]);
+  }, [isLoading, restoreBookingId, bookings]);
 
   // Restore edit booking modal once bookings are loaded
   useEffect(() => {
-    if (loading || !restoreEditId) return;
+    if (isLoading || !restoreEditId) return;
     const b = bookings.find(b => b.id === restoreEditId);
     if (b && isModifiableBooking(b)) setEditBooking(b);
     setRestoreEditId(null);
-  }, [loading, restoreEditId, bookings]);
+  }, [isLoading, restoreEditId, bookings]);
 
   // Restore create booking modal by fetching cars
   useEffect(() => {
@@ -612,23 +621,6 @@ export default function AdminBookings() {
     closeModal();
   }, [closeModal]);
 
-  // ── Fetch all bookings (client-side split between tabs) ───────────────────
-
-  const fetchBookings = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/next-api/bookings", { cache: "no-store" });
-      if (!res.ok) throw new Error();
-      setBookings(await res.json());
-    } catch {
-      setError("Failed to load bookings.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchBookings(); }, [fetchBookings]);
 
   // ── Unique cars for filter dropdown ──────────────────────────────────────
 
@@ -741,12 +733,12 @@ export default function AdminBookings() {
       });
       if (!res.ok) return;
       const updated: AdminBooking = await res.json();
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: updated.status } : b));
+      mutate(prev => (prev ?? []).map(b => b.id === id ? { ...b, status: updated.status } : b), { revalidate: false });
       setSelected(prev => prev?.id === id ? { ...prev, status: updated.status } : prev);
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [mutate]);
 
   const deleteBooking = useCallback(async (id: string) => {
     if (!window.confirm("Delete this booking? This cannot be undone.")) return;
@@ -754,7 +746,7 @@ export default function AdminBookings() {
     try {
       const res = await fetch(`/next-api/bookings/${id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
-        setBookings(prev => prev.filter(b => b.id !== id));
+        mutate(prev => (prev ?? []).filter(b => b.id !== id), { revalidate: false });
         setSelected(prev => {
           if (prev?.id === id) { closeModal(); return null; }
           return prev;
@@ -763,13 +755,13 @@ export default function AdminBookings() {
     } finally {
       setActionLoading(false);
     }
-  }, [closeModal]);
+  }, [closeModal, mutate]);
 
   const handleReactivated = useCallback((updated: AdminBooking) => {
-    setBookings(prev => prev.map(b => b.id === updated.id ? { ...b, ...updated } : b));
+    mutate(prev => (prev ?? []).map(b => b.id === updated.id ? { ...b, ...updated } : b), { revalidate: false });
     setSelected(null);
     closeModal();
-  }, [closeModal]);
+  }, [closeModal, mutate]);
 
   const openCarPicker = async () => {
     setShowCarPicker(true);
@@ -809,7 +801,7 @@ export default function AdminBookings() {
           onClick={() => setTab("active")}
         >
           Schedule
-          {!loading && activeCount > 0 && (
+          {!isLoading && activeCount > 0 && (
             <span className={`${styles.tabBadge} ${tab === "active" ? styles.tabBadgeActive : ""}`}>
               {activeCount}
             </span>
@@ -820,28 +812,35 @@ export default function AdminBookings() {
           onClick={() => setTab("history")}
         >
           History
-          {!loading && history.length > 0 && tab === "history" && (
+          {!isLoading && history.length > 0 && tab === "history" && (
             <span className={`${styles.tabBadge} ${styles.tabBadgeActive}`}>{history.length}</span>
           )}
         </button>
       </div>
 
       {/* ── Loading / error ── */}
-      {loading && (
-        <div className={styles.stateCenter}>
-          <span className={styles.spinner} />
-          <span>Loading bookings…</span>
+      {isLoading && (
+        <div className={styles.skeletonList}>
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className={styles.skeletonRow}>
+              <div className={styles.skeletonAvatar} />
+              <div className={styles.skeletonLines}>
+                <div className={styles.skeletonLine} style={{ width: "40%" }} />
+                <div className={styles.skeletonLine} style={{ width: "65%" }} />
+              </div>
+            </div>
+          ))}
         </div>
       )}
-      {error && !loading && (
+      {bookingsError && !isLoading && (
         <div className={styles.stateError}>
-          <AlertTriangle size={16} strokeWidth={1.75} /> {error}
-          <button className={styles.retryBtn} onClick={fetchBookings}>Retry</button>
+          <AlertTriangle size={16} strokeWidth={1.75} /> Failed to load bookings.
+          <button className={styles.retryBtn} onClick={() => mutate()}>Retry</button>
         </div>
       )}
 
       {/* ══ ACTIVE TAB ══════════════════════════════════════════════════════ */}
-      {!loading && !error && tab === "active" && (
+      {!isLoading && !bookingsError && tab === "active" && (
         <>
           {/* Search + source + car filter */}
           <div className={styles.filters}>
@@ -903,7 +902,7 @@ export default function AdminBookings() {
       )}
 
       {/* ══ HISTORY TAB ═════════════════════════════════════════════════════ */}
-      {!loading && !error && tab === "history" && (
+      {!isLoading && !bookingsError && tab === "history" && (
         <>
           {/* Full filter bar */}
           <div className={styles.filters}>
@@ -1090,7 +1089,7 @@ export default function AdminBookings() {
         <BookingAdminModal
           car={createCar}
           onClose={closeBookingCreate}
-          onSaved={() => { closeBookingCreate(); fetchBookings(); }}
+          onSaved={() => { closeBookingCreate(); mutate(); }}
         />
       )}
 
@@ -1105,7 +1104,7 @@ export default function AdminBookings() {
           sessionStarted={editBooking.hasSession}
           onClose={closeBookingEdit}
           onSaved={(updated) => {
-            setBookings(prev => prev.map(b =>
+            mutate(prev => (prev ?? []).map(b =>
               b.id === editBooking.id
                 ? {
                     ...b,
@@ -1121,7 +1120,7 @@ export default function AdminBookings() {
                       : b.user,
                   }
                 : b
-            ));
+            ), { revalidate: false });
             closeBookingEdit();
           }}
         />

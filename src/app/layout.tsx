@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { headers } from "next/headers";
+import NextTopLoader from "nextjs-toploader";
 import "@/app/globals.css";
 import { AppMode } from "@/app/config";
 import Maintenance from "@/components/Maintenance/Maintenance";
@@ -22,6 +23,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang={locale} dir="ltr">
       <head />
       <body className={inter.className}>
+        {/* Global nav-in-progress feedback — mounted once here so it covers
+            every route (public + admin) instead of each section rolling its
+            own. Brand/admin accent color; no spinner, just the top bar. */}
+        <NextTopLoader color="#8DC220" height={3} showSpinner={false} shadow="0 0 10px #8DC220,0 0 5px #8DC220" />
         <ToastProvider>
           {process.env.APP_MODE === AppMode.MAINTENANCE ? (
             <Maintenance />

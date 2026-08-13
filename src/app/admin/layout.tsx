@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AdminHeader from "@/components/layout/AdminHeader";
 import TokenRefresher from "@/components/admin/shell/TokenRefresher";
 import { TzProvider } from "@/contexts/TzContext";
+import { getBusinessTimezone } from "@/lib/platformSettings";
 
 export const metadata: Metadata = {
   robots: {
@@ -15,23 +16,13 @@ export const metadata: Metadata = {
   },
 };
 
-const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
-
-async function fetchBusinessTimezone(): Promise<string> {
-  try {
-    const res = await fetch(`${API}/public/platform-settings`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return "Europe/Paris";
-    const data = await res.json() as { timezone?: string };
-    return data.timezone ?? "Europe/Paris";
-  } catch {
-    return "Europe/Paris";
-  }
-}
-
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const timezone = await fetchBusinessTimezone();
+  // This layout wraps every /admin/* route, so this fetch ran fresh
+  // (cache: "no-store") on every single admin navigation. Admin pages stay
+  // dynamic regardless (session-gated), but the timezone itself rarely
+  // changes — getBusinessTimezone() caches it for 5 minutes instead of
+  // hitting the backend on every request.
+  const timezone = await getBusinessTimezone();
   return (
     <TzProvider timezone={timezone}>
       <TokenRefresher />
