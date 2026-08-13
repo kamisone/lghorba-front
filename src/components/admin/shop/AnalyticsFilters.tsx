@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useToast } from "@/components/toast/ToastContext";
 import styles from "./ShopAdmin.module.css";
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -426,6 +427,8 @@ interface EventDetailRow {
   countryName: string | null;
   cartToken: string | null;
   quantity: number | null;
+  /** Null for rows recorded before this was captured. */
+  clientIp: string | null;
 }
 
 interface PurchaseDetailRow {
@@ -482,8 +485,29 @@ export function AnalyticsDetailModal({
   /** Event types selectable in the modal's event-name filter. */
   eventOptions?: Array<{ value: string; label: string }>;
 }) {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<(EventDetailRow | PurchaseDetailRow)[]>([]);
+  const [blockedIps, setBlockedIps] = useState<Set<string>>(new Set());
+  const [blockingIp, setBlockingIp] = useState<string | null>(null);
+
+  const blockIp = useCallback(async (ip: string) => {
+    setBlockingIp(ip);
+    try {
+      const res = await fetch("/next-api/admin/shop/analytics-excluded-ips/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ip }),
+      });
+      if (!res.ok) throw new Error();
+      setBlockedIps((prev) => new Set(prev).add(ip));
+      toast.success(`${ip} added to the analytics exclusion list`);
+    } catch {
+      toast.error(`Failed to block ${ip}`);
+    } finally {
+      setBlockingIp(null);
+    }
+  }, [toast]);
 
   // The modal owns its own date + event filters, seeded from the clicked scope.
   // Seeded lazily from `params` (not a plain "30"/""/"" default) so the very
@@ -617,7 +641,7 @@ export function AnalyticsDetailModal({
           ) : kind === "event" ? (
             <table className={styles.table}>
               <thead>
-                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Qty</th></tr>
+                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Qty</th><th>IP</th><th /></tr>
               </thead>
               <tbody>
                 {(rows as EventDetailRow[]).map((r) => (
@@ -627,6 +651,35 @@ export function AnalyticsDetailModal({
                     <td title={r.productTitle ?? undefined}>{r.productTitle ? truncateTitle(r.productTitle, 30) : "—"}</td>
                     <td>{r.countryName ?? "—"}</td>
                     <td>{r.quantity ?? "—"}</td>
+                    <td style={{ whiteSpace: "nowrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12 }}>
+                      {r.clientIp ?? "—"}
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {r.clientIp && (
+                        blockedIps.has(r.clientIp) ? (
+                          <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>Blocked</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => blockIp(r.clientIp!)}
+                            disabled={blockingIp === r.clientIp}
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              padding: "3px 9px",
+                              borderRadius: 6,
+                              border: "1px solid var(--color-error-border)",
+                              background: "var(--color-error-bg)",
+                              color: "var(--color-error)",
+                              cursor: blockingIp === r.clientIp ? "not-allowed" : "pointer",
+                              opacity: blockingIp === r.clientIp ? 0.6 : 1,
+                            }}
+                          >
+                            {blockingIp === r.clientIp ? "Blocking…" : "Block IP"}
+                          </button>
+                        )
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
