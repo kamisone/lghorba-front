@@ -24,6 +24,7 @@ import DoorsCarIcon from "@/icons/car/DoorsCarIcon";
 import SeatsCarIcon from "@/icons/car/SeatsCarIcon";
 import PaintPaletteIcon from "@/icons/car/PaintPaletteIcon";
 import type { Translations } from "@/lib/i18n/translations";
+import { getBusinessTimezone } from "@/lib/platformSettings";
 
 // Data fetches tagged below — revalidated on car/photo mutations, not on a timer.
 
@@ -66,17 +67,6 @@ interface PublicCarDetail {
 }
 
 const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
-
-async function getBusinessTimezone(): Promise<string> {
-  try {
-    const res = await fetch(`${API}/public/platform-settings`, { cache: "no-store" });
-    if (!res.ok) return "Europe/Paris";
-    const data = await res.json() as { timezone?: string };
-    return data.timezone ?? "Europe/Paris";
-  } catch {
-    return "Europe/Paris";
-  }
-}
 
 async function getCar(id: string, lang: string): Promise<PublicCarDetail | null> {
   try {

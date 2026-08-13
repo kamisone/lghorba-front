@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Emits a pruned .next/standalone (traced deps only, no source, no dev deps)
+  // instead of shipping the full repo + node_modules in the Docker image —
+  // see docker/Dockerfile for the matching multi-stage build.
+  output: "standalone",
+  experimental: {
+    // lucide-react ships hundreds of icon modules; this teaches Next's module
+    // resolution to reach each icon file directly instead of pulling anything
+    // through the package's barrel export.
+    optimizePackageImports: ["lucide-react"],
+  },
   env: {
     API_BASE_URL_BROWSER:  process.env.API_BASE_URL_BROWSER  ?? "http://localhost:4000",
     NEXT_PUBLIC_GCS_BUCKET: process.env.GCS_BUCKET_NAME ?? "",

@@ -9,24 +9,10 @@ import { CartProvider } from "@/components/shop/CartContext";
 import { WishlistProvider } from "@/components/shop/WishlistContext";
 import CartDrawer from "@/components/shop/CartDrawer";
 import MetaPixelLoader from "@/components/tracking/MetaPixelLoader";
+import { getMetaPixelConfig } from "@/lib/platformSettings";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
-}
-
-const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
-
-interface MetaPixelConfig { pixelId: string | null; enabled: boolean }
-
-async function fetchMetaPixelConfig(): Promise<MetaPixelConfig> {
-  try {
-    const res = await fetch(`${API}/public/platform-settings`, { cache: "no-store" });
-    if (!res.ok) return { pixelId: null, enabled: false };
-    const data = await res.json() as { metaPixel?: MetaPixelConfig };
-    return data.metaPixel ?? { pixelId: null, enabled: false };
-  } catch {
-    return { pixelId: null, enabled: false };
-  }
 }
 
 export default async function LocaleLayout({
@@ -40,7 +26,7 @@ export default async function LocaleLayout({
     redirect(`/${DEFAULT_LOCALE}`);
   }
 
-  const metaPixel = await fetchMetaPixelConfig();
+  const metaPixel = await getMetaPixelConfig();
 
   return (
     <CookieConsentProvider locale={params.locale}>

@@ -16,20 +16,10 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { TuroLogo, GetaroundLogo } from "@/components/icons/PlatformLogos";
+import { getBusinessTimezone } from "@/lib/platformSettings";
 import styles from "../page.module.css";
 
 const API_SERVER = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
-
-async function getBusinessTimezone(): Promise<string> {
-  try {
-    const res = await fetch(`${API_SERVER}/public/platform-settings`, { cache: "no-store" });
-    if (!res.ok) return "Europe/Paris";
-    const data = await res.json() as { timezone?: string };
-    return data.timezone ?? "Europe/Paris";
-  } catch {
-    return "Europe/Paris";
-  }
-}
 
 async function getPublicCars(locale: string): Promise<CarouselCar[]> {
   try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Car } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
@@ -8,10 +8,10 @@ import styles from "./BlogListing.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface Category { id: string; name: string; slug: string; color: string | null; }
-interface Tag       { id: string; name: string; slug: string; }
+export interface Category { id: string; name: string; slug: string; color: string | null; }
+export interface Tag       { id: string; name: string; slug: string; }
 
-interface Post {
+export interface Post {
   id: string;
   slug: string;
   locale: string;
@@ -38,20 +38,31 @@ function formatDate(iso: string): string {
 
 interface Props {
   locale: string;
+  // Default-view (page 0, no search/category filter) data fetched server-side
+  // in blog/page.tsx, so the first paint has real HTML instead of an empty
+  // shell — this component previously fetched everything client-side on
+  // mount, which meant no SSR content for search engines and a fetch
+  // waterfall (HTML -> JS -> client fetch) on every visit. Passing these in
+  // lets it skip that redundant first fetch while every later interaction
+  // (search, filter, pagination) still fetches client-side exactly as before.
+  initialPosts?:      Post[];
+  initialFeatured?:   Post | null;
+  initialCategories?: Category[];
+  initialTotal?:      number;
 }
 
-export default function BlogListing({ locale }: Props) {
+export default function BlogListing({ locale, initialPosts, initialFeatured, initialCategories, initialTotal }: Props) {
   const t = getTranslations(locale).blog;
 
-  const [posts,      setPosts]      = useState<Post[]>([]);
-  const [featured,   setFeatured]   = useState<Post | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [total,      setTotal]      = useState(0);
+  const [posts,      setPosts]      = useState<Post[]>(initialPosts ?? []);
+  const [featured,   setFeatured]   = useState<Post | null>(initialFeatured ?? null);
+  const [categories, setCategories] = useState<Category[]>(initialCategories ?? []);
+  const [total,      setTotal]      = useState(initialTotal ?? 0);
   const [page,       setPage]       = useState(0);
   const [search,     setSearch]     = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeCat,  setActiveCat]  = useState<string | null>(null);
-  const [loading,    setLoading]    = useState(true);
+  const [loading,    setLoading]    = useState(initialPosts === undefined);
 
   // Debounce search
   useEffect(() => {
@@ -59,15 +70,21 @@ export default function BlogListing({ locale }: Props) {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Load categories once
+  // Load categories once — skipped when the server already supplied them.
+  const skipCategoriesFetchRef = useRef(initialCategories !== undefined);
   useEffect(() => {
+    if (skipCategoriesFetchRef.current) { skipCategoriesFetchRef.current = false; return; }
     fetch(`/next-api/public/blog/categories`)
       .then(r => r.json())
       .then(setCategories)
       .catch(() => {});
   }, []);
 
+  // The very first `load()` call matches exactly the default view the server
+  // already fetched (page 0, no search, no category) — skip just that one.
+  const skipInitialLoadRef = useRef(initialPosts !== undefined);
   const load = useCallback(() => {
+    if (skipInitialLoadRef.current) { skipInitialLoadRef.current = false; return; }
     setLoading(true);
     const params = new URLSearchParams({
       locale,
