@@ -84,6 +84,54 @@
   border: 1px solid #fecaca;
 }
 
+/* ── Quantity discounts (upselling) ── */
+.upsellTiers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.upsellTier {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-white);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .12s, background .12s;
+}
+.upsellTier:hover:not(:disabled) { border-color: var(--color-brand-accent); background: rgba(141, 194, 32, .06); }
+.upsellTier:disabled { opacity: .5; cursor: not-allowed; }
+
+.upsellTierActive {
+  border-color: var(--color-brand-accent);
+  background: rgba(141, 194, 32, .08);
+}
+
+.upsellTierMain {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.upsellTierBadge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 /* ── Free shipping ── */
 /*
  * Sits directly under the price, where delivery cost is the next thing a

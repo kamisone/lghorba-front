@@ -81,7 +81,7 @@ function makePopup(car: MapCar, labels: MapLabels, locale: string, start: string
     ? `<img src="/next-api/public/cars/${car.id}/photo"
          style="width:100%;height:100%;object-fit:cover;display:block;"
          loading="lazy"
-         onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\\"height:100%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;\\">🚗</div>'">`
+         onerror="this.style.display='none';this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;&quot;>🚗</div>'">`
     : `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;">🚗</div>`;
 
   return `

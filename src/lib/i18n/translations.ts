@@ -919,6 +919,9 @@ export const en = {
     freeShippingIncluded: "Free",
     savingsPrefix: "Savings of ",
     savingsSuffix: " will be confirmed at checkout.",
+    // quantity discounts (upselling)
+    upsellTierBuyLine: "Buy {qty} and pay {price} each",
+    upsellSaveBadge: "Save {pct}%",
     proceedToCheckout: "Proceed to Checkout",
     continueShoppingLink: "← Continue shopping",
     // promo code
@@ -1992,6 +1995,9 @@ export const fr: Translations = {
     freeShippingIncluded: "Offerte",
     savingsPrefix: "Une économie de ",
     savingsSuffix: " sera confirmée à la caisse.",
+    // quantity discounts (upselling)
+    upsellTierBuyLine: "Achetez {qty} et payez {price} l'unité",
+    upsellSaveBadge: "Économisez {pct} %",
     proceedToCheckout: "Passer à la caisse",
     continueShoppingLink: "← Continuer les achats",
     // promo code
@@ -2997,6 +3003,9 @@ export const es: Translations = {
     freeShippingIncluded: "Gratis",
     savingsPrefix: "Ahorro de ",
     savingsSuffix: " se confirmará al finalizar la compra.",
+    // quantity discounts (upselling)
+    upsellTierBuyLine: "Compra {qty} y paga {price} cada uno",
+    upsellSaveBadge: "Ahorra un {pct}%",
     proceedToCheckout: "Proceder al pago",
     continueShoppingLink: "← Seguir comprando",
     // promo code
@@ -4001,6 +4010,9 @@ export const it: Translations = {
     freeShippingIncluded: "Gratuita",
     savingsPrefix: "Risparmio di ",
     savingsSuffix: " sarà confermato al checkout.",
+    // quantity discounts (upselling)
+    upsellTierBuyLine: "Acquista {qty} e paga {price} cadauno",
+    upsellSaveBadge: "Risparmia il {pct}%",
     proceedToCheckout: "Procedi al checkout",
     continueShoppingLink: "← Continua lo shopping",
     // promo code
@@ -5005,6 +5017,9 @@ export const de: Translations = {
     freeShippingIncluded: "Kostenlos",
     savingsPrefix: "Ersparnis von ",
     savingsSuffix: " wird beim Checkout bestätigt.",
+    // quantity discounts (upselling)
+    upsellTierBuyLine: "Kaufen Sie {qty} und zahlen Sie {price} je Stück",
+    upsellSaveBadge: "Sparen Sie {pct}%",
     proceedToCheckout: "Zur Kasse gehen",
     continueShoppingLink: "← Weiter einkaufen",
     // promo code
@@ -6009,6 +6024,9 @@ export const nl: Translations = {
     freeShippingIncluded: "Gratis",
     savingsPrefix: "Besparing van ",
     savingsSuffix: " wordt bevestigd bij het afrekenen.",
+    // quantity discounts (upselling)
+    upsellTierBuyLine: "Koop {qty} en betaal {price} per stuk",
+    upsellSaveBadge: "Bespaar {pct}%",
     proceedToCheckout: "Doorgaan naar afrekenen",
     continueShoppingLink: "← Verder winkelen",
     // promo code
@@ -7013,6 +7031,9 @@ export const pl: Translations = {
     freeShippingIncluded: "Bezpłatnie",
     savingsPrefix: "Oszczędność w wysokości ",
     savingsSuffix: " zostanie potwierdzona przy finalizacji zakupu.",
+    // quantity discounts (upselling)
+    upsellTierBuyLine: "Kup {qty} i zapłać {price} za sztukę",
+    upsellSaveBadge: "Zaoszczędź {pct}%",
     proceedToCheckout: "Przejdź do finalizacji",
     continueShoppingLink: "← Kontynuuj zakupy",
     // promo code

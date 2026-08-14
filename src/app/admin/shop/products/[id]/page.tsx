@@ -10,13 +10,14 @@ import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductF
 import ProductDocumentsManager, { ProductDocument } from "@/components/admin/shop/ProductDocumentsManager";
 import ProductStoryGalleryManager, { ProductStoryItem, ResolvedProductStoryItem } from "@/components/admin/shop/ProductStoryGalleryManager";
 import ProductSocialVideosManager, { ProductSocialVideo, ResolvedProductSocialVideo } from "@/components/admin/shop/ProductSocialVideosManager";
+import ProductUpsellTiersManager, { ProductUpsellTier } from "@/components/admin/shop/ProductUpsellTiersManager";
 import CollapsibleSection from "@/components/admin/shop/CollapsibleSection";
 import ProductImagePicker from "@/components/admin/shop/ProductImagePicker";
 import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
-import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd, Clapperboard } from "lucide-react";
+import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd, Clapperboard, Layers } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -82,6 +83,8 @@ interface Product {
   primaryCategoryId: string | null;
   categories: Array<{ id: string; name: string }>;
   variants: DefaultVariant[];
+  upsellingEnabled: boolean;
+  upsellTiers: ProductUpsellTier[];
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -102,6 +105,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   >([]);
   const [form, setForm] = useState({
     title: "", slug: "", status: "draft", featured: false, isTestProduct: false, freeShipping: false,
+    upsellingEnabled: false,
     freeShippingUpgradeMethodIds: [] as string[],
     freeShippingDaysMin: "",
     freeShippingDaysMax: "",
@@ -125,6 +129,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [socialVideos, setSocialVideos] = useState<ProductSocialVideo[]>([]);
   const [socialVideosTitle, setSocialVideosTitle] = useState("");
   const [storyNarrativeTitle, setStoryNarrativeTitle] = useState("");
+  const [upsellTiers, setUpsellTiers] = useState<ProductUpsellTier[]>([]);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
@@ -173,6 +178,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setSocialVideos(p.socialVideos ?? []);
       setSocialVideosTitle(p.socialVideosTitle ?? "");
       setStoryNarrativeTitle(p.storyNarrativeTitle ?? "");
+      setUpsellTiers(p.upsellTiers ?? []);
       setCategories(Array.isArray(cats) ? cats : []);
       setFreeShipMethods(Array.isArray(freeShipMs) ? freeShipMs : []);
       setAllAttrs(Array.isArray(attrs) ? attrs : []);
@@ -185,6 +191,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         featured:          p.featured ?? false,
         isTestProduct:     p.isTestProduct ?? false,
         freeShipping:      p.freeShipping ?? false,
+        upsellingEnabled:  p.upsellingEnabled ?? false,
         freeShippingUpgradeMethodIds: (p.freeShippingUpgradeMethods ?? []).map((m: { id: string }) => m.id),
         freeShippingDaysMin: p.freeShippingDaysMin != null ? String(p.freeShippingDaysMin) : "",
         freeShippingDaysMax: p.freeShippingDaysMax != null ? String(p.freeShippingDaysMax) : "",
@@ -373,6 +380,9 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         socialVideos,
         socialVideosTitle: socialVideosTitle || null,
         storyNarrativeTitle: storyNarrativeTitle || null,
+        // Tiers only take effect while the toggle is on, but they're sent
+        // either way so turning it back on later doesn't lose them.
+        upsellTiers,
         ...(basePriceCents !== undefined ? { basePriceCents } : {}),
         compareAtPriceCents,
       }),
@@ -403,6 +413,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setSocialVideos(p.socialVideos ?? []);
       setSocialVideosTitle(p.socialVideosTitle ?? "");
       setStoryNarrativeTitle(p.storyNarrativeTitle ?? "");
+      setUpsellTiers(p.upsellTiers ?? []);
       toast.success("Changes saved");
     }
     setSaving(false);
@@ -673,6 +684,35 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 </p>
               </div>
               <ProductSocialVideosManager initialItems={product.socialVideos ?? []} onChange={setSocialVideos} translations={translations} setTranslation={setTranslation} />
+            </CollapsibleSection>
+
+            {/* ── Quantity discounts (upselling) ── */}
+            <CollapsibleSection icon={<Layers size={14} strokeWidth={1.75} />} title="Quantity discounts">
+              <div className={styles.toggleRow}>
+                <div>
+                  <div className={styles.toggleLabel}>Enable quantity discounts</div>
+                  <div className={styles.toggleNote}>
+                    Show &ldquo;buy more, pay less&rdquo; pricing tiers on the product page and
+                    apply them at checkout. When off, this product behaves exactly as if it
+                    never had tiers configured.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={form.upsellingEnabled}
+                  onChange={e => setForm(f => ({ ...f, upsellingEnabled: e.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: "var(--color-admin-secondary)", cursor: "pointer" }}
+                />
+              </div>
+              {form.upsellingEnabled && (
+                <div style={{ marginTop: 14 }}>
+                  <ProductUpsellTiersManager
+                    tiers={upsellTiers}
+                    onChange={setUpsellTiers}
+                    basePriceCents={price ? Math.round(parseFloat(price) * 100) : null}
+                  />
+                </div>
+              )}
             </CollapsibleSection>
 
             {/* ── Variations ── */}

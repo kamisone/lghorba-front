@@ -69,6 +69,13 @@ interface ProductFaq {
   isActive: boolean;
 }
 
+/** A quantity-price tier — "buy `quantity`, pay `unitPriceCents` each". Server pre-filters to active-only, sorted ascending. */
+interface UpsellTier {
+  id: string;
+  quantity: number;
+  unitPriceCents: number;
+}
+
 interface Product {
   id: string;
   slug: string;
@@ -87,6 +94,23 @@ interface Product {
   outOfStock?: boolean;
   /** Delivery offered on this product; frees the whole basket. */
   freeShipping?: boolean;
+  upsellingEnabled?: boolean;
+  upsellTiers?: UpsellTier[];
+}
+
+/**
+ * Presentational only — the authoritative price is always resolved server-side
+ * (cart add/update, checkout re-verification; see back/src/commerce/pricing/
+ * variant-price.ts resolveUnitPriceForQuantity). Mirrors that same "flat price,
+ * highest qualifying quantity wins" rule purely so the price shown before
+ * adding to cart matches what will actually be charged.
+ */
+function resolveDisplayUnitPriceCents(basePriceCents: number, quantity: number, product: Product): number {
+  if (!product.upsellingEnabled || !product.upsellTiers?.length) return basePriceCents;
+  const bestTier = product.upsellTiers
+    .filter(t => t.quantity <= quantity)
+    .sort((a, b) => b.quantity - a.quantity)[0];
+  return bestTier ? bestTier.unitPriceCents : basePriceCents;
 }
 
 interface ReviewStats { average: number; count: number }
@@ -384,7 +408,11 @@ export default function ShopProductDetail({
   const isBlocked     = isOos || isUnavailable;
   const verifying     = resolveStatus === 'loading' || stockChecking;
 
-  const totalPriceCents = activePriceCents * qty;
+  // Presentational mirror of the backend's tier resolution — see
+  // resolveDisplayUnitPriceCents's doc comment. Falls back to activePriceCents
+  // unchanged for every product without upselling enabled.
+  const displayUnitPriceCents = resolveDisplayUnitPriceCents(activePriceCents, qty, product);
+  const totalPriceCents = displayUnitPriceCents * qty;
 
   async function handleBuyNow() {
     if (!activeId || isBlocked || verifying) return;
@@ -452,9 +480,9 @@ export default function ShopProductDetail({
         <div className={styles.priceRow}>
           <span className={styles.price}>
             {qty > 1 ? (
-              <>{centsToEuros(totalPriceCents)} €<span className={styles.unitPrice}>{centsToEuros(activePriceCents)} € × {qty}</span></>
+              <>{centsToEuros(totalPriceCents)} €<span className={styles.unitPrice}>{centsToEuros(displayUnitPriceCents)} € × {qty}</span></>
             ) : (
-              <>{centsToEuros(activePriceCents)} €</>
+              <>{centsToEuros(displayUnitPriceCents)} €</>
             )}
           </span>
           {activeCompare && activeCompare > activePriceCents && (
@@ -466,6 +494,44 @@ export default function ShopProductDetail({
             <span className={styles.discountBadge}>−{discount}%</span>
           ) : null}
         </div>
+
+        {/* Quantity discounts — clicking a tier raises qty; the price shown
+            everywhere above already reflects it via displayUnitPriceCents.
+            The actual charge is independently resolved server-side on add. */}
+        {product.upsellingEnabled && !!product.upsellTiers?.length && (
+          <div className={styles.upsellTiers}>
+            {product.upsellTiers.map(tier => {
+              const savingsPct = activePriceCents > 0 && tier.unitPriceCents < activePriceCents
+                ? Math.round((1 - tier.unitPriceCents / activePriceCents) * 100)
+                : null;
+              const isSelected = qty >= tier.quantity && displayUnitPriceCents === tier.unitPriceCents;
+              // Below available stock the tier can't actually be fulfilled —
+              // disable rather than silently set a lower quantity that
+              // wouldn't even qualify for the price just advertised.
+              const unreachable = qtyMax !== null && qtyMax < tier.quantity;
+              const buyLine = t.upsellTierBuyLine
+                .replace("{qty}", String(tier.quantity))
+                .replace("{price}", `${centsToEuros(tier.unitPriceCents)} €`);
+              return (
+                <button
+                  key={tier.id}
+                  type="button"
+                  className={`${styles.upsellTier} ${isSelected ? styles.upsellTierActive : ""}`}
+                  disabled={unreachable || inCart || isBlocked || verifying}
+                  title={unreachable ? t.stockOnlyN.replace("{n}", String(qtyMax)) : undefined}
+                  onClick={() => setQty(tier.quantity)}
+                >
+                  <span className={styles.upsellTierMain}>{buyLine}</span>
+                  {savingsPct !== null && (
+                    <span className={styles.upsellTierBadge}>
+                      {t.upsellSaveBadge.replace("{pct}", String(savingsPct))}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {product.freeShipping && (
           <div className={styles.freeShippingBanner}>
@@ -630,7 +696,7 @@ export default function ShopProductDetail({
         {/* Row 1: price + selected variant title + stock status */}
         <div className={styles.stickyMeta}>
           <span className={styles.stickyPrice}>
-            {qty > 1 ? `${centsToEuros(totalPriceCents)} €` : `${centsToEuros(activePriceCents)} €`}
+            {qty > 1 ? `${centsToEuros(totalPriceCents)} €` : `${centsToEuros(displayUnitPriceCents)} €`}
           </span>
           {activeCompare && activeCompare > activePriceCents && (
             <span className={styles.stickyCompare}>{centsToEuros(activeCompare)} €</span>
