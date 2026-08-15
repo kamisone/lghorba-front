@@ -429,6 +429,8 @@ interface EventDetailRow {
   quantity: number | null;
   /** Null for rows recorded before this was captured. */
   clientIp: string | null;
+  /** 'mobile' | 'desktop', null when no User-Agent was available to classify. */
+  device: string | null;
 }
 
 interface PurchaseDetailRow {
@@ -641,7 +643,7 @@ export function AnalyticsDetailModal({
           ) : kind === "event" ? (
             <table className={styles.table}>
               <thead>
-                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Qty</th><th>IP</th><th /></tr>
+                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Device</th><th>Qty</th><th>IP</th><th /></tr>
               </thead>
               <tbody>
                 {(rows as EventDetailRow[]).map((r) => (
@@ -650,6 +652,7 @@ export function AnalyticsDetailModal({
                     <td><span className={styles.eventTypeTag} title={r.eventType}>{eventTypeLabel(r.eventType)}</span></td>
                     <td title={r.productTitle ?? undefined}>{r.productTitle ? truncateTitle(r.productTitle, 30) : "—"}</td>
                     <td>{r.countryName ?? "—"}</td>
+                    <td>{r.device === "mobile" ? "Mobile" : r.device === "desktop" ? "Desktop" : "—"}</td>
                     <td>{r.quantity ?? "—"}</td>
                     <td style={{ whiteSpace: "nowrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12 }}>
                       {r.clientIp ?? "—"}
