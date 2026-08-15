@@ -149,6 +149,17 @@
   gap: 4px;
 }
 
+.badgeHead {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.itemError {
+  margin: 0;
+  font-size: 11px;
+  color: #ef4444;
+}
+
 .badgeInputRow {
   display: flex;
   align-items: center;

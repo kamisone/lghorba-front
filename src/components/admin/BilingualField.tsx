@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { ChevronDown } from "lucide-react";
 import { OVERLAY_LANGS, type OverlayLang } from "@/hooks/useEntityTranslations";
+import SectionGenerateButton from "./SectionGenerateButton";
 import styles from "./BilingualField.module.css";
 
 // TipTap/ProseMirror needs browser globals — load client-side only.
@@ -93,6 +94,11 @@ interface BilingualFieldProps {
   collapsible?: boolean;
   /** When collapsible, whether the field starts expanded */
   defaultOpen?: boolean;
+  /** When provided, shows a "Generate" button that fills French + the other
+   *  overlay languages from the admin-written English value for this field. */
+  onGenerate?: () => void;
+  generating?: boolean;
+  generateError?: string | null;
 }
 
 export default function BilingualField({
@@ -108,10 +114,14 @@ export default function BilingualField({
   richText = false,
   collapsible = false,
   defaultOpen = false,
+  onGenerate,
+  generating = false,
+  generateError = null,
 }: BilingualFieldProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [activeLang, setActiveLang] = useState<OverlayLang>("en");
   const isOpen = !collapsible || open;
+  const enSourceEmpty = !translations.en?.[field]?.trim();
 
   const labelContent = (
     <span className={styles.bilingualLabel}>
@@ -166,7 +176,17 @@ export default function BilingualField({
                   {translations[l]?.[field]?.trim() && <span className={styles.overlayTabDot} />}
                 </button>
               ))}
+              {onGenerate && (
+                <span className={styles.generateSlot}>
+                  <SectionGenerateButton
+                    onClick={onGenerate}
+                    generating={generating}
+                    disabled={enSourceEmpty}
+                  />
+                </span>
+              )}
             </div>
+            {generateError && <p className={styles.generateError}>{generateError}</p>}
             <LangRow
               lang={activeLang}
               value={translations[activeLang]?.[field] ?? ""}

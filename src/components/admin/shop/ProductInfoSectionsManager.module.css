@@ -51,6 +51,15 @@
 }
 .removeBtn:hover { background: rgba(239,68,68,.1); }
 
+.itemError {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #ef4444;
+  background: rgba(239, 68, 68, .08);
+  border-bottom: 1px solid var(--color-border);
+}
+
 .cardBody {
   padding: 14px;
   display: flex;

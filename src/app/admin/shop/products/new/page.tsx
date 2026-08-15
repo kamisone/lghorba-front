@@ -12,6 +12,8 @@ import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 import { Pencil } from "lucide-react";
 
 interface Category { id: string; name: string; parentId: string | null }
@@ -31,6 +33,47 @@ export default function NewProductPage() {
     categoryIds: [] as string[],
   });
   const { translations, setTranslation, saveTranslations } = useEntityTranslations('shop_product', null);
+
+  // AI "Generate" — one independent button per field: smaller, more focused
+  // Translation requests per click rather than one big multi-field call.
+  const titleGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/shop/products/sections/title/translate");
+  const shortDescriptionGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/shop/products/sections/short-description/translate");
+  const descriptionGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/shop/products/sections/description/translate");
+
+  async function generateTitle() {
+    const en = translations.en?.title?.trim();
+    if (!en) return;
+    const outcome = await titleGen.generate({ text: en });
+    if (!outcome) return;
+    // A failed language comes back as an empty string (see TranslationService) — never
+    // let that blank out content the admin already wrote.
+    if (outcome.result.fr) setForm(f => ({ ...f, title: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setTranslation(lang, "title", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) titleGen.setError(errorSummary);
+  }
+
+  async function generateShortDescription() {
+    const en = translations.en?.shortDescription?.trim();
+    if (!en) return;
+    const outcome = await shortDescriptionGen.generate({ text: en });
+    if (!outcome) return;
+    if (outcome.result.fr) setForm(f => ({ ...f, shortDescription: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setTranslation(lang, "shortDescription", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) shortDescriptionGen.setError(errorSummary);
+  }
+
+  async function generateDescription() {
+    const en = translations.en?.description?.trim();
+    if (!en) return;
+    const outcome = await descriptionGen.generate({ html: en });
+    if (!outcome) return;
+    if (outcome.result.fr) setForm(f => ({ ...f, description: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setTranslation(lang, "description", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) descriptionGen.setError(errorSummary);
+  }
 
   const [media, setMedia]               = useState<ProductMediaItem[]>([]);
   const [infoSections, setInfoSections] = useState<ProductInfoSection[]>([]);
@@ -147,6 +190,9 @@ export default function NewProductPage() {
                   translations={translations}
                   onTranslationChange={setTranslation}
                   overlayPlaceholder="Product title"
+                  onGenerate={generateTitle}
+                  generating={titleGen.generating}
+                  generateError={titleGen.error}
                 />
                 <div className={styles.fieldRow}>
                   <div className={styles.field}>
@@ -175,6 +221,9 @@ export default function NewProductPage() {
                   translations={translations}
                   onTranslationChange={setTranslation}
                   multiline rows={2}
+                  onGenerate={generateShortDescription}
+                  generating={shortDescriptionGen.generating}
+                  generateError={shortDescriptionGen.error}
                 />
                 <BilingualField
                   label="Description"
@@ -185,6 +234,9 @@ export default function NewProductPage() {
                   onTranslationChange={setTranslation}
                   richText
                   collapsible
+                  onGenerate={generateDescription}
+                  generating={descriptionGen.generating}
+                  generateError={descriptionGen.error}
                 />
               </div>
             </div>

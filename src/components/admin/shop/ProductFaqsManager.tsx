@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { GripVertical, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import BilingualField from "@/components/admin/BilingualField";
+import SectionGenerateButton from "@/components/admin/SectionGenerateButton";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductFaqsManager.module.css";
 
@@ -30,9 +33,46 @@ interface Props {
 
 export default function ProductFaqsManager({ faqs, onChange, translations, setTranslation }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [itemError, setItemError] = useState<{ id: string; message: string } | null>(null);
+  const generator = useSectionGenerate<SectionTranslationOutcome<{ question: string; answer: string }>>(
+    "/next-api/shop/products/sections/faqs/translate",
+  );
 
   function notify(next: ProductFaq[]) {
     onChange(next.map((f, i) => ({ ...f, sortOrder: i })));
+  }
+
+  async function generateItem(index: number) {
+    const faq = faqs[index];
+    const enQuestion = translations.en?.[`faq:${faq.id}:question`]?.trim();
+    const enAnswer = translations.en?.[`faq:${faq.id}:answer`]?.trim();
+    if (!enQuestion || !enAnswer) {
+      setItemError({ id: faq.id, message: "Write the English question and answer first." });
+      return;
+    }
+    setItemError(null);
+    setGeneratingIds(prev => new Set(prev).add(faq.id));
+    try {
+      const outcome = await generator.generate({ question: enQuestion, answer: enAnswer });
+      if (!outcome) {
+        setItemError({ id: faq.id, message: "Generation failed — try again." });
+        return;
+      }
+      // A failed language comes back as an empty string (see TranslationService) —
+      // never let that blank out content the admin already wrote.
+      if (outcome.result.fr.question || outcome.result.fr.answer) {
+        update(index, { question: outcome.result.fr.question || faq.question, answer: outcome.result.fr.answer || faq.answer });
+      }
+      AI_TARGET_LANGS.forEach(lang => {
+        if (outcome.result[lang].question) setTranslation(lang, `faq:${faq.id}:question`, outcome.result[lang].question);
+        if (outcome.result[lang].answer) setTranslation(lang, `faq:${faq.id}:answer`, outcome.result[lang].answer);
+      });
+      const errorSummary = summarizeGenerateErrors(outcome.errors);
+      if (errorSummary) setItemError({ id: faq.id, message: errorSummary });
+    } finally {
+      setGeneratingIds(prev => { const next = new Set(prev); next.delete(faq.id); return next; });
+    }
   }
 
   function addFaq() {
@@ -76,6 +116,11 @@ export default function ProductFaqsManager({ faqs, onChange, translations, setTr
             <div className={styles.cardHead}>
               <span className={styles.dragHandle}><GripVertical size={16} /></span>
               <span className={styles.cardTitle}>FAQ {i + 1}</span>
+              <SectionGenerateButton
+                onClick={() => generateItem(i)}
+                generating={generatingIds.has(faq.id)}
+                title="Write the English question/answer first, then generate the other languages"
+              />
               <button
                 type="button"
                 className={styles.toggleBtn}
@@ -89,6 +134,10 @@ export default function ProductFaqsManager({ faqs, onChange, translations, setTr
                 <Trash2 size={15} />
               </button>
             </div>
+
+            {itemError?.id === faq.id && (
+              <p className={styles.itemError}>{itemError.message}</p>
+            )}
 
             <div className={styles.cardBody}>
               <BilingualField

@@ -17,6 +17,8 @@ import BilingualField from "@/components/admin/BilingualField";
 import styles from "../ProductEdit.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd, Clapperboard, Layers } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -135,6 +137,71 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   // Bilingual
   const { translations, setTranslation, saveTranslations } = useEntityTranslations('shop_product', params.id);
+
+  // AI "Generate" — one independent button per field: smaller, more focused
+  // Translation requests per click rather than one big multi-field call.
+  const titleGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/shop/products/sections/title/translate");
+  const shortDescriptionGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/shop/products/sections/short-description/translate");
+  const descriptionGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/shop/products/sections/description/translate");
+  const storyNarrativeTitleGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/shop/products/sections/story-narrative-title/translate");
+  const socialVideosTitleGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/shop/products/sections/social-videos-title/translate");
+
+  async function generateTitle() {
+    const en = translations.en?.title?.trim();
+    if (!en) return;
+    const outcome = await titleGen.generate({ text: en });
+    if (!outcome) return;
+    // A failed language comes back as an empty string (see TranslationService) — never
+    // let that blank out content the admin already wrote.
+    if (outcome.result.fr) setForm(f => ({ ...f, title: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setTranslation(lang, "title", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) titleGen.setError(errorSummary);
+  }
+
+  async function generateShortDescription() {
+    const en = translations.en?.shortDescription?.trim();
+    if (!en) return;
+    const outcome = await shortDescriptionGen.generate({ text: en });
+    if (!outcome) return;
+    if (outcome.result.fr) setForm(f => ({ ...f, shortDescription: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setTranslation(lang, "shortDescription", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) shortDescriptionGen.setError(errorSummary);
+  }
+
+  async function generateDescription() {
+    const en = translations.en?.description?.trim();
+    if (!en) return;
+    const outcome = await descriptionGen.generate({ html: en });
+    if (!outcome) return;
+    if (outcome.result.fr) setForm(f => ({ ...f, description: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setTranslation(lang, "description", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) descriptionGen.setError(errorSummary);
+  }
+
+  async function generateStoryNarrativeTitle() {
+    const en = translations.en?.storyNarrativeTitle?.trim();
+    if (!en) return;
+    const outcome = await storyNarrativeTitleGen.generate({ text: en });
+    if (!outcome) return;
+    if (outcome.result.fr) setStoryNarrativeTitle(outcome.result.fr);
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setTranslation(lang, "storyNarrativeTitle", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) storyNarrativeTitleGen.setError(errorSummary);
+  }
+
+  async function generateSocialVideosTitle() {
+    const en = translations.en?.socialVideosTitle?.trim();
+    if (!en) return;
+    const outcome = await socialVideosTitleGen.generate({ text: en });
+    if (!outcome) return;
+    if (outcome.result.fr) setSocialVideosTitle(outcome.result.fr);
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setTranslation(lang, "socialVideosTitle", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) socialVideosTitleGen.setError(errorSummary);
+  }
 
   // ── Product-level variation attributes ──────────────────────────────────────
   const [productAttrs, setProductAttrs] = useState<ProductAttr[]>([]);
@@ -566,7 +633,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 <span className={styles.sectionTitle}>Content</span>
               </div>
               <div className={styles.sectionBody}>
-                <BilingualField label="Title" field="title" frRequired frValue={form.title} frOnChange={v => setForm(f => ({ ...f, title: v }))} translations={translations} onTranslationChange={setTranslation} />
+                <BilingualField label="Title" field="title" frRequired frValue={form.title} frOnChange={v => setForm(f => ({ ...f, title: v }))} translations={translations} onTranslationChange={setTranslation} onGenerate={generateTitle} generating={titleGen.generating} generateError={titleGen.error} />
                 <div className={styles.fieldRow}>
                   <div className={styles.field}>
                     <label className={styles.label}>Slug</label>
@@ -577,8 +644,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     <input className={styles.input} value={form.brand} onChange={e => setForm(f => ({ ...f, brand: e.target.value }))} />
                   </div>
                 </div>
-                <BilingualField label="Short description" field="shortDescription" frValue={form.shortDescription} frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))} translations={translations} onTranslationChange={setTranslation} multiline rows={2} />
-                <BilingualField label="Description" field="description" frValue={form.description} frOnChange={v => setForm(f => ({ ...f, description: v }))} translations={translations} onTranslationChange={setTranslation} richText collapsible />
+                <BilingualField label="Short description" field="shortDescription" frValue={form.shortDescription} frOnChange={v => setForm(f => ({ ...f, shortDescription: v }))} translations={translations} onTranslationChange={setTranslation} multiline rows={2} onGenerate={generateShortDescription} generating={shortDescriptionGen.generating} generateError={shortDescriptionGen.error} />
+                <BilingualField label="Description" field="description" frValue={form.description} frOnChange={v => setForm(f => ({ ...f, description: v }))} translations={translations} onTranslationChange={setTranslation} richText collapsible onGenerate={generateDescription} generating={descriptionGen.generating} generateError={descriptionGen.error} />
               </div>
             </div>
 
@@ -658,6 +725,9 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   translations={translations}
                   onTranslationChange={setTranslation}
                   overlayPlaceholder="e.g. The story"
+                  onGenerate={generateStoryNarrativeTitle}
+                  generating={storyNarrativeTitleGen.generating}
+                  generateError={storyNarrativeTitleGen.error}
                 />
                 <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 6 }}>
                   Shown above the Narrative Gallery on the product page. Leave empty to hide it.
@@ -678,6 +748,9 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   translations={translations}
                   onTranslationChange={setTranslation}
                   overlayPlaceholder="e.g. See it in action"
+                  onGenerate={generateSocialVideosTitle}
+                  generating={socialVideosTitleGen.generating}
+                  generateError={socialVideosTitleGen.error}
                 />
                 <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 6 }}>
                   Shown above the social videos carousel. Leave empty to use the default localized title.

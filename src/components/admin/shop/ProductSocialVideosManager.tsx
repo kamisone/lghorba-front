@@ -4,6 +4,9 @@ import { useState } from "react";
 import { GripVertical, Trash2, Film, Plus } from "lucide-react";
 import MediaPicker, { MediaAsset, formatDuration } from "@/components/admin/media/MediaPicker";
 import BilingualField from "@/components/admin/BilingualField";
+import SectionGenerateButton from "@/components/admin/SectionGenerateButton";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductSocialVideosManager.module.css";
 
@@ -58,11 +61,44 @@ export default function ProductSocialVideosManager({ initialItems, onChange, tra
   const [items, setItems] = useState<ResolvedProductSocialVideo[]>(initialItems);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [itemError, setItemError] = useState<{ id: string; message: string } | null>(null);
+  const generator = useSectionGenerate<SectionTranslationOutcome<string>>(
+    "/next-api/shop/products/sections/social-videos/translate",
+  );
 
   function notify(next: ResolvedProductSocialVideo[]) {
     const ordered = next.map((v, i) => ({ ...v, sortOrder: i }));
     setItems(ordered);
     onChange(ordered.map(strip));
+  }
+
+  async function generateItem(index: number) {
+    const item = items[index];
+    const enTitle = translations.en?.[`socialVideo:${item.id}:title`]?.trim();
+    if (!enTitle) {
+      setItemError({ id: item.id, message: "Write the English badge text first." });
+      return;
+    }
+    setItemError(null);
+    setGeneratingIds(prev => new Set(prev).add(item.id));
+    try {
+      const outcome = await generator.generate({ text: enTitle });
+      if (!outcome) {
+        setItemError({ id: item.id, message: "Generation failed — try again." });
+        return;
+      }
+      // A failed language comes back as an empty string (see TranslationService) —
+      // never let that blank out content the admin already wrote.
+      if (outcome.result.fr) updateTitle(index, outcome.result.fr);
+      AI_TARGET_LANGS.forEach(lang => {
+        if (outcome.result[lang]) setTranslation(lang, `socialVideo:${item.id}:title`, outcome.result[lang]);
+      });
+      const errorSummary = summarizeGenerateErrors(outcome.errors);
+      if (errorSummary) setItemError({ id: item.id, message: errorSummary });
+    } finally {
+      setGeneratingIds(prev => { const next = new Set(prev); next.delete(item.id); return next; });
+    }
   }
 
   function handleAddMulti(assets: MediaAsset[]) {
@@ -154,6 +190,16 @@ export default function ProductSocialVideosManager({ initialItems, onChange, tra
             </div>
 
             <div className={styles.badgeFields}>
+              <div className={styles.badgeHead}>
+                <SectionGenerateButton
+                  onClick={() => generateItem(i)}
+                  generating={generatingIds.has(item.id)}
+                  title="Write the English badge text first, then generate the other languages"
+                />
+              </div>
+              {itemError?.id === item.id && (
+                <p className={styles.itemError}>{itemError.message}</p>
+              )}
               <BilingualField
                 label="Badge"
                 field={`socialVideo:${item.id}:title`}

@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { GripVertical, Trash2, Plus } from "lucide-react";
 import BilingualField from "@/components/admin/BilingualField";
+import SectionGenerateButton from "@/components/admin/SectionGenerateButton";
 import TrustBadgeIconSelect from "./TrustBadgeIconSelect";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 import { type TrustBadgeIconName } from "@/lib/shop/trustBadgeIcons";
 import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductTrustBadgesManager.module.css";
@@ -33,9 +36,49 @@ interface Props {
 
 export default function ProductTrustBadgesManager({ badges, onChange, translations, setTranslation }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [itemError, setItemError] = useState<{ id: string; message: string } | null>(null);
+  const generator = useSectionGenerate<SectionTranslationOutcome<{ title: string; subtitle: string }>>(
+    "/next-api/shop/products/sections/trust-badges/translate",
+  );
 
   function notify(next: ProductTrustBadge[]) {
     onChange(next.map((b, i) => ({ ...b, sortOrder: i })));
+  }
+
+  async function generateItem(index: number) {
+    const badge = badges[index];
+    const enTitle = translations.en?.[`trustBadge:${badge.id}:title`]?.trim();
+    if (!enTitle) {
+      setItemError({ id: badge.id, message: "Write the English badge title first." });
+      return;
+    }
+    const enSubtitle = translations.en?.[`trustBadge:${badge.id}:subtitle`]?.trim() ?? "";
+    setItemError(null);
+    setGeneratingIds(prev => new Set(prev).add(badge.id));
+    try {
+      const outcome = await generator.generate({ title: enTitle, subtitle: enSubtitle });
+      if (!outcome) {
+        setItemError({ id: badge.id, message: "Generation failed — try again." });
+        return;
+      }
+      // A failed language comes back as an empty string (see TranslationService) —
+      // never let that blank out content the admin already wrote.
+      if (outcome.result.fr.title || outcome.result.fr.subtitle) {
+        update(index, {
+          title: outcome.result.fr.title || badge.title,
+          subtitle: outcome.result.fr.subtitle || badge.subtitle,
+        });
+      }
+      AI_TARGET_LANGS.forEach(lang => {
+        if (outcome.result[lang].title) setTranslation(lang, `trustBadge:${badge.id}:title`, outcome.result[lang].title);
+        if (outcome.result[lang].subtitle) setTranslation(lang, `trustBadge:${badge.id}:subtitle`, outcome.result[lang].subtitle);
+      });
+      const errorSummary = summarizeGenerateErrors(outcome.errors);
+      if (errorSummary) setItemError({ id: badge.id, message: errorSummary });
+    } finally {
+      setGeneratingIds(prev => { const next = new Set(prev); next.delete(badge.id); return next; });
+    }
   }
 
   function addBadge() {
@@ -83,10 +126,19 @@ export default function ProductTrustBadgesManager({ badges, onChange, translatio
                   value={badge.icon}
                   onChange={icon => update(i, { icon })}
                 />
+                <SectionGenerateButton
+                  onClick={() => generateItem(i)}
+                  generating={generatingIds.has(badge.id)}
+                  title="Write the English title first, then generate the other languages"
+                />
                 <button type="button" className={styles.removeBtn} onClick={() => remove(i)} title="Remove">
                   <Trash2 size={15} />
                 </button>
               </div>
+
+              {itemError?.id === badge.id && (
+                <p className={styles.itemError}>{itemError.message}</p>
+              )}
 
               <div className={styles.cardBody}>
                 <BilingualField

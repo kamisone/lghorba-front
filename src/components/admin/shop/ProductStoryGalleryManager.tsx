@@ -3,6 +3,9 @@
 import { useState } from "react";
 import MediaPicker, { MediaAsset } from "@/components/admin/media/MediaPicker";
 import BilingualField from "@/components/admin/BilingualField";
+import SectionGenerateButton from "@/components/admin/SectionGenerateButton";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 import { GripVertical, Trash2, Eye, EyeOff, ImagePlus, PanelRight, BookOpen } from "lucide-react";
 import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductStoryGalleryManager.module.css";
@@ -60,6 +63,11 @@ export default function ProductStoryGalleryManager({ initialItems, onChange, tra
   const [items, setItems] = useState<ResolvedProductStoryItem[]>(initialItems);
   const [pickerTarget, setPickerTarget] = useState<StoryGalleryLocation | null>(null);
   const [drag, setDrag] = useState<{ location: StoryGalleryLocation; index: number } | null>(null);
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [itemError, setItemError] = useState<{ id: string; message: string } | null>(null);
+  const generator = useSectionGenerate<SectionTranslationOutcome<{ title: string; description: string }>>(
+    "/next-api/shop/products/sections/story-items/translate",
+  );
 
   const side      = items.filter(i => i.location === "side");
   const narrative = items.filter(i => i.location === "narrative");
@@ -109,6 +117,40 @@ export default function ProductStoryGalleryManager({ initialItems, onChange, tra
   function remove(location: StoryGalleryLocation, index: number) {
     const sub = location === "side" ? side : narrative;
     withUpdated(location, sub.filter((_, i) => i !== index));
+  }
+
+  /** Reads the admin-written English title/description for this story block and
+   *  asks the AI to fill in French (base) plus the other overlay languages. */
+  async function generateItem(index: number) {
+    const item = narrative[index];
+    const enTitle = translations.en?.[`storyItem:${item.id}:title`]?.trim();
+    const enDescription = translations.en?.[`storyItem:${item.id}:description`]?.trim();
+    if (!enTitle || !enDescription) {
+      setItemError({ id: item.id, message: "Write the English title and description first." });
+      return;
+    }
+    setItemError(null);
+    setGeneratingIds(prev => new Set(prev).add(item.id));
+    try {
+      const outcome = await generator.generate({ title: enTitle, description: enDescription });
+      if (!outcome) {
+        setItemError({ id: item.id, message: "Generation failed — try again." });
+        return;
+      }
+      // A failed language comes back as an empty string (see TranslationService) —
+      // never let that blank out content the admin already wrote.
+      if (outcome.result.fr.title || outcome.result.fr.description) {
+        update("narrative", index, { title: outcome.result.fr.title || item.title, description: outcome.result.fr.description || item.description });
+      }
+      AI_TARGET_LANGS.forEach(lang => {
+        if (outcome.result[lang].title) setTranslation(lang, `storyItem:${item.id}:title`, outcome.result[lang].title);
+        if (outcome.result[lang].description) setTranslation(lang, `storyItem:${item.id}:description`, outcome.result[lang].description);
+      });
+      const errorSummary = summarizeGenerateErrors(outcome.errors);
+      if (errorSummary) setItemError({ id: item.id, message: errorSummary });
+    } finally {
+      setGeneratingIds(prev => { const next = new Set(prev); next.delete(item.id); return next; });
+    }
   }
 
   function handleDrop(location: StoryGalleryLocation, targetIndex: number) {
@@ -210,6 +252,11 @@ export default function ProductStoryGalleryManager({ initialItems, onChange, tra
             <div className={styles.narrativeHead}>
               <span className={styles.dragHandle}><GripVertical size={16} /></span>
               <span className={styles.narrativeTitle}>Story block {i + 1}</span>
+              <SectionGenerateButton
+                onClick={() => generateItem(i)}
+                generating={generatingIds.has(item.id)}
+                title="Write the English title/description first, then generate the other languages"
+              />
               <button
                 type="button"
                 className={styles.toggleBtn}
@@ -223,6 +270,10 @@ export default function ProductStoryGalleryManager({ initialItems, onChange, tra
                 <Trash2 size={15} />
               </button>
             </div>
+
+            {itemError?.id === item.id && (
+              <p className={styles.itemError}>{itemError.message}</p>
+            )}
 
             <div className={styles.narrativeBody}>
               <div className={styles.narrativeThumbCol}>

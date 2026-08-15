@@ -1,0 +1,69 @@
+.empty {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.tile {
+  position: relative;
+  aspect-ratio: 1;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8fafc;
+  padding: 0;
+  cursor: pointer;
+}
+
+.tileSelected {
+  border-color: #4f46e5;
+}
+
+.tileFailed {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.thumb {
+  object-fit: cover;
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  background: #e2e8f0;
+}
+
+.failedIcon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b91c1c;
+}
+
+.checkBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.checkBadgeOn {
+  background: #4f46e5;
+  border-color: #4f46e5;
+}

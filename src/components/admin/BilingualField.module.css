@@ -107,9 +107,25 @@
 
 .overlayTabs {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 2px;
-  padding: 0.35rem 0.5rem 0;
+  padding: 0.35rem 0.5rem;
+  background: var(--color-surface);
+}
+
+.generateSlot {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.generateError {
+  margin: 0;
+  padding: 0.3rem 0.5rem 0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #ef4444;
   background: var(--color-surface);
 }
 

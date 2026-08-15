@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { GripVertical, Trash2, Plus } from "lucide-react";
 import BilingualField from "@/components/admin/BilingualField";
+import SectionGenerateButton from "@/components/admin/SectionGenerateButton";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 import type { OverlayLang } from "@/hooks/useEntityTranslations";
 import styles from "./ProductInfoSectionsManager.module.css";
 
@@ -30,9 +33,46 @@ interface Props {
 
 export default function ProductInfoSectionsManager({ sections, onChange, translations, setTranslation }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [itemError, setItemError] = useState<{ id: string; message: string } | null>(null);
+  const generator = useSectionGenerate<SectionTranslationOutcome<{ label: string; value: string }>>(
+    "/next-api/shop/products/sections/info-sections/translate",
+  );
 
   function notify(next: ProductInfoSection[]) {
     onChange(next.map((s, i) => ({ ...s, sortOrder: i })));
+  }
+
+  async function generateItem(index: number) {
+    const section = sections[index];
+    const enLabel = translations.en?.[`infoSection:${section.id}:label`]?.trim();
+    const enValue = translations.en?.[`infoSection:${section.id}:value`]?.trim();
+    if (!enLabel || !enValue) {
+      setItemError({ id: section.id, message: "Write the English title and content first." });
+      return;
+    }
+    setItemError(null);
+    setGeneratingIds(prev => new Set(prev).add(section.id));
+    try {
+      const outcome = await generator.generate({ label: enLabel, value: enValue });
+      if (!outcome) {
+        setItemError({ id: section.id, message: "Generation failed — try again." });
+        return;
+      }
+      // A failed language comes back as an empty string (see TranslationService) —
+      // never let that blank out content the admin already wrote.
+      if (outcome.result.fr.label || outcome.result.fr.value) {
+        update(index, { label: outcome.result.fr.label || section.label, value: outcome.result.fr.value || section.value });
+      }
+      AI_TARGET_LANGS.forEach(lang => {
+        if (outcome.result[lang].label) setTranslation(lang, `infoSection:${section.id}:label`, outcome.result[lang].label);
+        if (outcome.result[lang].value) setTranslation(lang, `infoSection:${section.id}:value`, outcome.result[lang].value);
+      });
+      const errorSummary = summarizeGenerateErrors(outcome.errors);
+      if (errorSummary) setItemError({ id: section.id, message: errorSummary });
+    } finally {
+      setGeneratingIds(prev => { const next = new Set(prev); next.delete(section.id); return next; });
+    }
   }
 
   function addSection() {
@@ -76,10 +116,19 @@ export default function ProductInfoSectionsManager({ sections, onChange, transla
             <div className={styles.cardHead}>
               <span className={styles.dragHandle}><GripVertical size={16} /></span>
               <span className={styles.cardHeadLabel}>Specification</span>
+              <SectionGenerateButton
+                onClick={() => generateItem(i)}
+                generating={generatingIds.has(section.id)}
+                title="Write the English title/content first, then generate the other languages"
+              />
               <button type="button" className={styles.removeBtn} onClick={() => remove(i)} title="Remove">
                 <Trash2 size={15} />
               </button>
             </div>
+
+            {itemError?.id === section.id && (
+              <p className={styles.itemError}>{itemError.message}</p>
+            )}
 
             <div className={styles.cardBody}>
               <BilingualField

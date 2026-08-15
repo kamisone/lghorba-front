@@ -5,6 +5,8 @@ import styles from "./VariantAttributes.module.css";
 import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 import BilingualField from "@/components/admin/BilingualField";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 import { slugify } from "@/lib/slugify";
 import { X, ChevronDown } from "lucide-react";
 
@@ -76,6 +78,37 @@ export default function VariantAttributesPage() {
     useEntityTranslations("shop_variant_attribute", attrEditId);
   const { translations: valTr, setTranslation: setValTr, saveTranslations: saveValTr } =
     useEntityTranslations("shop_variation_option", valEditId);
+
+  const nameGen = useSectionGenerate<SectionTranslationOutcome<string>>(
+    "/next-api/admin/shop/variant-attributes/sections/name/translate",
+  );
+  const displayValueGen = useSectionGenerate<SectionTranslationOutcome<string>>(
+    "/next-api/admin/shop/variant-attributes/sections/display-value/translate",
+  );
+
+  async function generateAttrName() {
+    const en = attrTr.en?.name?.trim();
+    if (!en) return;
+    const outcome = await nameGen.generate({ text: en });
+    if (!outcome) return;
+    // A failed language comes back as an empty string (see TranslationService) — never
+    // let that blank out content the admin already wrote.
+    if (outcome.result.fr) setAttrForm(f => ({ ...f, name: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setAttrTr(lang, "name", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) nameGen.setError(errorSummary);
+  }
+
+  async function generateDisplayValue() {
+    const en = valTr.en?.displayValue?.trim();
+    if (!en) return;
+    const outcome = await displayValueGen.generate({ text: en });
+    if (!outcome) return;
+    if (outcome.result.fr) setValForm(f => ({ ...f, displayValue: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setValTr(lang, "displayValue", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) displayValueGen.setError(errorSummary);
+  }
 
   async function load() {
     setLoading(true);
@@ -360,6 +393,9 @@ export default function VariantAttributesPage() {
                     translations={attrTr}
                     onTranslationChange={setAttrTr}
                     overlayPlaceholder="e.g. Color, Size"
+                    onGenerate={generateAttrName}
+                    generating={nameGen.generating}
+                    generateError={nameGen.error}
                   />
                 </div>
                 <div className={styles.formField}>
@@ -431,6 +467,9 @@ export default function VariantAttributesPage() {
                     translations={valTr}
                     onTranslationChange={setValTr}
                     overlayPlaceholder="Black"
+                    onGenerate={generateDisplayValue}
+                    generating={displayValueGen.generating}
+                    generateError={displayValueGen.error}
                   />
                 </div>
                 <div className={styles.formField}>
