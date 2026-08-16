@@ -643,7 +643,7 @@ export function AnalyticsDetailModal({
           ) : kind === "event" ? (
             <table className={styles.table}>
               <thead>
-                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Device</th><th>Qty</th><th>IP</th><th /></tr>
+                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Device</th><th>Qty</th><th>IP</th><th><span className={styles.srOnly}>Actions</span></th></tr>
               </thead>
               <tbody>
                 {(rows as EventDetailRow[]).map((r) => (
