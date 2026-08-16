@@ -73,7 +73,12 @@ interface UseSupportChatReturn {
   emitTyping:     (isTyping: boolean) => void;
 }
 
-export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
+export function useSupportChat(
+  isOpen: boolean,
+  // Lazily read at send time (not a plain value) so a stale closure inside
+  // doSend's useCallback([]) can't ship a cart snapshot from first render.
+  getCheckoutProducts?: () => Array<{ title: string; url: string }> | undefined,
+): UseSupportChatReturn {
   const [messages,       setMessages]       = useState<SupportMessage[]>([]);
   const [status,         setStatus]         = useState<ConnectionStatus>("idle");
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -98,9 +103,11 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
   // Debounces reconnectIfNeeded so visibilitychange + focus firing together
   // only produce one disconnect/connect cycle and one ws-ticket request.
   const reconnectTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const getCheckoutProductsRef   = useRef(getCheckoutProducts);
 
-  isOpenRef.current   = isOpen;
-  messagesRef.current = messages;
+  isOpenRef.current            = isOpen;
+  messagesRef.current          = messages;
+  getCheckoutProductsRef.current = getCheckoutProducts;
 
   // ── Passive seen ───────────────────────────────────────────────────────────
 
@@ -132,7 +139,13 @@ export function useSupportChat(isOpen: boolean): UseSupportChatReturn {
 
     socket.emit(
       "message:send",
-      { content, clientId, guestName: guestNameRef.current, pageUrl: window.location.href },
+      {
+        content,
+        clientId,
+        guestName: guestNameRef.current,
+        pageUrl: window.location.href,
+        checkoutProducts: getCheckoutProductsRef.current?.(),
+      },
       (ack: { ok: boolean; message?: SupportMessage; clientId?: string; error?: string }) => {
         clearTimeout(timer);
         pendingRef.current.delete(clientId);

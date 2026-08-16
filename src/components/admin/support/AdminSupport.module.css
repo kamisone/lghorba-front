@@ -267,6 +267,27 @@
 }
 .chatPageUrl a:hover { text-decoration: underline; }
 
+.chatCheckoutProducts {
+  margin: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 320px;
+}
+.chatCheckoutProducts a {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--color-brand-primary-bg, #eff6ff);
+  color: var(--color-brand-primary, #2563eb);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.chatCheckoutProducts a:hover { text-decoration: underline; }
+
 .chatActions { display: flex; gap: 8px; }
 
 .actionBtn {

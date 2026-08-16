@@ -15,6 +15,7 @@ interface Conversation {
   guestToken: string;
   guestName: string | null;
   pageUrl: string | null;
+  checkoutProducts: Array<{ title: string; url: string }> | null;
   assignedAdminId: string | null;
   status: string;
   lastMessageAt: string | null;
@@ -649,6 +650,15 @@ export default function AdminSupport() {
                   <p className={styles.chatPageUrl}>
                     <a href={selected.pageUrl} target="_blank" rel="noopener noreferrer">{selected.pageUrl.replace(/^https?:\/\/[^/]+/, "")}</a>
                   </p>
+                )}
+                {!!selected.checkoutProducts?.length && (
+                  <div className={styles.chatCheckoutProducts}>
+                    {selected.checkoutProducts.map((p) => (
+                      <a key={p.url} href={p.url} target="_blank" rel="noopener noreferrer" title={p.title}>
+                        {p.title}
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
               <div className={styles.chatActions}>

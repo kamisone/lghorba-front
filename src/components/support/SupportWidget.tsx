@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Headphones, X, MessageCircle, Send } from "lucide-react";
 import { useSupportChat, type SupportMessage } from "@/hooks/useSupportChat";
+import { useCart } from "@/components/shop/CartContext";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./SupportWidget.module.css";
 
@@ -48,7 +49,30 @@ export default function SupportWidget({ locale }: Props) {
   const [guestName, setGuestName] = useState("");
   const [nameSet,   setNameSet]   = useState(false);
 
-  const { messages, status, unreadCount, adminTyping, sendMessage, retryMessage, retry, emitTyping } = useSupportChat(open);
+  const { cart } = useCart();
+
+  // On the checkout page, "/shop/checkout" alone tells an admin nothing about
+  // what the customer is buying — so surface the cart's product page URLs
+  // instead. Read lazily at send time, not memoized on cart/pathname, since
+  // the guest can navigate to checkout after the widget/hook already mounted.
+  const getCheckoutProducts = useCallback(() => {
+    if (typeof window === "undefined") return undefined;
+    if (!window.location.pathname.includes("/shop/checkout")) return undefined;
+    if (!cart?.items?.length) return undefined;
+    const seen = new Set<string>();
+    const products: Array<{ title: string; url: string }> = [];
+    for (const item of cart.items) {
+      if (!item.productSlug || seen.has(item.productSlug)) continue;
+      seen.add(item.productSlug);
+      products.push({
+        title: item.titleSnapshot,
+        url: `${window.location.origin}/${locale}/shop/${item.productSlug}`,
+      });
+    }
+    return products.length ? products : undefined;
+  }, [cart, locale]);
+
+  const { messages, status, unreadCount, adminTyping, sendMessage, retryMessage, retry, emitTyping } = useSupportChat(open, getCheckoutProducts);
 
   const bottomRef        = useRef<HTMLDivElement>(null);
   const inputRef         = useRef<HTMLTextAreaElement>(null);
