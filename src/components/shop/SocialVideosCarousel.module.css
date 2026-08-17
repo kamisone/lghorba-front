@@ -4,6 +4,17 @@
   padding: 0 16px;
 }
 
+/* Subtle card container — gives the section a settled, "complete" footprint
+   even when there are only 1-2 videos, instead of them floating on bare
+   page background with nothing to anchor them. */
+.panel {
+  background: linear-gradient(135deg, rgba(var(--rgb-brand-primary), .07), rgba(var(--rgb-brand-accent), .07));
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 24px 24px 20px;
+  box-shadow: 0 1px 2px rgba(0, 24, 41, .03), 0 10px 28px rgba(0, 24, 41, .05);
+}
+
 .head {
   display: flex;
   align-items: center;
@@ -52,6 +63,11 @@
   padding: 2px; /* room for card focus ring */
 }
 .track::-webkit-scrollbar { display: none; }
+
+/* Applied when every card already fits without scrolling (see `fits` state
+   in the component) — centers the cards instead of leaving them hugging the
+   left edge with dead space on the right. */
+.trackCentered { justify-content: center; }
 
 /* ── Reel card (9:16) ── */
 .card {
@@ -160,6 +176,7 @@
 
 @media (max-width: 640px) {
   .section { margin-top: 40px; }
+  .panel { padding: 18px 16px 16px; border-radius: 18px; }
   .arrows { display: none; } /* touch scrolling + snap covers navigation */
   .card { width: min(62vw, 240px); }
 }

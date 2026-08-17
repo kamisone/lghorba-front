@@ -136,12 +136,19 @@ export default function SocialVideosCarousel({ videos, title, ariaLabel }: Props
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
+  // Whether every card already fits without scrolling (typically 1-2 videos)
+  // — when it does, the track centers instead of hugging the left edge, and
+  // the now-pointless scroll arrows are hidden. Seeded from the video count
+  // so the server-rendered markup already guesses right and there's no
+  // layout flash before the real measurement below runs.
+  const [fits, setFits] = useState(() => videos.length <= 2);
 
   const updateArrows = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
     setCanPrev(el.scrollLeft > 4);
     setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    setFits(el.scrollWidth <= el.clientWidth + 1);
   }, []);
 
   useEffect(() => {
@@ -168,39 +175,43 @@ export default function SocialVideosCarousel({ videos, title, ariaLabel }: Props
 
   return (
     <section className={styles.section} aria-label={ariaLabel}>
-      <div className={styles.head}>
-        <h2 className={styles.title}>{title}</h2>
-        <div className={styles.arrows}>
-          <button
-            type="button"
-            className={styles.arrowBtn}
-            onClick={() => scrollByCard(-1)}
-            disabled={!canPrev}
-            aria-label="Scroll videos left"
-          >
-            <ChevronLeft size={17} />
-          </button>
-          <button
-            type="button"
-            className={styles.arrowBtn}
-            onClick={() => scrollByCard(1)}
-            disabled={!canNext}
-            aria-label="Scroll videos right"
-          >
-            <ChevronRight size={17} />
-          </button>
+      <div className={styles.panel}>
+        <div className={styles.head}>
+          <h2 className={styles.title}>{title}</h2>
+          {!fits && (
+            <div className={styles.arrows}>
+              <button
+                type="button"
+                className={styles.arrowBtn}
+                onClick={() => scrollByCard(-1)}
+                disabled={!canPrev}
+                aria-label="Scroll videos left"
+              >
+                <ChevronLeft size={17} />
+              </button>
+              <button
+                type="button"
+                className={styles.arrowBtn}
+                onClick={() => scrollByCard(1)}
+                disabled={!canNext}
+                aria-label="Scroll videos right"
+              >
+                <ChevronRight size={17} />
+              </button>
+            </div>
+          )}
         </div>
-      </div>
 
-      <div ref={trackRef} className={styles.track}>
-        {videos.map((video, i) => (
-          <ReelCard
-            key={video.id}
-            video={video}
-            suspended={viewerIndex !== null}
-            onOpen={() => setViewerIndex(i)}
-          />
-        ))}
+        <div ref={trackRef} className={`${styles.track} ${fits ? styles.trackCentered : ""}`}>
+          {videos.map((video, i) => (
+            <ReelCard
+              key={video.id}
+              video={video}
+              suspended={viewerIndex !== null}
+              onOpen={() => setViewerIndex(i)}
+            />
+          ))}
+        </div>
       </div>
 
       {viewerIndex !== null && (
