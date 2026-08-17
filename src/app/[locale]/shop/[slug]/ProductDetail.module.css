@@ -273,7 +273,15 @@
 }
 
 /* ── Action buttons ── */
-.actions { display: flex; gap: 10px; margin-bottom: 12px; align-items: stretch; }
+/* scroll-margin-top clears the sticky header when the returns-guarantee
+   section's "Commandez maintenant" button scrolls the page back up here. */
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: stretch;
+  scroll-margin-top: calc(var(--header-height, 64px) + 16px);
+}
 .addToCartWrap { flex: 1; min-width: 0; min-height: 52px; }
 
 .addToCartBtn {

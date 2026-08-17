@@ -606,8 +606,9 @@ export default function ShopProductDetail({
           {qtyError && <p className={styles.qtyError}>{qtyError}</p>}
         </div>
 
-        {/* CTA buttons */}
-        <div className={styles.actions} ref={actionsRef}>
+        {/* CTA buttons — id is the scroll target for the returns-guarantee
+            section's "order now" button (see ReturnsGuarantee.tsx). */}
+        <div id="product-actions" className={styles.actions} ref={actionsRef}>
           <AddToCartButton
             variantId={activeId || "none"}
             initialQty={qty}

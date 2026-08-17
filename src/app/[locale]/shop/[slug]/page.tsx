@@ -9,6 +9,7 @@ import RelatedSection from "./RelatedSection";
 import StorySideGallery, { StoryGalleryItem } from "./StorySideGallery";
 import StoryNarrativeGallery from "./StoryNarrativeGallery";
 import ZoomedImagesGallery, { ZoomedImageItem } from "./ZoomedImagesGallery";
+import ReturnsGuarantee from "./ReturnsGuarantee";
 import ReviewsSection from "./ReviewsSection";
 import SocialVideosCarousel, { SocialVideoItem } from "@/components/shop/SocialVideosCarousel";
 import BackToTopButton from "@/components/BackToTopButton";
@@ -291,6 +292,15 @@ export default async function ProductPage({ params, searchParams }: Props) {
           </>
         );
       })()}
+
+      {/* 14-day returns reassurance panel — right after the FAQ section.
+          Its CTA scrolls back up to the buy box rather than linking there. */}
+      <ReturnsGuarantee
+        title={t.returnsTitle}
+        body={t.returnsBody}
+        buttonLabel={t.returnsButton}
+        ariaLabel={t.returnsAria}
+      />
 
       {/* Location 2 — Narrative Gallery, after all product sections */}
       {narrativeStory.length > 0 && (
