@@ -1,0 +1,87 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Zoomed Images — full-bleed detail shots between Specifications and FAQ.
+   A single stage layers every image on top of the last; only one is ever
+   at full opacity. Each takes its turn zooming out from a close crop, then
+   crossfades into the next — driven entirely by the @keyframes injected
+   per-instance in ZoomedImagesGallery.tsx (percentages depend on image
+   count, so they can't live in this static stylesheet).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* No max-width/margin/padding here on purpose — this section is rendered in
+   two different contexts (full-width fallback vs. the narrow column next to
+   the Story Side Gallery) that each own their own outer spacing. See
+   .zoomedImagesSectionFull in ProductDetail.module.css and .faqStoryCol in
+   StoryGallery.module.css. */
+.section {}
+
+.heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  margin: 0 0 16px;
+}
+
+.stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: zoom-in;
+  /* Shimmer skeleton behind the images — only visible during the brief
+     pre-animation instant before the first image reaches full opacity. */
+  background:
+    linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .65) 50%, transparent 70%)
+    var(--color-surface-raised);
+  background-size: 220% 100%;
+  animation: zoomStageShimmer 1.5s ease-in-out infinite;
+  box-shadow:
+    0 4px 10px rgba(0, 24, 41, .08),
+    0 24px 48px rgba(0, 24, 41, .14);
+}
+
+.stageReady {
+  animation: none;
+  background: none;
+}
+
+.stage:focus-visible {
+  outline: 2px solid var(--color-brand-mid);
+  outline-offset: 3px;
+}
+
+@keyframes zoomStageShimmer {
+  from { background-position: 120% 0; }
+  to   { background-position: -100% 0; }
+}
+
+/* Every image is layered in the same box; the per-instance @keyframes
+   (see ZoomedImagesGallery.tsx) drive opacity/transform so only one is ever
+   at full opacity — animation-fill-mode keeps this base opacity:0 as the
+   resting state before/after each image's own animation window. */
+.img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  opacity: 0;
+  /* Matches START_SCALE in ZoomedImagesGallery.tsx — the pre-animation
+     fallback state for images with a positive animation-delay. */
+  transform: scale(2.5);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  will-change: opacity, transform;
+}
+
+@media (max-width: 640px) {
+  .stage { aspect-ratio: 4 / 3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage { animation: none; }
+  .img { animation: none; opacity: 0; transform: none; }
+  .img:first-child { opacity: 1; }
+}

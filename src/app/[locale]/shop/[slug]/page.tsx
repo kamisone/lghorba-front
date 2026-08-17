@@ -8,6 +8,7 @@ import ShopProductDetail from "./ShopProductDetail";
 import RelatedSection from "./RelatedSection";
 import StorySideGallery, { StoryGalleryItem } from "./StorySideGallery";
 import StoryNarrativeGallery from "./StoryNarrativeGallery";
+import ZoomedImagesGallery, { ZoomedImageItem } from "./ZoomedImagesGallery";
 import ReviewsSection from "./ReviewsSection";
 import SocialVideosCarousel, { SocialVideoItem } from "@/components/shop/SocialVideosCarousel";
 import BackToTopButton from "@/components/BackToTopButton";
@@ -156,6 +157,8 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const storyGallery: Array<StoryGalleryItem & { location: "side" | "narrative" }> = product.storyGallery ?? [];
   // Social Videos — backend filters to active items and resolves HLS/mp4/poster URLs
   const socialVideos: SocialVideoItem[] = product.socialVideos ?? [];
+  // Zoomed Images — backend already filters to active items with resolved URLs
+  const zoomedImages: ZoomedImageItem[] = product.zoomedImages ?? [];
   const sideStory      = storyGallery.filter(s => s.location === "side");
   const narrativeStory = storyGallery.filter(s => s.location === "narrative");
   const faqJsonLd = faqs.length > 0 ? {
@@ -196,7 +199,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         />
       )}
 
-      {(product.infoSections?.length > 0 || faqs.length > 0 || product.documents?.length > 0 || sideStory.length > 0) && (() => {
+      {(product.infoSections?.length > 0 || zoomedImages.length > 0 || faqs.length > 0 || product.documents?.length > 0 || sideStory.length > 0) && (() => {
         const specsBlock = product.infoSections?.length > 0 && (
           <>
             <h2>{t.specificationsTitle}</h2>
@@ -209,6 +212,9 @@ export default async function ProductPage({ params, searchParams }: Props) {
               ))}
             </dl>
           </>
+        );
+        const zoomedImagesBlock = zoomedImages.length > 0 && (
+          <ZoomedImagesGallery items={zoomedImages} ariaLabel={t.zoomedImagesAria} />
         );
         const faqBlock = faqs.length > 0 && (
           <>
@@ -254,16 +260,17 @@ export default async function ProductPage({ params, searchParams }: Props) {
             ))}
           </div>
         );
-        const hasLeft = !!(specsBlock || faqBlock || documentsBlock);
+        const hasLeft = !!(specsBlock || zoomedImagesBlock || faqBlock || documentsBlock);
 
         // Location 1 — Creative Side Gallery sits to the right of the
-        // Specifications, FAQ and Documents sections (sticky while they scroll).
+        // Specifications, Zoomed Images, FAQ and Documents sections (sticky while they scroll).
         if (sideStory.length > 0) {
           return (
             <div className={storyStyles.faqStoryRow}>
               {hasLeft && (
                 <div className={storyStyles.faqStoryCol}>
                   {specsBlock && <section>{specsBlock}</section>}
+                  {zoomedImagesBlock}
                   {faqBlock && <section>{faqBlock}</section>}
                   {documentsBlock && <section>{documentsBlock}</section>}
                 </div>
@@ -278,6 +285,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         return (
           <>
             {specsBlock && <div className={styles.specsSectionFull}>{specsBlock}</div>}
+            {zoomedImagesBlock && <div className={styles.zoomedImagesSectionFull}>{zoomedImagesBlock}</div>}
             {faqBlock && <div className={styles.faqSectionFull}>{faqBlock}</div>}
             {documentsBlock && <div className={styles.documentsSectionFull}>{documentsBlock}</div>}
           </>

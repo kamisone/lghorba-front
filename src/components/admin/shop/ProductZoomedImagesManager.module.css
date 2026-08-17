@@ -1,0 +1,110 @@
+.note {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  padding: 14px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.cardDragging { opacity: 0.4; }
+.cardInactive { opacity: 0.6; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: opacity .12s;
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: grab;
+}
+.thumb:hover { border-color: var(--color-admin-secondary); }
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dragBadge {
+  position: absolute;
+  top: 6px; left: 6px;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .85);
+  color: var(--color-text-muted);
+}
+
+.iconBtn {
+  position: absolute;
+  top: 6px;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, .9);
+  color: var(--color-text-primary);
+  transition: background .12s, color .12s;
+}
+
+.eyeBtn { right: 34px; }
+.eyeBtn:hover { color: var(--color-admin-secondary); }
+
+.removeIconBtn { right: 6px; color: #ef4444; }
+.removeIconBtn:hover { background: rgba(239, 68, 68, .12); }
+
+.altInput {
+  width: 100%;
+  padding: 6px 9px;
+  font-size: 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--color-text-primary);
+}
+.altInput:focus { outline: none; border-color: var(--color-admin-secondary); }
+
+.addTile {
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  border: 2px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: border-color .15s, color .15s;
+}
+.addTile:hover { border-color: var(--color-admin-secondary); color: var(--color-admin-secondary); }
+
+.hint { font-size: 12px; color: var(--color-text-muted); margin-top: 8px; }
