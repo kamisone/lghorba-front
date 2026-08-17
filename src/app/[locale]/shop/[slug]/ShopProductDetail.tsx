@@ -273,7 +273,6 @@ export default function ShopProductDetail({
   const activeId         = resolvedVariant?.id         ?? selectedVariant?.id         ?? defaultVariant?.id         ?? "";
   const activePriceCents = resolvedVariant?.priceCents ?? selectedVariant?.priceCents ?? defaultVariant?.priceCents ?? 0;
   const activeCompare    = resolvedVariant?.compareAtPriceCents ?? selectedVariant?.compareAtPriceCents ?? defaultVariant?.compareAtPriceCents ?? null;
-  const activeSku        = resolvedVariant?.sku ?? defaultVariant?.sku ?? null;
 
   const selectedOptionValueIds = selectedVariant?.optionValueIds ?? [];
 
@@ -586,13 +585,6 @@ export default function ShopProductDetail({
             {resolveStatus === 'unavailable'  && t.stockUnavailable}
             {resolveStatus === 'loading'      && t.stockChecking}
           </div>
-        )}
-
-        {/* SKU */}
-        {activeSku && (
-          <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginBottom: 16 }}>
-            {t.skuLabel} {activeSku}
-          </p>
         )}
 
         {/* Quantity row — always visible, disabled when item is in cart or unavailable */}

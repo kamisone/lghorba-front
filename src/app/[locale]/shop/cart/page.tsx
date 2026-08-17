@@ -117,7 +117,6 @@ export default function CartPage({ params }: { params: { locale: string } }) {
                     {item.optionsSnapshot.map(o => `${o.attributeName}: ${o.displayValue ?? o.value}`).join(" · ")}
                   </p>
                 )}
-                {item.skuSnapshot && <p className={styles.itemSku}>{t.skuLabel} {item.skuSnapshot}</p>}
                 <p className={styles.itemPrice}>€{centsToEuros(item.unitPriceCents)}</p>
               </div>
               <div className={styles.itemQtyCol}>
