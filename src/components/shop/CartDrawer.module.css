@@ -326,6 +326,16 @@
   margin: 0;
 }
 
+.freeShippingNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+  margin: 0;
+}
+
 .checkoutBtn {
   display: flex;
   align-items: center;
