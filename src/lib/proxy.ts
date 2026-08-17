@@ -24,13 +24,16 @@ export type ProxyOptions = {
 };
 
 /**
- * Carry the caller's address through to the backend.
+ * Carry the caller's address and User-Agent through to the backend.
  *
  * Storefront calls do not reach the backend directly — the browser hits a
  * /next-api route and this helper makes a fresh server-to-server request. Without
  * forwarding these headers the backend sees the Next.js pod's own cluster IP for
  * every visitor, so geo-IP resolves to null (no country on behaviour events) and
- * IP rate limiting buckets everyone into one counter.
+ * IP rate limiting buckets everyone into one counter. Same story for User-Agent:
+ * left unforwarded, the backend classifies every visitor from Node's own fetch
+ * client string, which never matches the mobile pattern — every analytics event
+ * came out "Device: Desktop" regardless of the real device.
  *
  * Passed through unchanged rather than appended: Next.js does not expose the
  * socket peer, and the backend's `trust proxy` already walks past private hops to
@@ -47,6 +50,8 @@ function forwardedClientHeaders(req: NextRequest): Record<string, string> {
   // back/src/common/utils/client-ip.util.ts.
   const originalIp = req.headers.get("x-original-client-ip");
   if (originalIp) out["x-original-client-ip"] = originalIp;
+  const userAgent = req.headers.get("user-agent");
+  if (userAgent) out["user-agent"] = userAgent;
   return out;
 }
 

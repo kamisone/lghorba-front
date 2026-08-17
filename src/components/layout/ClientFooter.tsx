@@ -54,10 +54,22 @@ export default function ClientFooter({ locale }: Props) {
               </a>
             </div>
             <div className={styles.socialRow}>
-              <a href="#" aria-label={t.footer.socialInstagram} className={styles.socialLink}>
+              <a
+                href="https://www.instagram.com/vitecamion/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t.footer.socialInstagram}
+                className={styles.socialLink}
+              >
                 <InstagramIcon className={styles.socialIcon} />
               </a>
-              <a href="#" aria-label={t.footer.socialFacebook} className={styles.socialLink}>
+              <a
+                href="https://www.facebook.com/profile.php?id=61570847295628"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t.footer.socialFacebook}
+                className={styles.socialLink}
+              >
                 <FacebookIcon className={styles.socialIcon} />
               </a>
               <a href="#" aria-label={t.footer.socialTiktok} className={styles.socialLink}>
