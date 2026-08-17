@@ -13,6 +13,8 @@ import {
   dateRangeToQuery,
   useUrlFilters,
 } from "@/components/admin/shop/AnalyticsFilters";
+import SessionReplayModal from "@/components/admin/shop/SessionReplayModal";
+import replayStyles from "@/components/admin/shop/SessionReplay.module.css";
 
 interface TestProductDemand {
   productId: string;
@@ -118,6 +120,7 @@ function TestProductsAnalytics() {
   const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
   const [countryOptions, setCountryOptions] = useState<CountryOption[]>([]);
   const [modal, setModal]     = useState<ModalState | null>(null);
+  const [replayProduct, setReplayProduct] = useState<{ id: string; title: string } | null>(null);
 
   // Date window + country scope, so the detail modal opens on the same
   // population the row was computed from.
@@ -316,6 +319,7 @@ function TestProductsAnalytics() {
                       <span className={styles.sortArrow}>{sortArrow(col.key)}</span>
                     </th>
                   ))}
+                  <th><span className={styles.srOnly}>Replay</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -346,6 +350,18 @@ function TestProductsAnalytics() {
                     <td>{r.cartToShippingRatePct}%</td>
                     <td>{r.cartToCheckoutRatePct}%</td>
                     <td>{r.viewToCheckoutRatePct}%</td>
+                    <td>
+                      <button
+                        type="button"
+                        className={replayStyles.replayBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReplayProduct({ id: r.productId, title: r.title });
+                        }}
+                      >
+                        ▶ Replays
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -362,6 +378,15 @@ function TestProductsAnalytics() {
           subtitle={modal.subtitle}
           kind={modal.kind}
           params={modal.params}
+        />
+      )}
+
+      {replayProduct && (
+        <SessionReplayModal
+          productId={replayProduct.id}
+          productTitle={replayProduct.title}
+          windowParams={windowParams}
+          onClose={() => setReplayProduct(null)}
         />
       )}
     </div>

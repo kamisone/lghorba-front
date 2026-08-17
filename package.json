@@ -28,6 +28,8 @@
     "react": "^18",
     "react-dom": "^18",
     "recharts": "^2.15.0",
+    "rrweb": "^2.1.1",
+    "rrweb-player": "^2.1.1",
     "socket.io-client": "^4.8.3",
     "swr": "^2.5.1"
   },

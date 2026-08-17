@@ -13,6 +13,7 @@ import ReturnsGuarantee from "./ReturnsGuarantee";
 import ReviewsSection from "./ReviewsSection";
 import SocialVideosCarousel, { SocialVideoItem } from "@/components/shop/SocialVideosCarousel";
 import BackToTopButton from "@/components/BackToTopButton";
+import ReplayRecorderMount from "@/components/shop/ReplayRecorderMount";
 import storyStyles from "./StoryGallery.module.css";
 import RelatedProductsSkeleton from "@/components/shop/RelatedProductsSkeleton";
 import { getTranslations } from "@/lib/i18n";
@@ -190,6 +191,9 @@ export default async function ProductPage({ params, searchParams }: Props) {
         availabilityMatrix={availabilityMatrix}
         initialVariantSlug={initialVariantSlug}
       />
+
+      {/* ── Session-replay recorder — test products only, see ReplayRecorderMount ── */}
+      <ReplayRecorderMount productId={product.id} isTestProduct={!!product.isTestProduct} />
 
       {/* ── Social Videos — reels carousel above the FAQ row ── */}
       {socialVideos.length > 0 && (
