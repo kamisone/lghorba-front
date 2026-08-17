@@ -431,6 +431,8 @@ interface EventDetailRow {
   clientIp: string | null;
   /** 'mobile' | 'desktop', null when no User-Agent was available to classify. */
   device: string | null;
+  /** First-touch acquisition channel (e.g. "Instagram"), null when not captured for this event type. */
+  source: string | null;
 }
 
 interface PurchaseDetailRow {
@@ -643,7 +645,7 @@ export function AnalyticsDetailModal({
           ) : kind === "event" ? (
             <table className={styles.table}>
               <thead>
-                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Device</th><th>Qty</th><th>IP</th><th><span className={styles.srOnly}>Actions</span></th></tr>
+                <tr><th>Date &amp; time</th><th>Event</th><th>Product</th><th>Country</th><th>Device</th><th>Source</th><th>Qty</th><th>IP</th><th><span className={styles.srOnly}>Actions</span></th></tr>
               </thead>
               <tbody>
                 {(rows as EventDetailRow[]).map((r) => (
@@ -653,6 +655,7 @@ export function AnalyticsDetailModal({
                     <td title={r.productTitle ?? undefined}>{r.productTitle ? truncateTitle(r.productTitle, 30) : "—"}</td>
                     <td>{r.countryName ?? "—"}</td>
                     <td>{r.device === "mobile" ? "Mobile" : r.device === "desktop" ? "Desktop" : "—"}</td>
+                    <td>{r.source ?? "—"}</td>
                     <td>{r.quantity ?? "—"}</td>
                     <td style={{ whiteSpace: "nowrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12 }}>
                       {r.clientIp ?? "—"}
@@ -678,7 +681,7 @@ export function AnalyticsDetailModal({
                               opacity: blockingIp === r.clientIp ? 0.6 : 1,
                             }}
                           >
-                            {blockingIp === r.clientIp ? "Blocking…" : "Block IP"}
+                            {blockingIp === r.clientIp ? "Blocking…" : "Block From Stats"}
                           </button>
                         )
                       )}

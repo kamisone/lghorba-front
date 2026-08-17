@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { parseApiError, type CartMutationResult } from "@/lib/shop/stockError";
 import { pixelTrack } from "@/lib/metaPixel";
+import { getTrafficSource } from "@/lib/shopBehavior";
 
 export interface AppliedCoupon {
   code: string;
@@ -121,7 +122,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
       const res = await fetch(`/next-api/public/shop/cart/${token}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId, quantity, selectedOptionValueIds }),
+        body: JSON.stringify({ variantId, quantity, selectedOptionValueIds, ...getTrafficSource() }),
       });
       if (res.ok) {
         const data: Cart & { metaAddToCartEventId?: string } = await res.json();
@@ -175,7 +176,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
       const res = await fetch(`/next-api/public/shop/cart/${token}/items/${itemId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity }),
+        body: JSON.stringify({ quantity, ...getTrafficSource() }),
       });
       if (res.ok) {
         applyCart(await res.json());
