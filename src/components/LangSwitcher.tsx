@@ -135,7 +135,13 @@ export default function LangSwitcher({
         aria-haspopup="listbox"
         aria-label={ariaLabel}
       >
-        <Globe2 size={13} strokeWidth={1.75} className={styles.globeIcon} aria-hidden="true" />
+        {current ? (
+          <span className={styles.flag}>
+            <current.Flag />
+          </span>
+        ) : (
+          <Globe2 size={13} strokeWidth={1.75} className={styles.globeIcon} aria-hidden="true" />
+        )}
         <span className={styles.code}>{current?.short ?? locale.toUpperCase()}</span>
         <ChevronDown
           size={11}
