@@ -1,6 +1,9 @@
-/* ── Spacer (prevents content jumping under fixed header) ── */
+/* ── Spacer (prevents content jumping under fixed header) ──
+   Height tracks the header's real measured height (set on <html> by
+   ScrollAwareHeader) rather than a fixed guess, so it stays correct across
+   breakpoints. 64px fallback covers the instant before that JS runs. */
 .headerSpacer {
-  height: 64px;
+  height: var(--header-height, 64px);
   flex-shrink: 0;
 }
 

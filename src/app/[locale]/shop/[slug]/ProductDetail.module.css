@@ -1,6 +1,6 @@
 /* ── Page layout ──────────────────────────────────────────────────────────── */
 .container {
-  max-width: 1120px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 40px 20px 64px;
   display: grid;

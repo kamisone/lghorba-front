@@ -27,16 +27,26 @@ export default function ScrollAwareHeader({ children }: { children: React.ReactN
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Keep --header-offset in sync so sticky panels below the header
-  // can transition their `top` value alongside the header hide/show animation.
-  // Uses the measured height — the commerce header is taller than the 64px
-  // main header (two rows), and both render through this component.
+  // Keep --header-offset and --header-height in sync with the real, measured
+  // header height — the commerce header is taller than the plain 64px main
+  // header (two rows, and it wraps onto extra lines on narrower widths where
+  // the search bar/icon row no longer fit on one line), and both render
+  // through this component. A hardcoded px value per breakpoint drifts out of
+  // sync with that wrapping and lets the fixed header cover page content.
   useEffect(() => {
     const setOffset = () => {
+      const height = headerRef.current?.offsetHeight ?? 64;
+      // --header-offset follows the hide/show animation, for sticky panels
+      // that should slide up under the header once it scrolls away.
       document.documentElement.style.setProperty(
         "--header-offset",
-        hidden ? "0px" : `${headerRef.current?.offsetHeight ?? 64}px`,
+        hidden ? "0px" : `${height}px`,
       );
+      // --header-height never collapses to 0 — the header is `position:
+      // fixed`, so content must always reserve its full height regardless of
+      // the hide-on-scroll transform (used by the layout spacer + any
+      // top-of-page sticky element measured against the header at rest).
+      document.documentElement.style.setProperty("--header-height", `${height}px`);
     };
     setOffset();
     window.addEventListener("resize", setOffset, { passive: true });

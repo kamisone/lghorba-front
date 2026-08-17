@@ -1,6 +1,13 @@
-/* ── Spacer (prevents content jumping under fixed two-row header) ── */
+/* ── Spacer (prevents content jumping under fixed two-row header) ──
+   Height tracks the header's real measured height (set on <html> by
+   ScrollAwareHeader) rather than a fixed guess. The static fallback values
+   below (112px desktop, 156px ≤640px) only cover the instant before that JS
+   runs — they used to be the *only* source of truth and drifted out of sync
+   whenever the top row wrapped onto an extra line (e.g. the 641-900px tablet
+   band, where logo + search + the icon cluster no longer fit on one line),
+   letting the fixed header cover the page's top content. */
 .headerSpacer {
-  height: 112px;
+  height: var(--header-height, 112px);
   flex-shrink: 0;
 }
 
@@ -101,7 +108,7 @@
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
-  .headerSpacer { height: 156px; }
+  .headerSpacer { height: var(--header-height, 156px); }
 
   .searchDesktop { display: none; }
 
