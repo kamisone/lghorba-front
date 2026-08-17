@@ -6,6 +6,10 @@
 }
 
 .replayBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid #e5e7eb;
   background: #fff;
   color: #374151;
@@ -17,6 +21,23 @@
   white-space: nowrap;
 }
 .replayBtn:hover { border-color: #1d4ed8; color: #1d4ed8; }
+
+/* Unread-replay count — same "new items" badge language as the unread dot
+   in the session list, just in numeric-count form for the trigger button. */
+.unreadBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+}
 
 /* ── Session list ── */
 .metaBadge {
@@ -30,6 +51,27 @@
 }
 .statusActive { background: #dcfce7; color: #166534; }
 .statusEnded  { background: #e0e7ff; color: #3730a3; }
+
+/* ── Read/unread ── */
+.unreadSummary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1d4ed8;
+  margin: 0 0 10px;
+}
+.unreadDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563eb;
+  flex-shrink: 0;
+}
+.rowUnread td { background: #f5f8ff; }
+.rowUnread:hover td { background: #eaf1ff; }
 
 /* ── Player layout: video left, timeline + event list right; stacks on narrow screens ── */
 .playerLayout {

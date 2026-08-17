@@ -29,6 +29,8 @@ interface SessionListItem {
   clickCount: number;
   maxScrollPct: number;
   pageUrl: string | null;
+  /** Null means no admin has opened this session's replay yet. */
+  viewedAt: string | null;
 }
 
 interface ReplayMarker {
@@ -168,7 +170,16 @@ export default function SessionReplayModal({
             <SessionList
               state={listState}
               sessions={sessions}
-              onSelect={setSelectedId}
+              onSelect={(id) => {
+                setSelectedId(id);
+                // Optimistic — the backend marks it viewed on the same
+                // detail fetch this triggers below; updating local state
+                // immediately means the dot/bold clears without waiting on
+                // a round trip or a full list refetch.
+                setSessions((prev) =>
+                  prev.map((s) => (s.id === id && !s.viewedAt ? { ...s, viewedAt: new Date().toISOString() } : s)),
+                );
+              }}
             />
           ) : (
             <>
@@ -233,39 +244,65 @@ function SessionList({
   if (state === "empty" || sessions.length === 0) {
     return <div className={shopStyles.modalEmpty}>No recorded sessions for this product in this date range.</div>;
   }
+  const unreadCount = sessions.filter((s) => !s.viewedAt).length;
   return (
-    <table className={shopStyles.table}>
-      <thead>
-        <tr>
-          <th>Started</th>
-          <th>Duration</th>
-          <th>Device</th>
-          <th>Country</th>
-          <th>Source</th>
-          <th>Clicks</th>
-          <th>Max scroll</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sessions.map((s) => (
-          <tr key={s.id} className={shopStyles.clickableRow} onClick={() => onSelect(s.id)} title="Click to open replay">
-            <td style={{ whiteSpace: "nowrap" }}>{fmtDateTime(s.startedAt)}</td>
-            <td>{fmtDuration(s.durationMs)}</td>
-            <td>{s.device === "mobile" ? "Mobile" : s.device === "desktop" ? "Desktop" : "—"}</td>
-            <td>{s.countryName ?? "—"}</td>
-            <td>{s.source ?? "—"}</td>
-            <td>{s.clickCount}</td>
-            <td>{s.maxScrollPct}%</td>
-            <td>
-              <span className={`${styles.metaBadge} ${s.status === "active" ? styles.statusActive : styles.statusEnded}`}>
-                {s.status}
-              </span>
-            </td>
+    <>
+      {unreadCount > 0 && (
+        <div className={styles.unreadSummary}>
+          <span className={styles.unreadDot} aria-hidden="true" />
+          {unreadCount} unread {unreadCount === 1 ? "session" : "sessions"}
+        </div>
+      )}
+      <table className={shopStyles.table}>
+        <thead>
+          <tr>
+            <th aria-hidden="true" />
+            <th>Started</th>
+            <th>Duration</th>
+            <th>Device</th>
+            <th>Country</th>
+            <th>Source</th>
+            <th>Clicks</th>
+            <th>Max scroll</th>
+            <th>Status</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {sessions.map((s) => {
+            const unread = !s.viewedAt;
+            return (
+              <tr
+                key={s.id}
+                className={`${shopStyles.clickableRow} ${unread ? styles.rowUnread : ""}`}
+                onClick={() => onSelect(s.id)}
+                title={unread ? "Unopened — click to view replay" : "Click to open replay"}
+              >
+                <td>
+                  {unread && (
+                    <>
+                      <span className={styles.unreadDot} aria-hidden="true" />
+                      <span className={shopStyles.srOnly}>Unread</span>
+                    </>
+                  )}
+                </td>
+                <td style={{ whiteSpace: "nowrap", fontWeight: unread ? 700 : 400 }}>{fmtDateTime(s.startedAt)}</td>
+                <td>{fmtDuration(s.durationMs)}</td>
+                <td>{s.device === "mobile" ? "Mobile" : s.device === "desktop" ? "Desktop" : "—"}</td>
+                <td>{s.countryName ?? "—"}</td>
+                <td>{s.source ?? "—"}</td>
+                <td>{s.clickCount}</td>
+                <td>{s.maxScrollPct}%</td>
+                <td>
+                  <span className={`${styles.metaBadge} ${s.status === "active" ? styles.statusActive : styles.statusEnded}`}>
+                    {s.status}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </>
   );
 }
 

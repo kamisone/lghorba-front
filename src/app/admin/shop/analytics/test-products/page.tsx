@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "@/components/admin/shop/ShopAdmin.module.css";
 import {
@@ -121,6 +121,7 @@ function TestProductsAnalytics() {
   const [countryOptions, setCountryOptions] = useState<CountryOption[]>([]);
   const [modal, setModal]     = useState<ModalState | null>(null);
   const [replayProduct, setReplayProduct] = useState<{ id: string; title: string } | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   // Date window + country scope, so the detail modal opens on the same
   // population the row was computed from.
@@ -175,6 +176,26 @@ function TestProductsAnalytics() {
       .then(data => setRows(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false));
   }, [query]);
+
+  // Unread session-replay count per product, for the "▶ Replays" badge —
+  // same date-range scope as the rest of the page. Re-fetched whenever the
+  // row set changes, and again after a replay modal closes (opening a
+  // session there marks it viewed server-side, so the badge should shrink
+  // without waiting for the next full page load).
+  const fetchUnreadCounts = useCallback((productIds: string[]) => {
+    if (!productIds.length) { setUnreadCounts({}); return; }
+    const params = new URLSearchParams(dateRangeToQuery(filters.range, filters.startDate, filters.endDate));
+    params.set("productIds", productIds.join(","));
+    fetch(`/next-api/admin/shop/analytics/replay/unread-counts?${params.toString()}`)
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data: Record<string, number>) => setUnreadCounts(data && typeof data === "object" ? data : {}))
+      .catch(() => {});
+  }, [filters.range, filters.startDate, filters.endDate]);
+
+  useEffect(() => {
+    fetchUnreadCounts(rows.map((r) => r.productId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, fetchUnreadCounts]);
 
   const countrySelectOptions = useMemo(
     () => countryOptions.map((c) => ({ value: c.isoCode, label: c.name })),
@@ -360,6 +381,9 @@ function TestProductsAnalytics() {
                         }}
                       >
                         ▶ Replays
+                        {!!unreadCounts[r.productId] && (
+                          <span className={replayStyles.unreadBadge}>{unreadCounts[r.productId]}</span>
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -386,7 +410,12 @@ function TestProductsAnalytics() {
           productId={replayProduct.id}
           productTitle={replayProduct.title}
           windowParams={windowParams}
-          onClose={() => setReplayProduct(null)}
+          onClose={() => {
+            setReplayProduct(null);
+            // Opening sessions in the modal marks them viewed server-side —
+            // refresh so the badge reflects that without a full page reload.
+            fetchUnreadCounts(rows.map((r) => r.productId));
+          }}
         />
       )}
     </div>
