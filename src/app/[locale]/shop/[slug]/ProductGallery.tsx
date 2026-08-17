@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Play, Maximize2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import GalleryVideo from "./GalleryVideo";
@@ -32,8 +32,10 @@ function formatDuration(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/** Thumbnail content for a media item — poster/frame + play badge + duration for videos. */
-function MediaThumb({ item, sizes }: { item: GalleryMediaItem; sizes: string }) {
+/** Thumbnail content for a media item — poster/frame + play badge + duration for videos.
+ *  Exported so the desktop big-thumbnails grid (rendered outside this component,
+ *  see BigThumbnailsGrid.tsx) can reuse the exact same thumbnail visuals. */
+export function MediaThumb({ item, sizes }: { item: GalleryMediaItem; sizes: string }) {
   if (item.type === "video") {
     return (
       <>
@@ -53,7 +55,13 @@ function MediaThumb({ item, sizes }: { item: GalleryMediaItem; sizes: string }) 
   return <Image src={item.url} alt="" fill sizes={sizes} className={styles.thumbImg} />;
 }
 
-export default function ProductGallery({ media, title, compact }: Props) {
+export interface ProductGalleryHandle {
+  /** Jumps the main viewer to `index` and opens the fullscreen lightbox there —
+   *  used by the desktop big-thumbnails grid so it opens "the same carousel". */
+  openAt: (index: number) => void;
+}
+
+const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductGallery({ media, title, compact }, ref) {
   const [current, setCurrent] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [mounted, setMounted]  = useState(false);
@@ -136,6 +144,13 @@ export default function ProductGallery({ media, title, compact }: Props) {
 
   const prev = useCallback(() => goTo((current - 1 + media.length) % media.length), [current, goTo, media.length]);
   const next = useCallback(() => goTo((current + 1) % media.length), [current, goTo, media.length]);
+
+  useImperativeHandle(ref, () => ({
+    openAt: (index: number) => {
+      goTo(index);
+      setLightbox(true);
+    },
+  }), [goTo]);
 
   // The parent always places the variant-specific hero image at index 0 when one
   // applies. Snap back to it whenever it changes (e.g. a new variant/swatch is
@@ -540,4 +555,6 @@ export default function ProductGallery({ media, title, compact }: Props) {
       )}
     </>
   );
-}
+});
+
+export default ProductGallery;

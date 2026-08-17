@@ -6,7 +6,8 @@ import { useCart } from "@/components/shop/CartContext";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVariant } from "@/components/shop/ProductVariantSelector";
-import ProductGallery, { type GalleryMediaItem } from "./ProductGallery";
+import ProductGallery, { type GalleryMediaItem, type ProductGalleryHandle } from "./ProductGallery";
+import BigThumbnailsGrid from "./BigThumbnailsGrid";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
 import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
@@ -167,6 +168,7 @@ export default function ShopProductDetail({
   const router = useRouter();
 
   const galleryColRef = useRef<HTMLDivElement>(null);
+  const galleryRef    = useRef<ProductGalleryHandle>(null);
   const actionsRef    = useRef<HTMLDivElement>(null);
   const [compact, setCompact]             = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
@@ -457,10 +459,13 @@ export default function ShopProductDetail({
       {/* Gallery */}
       <div className={styles.galleryCol} ref={galleryColRef}>
         <ProductGallery
+          ref={galleryRef}
           media={activeGallery}
           title={product.title}
           compact={compact}
         />
+        {/* Desktop-only big-thumbnails grid, right at the bottom of the gallery. */}
+        <BigThumbnailsGrid media={activeGallery} onOpen={i => galleryRef.current?.openAt(i)} />
       </div>
 
       {/* Details */}

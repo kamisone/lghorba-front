@@ -423,6 +423,43 @@
 }
 .mobileThumbActive { border-color: var(--color-brand-primary); }
 
+/* ── Big thumbnails grid (desktop only) ──────────────────────────────────────
+   Rendered by BigThumbnailsGrid.tsx, directly below the gallery inside the
+   sticky .galleryCol (ProductDetail.module.css) — same 900px cutoff as the
+   rest of the desktop gallery chrome. */
+.bigThumbGrid { display: none; }
+
+@media (min-width: 901px) {
+  .bigThumbGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 20px;
+  }
+}
+
+.bigThumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: zoom-in;
+  border: 2px solid transparent;
+  background: var(--color-surface);
+  padding: 0;
+  transition: border-color .18s, opacity .18s;
+}
+.bigThumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: rgba(0,0,0,.04);
+  transition: background .18s;
+}
+.bigThumb:hover { border-color: var(--color-brand-mid); }
+.bigThumb:hover::after { background: transparent; }
+
 /* ── Placeholder (no images) ─────────────────────────────────────────────── */
 .placeholder {
   aspect-ratio: 1;
