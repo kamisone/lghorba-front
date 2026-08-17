@@ -389,6 +389,12 @@
 
   .narrativeMedia,
   .narrativeRowReversed .narrativeMedia { transform: translateY(24px); }
+
+  /* Ties in specificity with .narrativeRowRevealed .narrativeMedia above and
+     comes later in the cascade, so without this the reversed rows' images
+     never settle back to transform:none after the reveal animation — they
+     stay shifted down, eating the row gap and pushing the title into them. */
+  .narrativeRowRevealed.narrativeRowReversed .narrativeMedia { transform: none; }
 }
 
 /* ── Reduced motion: no parallax (handled in JS), no movement on reveal ── */
