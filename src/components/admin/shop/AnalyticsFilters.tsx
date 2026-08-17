@@ -468,8 +468,16 @@ export function eventTypeLabel(value: string): string {
   return EVENT_TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
 
-// Scope params that are NOT the modal's own date/event controls.
-const SCOPE_KEYS = ["days", "startDate", "endDate", "eventType"];
+// Scope params that are NOT the modal's own date/event/device/source/country controls.
+// countryCode is included: a caller may pre-scope the modal to one country (e.g. a
+// country-breakdown row), and that becomes the seed for the modal's own Country
+// dropdown below rather than a second, conflicting copy of the param.
+const SCOPE_KEYS = ["days", "startDate", "endDate", "eventType", "countryCode"];
+
+const DEVICE_OPTIONS = [
+  { value: "mobile", label: "Mobile" },
+  { value: "desktop", label: "Desktop" },
+];
 
 export function AnalyticsDetailModal({
   open,
@@ -531,6 +539,11 @@ export function AnalyticsDetailModal({
   const [eventType, setEventType] = useState(() =>
     params.eventType && !params.eventType.includes(",") ? params.eventType : "",
   );
+  const [deviceFilter, setDeviceFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [countryFilter, setCountryFilter] = useState(() => params.countryCode ?? "");
+  const [sourceOptions, setSourceOptions] = useState<string[]>([]);
+  const [countryOptions, setCountryOptions] = useState<Array<{ isoCode: string; name: string }>>([]);
 
   const seedKey = new URLSearchParams(params).toString();
   useEffect(() => {
@@ -547,10 +560,15 @@ export function AnalyticsDetailModal({
     // A single incoming type preselects it; a comma-list (e.g. a product row)
     // starts as "All" so every relevant event type shows.
     setEventType(params.eventType && !params.eventType.includes(",") ? params.eventType : "");
+    setDeviceFilter("");
+    setSourceFilter("");
+    setCountryFilter(params.countryCode ?? "");
   }, [open, seedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Effective fetch params: scope (productId/country/limit) + modal date + event.
-  const effParams = useMemo(() => {
+  // Base scope (date range + event + productId/etc, but NOT device/source/country —
+  // those are what the facet fetch below uses to populate the Source/Country
+  // dropdowns, so it must stay independent of the very filters it offers).
+  const scopeParams = useMemo(() => {
     const p: Record<string, string> = {};
     for (const [k, v] of Object.entries(params)) {
       if (!SCOPE_KEYS.includes(k)) p[k] = v;
@@ -560,6 +578,21 @@ export function AnalyticsDetailModal({
     if (kind === "event" && eventType) p.eventType = eventType;
     return p;
   }, [params, range, startDate, endDate, eventType, kind]);
+
+  // Effective fetch params for the row table: scope + the modal's own
+  // device/source/country selections. countryFilter applies for both kinds —
+  // there's no dropdown for it on the purchase modal, but it must still carry
+  // through a country pre-scoped by the caller (e.g. a country-breakdown row),
+  // now that countryCode was pulled out of the generic scope passthrough above.
+  const effParams = useMemo(() => {
+    const p = { ...scopeParams };
+    if (countryFilter) p.countryCode = countryFilter;
+    if (kind === "event") {
+      if (deviceFilter) p.device = deviceFilter;
+      if (sourceFilter) p.source = sourceFilter;
+    }
+    return p;
+  }, [scopeParams, deviceFilter, sourceFilter, countryFilter, kind]);
 
   const effKey = new URLSearchParams(effParams).toString();
   useEffect(() => {
@@ -577,6 +610,24 @@ export function AnalyticsDetailModal({
     // can never land after — and overwrite — a more recent one.
     return () => { cancelled = true; };
   }, [open, kind, effKey]);
+
+  // Source/Country dropdown options — only values with real rows in this
+  // scope. Keyed off scopeParams (not effParams), so picking a filter never
+  // shrinks the other dropdowns' own options out from under the admin.
+  const scopeKey = new URLSearchParams(scopeParams).toString();
+  useEffect(() => {
+    if (!open || kind !== "event") return;
+    let cancelled = false;
+    fetch(`/next-api/admin/shop/analytics/event-detail-filters?${scopeKey}`)
+      .then((r) => (r.ok ? r.json() : { sources: [], countries: [] }))
+      .then((data) => {
+        if (cancelled) return;
+        setSourceOptions(Array.isArray(data.sources) ? data.sources : []);
+        setCountryOptions(Array.isArray(data.countries) ? data.countries : []);
+      })
+      .catch(() => { if (!cancelled) { setSourceOptions([]); setCountryOptions([]); } });
+    return () => { cancelled = true; };
+  }, [open, kind, scopeKey]);
 
   // Escape to close + lock body scroll while open.
   useEffect(() => {
@@ -634,6 +685,33 @@ export function AnalyticsDetailModal({
                 ))}
               </select>
             </div>
+          )}
+          {kind === "event" && (
+            <FilterSelect
+              label="Device"
+              value={deviceFilter}
+              onChange={setDeviceFilter}
+              options={DEVICE_OPTIONS}
+              allLabel="All devices"
+            />
+          )}
+          {kind === "event" && (
+            <FilterSelect
+              label="Source"
+              value={sourceFilter}
+              onChange={setSourceFilter}
+              options={sourceOptions.map((s) => ({ value: s, label: s }))}
+              allLabel="All sources"
+            />
+          )}
+          {kind === "event" && (
+            <FilterSelect
+              label="Country"
+              value={countryFilter}
+              onChange={setCountryFilter}
+              options={countryOptions.map((c) => ({ value: c.isoCode, label: c.name }))}
+              allLabel="All countries"
+            />
           )}
         </div>
 
