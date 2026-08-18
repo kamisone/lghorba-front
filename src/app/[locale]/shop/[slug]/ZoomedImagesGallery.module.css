@@ -1,17 +1,20 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   Zoomed Images — full-bleed detail shots between Specifications and FAQ.
-   A single stage layers every image on top of the last; only one is ever
-   at full opacity. Each takes its turn zooming out from a close crop, then
-   crossfades into the next — driven entirely by the @keyframes injected
-   per-instance in ZoomedImagesGallery.tsx (percentages depend on image
-   count, so they can't live in this static stylesheet).
+   Zoomed Images — full-bleed, non-interactive auto-scrolling filmstrip
+   between Specifications and FAQ. Every image renders twice back to back
+   (see the `track` array built in ZoomedImagesGallery.tsx) and the track
+   scrolls exactly -50% on a linear infinite loop — since the second half is
+   an identical copy of the first, the moment it finishes the loop restarts
+   on a pixel-identical frame, so the seam is invisible.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* No max-width/margin/padding here on purpose — this section is rendered in
    two different contexts (full-width fallback vs. the narrow column next to
    the Story Side Gallery) that each own their own outer spacing. See
    .zoomedImagesSectionFull in ProductDetail.module.css and .faqStoryCol in
-   StoryGallery.module.css. */
+   StoryGallery.module.css. The viewport-width breakout below only makes
+   sense in the first context — inside the sticky two-column layout there's
+   no sensible way to break out to the screen edge without overlapping the
+   side gallery, so it just fills its own column there instead. */
 .section {}
 
 .heading {
@@ -21,67 +24,78 @@
   margin: 0 0 16px;
 }
 
-.stage {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  border-radius: 18px;
+.viewport {
   overflow: hidden;
-  cursor: zoom-in;
-  /* Shimmer skeleton behind the images — only visible during the brief
-     pre-animation instant before the first image reaches full opacity. */
-  background:
-    linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .65) 50%, transparent 70%)
-    var(--color-surface-raised);
-  background-size: 220% 100%;
-  animation: zoomStageShimmer 1.5s ease-in-out infinite;
-  box-shadow:
-    0 4px 10px rgba(0, 24, 41, .08),
-    0 24px 48px rgba(0, 24, 41, .14);
+  /* Soft fade at both edges instead of a hard cut, since content is
+     entering/leaving right at the strip's own boundary (or the screen
+     boundary, once .viewportFullBleed applies too). */
+  mask-image: linear-gradient(90deg, transparent 0, #000 4%, #000 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 4%, #000 96%, transparent 100%);
 }
 
-.stageReady {
-  animation: none;
-  background: none;
+/* Breaks out of whatever max-width container this section sits in, to the
+   full browser viewport width — the standard "full-bleed" trick (100vw
+   pulled back by half the viewport on each side via negative margins).
+   Applied conditionally (see the `fullBleed` prop in the component) — only
+   safe in the plain full-width layout, not the narrower grid column shared
+   with the sticky Story Side Gallery, where this would overflow the row
+   instead of the page. */
+.viewportFullBleed {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
 }
 
-.stage:focus-visible {
-  outline: 2px solid var(--color-brand-mid);
-  outline-offset: 3px;
-}
-
-@keyframes zoomStageShimmer {
-  from { background-position: 120% 0; }
-  to   { background-position: -100% 0; }
-}
-
-/* Every image is layered in the same box; the per-instance @keyframes
-   (see ZoomedImagesGallery.tsx) drive opacity/transform so only one is ever
-   at full opacity — animation-fill-mode keeps this base opacity:0 as the
-   resting state before/after each image's own animation window. */
-.img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  opacity: 0;
-  /* Matches START_SCALE in ZoomedImagesGallery.tsx — the pre-animation
-     fallback state for images with a positive animation-delay. */
-  transform: scale(2.5);
+/* Purely decorative and non-interactive: no pointer cursor, no text/image
+   selection or drag ghost, no click target of any kind. Hover is the one
+   thing that still works — it just pauses the scroll (see :hover below),
+   nothing is revealed or becomes clickable. */
+.track {
+  display: flex;
+  width: max-content;
+  gap: 14px;
+  padding: 0 14px;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  animation-name: zoomedMarquee;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-  animation-fill-mode: both;
-  will-change: opacity, transform;
+}
+.track:hover { animation-play-state: paused; }
+
+@keyframes zoomedMarquee {
+  from { transform: translateX(0); }
+  /* Exactly half the track's width (it's a doubled array) — this is what
+     makes the loop seamless. */
+  to   { transform: translateX(-50%); }
+}
+
+.img {
+  flex-shrink: 0;
+  height: 280px;
+  width: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 14px;
+  display: block;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 24, 41, .1);
+}
+
+@media (max-width: 900px) {
+  .img { height: 220px; }
 }
 
 @media (max-width: 640px) {
-  .stage { aspect-ratio: 4 / 3; }
+  .img { height: 160px; }
+  .track { gap: 10px; padding: 0 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage { animation: none; }
-  .img { animation: none; opacity: 0; transform: none; }
-  .img:first-child { opacity: 1; }
+  .track { animation: none; }
 }

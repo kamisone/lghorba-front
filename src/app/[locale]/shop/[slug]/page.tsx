@@ -218,8 +218,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
             </dl>
           </>
         );
+        // fullBleed only when this section isn't sharing a row with the sticky
+        // Story Side Gallery — breaking out to the screen edge from inside
+        // that narrower grid column would overflow it instead of the page.
         const zoomedImagesBlock = zoomedImages.length > 0 && (
-          <ZoomedImagesGallery items={zoomedImages} ariaLabel={t.zoomedImagesAria} />
+          <ZoomedImagesGallery items={zoomedImages} ariaLabel={t.zoomedImagesAria} fullBleed={sideStory.length === 0} />
         );
         const faqBlock = faqs.length > 0 && (
           <>
