@@ -9,22 +9,41 @@
   align-items: start;
 }
 
-/* Desktop sticky gallery column */
+/* Desktop split-scroll layout: the gallery column pins at full available
+   viewport height (below the header) while .details scrolls independently
+   inside its own box — neither column scrolls the page itself. Both reset
+   back to normal document flow at ≤900px (see that media query below),
+   where the gallery becomes a fixed-height strip instead and the rest of
+   the page scrolls together as one column, same as before. */
 .galleryCol {
   min-width: 0;
   position: sticky;
   top: calc(var(--header-height, 64px) + 16px);
+  height: calc(100vh - var(--header-height, 64px) - 32px);
   align-self: start;
   z-index: 10;
   background: var(--color-background, #fff);
   border-radius: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Flex column so the main image (flex:1, see .galleryWrap in
+     ProductGallery.module.css) and the thumbnail strip below it share this
+     fixed height instead of the image alone claiming a plain 100%. */
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Product details column ───────────────────────────────────────────────── */
 .details {
   display: flex;
   flex-direction: column;
-  position: relative;
+  /* Pinned to the same vertical band as .galleryCol, with its own internal
+     scrollbar — scrolling the product info never scrolls the gallery out of
+     view, and vice versa. Reset to normal flow at ≤900px. */
+  position: sticky;
+  top: calc(var(--header-height, 64px) + 16px);
+  max-height: calc(100vh - var(--header-height, 64px) - 32px);
+  overflow-y: auto;
   z-index: 1;
 }
 
@@ -592,9 +611,14 @@
     background: none;
   }
 
-  /* Details card overlaps the gallery bottom edge for a continuous feel. */
+  /* Details card overlaps the gallery bottom edge for a continuous feel.
+     Cancels the desktop split-scroll behavior (sticky + capped height +
+     own scrollbar) — below 900px the whole page scrolls as one column. */
   .details {
     position: relative;
+    top: auto;
+    max-height: none;
+    overflow-y: visible;
     z-index: 2;
     background: var(--color-background, #fff);
     border-radius: 24px 24px 0 0;

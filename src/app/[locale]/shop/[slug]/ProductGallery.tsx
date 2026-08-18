@@ -33,8 +33,8 @@ function formatDuration(seconds: number): string {
 }
 
 /** Thumbnail content for a media item — poster/frame + play badge + duration for videos.
- *  Exported so the desktop big-thumbnails grid (rendered outside this component,
- *  see BigThumbnailsGrid.tsx) can reuse the exact same thumbnail visuals. */
+ *  Exported so both the vertical thumb strip and the horizontal mobile strip
+ *  below the gallery can reuse the exact same thumbnail visuals. */
 export function MediaThumb({ item, sizes }: { item: GalleryMediaItem; sizes: string }) {
   if (item.type === "video") {
     return (

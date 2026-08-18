@@ -458,43 +458,6 @@
 }
 .mobileThumbActive { border-color: var(--color-brand-primary); }
 
-/* ── Big thumbnails grid (desktop only) ──────────────────────────────────────
-   Rendered by BigThumbnailsGrid.tsx, directly below the gallery inside the
-   sticky .galleryCol (ProductDetail.module.css) — same 900px cutoff as the
-   rest of the desktop gallery chrome. */
-.bigThumbGrid { display: none; }
-
-@media (min-width: 901px) {
-  .bigThumbGrid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-    margin-top: 20px;
-  }
-}
-
-.bigThumb {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 14px;
-  overflow: hidden;
-  cursor: zoom-in;
-  border: 2px solid transparent;
-  background: var(--color-surface);
-  padding: 0;
-  transition: border-color .18s, opacity .18s;
-}
-.bigThumb::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 12px;
-  background: rgba(0,0,0,.04);
-  transition: background .18s;
-}
-.bigThumb:hover { border-color: var(--color-brand-mid); }
-.bigThumb:hover::after { background: transparent; }
-
 /* ── Placeholder (no images) ─────────────────────────────────────────────── */
 .placeholder {
   aspect-ratio: 1;
@@ -688,6 +651,62 @@
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
+
+/* ─ Desktop >900px: galleryCol (see ProductDetail.module.css) is pinned to
+   the full available viewport height instead of a plain aspect-ratio box.
+   The vertical thumbnail column is replaced by a horizontal strip pinned to
+   the bottom of that column, mirroring the mobile layout — main image and
+   strip share the fixed height via this flex chain: galleryWrap(column) →
+   gallery(flex:1, the image row) / mobileStripWrap(fixed height, bottom). ─ */
+@media (min-width: 901px) {
+  .galleryWrap {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .gallery {
+    flex: 1;
+    min-height: 0;
+  }
+  .mainImage {
+    aspect-ratio: unset;
+    height: 100%;
+  }
+  /* Thumbnails move below the image — the old vertical side column is redundant. */
+  .thumbColumn { display: none; }
+  .thumbColumn + .mainImage { margin-left: 0; }
+  /* The arrow+counter row duplicates the strip's own navigation once the
+     strip is visible here too — hidden, same as it already is on mobile. */
+  .navRow { display: none; }
+  /* Same edge capsule prev/next buttons already built for mobile, reused
+     here. They're positioned against .galleryWrap (a sibling of the strip
+     below), so top:50% would center them across image+strip together —
+     reset to an explicit top/bottom band matching just the strip's height
+     (thumb row ~136px + 26px top/bottom padding) so they land on the
+     image's own vertical center instead. */
+  .mobileNavBtn {
+    display: flex;
+    top: 0;
+    bottom: 166px;
+    transform: none;
+    margin: auto 0;
+  }
+  /* Base :active (line 385) assumes the mobile resting transform
+     (translateY(-50%)) and re-applies it alongside the click scale — on
+     desktop the resting transform is none, so that translateY would jump
+     the button on click. Scale only, no translate. */
+  .mobileNavBtn:active { transform: scale(.94); }
+  .mobileStripWrap {
+    display: flex;
+    flex: 0 0 auto;
+    padding: 12px 2px 14px;
+  }
+  /* Slightly larger than the mobile strip's thumbnails — more spare width
+     to work with here, and the strip is now the primary way to browse
+     media rather than a compact touch-scroll row. */
+  .mobileThumbs { width: 132px; height: 132px; border-radius: 14px; }
+  .mobileArrow { width: 48px; height: 48px; }
+}
 
 /* ─ Tablet 641–900px: gallery is height-constrained by galleryCol (52vh).
    The flex container and image must fill that height; nav is overlaid.     ─ */

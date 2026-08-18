@@ -7,7 +7,6 @@ import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVariant } from "@/components/shop/ProductVariantSelector";
 import ProductGallery, { type GalleryMediaItem, type ProductGalleryHandle } from "./ProductGallery";
-import BigThumbnailsGrid from "./BigThumbnailsGrid";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
 import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
@@ -168,6 +167,7 @@ export default function ShopProductDetail({
   const router = useRouter();
 
   const galleryColRef = useRef<HTMLDivElement>(null);
+  const detailsRef    = useRef<HTMLDivElement>(null);
   const galleryRef    = useRef<ProductGalleryHandle>(null);
   const actionsRef    = useRef<HTMLDivElement>(null);
   const [compact, setCompact]             = useState(false);
@@ -187,6 +187,31 @@ export default function ShopProductDetail({
     const onResize = () => { if (window.innerWidth > 900) setCompact(false); };
     window.addEventListener("resize", onResize, { passive: true });
     return () => { observer.disconnect(); window.removeEventListener("resize", onResize); };
+  }, []);
+
+  // Desktop split-scroll: the gallery column is sticky and pinned to the
+  // viewport height while .details scrolls independently inside itself
+  // (see ProductDetail.module.css). Wheeling over the gallery would
+  // otherwise just scroll the page underneath it instead of the details
+  // text, so forward the wheel delta to .details's own scroll — until it
+  // hits its top/bottom edge, at which point the event passes through and
+  // the page scrolls normally past both columns.
+  useEffect(() => {
+    const gallery = galleryColRef.current;
+    if (!gallery) return;
+    const onWheel = (e: WheelEvent) => {
+      if (window.innerWidth <= 900) return;
+      const details = detailsRef.current;
+      if (!details) return;
+      const { scrollTop, scrollHeight, clientHeight } = details;
+      const atTop = scrollTop <= 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+      if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) return;
+      e.preventDefault();
+      details.scrollTop += e.deltaY;
+    };
+    gallery.addEventListener("wheel", onWheel, { passive: false });
+    return () => gallery.removeEventListener("wheel", onWheel);
   }, []);
 
   // Sticky buy bar: appears once the main CTA row scrolls above the viewport.
@@ -463,12 +488,10 @@ export default function ShopProductDetail({
           title={product.title}
           compact={compact}
         />
-        {/* Desktop-only big-thumbnails grid, right at the bottom of the gallery. */}
-        <BigThumbnailsGrid media={activeGallery} onOpen={i => galleryRef.current?.openAt(i)} />
       </div>
 
       {/* Details */}
-      <div className={styles.details}>
+      <div className={styles.details} ref={detailsRef}>
         {product.brand && <p className={styles.brand}>{product.brand}</p>}
         <h1 className={styles.title}>{product.title}</h1>
 
