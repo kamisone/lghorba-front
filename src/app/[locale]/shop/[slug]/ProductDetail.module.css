@@ -570,7 +570,13 @@
   .container {
     grid-template-columns: 1fr;
     gap: 0;
-    padding: 0 0 110px; /* reserve bottom space for sticky buy bar */
+    /* The sticky buy bar (position:fixed) stays visible for the rest of the
+       page's scroll once it appears, not just while .container is on screen
+       (see showStickyBar in ShopProductDetail.tsx — it only re-hides if you
+       scroll back up past the CTA row) — so it doesn't need a full-height
+       reservation right here. Small buffer only, to clear the description's
+       last line at the exact moment this section ends. */
+    padding: 0 0 24px;
     align-items: start;
   }
 
@@ -612,6 +618,11 @@
   .details    { margin-top: 0; border-radius: 0; box-shadow: none; padding: 16px 16px 0; }
   .title      { font-size: 22px; }
   .price      { font-size: 24px; }
+  /* Tighter vertical rhythm on phone — the 28px+28px gap either side of the
+     trust badges (desktop spacing) reads as an oversized gap once everything
+     is already stacked full-width. */
+  .trust        { margin-bottom: 16px; }
+  .descSection  { padding-top: 16px; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */

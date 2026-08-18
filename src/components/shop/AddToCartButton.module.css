@@ -17,7 +17,7 @@
   justify-content: center;
   gap: 7px;
   white-space: nowrap;
-  min-height: 44px;
+  min-height: 52px;
 }
 .addBtn:disabled { opacity: .6; cursor: not-allowed; }
 .addBtn:hover:not(:disabled) {

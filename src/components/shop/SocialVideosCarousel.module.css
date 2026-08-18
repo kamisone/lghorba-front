@@ -188,7 +188,7 @@
 }
 
 @media (max-width: 640px) {
-  .section { margin-top: 40px; }
+  .section { margin-top: 24px; }
   .panel { padding: 18px 16px 16px; border-radius: 18px; }
   .arrows { display: none; } /* touch scrolling + snap covers navigation */
   .card { width: min(62vw, 240px); }

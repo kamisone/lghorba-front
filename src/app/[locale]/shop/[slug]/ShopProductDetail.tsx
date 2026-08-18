@@ -675,10 +675,9 @@ export default function ShopProductDetail({
           )}
         </div>
 
-        {/* Description */}
+        {/* Description — no heading, the text reads fine as a direct continuation of the page */}
         {product.description && (
           <div className={styles.descSection}>
-            <h3>{t.descriptionTitle}</h3>
             <div className={styles.descBody} dangerouslySetInnerHTML={{ __html: product.description }} />
           </div>
         )}
