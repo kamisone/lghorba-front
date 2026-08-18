@@ -353,6 +353,41 @@
 .navBtn:hover { background: var(--color-brand-primary); color: #fff; border-color: var(--color-brand-primary); transform: scale(1.08); }
 .counter { font-size: 13px; font-weight: 500; color: var(--color-text-muted); min-width: 40px; text-align: center; }
 
+/* ── Edge prev/next — mobile only, floats over the image itself ──
+   Tall capsule (height clearly greater than width, not a circle), flush
+   with each edge — the OUTER corner (flush with the image's own boundary)
+   is square/flat, the INNER corner (facing into the image) is fully
+   rounded, so each button reads as a soft tab bulging in from that edge
+   rather than a rounded shape awkwardly clipped by the boundary. Brand
+   accent green, matching the site's other CTA buttons (AddToCartButton,
+   header nav CTA). Positioned absolute against .galleryWrap rather than
+   .mainImage so it stays put at a fixed spot on screen instead of scrolling
+   away with the slide track. Hidden by default — revealed at ≤900px
+   alongside the rest of the touch gallery UI. */
+.mobileNavBtn {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  width: 30px;
+  height: 84px;
+  border: none;
+  background: var(--color-brand-accent);
+  color: var(--color-brand-darkest);
+  box-shadow: 0 2px 10px rgba(0, 24, 41, .18);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background .15s, transform .15s;
+}
+.mobileNavBtn:active { transform: translateY(-50%) scale(.94); background: #7eb31a; }
+/* Flat edge flush with the left/screen edge, curved edge facing into the gallery. */
+.mobileNavPrev { left: 0; border-radius: 0 999px 999px 0; }
+/* Flat edge flush with the right/screen edge, curved edge facing into the gallery. */
+.mobileNavNext { right: 0; border-radius: 999px 0 0 999px; }
+
 /* Mobile dot indicators */
 .dots {
   display: none;
@@ -698,6 +733,7 @@
     z-index: 3;
   }
   .navBtn { pointer-events: all; background: rgba(255,255,255,.88); backdrop-filter: blur(4px); }
+  .mobileNavBtn { display: flex; }
   /* Mobile strip sits below the image in normal flow but is clipped by
      galleryCol overflow:hidden — hide it explicitly for clarity */
   .mobileStripWrap { display: none; }

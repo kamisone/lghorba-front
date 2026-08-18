@@ -461,6 +461,31 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
             ))}
           </div>
         )}
+
+        {/* Edge prev/next — mobile only (via CSS). Complements swipe + dots
+            with an explicit, always-reachable tap target; positioned against
+            galleryWrap (not mainImage) so they float over the image at a
+            fixed spot instead of scrolling away with the slide track. */}
+        {hasMany && (
+          <>
+            <button
+              type="button"
+              onClick={prev}
+              className={`${styles.mobileNavBtn} ${styles.mobileNavPrev}`}
+              aria-label="Previous media"
+            >
+              <ChevronLeft size={24} strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              onClick={next}
+              className={`${styles.mobileNavBtn} ${styles.mobileNavNext}`}
+              aria-label="Next media"
+            >
+              <ChevronRight size={24} strokeWidth={2.5} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Horizontal thumbnail row — mobile only (via CSS). Arrows page the strip
