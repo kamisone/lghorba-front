@@ -7,6 +7,8 @@ import { X } from "lucide-react";
 import { EUROPEAN_FLAGS, getFlagSvgDataUrl } from "@/lib/european-flags";
 import BilingualField from "@/components/admin/BilingualField";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
+import { useSectionGenerate } from "@/hooks/useSectionGenerate";
+import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
 
 interface Country {
   isoCode: string;
@@ -174,6 +176,21 @@ export default function CountriesPage() {
 
   const { translations: nameTr, setTranslation: setNameTr, saveTranslations: saveNameTr } =
     useEntityTranslations("shop_country", modal ? form.isoCode || null : null);
+
+  const nameGen = useSectionGenerate<SectionTranslationOutcome<string>>("/next-api/admin/shop/countries/sections/name/translate");
+
+  async function generateName() {
+    const en = nameTr.en?.name?.trim();
+    if (!en) return;
+    const outcome = await nameGen.generate({ text: en });
+    if (!outcome) return;
+    // A failed language comes back as an empty string — never let that blank
+    // out content the admin already wrote.
+    if (outcome.result.fr) setForm(f => ({ ...f, name: outcome.result.fr }));
+    AI_TARGET_LANGS.forEach(lang => { if (outcome.result[lang]) setNameTr(lang, "name", outcome.result[lang]); });
+    const errorSummary = summarizeGenerateErrors(outcome.errors);
+    if (errorSummary) nameGen.setError(errorSummary);
+  }
 
   async function load() {
     setLoading(true);
@@ -434,6 +451,9 @@ export default function CountriesPage() {
                 frPlaceholder="France"
                 translations={nameTr} onTranslationChange={setNameTr}
                 overlayPlaceholder="France"
+                onGenerate={generateName}
+                generating={nameGen.generating}
+                generateError={nameGen.error}
               />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {field("Phone prefix", "phonePrefix", { placeholder: "+33", maxLength: 10 })}
