@@ -86,7 +86,7 @@ interface ModalState {
 }
 
 const DEFAULTS = {
-  range: "30",
+  range: "today",
   startDate: "",
   endDate: "",
   product: "",
