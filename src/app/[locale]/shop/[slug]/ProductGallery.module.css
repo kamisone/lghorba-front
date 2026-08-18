@@ -661,6 +661,32 @@
   .gallery     { height: 100%; }
   /* Remove aspect-ratio so the image fills the fixed-height container */
   .mainImage   { aspect-ratio: unset; height: 100%; border-radius: 0; }
+  /* Real native horizontal scroll-snap on touch, replacing the crossfade —
+     the previous touch-delta swipe (see onTouchStart/onTouchEnd in
+     ProductGallery.tsx) only jumped discretely on release, with no momentum
+     or drag feedback, which doesn't feel like an actual scroll. Every slide
+     is laid out side by side and scroll-snapped instead of opacity-stacked;
+     `current` now syncs both ways (JS scroll listener → state on swipe,
+     and state → scrollTo for dot/thumbnail/keyboard navigation). */
+  .mainImage {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mainImage::-webkit-scrollbar { display: none; }
+  .slideLayer {
+    position: relative;
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    scroll-snap-align: start;
+    opacity: 1;
+    pointer-events: auto;
+    transition: none;
+  }
   /* Overlay nav arrows on the image — normal flow is clipped by galleryCol */
   .navRow {
     position: absolute;

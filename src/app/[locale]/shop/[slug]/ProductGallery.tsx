@@ -76,7 +76,9 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
   const touchStartX = useRef<number | null>(null);
   const stripRef       = useRef<HTMLDivElement>(null);
   const mobileStripRef = useRef<HTMLDivElement>(null);
+  const mainImageRef   = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef<number | null>(null);
+  const mainScrollSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -169,6 +171,17 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
     active?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [current]);
 
+  // Same, for the mobile horizontal thumbnail strip — otherwise swiping the
+  // main image (or tapping a dot) can leave the selected thumbnail scrolled
+  // out of view in its own row. `inline`/`block` both "nearest" so this only
+  // moves the strip itself, never the page.
+  useEffect(() => {
+    const strip = mobileStripRef.current;
+    if (!strip) return;
+    const activeThumb = strip.children[current] as HTMLElement | undefined;
+    activeThumb?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [current]);
+
   // Keep the "more thumbnails" cues in sync with the strip's scroll position and
   // size. ResizeObserver covers viewport/layout changes; the media dependency
   // re-measures when the thumbnail count changes (e.g. a new variant's media).
@@ -199,6 +212,61 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
     };
   }, [syncMobileCues, media.length]);
 
+  // Mobile native-scroll main image (see .mainImage/.slideLayer in the CSS,
+  // ≤900px): sync `current` FROM scroll position once the swipe settles.
+  // Debounced rather than live so a mid-gesture scroll position — which
+  // legitimately sits between two slides while the finger is still moving —
+  // doesn't flicker `current` back and forth before scroll-snap settles it.
+  // No-ops on desktop, where the container never actually overflows.
+  const onMainImageScroll = useCallback(() => {
+    const el = mainImageRef.current;
+    if (!el || el.clientWidth === 0) return;
+    if (mainScrollSyncTimer.current) clearTimeout(mainScrollSyncTimer.current);
+    mainScrollSyncTimer.current = setTimeout(() => {
+      const index = Math.round(el.scrollLeft / el.clientWidth);
+      setCurrent(prev => (index !== prev && index >= 0 && index < media.length ? index : prev));
+    }, 120);
+  }, [media.length]);
+
+  useEffect(() => {
+    const el = mainImageRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", onMainImageScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onMainImageScroll);
+      if (mainScrollSyncTimer.current) clearTimeout(mainScrollSyncTimer.current);
+    };
+  }, [onMainImageScroll]);
+
+  // The reverse direction: scroll the container TO `current` when it changes
+  // for a reason other than the user's own swipe (dot/thumbnail click,
+  // keyboard, variant change resetting to slide 0). Skipped when the
+  // container is already close to that position, so it never fights a native
+  // scroll gesture that's still settling.
+  useEffect(() => {
+    const el = mainImageRef.current;
+    if (!el || el.clientWidth === 0) return;
+    const target = current * el.clientWidth;
+    if (Math.abs(el.scrollLeft - target) > 4) {
+      el.scrollTo({ left: target, behavior: mounted ? "smooth" : "auto" });
+    }
+  }, [current, mounted]);
+
+  // Re-align instantly (no animation) on resize/orientation change — the
+  // effect above only re-runs when `current` itself changes, so without this
+  // a device rotation would leave the scroll position mismatched against the
+  // now-different slide width until the next navigation.
+  useEffect(() => {
+    const el = mainImageRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth === 0) return;
+      el.scrollTo({ left: current * el.clientWidth, behavior: "auto" });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [current]);
+
   // Never leave an animation frame pending after unmount.
   useEffect(() => stopAutoScroll, [stopAutoScroll]);
 
@@ -220,8 +288,9 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
     return () => { document.body.style.overflow = ""; };
   }, [lightbox]);
 
-  // Touch swipe handlers (shared between main image and lightbox) — image slides only,
-  // so they don't interfere with native video scrubbing controls.
+  // Touch swipe handlers for the lightbox (the in-page main image uses real
+  // native scroll instead — see onMainImageScroll) — image slides only, so
+  // they don't interfere with native video scrubbing controls.
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -298,12 +367,15 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
             </div>
           )}
 
-          {/* Main media — crossfade stack */}
+          {/* Main media — crossfade stack on desktop; a real horizontal
+              scroll-snap track on touch (≤900px, see .mainImage/.slideLayer
+              in the CSS) — `current` stays the single source of truth either
+              way, just synced from scroll position instead of touch-delta
+              on mobile (see onMainImageScroll below). */}
           <div
+            ref={mainImageRef}
             className={styles.mainImage}
             onClick={active.type === "image" ? () => setLightbox(true) : undefined}
-            onTouchStart={active.type === "image" ? onTouchStart : undefined}
-            onTouchEnd={active.type === "image" ? onTouchEnd : undefined}
             role={active.type === "image" ? "button" : undefined}
             tabIndex={active.type === "image" ? 0 : undefined}
             aria-label={active.type === "image" ? "Open full-size image" : undefined}
@@ -321,6 +393,16 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
                       active={isActive && !lightbox}
                       className={styles.mainVideo}
                     />
+                    {/* Rendered per-slide (not once globally) so it scrolls correctly
+                        with its own slide in the mobile scroll-snap track. */}
+                    <button
+                      type="button"
+                      className={styles.mainExpandBtn}
+                      onClick={() => setLightbox(true)}
+                      aria-label="Open full-size viewer"
+                    >
+                      <Maximize2 size={15} />
+                    </button>
                   </div>
                 );
               }
@@ -338,22 +420,13 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
               );
             })}
 
-            {active.type === "image" ? (
+            {active.type === "image" && (
               <span className={styles.zoomHint} aria-hidden="true">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                   <circle cx="11" cy="11" r="7" />
                   <path d="m21 21-4.35-4.35M11 8v6M8 11h6" />
                 </svg>
               </span>
-            ) : (
-              <button
-                type="button"
-                className={styles.mainExpandBtn}
-                onClick={() => setLightbox(true)}
-                aria-label="Open full-size viewer"
-              >
-                <Maximize2 size={15} />
-              </button>
             )}
           </div>
         </div>
