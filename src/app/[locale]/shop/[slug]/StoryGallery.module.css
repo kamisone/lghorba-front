@@ -231,9 +231,6 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .narrativeSection {
-  background:
-    linear-gradient(180deg, var(--color-surface) 0%, var(--color-white) 18%, var(--color-white) 82%, var(--color-surface) 100%);
-  border-top: 1px solid var(--color-border);
   margin-top: 24px;
 }
 
@@ -269,21 +266,25 @@
 
 .narrativeRow {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  /* Text column fixed at 30% of the row's width — image takes the rest. */
+  grid-template-columns: minmax(0, 70%) minmax(0, 30%);
   gap: clamp(20px, 3vw, 40px);
   align-items: center;
 }
 
-/* Media keeps the larger column on both sides — .narrativeMedia's order
+/* Media keeps the 70% column on both sides — .narrativeMedia's order
    moves it into the grid's 2nd track on reversed rows, so that track needs
    to be the big one there instead. */
-.narrativeRowReversed { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
+.narrativeRowReversed { grid-template-columns: minmax(0, 30%) minmax(0, 70%); }
 .narrativeRowReversed .narrativeMedia { order: 2; }
 .narrativeRowReversed .narrativeCopy  { order: 1; }
 
 .narrativeMedia {
   margin: 0;
-  aspect-ratio: 4 / 3;
+  /* Actual ratio (1:1 / 16:9 / 9:16, admin-chosen per image) is set inline
+     via style={{ aspectRatio }} in StoryNarrativeGallery.tsx — this is only
+     the fallback before that renders. */
+  aspect-ratio: 1 / 1;
   position: relative;
   isolation: isolate;
   cursor: zoom-in;

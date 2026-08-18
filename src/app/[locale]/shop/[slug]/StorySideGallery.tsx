@@ -5,12 +5,17 @@ import StoryLazyImage from "./StoryLazyImage";
 import ImageLightbox from "@/components/shop/ImageLightbox";
 import styles from "./StoryGallery.module.css";
 
+/** Narrative-image display ratio, chosen per image by the admin — not applicable to side items. */
+export type StoryImageAspectRatio = "1:1" | "16:9" | "9:16";
+
 export interface StoryGalleryItem {
   id: string;
   url: string;
   altText?: string | null;
   title?: string;
   description?: string;
+  /** Narrative items only — defaults to '1:1' when absent (side items, or items saved before this field existed). */
+  aspectRatio?: StoryImageAspectRatio;
 }
 
 /**

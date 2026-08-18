@@ -12,12 +12,23 @@ import styles from "./ProductStoryGalleryManager.module.css";
 
 export type StoryGalleryLocation = "side" | "narrative";
 
+/** Narrative-image display ratio, chosen per image — not applicable to side items. */
+export type StoryImageAspectRatio = "1:1" | "16:9" | "9:16";
+
+const ASPECT_RATIO_OPTIONS: Array<{ value: StoryImageAspectRatio; label: string }> = [
+  { value: "1:1", label: "1:1" },
+  { value: "16:9", label: "16:9" },
+  { value: "9:16", label: "9:16" },
+];
+
 /** A Story Gallery image. `side` = creative composition next to the FAQ, `narrative` = storytelling section after all product sections. */
 export interface ProductStoryItem {
   id: string;
   key: string;
   location: StoryGalleryLocation;
   altText?: string | null;
+  /** Narrative items only — ignored for side items. */
+  aspectRatio: StoryImageAspectRatio;
   /** Narrative items only — empty string for side items. */
   title: string;
   /** Narrative items only — empty string for side items. */
@@ -43,6 +54,7 @@ function strip(item: ResolvedProductStoryItem): ProductStoryItem {
     key:         item.key,
     location:    item.location,
     altText:     item.altText ?? null,
+    aspectRatio: item.aspectRatio,
     title:       item.title,
     description: item.description,
     sortOrder:   item.sortOrder,
@@ -100,6 +112,7 @@ export default function ProductStoryGalleryManager({ initialItems, onChange, tra
         key:         a.storageKey,
         location,
         altText:     a.altText,
+        aspectRatio: "1:1",
         title:       "",
         description: "",
         sortOrder:   0,
@@ -285,6 +298,20 @@ export default function ProductStoryGalleryManager({ initialItems, onChange, tra
                   onChange={e => update("narrative", i, { altText: e.target.value })}
                   placeholder="Alt text (accessibility)"
                 />
+                <p className={styles.ratioLabel}>Display ratio</p>
+                <div className={styles.ratioGroup}>
+                  {ASPECT_RATIO_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className={`${styles.ratioBtn} ${item.aspectRatio === opt.value ? styles.ratioBtnActive : ""}`}
+                      onClick={() => update("narrative", i, { aspectRatio: opt.value })}
+                      title={`Show this image at a ${opt.label} ratio on the product page`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className={styles.narrativeFields}>
                 <BilingualField

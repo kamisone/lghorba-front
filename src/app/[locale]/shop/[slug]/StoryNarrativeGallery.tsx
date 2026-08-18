@@ -47,6 +47,7 @@ function NarrativeRow({ item, index, onOpen }: { item: StoryGalleryItem; index: 
     >
       <figure
         className={styles.narrativeMedia}
+        style={{ aspectRatio: (item.aspectRatio ?? "1:1").replace(":", "/") }}
         role="button"
         tabIndex={0}
         aria-haspopup="dialog"
