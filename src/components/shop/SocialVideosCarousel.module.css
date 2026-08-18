@@ -4,15 +4,9 @@
   padding: 0 16px;
 }
 
-/* Subtle card container — gives the section a settled, "complete" footprint
-   even when there are only 1-2 videos, instead of them floating on bare
-   page background with nothing to anchor them. */
+/* No card chrome — just the title + track, flowing directly on the page background. */
 .panel {
-  background: linear-gradient(135deg, rgba(var(--rgb-brand-primary), .07), rgba(var(--rgb-brand-accent), .07));
-  border: 1px solid var(--color-border);
-  border-radius: 24px;
-  padding: 24px 24px 20px;
-  box-shadow: 0 1px 2px rgba(0, 24, 41, .03), 0 10px 28px rgba(0, 24, 41, .05);
+  padding: 0;
 }
 
 .head {
@@ -25,7 +19,9 @@
 
 .title {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
   color: var(--color-text-heading);
   margin: 0;
 }
