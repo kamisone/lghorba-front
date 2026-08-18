@@ -75,14 +75,16 @@
   flex: 1 1 240px;
   width: auto;
   min-width: 200px;
-  max-width: 600px;
+  max-width: 520px;
 }
 
 /* ── Reel card (9:16) ── */
 .card {
   position: relative;
   flex: 0 0 auto;
-  width: clamp(200px, 24vw, 280px);
+  /* Slightly smaller on desktop than before — height follows width via the
+     9:16 aspect-ratio below. */
+  width: clamp(200px, 22vw, 250px);
   aspect-ratio: 9 / 16;
   border-radius: 18px;
   overflow: hidden;
