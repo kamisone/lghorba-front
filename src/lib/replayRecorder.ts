@@ -58,12 +58,28 @@ export interface ReplayRecordingHandle {
   stop: () => void;
 }
 
+// Module-level, not component state: a recording must survive the mounting
+// component unmounting when the visitor navigates client-side (e.g. from the
+// test-product page to /shop/checkout — the App Router swaps the page tree,
+// unmounting ReplayRecorderMount, but rrweb's own DOM observers and this
+// module's event listeners are attached to `document`/`window`, not to that
+// component, so they keep running right through the route change as long as
+// nothing here explicitly tells them to stop). One recording per tab: a
+// second call (from checkout re-mounting a recorder, or a second test
+// product) reuses the session already in progress instead of starting a
+// parallel one.
+let activeRecording: ReplayRecordingHandle | null = null;
+
 /**
  * Starts a session (server-side gated: excluded IP/bot/non-test-product all
  * silently produce no session — see replay-tracking.service.ts) and, only if
  * one was granted, begins recording. Returns null when nothing was started.
+ * Idempotent: if a recording is already in progress in this tab, returns it
+ * unchanged rather than starting a second, overlapping one.
  */
 export async function startReplayRecording(productId: string): Promise<ReplayRecordingHandle | null> {
+  if (activeRecording) return activeRecording;
+
   const { referrer, utmSource } = getTrafficSource();
 
   let sessionId: string | undefined;
@@ -210,6 +226,7 @@ export async function startReplayRecording(productId: string): Promise<ReplayRec
   const stop = () => {
     if (stopped) return;
     stopped = true;
+    if (activeRecording === handle) activeRecording = null;
     window.clearInterval(flushInterval);
     document.removeEventListener("click", onClick, { capture: true } as EventListenerOptions);
     window.removeEventListener("scroll", onScroll);
@@ -220,7 +237,9 @@ export async function startReplayRecording(productId: string): Promise<ReplayRec
     endSession();
   };
 
-  return { stop };
+  const handle: ReplayRecordingHandle = { stop };
+  activeRecording = handle;
+  return handle;
 }
 
 // ── Marking additional elements as private ──
