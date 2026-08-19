@@ -9,6 +9,7 @@ import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin
 import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
 import ProductZoomedImagesManager, { ProductZoomedImage, ResolvedProductZoomedImage } from "@/components/admin/shop/ProductZoomedImagesManager";
 import ProductDocumentsManager, { ProductDocument } from "@/components/admin/shop/ProductDocumentsManager";
+import ProductPrivateLinksManager, { ProductPrivateLink } from "@/components/admin/shop/ProductPrivateLinksManager";
 import ProductStoryGalleryManager, { ProductStoryItem, ResolvedProductStoryItem } from "@/components/admin/shop/ProductStoryGalleryManager";
 import ProductSocialVideosManager, { ProductSocialVideo, ResolvedProductSocialVideo } from "@/components/admin/shop/ProductSocialVideosManager";
 import ProductUpsellTiersManager, { ProductUpsellTier } from "@/components/admin/shop/ProductUpsellTiersManager";
@@ -20,7 +21,7 @@ import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 import { useSectionGenerate } from "@/hooks/useSectionGenerate";
 import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
-import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd, Clapperboard, Layers, ZoomIn } from "lucide-react";
+import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd, Clapperboard, Layers, ZoomIn, Lock } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ interface Product {
   faqs: ProductFaq[];
   zoomedImages: ResolvedProductZoomedImage[];
   documents: ProductDocument[];
+  privateLinks: ProductPrivateLink[];
   storyGallery: ResolvedProductStoryItem[];
   socialVideos: ResolvedProductSocialVideo[];
   socialVideosTitle: string | null;
@@ -130,6 +132,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [faqs, setFaqs] = useState<ProductFaq[]>([]);
   const [zoomedImages, setZoomedImages] = useState<ProductZoomedImage[]>([]);
   const [documents, setDocuments] = useState<ProductDocument[]>([]);
+  const [privateLinks, setPrivateLinks] = useState<ProductPrivateLink[]>([]);
   const [storyGallery, setStoryGallery] = useState<ProductStoryItem[]>([]);
   const [socialVideos, setSocialVideos] = useState<ProductSocialVideo[]>([]);
   const [socialVideosTitle, setSocialVideosTitle] = useState("");
@@ -245,6 +248,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setFaqs(p.faqs ?? []);
       setZoomedImages(p.zoomedImages ?? []);
       setDocuments(p.documents ?? []);
+      setPrivateLinks(p.privateLinks ?? []);
       setStoryGallery(p.storyGallery ?? []);
       setSocialVideos(p.socialVideos ?? []);
       setSocialVideosTitle(p.socialVideosTitle ?? "");
@@ -448,6 +452,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         faqs,
         zoomedImages,
         documents,
+        privateLinks,
         storyGallery,
         socialVideos,
         socialVideosTitle: socialVideosTitle || null,
@@ -482,6 +487,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setFaqs(p.faqs ?? []);
       setZoomedImages(p.zoomedImages ?? []);
       setDocuments(p.documents ?? []);
+      setPrivateLinks(p.privateLinks ?? []);
       setStoryGallery(p.storyGallery ?? []);
       setSocialVideos(p.socialVideos ?? []);
       setSocialVideosTitle(p.socialVideosTitle ?? "");
@@ -722,6 +728,11 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             {/* Documents */}
             <CollapsibleSection icon={<FileText size={14} strokeWidth={1.75} />} title="Documents (PDF)">
               <ProductDocumentsManager productId={params.id} documents={documents} onChange={setDocuments} translations={translations} setTranslation={setTranslation} />
+            </CollapsibleSection>
+
+            {/* Private links — admin-only, never sent to the storefront */}
+            <CollapsibleSection icon={<Lock size={14} strokeWidth={1.75} />} title="Private Links">
+              <ProductPrivateLinksManager links={privateLinks} onChange={setPrivateLinks} />
             </CollapsibleSection>
 
             {/* Story Gallery */}
