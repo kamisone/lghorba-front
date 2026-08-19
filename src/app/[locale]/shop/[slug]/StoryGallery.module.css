@@ -285,6 +285,8 @@
      via style={{ aspectRatio }} in StoryNarrativeGallery.tsx — this is only
      the fallback before that renders. */
   aspect-ratio: 1 / 1;
+  /* Always fills its full 70% grid track width, for all three admin-chosen
+     ratios — height then follows from that width via aspect-ratio. */
   position: relative;
   isolation: isolate;
   cursor: zoom-in;
@@ -312,10 +314,12 @@
   pointer-events: none;
 }
 
-/* Uniform card: every row sits in the same 4:3 rounded frame regardless of
-   the source image's own size. object-fit is "cover", so the image always
-   fills the frame edge-to-edge (cropped as needed) — the card still keeps
-   its own background + shadow for the rounded corners. */
+/* Uniform card: every row sits in the same rounded frame (aspect-ratio set
+   inline per image, see .narrativeMedia above) regardless of the source
+   image's own aspect ratio. object-fit is "contain", so the whole image is
+   always visible, letterboxed on the frame's own white background rather
+   than cropped — the card still keeps its own background + shadow for the
+   rounded corners. */
 .narrativeMedia .imgShell {
   border-radius: 20px;
   overflow: hidden;
@@ -326,7 +330,7 @@
 }
 
 .narrativeMedia .img {
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 
