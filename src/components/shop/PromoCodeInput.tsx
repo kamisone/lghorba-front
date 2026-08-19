@@ -10,7 +10,8 @@ export interface CouponResult {
   valid: boolean;
   discountCents: number;
   type: string;
-  message?: string;
+  /** Stable reason code from the backend — mapped to a localized string below, never shown raw. */
+  code?: "invalid" | "not_yet_active" | "expired" | "usage_limit_reached" | "min_order_not_met";
 }
 
 interface Props {
@@ -23,6 +24,14 @@ interface Props {
 }
 
 function centsToEuros(c: number) { return (c / 100).toFixed(2); }
+
+const ERROR_KEY: Record<NonNullable<CouponResult["code"]>, "promoInvalidCode" | "promoNotYetActive" | "promoExpired" | "promoUsageLimitReached" | "promoMinOrderNotMet"> = {
+  invalid: "promoInvalidCode",
+  not_yet_active: "promoNotYetActive",
+  expired: "promoExpired",
+  usage_limit_reached: "promoUsageLimitReached",
+  min_order_not_met: "promoMinOrderNotMet",
+};
 
 export default function PromoCodeInput({
   onValidate,
@@ -113,7 +122,7 @@ export default function PromoCodeInput({
       {result && !result.valid && (
         <div className={`${styles.feedback} ${styles.feedbackInvalid}`}>
           <em className={styles.feedbackIcon}><X size={14} strokeWidth={2} /></em>
-          {result.message ?? t.promoInvalidCode}
+          {t[result.code ? ERROR_KEY[result.code] : "promoInvalidCode"]}
         </div>
       )}
     </div>

@@ -4,6 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { parseApiError, type CartMutationResult } from "@/lib/shop/stockError";
 import { pixelTrack } from "@/lib/metaPixel";
 import { getTrafficSource } from "@/lib/shopBehavior";
+import type { CouponResult } from "./PromoCodeInput";
 
 export interface AppliedCoupon {
   code: string;
@@ -52,7 +53,7 @@ interface CartContextValue {
   addItem: (variantId: string, quantity?: number, selectedOptionValueIds?: string[]) => Promise<CartMutationResult>;
   updateItem: (itemId: string, quantity: number) => Promise<CartMutationResult>;
   removeItem: (itemId: string) => Promise<void>;
-  validateCoupon: (code: string) => Promise<{ valid: boolean; discountCents: number; type: string; message?: string }>;
+  validateCoupon: (code: string) => Promise<CouponResult>;
   token: string;
   refresh: () => Promise<void>;
   clearCart: () => void;
