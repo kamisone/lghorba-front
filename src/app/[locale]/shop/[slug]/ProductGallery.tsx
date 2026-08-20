@@ -22,6 +22,14 @@ interface Props {
   title: string;
   /** Parent sets this true when the hero has been scrolled past — triggers the mini floating viewer */
   compact?: boolean;
+  /**
+   * The URL of the slide to jump to whenever it changes (e.g. a new variant
+   * was picked) — looked up by URL within `media` rather than assuming
+   * index 0, since the parent no longer reorders `media` to put the hero
+   * first (see ShopProductDetail.tsx's activeGallery/activeHeroUrl). Falls
+   * back to index 0 when null/not found.
+   */
+  focusUrl?: string | null;
 }
 
 /** Formats a duration in seconds as "m:ss". */
@@ -61,7 +69,7 @@ export interface ProductGalleryHandle {
   openAt: (index: number) => void;
 }
 
-const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductGallery({ media, title, compact }, ref) {
+const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductGallery({ media, title, compact, focusUrl }, ref) {
   const [current, setCurrent] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [mounted, setMounted]  = useState(false);
@@ -166,23 +174,28 @@ const ProductGallery = forwardRef<ProductGalleryHandle, Props>(function ProductG
     },
   }), [goTo]);
 
-  // The parent always places the variant-specific hero image at index 0 when one
-  // applies. Snap back to it whenever it changes (e.g. a new variant/swatch is
-  // selected) — otherwise the previously-active index can point at an unrelated
-  // slide once the array contents shift around it. Also cancels any debounced
-  // scroll-position sync still pending from a swipe on the *previous* media set
-  // (see onMainImageScroll below): covers the edge case where `current` is
-  // already 0 (so the reverse-sync effect, which is what normally arms
-  // isProgrammaticScrollRef, doesn't re-run) but a stale timer from an
-  // in-progress swipe gesture is still ticking and would otherwise clobber it.
-  const heroUrl = media[0]?.url;
+  // Jump to whichever slide matches focusUrl whenever it changes (e.g. a new
+  // variant/swatch was selected) — looked up by URL rather than assumed to
+  // be index 0, since the parent keeps `media` in its own stable order
+  // instead of re-splicing the hero to the front on every selection. No-ops
+  // when there's no focus target (products without variants) or the url
+  // isn't present in this media set. Also cancels any debounced
+  // scroll-position sync still pending from a swipe on the *previous* media
+  // set (see onMainImageScroll below): covers the edge case where `current`
+  // is already at the target index (so the reverse-sync effect, which is
+  // what normally arms isProgrammaticScrollRef, doesn't re-run) but a stale
+  // timer from an in-progress swipe gesture is still ticking and would
+  // otherwise clobber it.
   useEffect(() => {
+    if (!focusUrl) return;
+    const idx = media.findIndex(m => m.url === focusUrl);
+    if (idx < 0) return;
     if (mainScrollSyncTimer.current) {
       clearTimeout(mainScrollSyncTimer.current);
       mainScrollSyncTimer.current = null;
     }
-    setCurrent(0);
-  }, [heroUrl]);
+    setCurrent(idx);
+  }, [focusUrl, media]);
 
   // Scroll the thumbnail strip to keep the active thumb visible
   useEffect(() => {

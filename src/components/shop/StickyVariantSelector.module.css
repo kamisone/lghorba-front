@@ -1,0 +1,215 @@
+/* Fixed to the bottom of the viewport, phone/tablet only — visibility is
+   driven entirely by the `visible` prop (see the IntersectionObserver in
+   ShopProductDetail.tsx), not by a media query, since the same breakpoint
+   check already gates the observer itself. Hidden below the screen and
+   faded out by default; only .rootVisible slides/fades it in — this,
+   plus the caller's rootMargin buffer, is what keeps the transition from
+   feeling like a hard flicker right at the visibility threshold.
+   Deliberately tight — a compact control bar, not a second product section:
+   small type, thin rows, minimal padding throughout this file. */
+.root {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 39; /* just under .stickyBuyBar (40) in ProductDetail.module.css, in case both ever render */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 12px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-top: 1px solid var(--color-border);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -4px 24px rgba(0, 24, 41, 0.1);
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity   0.18s ease;
+}
+
+.rootVisible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+@media (min-width: 901px) {
+  .root { display: none; }
+}
+
+/* ── Stock status ── */
+.stockRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stockDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.stock_available    { color: #16a34a; }
+.stock_out_of_stock,
+.stock_unavailable  { color: #dc2626; }
+.stock_loading       { color: var(--color-text-muted); font-weight: 600; }
+
+/* Grid, not flex: the label column is a fixed width shared by every
+   attribute group, so "Color" and "Size" (and whatever comes after them)
+   line up in the same two columns row after row, instead of each label's
+   own content width nudging its options over by a different amount. */
+.group {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.group + .group { margin-top: 3px; }
+
+.label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  line-height: 1.15;
+  overflow-wrap: break-word;
+}
+
+/* Grid, not flex: every cell in a row is the same fixed size regardless of
+   its label's length, so "Black" and "Very Light Gray" occupy identical
+   cells instead of stretching the row unevenly — long labels wrap onto a
+   second line within the cell rather than being cut off with an ellipsis.
+   grid-auto-flow: column keeps it a single compact row (horizontal scroll
+   for overflow) instead of wrapping into extra *rows*, which is what keeps
+   the card's height predictable regardless of how many options an
+   attribute has. */
+.row {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-auto-flow: column;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+.row::-webkit-scrollbar { display: none; }
+
+.rowSwatch { grid-auto-columns: 32px; }
+.rowPill   { grid-auto-columns: 68px; }
+
+/* ── Color/image swatch tiles ── */
+.tile {
+  position: relative;
+  width: 100%;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: transform .15s cubic-bezier(.22, .61, .36, 1);
+}
+.tile:active:not(:disabled) { transform: scale(.92); }
+.tile::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 2px solid transparent;
+  transition: border-color .15s ease;
+}
+.tileColor::before { border-radius: 50%; }
+.tileImage::before { border-radius: 11px; }
+.tileSelected::before { border-color: var(--color-brand-primary); }
+
+.tileMediaImage,
+.tileMediaColor {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: #e5e7eb;
+  background-size: cover;
+  background-position: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 24, 41, .1);
+}
+.tileMediaImage { border-radius: 9px; }
+.tileMediaColor { border-radius: 50%; }
+
+.check {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--color-brand-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .97);
+}
+
+/* ── Button-type (e.g. Size) pills — fixed-width grid cell (see .rowPill
+   above) so "S" and "Very Light Gray" occupy identically-sized cells; a long
+   label wraps onto a second line within its own cell instead of being cut
+   off with an ellipsis or widening the cell. min-height (not a fixed
+   height) is what lets a wrapped two-line label grow the cell instead of
+   overflowing it — still comfortably touch-sized even at one line. */
+.pill {
+  width: 100%;
+  min-height: 30px;
+  padding: 5px 6px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 11.5px;
+  line-height: 1.15;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.pill:active:not(:disabled) { transform: scale(.96); }
+.pillSelected {
+  border-color: var(--color-brand-primary);
+  background: var(--color-brand-primary);
+  color: #fff;
+}
+
+.optionOos { opacity: .5; }
+.optionUnavailable { opacity: .28; cursor: not-allowed; }
+
+/* ── Dropdown-type ── */
+.select {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root, .tile { transition: none; }
+}

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/shop/CartContext";
 import { useWishlist } from "@/components/shop/WishlistContext";
 import AddToCartButton from "@/components/shop/AddToCartButton";
-import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVariant } from "@/components/shop/ProductVariantSelector";
+import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVariant, type ProductVariantSelectorHandle, type OptionState } from "@/components/shop/ProductVariantSelector";
+import StickyVariantSelector from "@/components/shop/StickyVariantSelector";
 import ProductGallery, { type GalleryMediaItem, type ProductGalleryHandle } from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
@@ -173,6 +174,18 @@ export default function ShopProductDetail({
   const [compact, setCompact]             = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
 
+  // Mirrors ProductVariantSelector's own selection state (see onSelectionChange)
+  // so the sticky mobile fallback selector can render the same
+  // selected/oos/unavailable states and drive the same selection via `pick`,
+  // without keeping a second, potentially-diverging copy of the matching logic.
+  const variantSelectorRef = useRef<ProductVariantSelectorHandle>(null);
+  const [variantSel, setVariantSel] = useState<Record<string, string>>({});
+  const variantOptionStateRef = useRef<(attrId: string, ovId: string) => OptionState>(() => "available");
+  const handleVariantSelectionChange = useCallback((sel: Record<string, string>, optionState: (attrId: string, ovId: string) => OptionState) => {
+    variantOptionStateRef.current = optionState;
+    setVariantSel(sel);
+  }, []);
+
   // Show mini viewer when the gallery element is no longer visible in the viewport.
   useEffect(() => {
     const el = galleryColRef.current;
@@ -185,6 +198,34 @@ export default function ShopProductDetail({
     );
     observer.observe(el);
     const onResize = () => { if (window.innerWidth > 900) setCompact(false); };
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => { observer.disconnect(); window.removeEventListener("resize", onResize); };
+  }, []);
+
+  // Sticky fallback variation selector (phone/tablet): visible whenever the
+  // real ProductVariantSelector (inline in .details, wrapped by
+  // variantSectionRef) is scrolled out of view, hidden the instant it's back
+  // on screen — in either scroll direction, since IntersectionObserver fires
+  // on every crossing regardless of direction. The rootMargin shrinks the
+  // "counted as visible" region by roughly the fixed header's height on top
+  // and the sticky buy bar's height on the bottom, so the real selector has
+  // to be genuinely usable — not just peeking out from under one of those —
+  // before the fallback hides; that, plus the CSS transition in
+  // StickyVariantSelector.module.css, is what keeps this from flickering
+  // right at the edge instead of needing a debounce timer.
+  const variantSectionRef = useRef<HTMLDivElement>(null);
+  const [realSelectorVisible, setRealSelectorVisible] = useState(true);
+  useEffect(() => {
+    const el = variantSectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (window.innerWidth <= 900) setRealSelectorVisible(entry.isIntersecting);
+      },
+      { threshold: 0, rootMargin: "-72px 0px -96px 0px" },
+    );
+    observer.observe(el);
+    const onResize = () => { if (window.innerWidth > 900) setRealSelectorVisible(true); };
     window.addEventListener("resize", onResize, { passive: true });
     return () => { observer.disconnect(); window.removeEventListener("resize", onResize); };
   }, []);
@@ -281,7 +322,7 @@ export default function ShopProductDetail({
     fetch(`/next-api/public/shop/products/${product.slug}/variants/resolve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ optionValueIds: selKey.split(',') }),
+      body: JSON.stringify({ optionValueIds: selKey.split(','), lang: locale !== 'fr' ? locale : undefined }),
     })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then((data: { status: ResolveStatus; variant: ResolvedVariant | null }) => {
@@ -292,7 +333,7 @@ export default function ShopProductDetail({
       })
       .catch(() => { if (!cancelled) setResolveStatus('idle'); });
     return () => { cancelled = true; };
-  }, [selKey, product.slug]);
+  }, [selKey, product.slug, locale]);
 
   // Prefer resolved (real-time) data; fall back to matrix data, then product default.
   const activeId         = resolvedVariant?.id         ?? selectedVariant?.id         ?? defaultVariant?.id         ?? "";
@@ -323,15 +364,21 @@ export default function ShopProductDetail({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
-  // Prepend the variant-specific hero image to the gallery, always at index 0,
-  // so ProductGallery can reliably snap to it on selection change. selectedVariant
-  // (synchronous, from the availability matrix) takes priority over resolvedVariant
-  // (async /resolve call) — the latter lags one tick behind a fresh selection and
-  // would otherwise show the previous variant's image until it resolves. Falls
-  // back to the selected option value's per-product swatch image (e.g. Color →
-  // Red) when the variant itself has no dedicated featured media.
-  const activeGallery = useMemo(() => {
-    let heroUrl = selectedVariant?.featuredMediaUrl ?? resolvedVariant?.featuredMediaUrl ?? null;
+  // Which gallery photo represents the current selection (variant's own
+  // featured image, else the selected option value's swatch image, e.g.
+  // Color → Red). selectedVariant (synchronous, from the availability
+  // matrix) takes priority over resolvedVariant (async /resolve call) — the
+  // latter lags one tick behind a fresh selection and would otherwise show
+  // the previous variant's image until it resolves. resolvedVariant is only
+  // trusted when its id actually matches the variant currently selected:
+  // the /resolve fetch for a fresh selection is still in flight for a beat
+  // after selectedVariant already updated (see the `selKey` effect above),
+  // so without this check the *previous* selection's
+  // resolvedVariant.featuredMediaUrl could still win the fallback for that
+  // beat whenever selectedVariant itself has no dedicated image.
+  const activeHeroUrl = useMemo(() => {
+    const resolvedMatchesSelection = resolvedVariant && selectedVariant && resolvedVariant.id === selectedVariant.id;
+    let heroUrl = selectedVariant?.featuredMediaUrl ?? (resolvedMatchesSelection ? resolvedVariant.featuredMediaUrl : null) ?? null;
 
     if (!heroUrl && availabilityMatrix && selectedOptionValueIds.length) {
       for (const attr of availabilityMatrix.attributes) {
@@ -340,11 +387,23 @@ export default function ShopProductDetail({
       }
     }
 
-    if (!heroUrl) return productGallery;
+    return heroUrl;
+  }, [resolvedVariant, selectedVariant, availabilityMatrix, selectedOptionValueIds]);
 
-    const rest = productGallery.filter(m => m.url !== heroUrl);
-    return [{ type: "image" as const, url: heroUrl, posterUrl: null }, ...rest];
-  }, [resolvedVariant, selectedVariant, productGallery, availabilityMatrix, selectedOptionValueIds]);
+  // ProductGallery is told which slide to focus (see the `focusUrl` prop)
+  // rather than having the hero re-spliced to the front of the array on
+  // every selection: reordering the array on each pick was reshuffling the
+  // whole thumbnail strip around, which read as broken/flickery on its own
+  // and made the "did the image actually update" question harder to answer
+  // at a glance. The gallery's own order now only ever changes when the hero
+  // photo isn't already one of the product's own gallery images (e.g. a
+  // swatch-only image never uploaded to the main gallery) — the one case
+  // where there's no existing slide to just navigate to.
+  const activeGallery = useMemo(() => {
+    if (!activeHeroUrl || productGallery.some(m => m.url === activeHeroUrl)) return productGallery;
+    const rest = productGallery.filter(m => m.url !== activeHeroUrl);
+    return [{ type: "image" as const, url: activeHeroUrl, posterUrl: null }, ...rest];
+  }, [activeHeroUrl, productGallery]);
 
   const wishlisted = isWishlisted(product.id);
   const inCart     = cart?.items.some(item => item.variantId === activeId) ?? false;
@@ -485,6 +544,7 @@ export default function ShopProductDetail({
         <ProductGallery
           ref={galleryRef}
           media={activeGallery}
+          focusUrl={activeHeroUrl}
           title={product.title}
           compact={compact}
         />
@@ -587,11 +647,15 @@ export default function ShopProductDetail({
 
         {/* ── Variation option pickers ── */}
         {availabilityMatrix && (
-          <ProductVariantSelector
-            matrix={availabilityMatrix}
-            initialVariantSlug={initialVariantSlug}
-            onVariantChange={setSelectedVariant}
-          />
+          <div ref={variantSectionRef}>
+            <ProductVariantSelector
+              ref={variantSelectorRef}
+              matrix={availabilityMatrix}
+              initialVariantSlug={initialVariantSlug}
+              onVariantChange={setSelectedVariant}
+              onSelectionChange={handleVariantSelectionChange}
+            />
+          </div>
         )}
 
         {/* Real-time stock status */}
@@ -706,6 +770,22 @@ export default function ShopProductDetail({
         )}
 
       </div>
+
+      {/* ── Sticky fallback variation selector — mobile/tablet only. Yields to
+             the sticky buy bar below once that's also showing (both are
+             fixed to the bottom edge; showing both at once would stack two
+             bars on top of each other), which by then already carries a
+             read-only summary of the current selection in its meta row. ── */}
+      {availabilityMatrix && (
+        <StickyVariantSelector
+          matrix={availabilityMatrix}
+          sel={variantSel}
+          optionState={variantOptionStateRef.current}
+          onPick={(attrId, ovId) => variantSelectorRef.current?.pick(attrId, ovId)}
+          visible={!realSelectorVisible && !(showStickyBar && !allOutOfStock)}
+          resolveStatus={resolveStatus}
+        />
+      )}
 
       {/* ── Sticky buy bar — mobile/tablet only, hidden when the whole product
              is out of stock (the sticky notice communicates the status) ────── */}

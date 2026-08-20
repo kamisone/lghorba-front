@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./ProductVariantSelector.module.css";
@@ -45,11 +45,30 @@ interface Props {
   matrix: AvailabilityMatrix;
   initialVariantSlug?: string | null;
   onVariantChange?: (variant: AvailabilityVariant | null) => void;
+  /**
+   * Fired whenever the per-attribute selection changes (including the initial
+   * one derived on mount) — lets a companion UI elsewhere on the page (e.g.
+   * the sticky mobile fallback selector, rendered from ShopProductDetail.tsx)
+   * mirror the current selection and its available/oos/unavailable state
+   * without duplicating this component's matching logic.
+   */
+  onSelectionChange?: (sel: Record<string, string>, optionState: (attrId: string, ovId: string) => OptionState) => void;
 }
 
-type OptionState = "selected" | "available" | "oos" | "unavailable";
+export type OptionState = "selected" | "available" | "oos" | "unavailable";
 
-export default function ProductVariantSelector({ matrix, initialVariantSlug, onVariantChange }: Props) {
+export interface ProductVariantSelectorHandle {
+  /** Picks an option value for an attribute — same guarded logic as clicking
+   *  a swatch/button here, exposed so the sticky fallback selector can drive
+   *  this component's single source of truth instead of keeping a second,
+   *  potentially-diverging copy of the matching logic. */
+  pick: (attrId: string, ovId: string) => void;
+}
+
+const ProductVariantSelector = forwardRef<ProductVariantSelectorHandle, Props>(function ProductVariantSelector(
+  { matrix, initialVariantSlug, onVariantChange, onSelectionChange }: Props,
+  ref,
+) {
   const locale = useLocale();
   const t = getTranslations(locale).shop;
 
@@ -143,6 +162,20 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
     if (matches.some(v => v.available && v.inStock)) return "available";
     return "oos";
   }
+
+  useEffect(() => {
+    onSelectionChange?.(sel, optionState);
+    // optionState is redefined every render (closes over sel/matrix/hasStructuredOptions,
+    // all already tracked below) — including it would just re-fire this identically.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sel, matrix, hasStructuredOptions, onSelectionChange]);
+
+  // pick is a plain closure redefined every render over exactly these three
+  // values (via optionState/setSel) — listing it too would just mean this
+  // reruns on every render instead of only when the selection can actually
+  // change what pick does.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useImperativeHandle(ref, () => ({ pick }), [sel, hasStructuredOptions, matrix]);
 
   function pick(attrId: string, ovId: string) {
     if (optionState(attrId, ovId) === "unavailable") return;
@@ -248,4 +281,6 @@ export default function ProductVariantSelector({ matrix, initialVariantSlug, onV
       })}
     </div>
   );
-}
+});
+
+export default ProductVariantSelector;

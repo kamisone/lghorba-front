@@ -120,7 +120,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
   const addItem = useCallback(async (variantId: string, quantity = 1, selectedOptionValueIds?: string[]): Promise<CartMutationResult> => {
     setMutating(true);
     try {
-      const res = await fetch(`/next-api/public/shop/cart/${token}/items`, {
+      const res = await fetch(`/next-api/public/shop/cart/${token}/items${langParam}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ variantId, quantity, selectedOptionValueIds, ...getTrafficSource() }),
@@ -151,7 +151,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
       setMutating(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, langParam]);
 
   const updateItem = useCallback(async (itemId: string, quantity: number): Promise<CartMutationResult> => {
     const prevCart = cartRef.current;
@@ -174,7 +174,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
 
     setMutating(true);
     try {
-      const res = await fetch(`/next-api/public/shop/cart/${token}/items/${itemId}`, {
+      const res = await fetch(`/next-api/public/shop/cart/${token}/items/${itemId}${langParam}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quantity, ...getTrafficSource() }),
@@ -194,7 +194,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
       setMutating(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, langParam]);
 
   const removeItem = useCallback(async (itemId: string) => {
     const prevCart = cartRef.current;
@@ -214,7 +214,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
 
     setMutating(true);
     try {
-      const res = await fetch(`/next-api/public/shop/cart/${token}/items/${itemId}`, {
+      const res = await fetch(`/next-api/public/shop/cart/${token}/items/${itemId}${langParam}`, {
         method: "DELETE",
       });
       if (res.ok) applyCart(await res.json());
@@ -225,7 +225,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
       setMutating(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, langParam]);
 
   const validateCoupon = useCallback(async (code: string) => {
     const subtotalCents = cart?.subtotalCents ?? 0;
