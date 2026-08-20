@@ -9,6 +9,7 @@ import ProductVariantSelector, { type AvailabilityMatrix, type AvailabilityVaria
 import StickyVariantSelector from "@/components/shop/StickyVariantSelector";
 import ProductGallery, { type GalleryMediaItem, type ProductGalleryHandle } from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
+import DeliveryDetails from "./DeliveryDetails";
 import { getTranslations } from "@/lib/i18n";
 import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
 import { ttqTrack, trackTikTokServerEvent } from "@/lib/tiktokPixel";
@@ -96,6 +97,8 @@ interface Product {
   outOfStock?: boolean;
   /** Delivery offered on this product; frees the whole basket. */
   freeShipping?: boolean;
+  freeShippingDaysMin?: number | null;
+  freeShippingDaysMax?: number | null;
   upsellingEnabled?: boolean;
   upsellTiers?: UpsellTier[];
 }
@@ -773,6 +776,13 @@ export default function ShopProductDetail({
             </>
           )}
         </div>
+
+        <DeliveryDetails
+          locale={locale}
+          freeShipping={product.freeShipping}
+          freeShippingDaysMin={product.freeShippingDaysMin}
+          freeShippingDaysMax={product.freeShippingDaysMax}
+        />
 
         {/* Description — no heading, the text reads fine as a direct continuation of the page */}
         {product.description && (

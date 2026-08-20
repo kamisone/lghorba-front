@@ -393,6 +393,95 @@
 .trustLink { color: inherit; text-decoration: none; }
 .trustLink:hover .trustText { text-decoration: underline; }
 
+/* ── Delivery details (collapsible) ── */
+.deliverySection {
+  display: block;
+  flex-shrink: 0;
+  margin-bottom: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.deliveryToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-heading);
+}
+.deliveryToggle::-webkit-details-marker { display: none; }
+.deliveryToggleLabel { display: inline-flex; align-items: center; gap: 8px; }
+.deliveryToggleIcon { flex-shrink: 0; color: var(--color-text-muted); }
+
+.deliveryChevron {
+  width: 16px; height: 16px; flex-shrink: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition: transform 0.2s ease;
+}
+.deliverySection[open] .deliveryChevron { transform: rotate(180deg); }
+
+.deliveryBody { padding: 2px 16px 16px; border-top: 1px solid var(--color-border); }
+
+.deliveryState { padding: 14px 0; font-size: 13px; color: var(--color-text-muted); }
+
+.deliveryFreeNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 0 2px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-brand-primary);
+}
+
+.deliveryZone { padding: 14px 0; border-bottom: 1px solid var(--color-border); }
+.deliveryZone:last-child { border-bottom: none; }
+
+.deliveryZoneName { font-size: 13.5px; font-weight: 700; color: var(--color-text-heading); }
+.deliveryZoneCountries {
+  font-size: 12px;
+  color: var(--color-text-placeholder);
+  line-height: 1.5;
+  margin: 2px 0 10px;
+}
+
+.deliveryMethodList { display: flex; flex-direction: column; gap: 10px; }
+.deliveryMethodRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.deliveryMethodMain { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.deliveryMethodName { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); }
+.deliveryMethodCarrier { font-size: 11.5px; color: var(--color-text-placeholder); }
+.deliveryMethodMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.deliveryMethodDays { font-size: 12.5px; color: var(--color-text-muted); white-space: nowrap; }
+.deliveryMethodPrice {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  white-space: nowrap;
+  min-width: 44px;
+  text-align: right;
+}
+
 /* ── Description ── */
 .descSection { border-top: 1px solid var(--color-border); padding-top: 28px; }
 .descSection h3 { font-size: 17px; font-weight: 700; color: var(--color-text-heading); margin: 0 0 14px; }
@@ -645,8 +734,9 @@
   /* Tighter vertical rhythm on phone — the 28px+28px gap either side of the
      trust badges (desktop spacing) reads as an oversized gap once everything
      is already stacked full-width. */
-  .trust        { margin-bottom: 16px; }
-  .descSection  { padding-top: 16px; }
+  .trust           { margin-bottom: 16px; }
+  .deliverySection { margin-bottom: 16px; }
+  .descSection     { padding-top: 16px; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */

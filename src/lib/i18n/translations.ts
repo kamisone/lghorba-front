@@ -923,6 +923,14 @@ export const en = {
     freeShippingProductNote: "Delivery is on us for this product.",
     freeShippingCartNote: "Your order ships free.",
     freeShippingIncluded: "Free",
+    // delivery details (collapsible panel)
+    deliveryDetailsTitle: "Delivery details",
+    deliveryDetailsLoading: "Loading delivery options…",
+    deliveryDetailsError: "Delivery options are unavailable right now.",
+    deliveryDetailsEmpty: "No delivery options are configured yet.",
+    deliveryDetailsWorldwide: "Other destinations",
+    deliveryDetailsDaysUnit: "business days",
+    deliveryDetailsFree: "Free",
     savingsPrefix: "Savings of ",
     savingsSuffix: " will be confirmed at checkout.",
     // quantity discounts (upselling)
@@ -2009,6 +2017,14 @@ export const fr: Translations = {
     freeShippingProductNote: "La livraison est offerte pour ce produit.",
     freeShippingCartNote: "La livraison de votre commande est offerte.",
     freeShippingIncluded: "Offerte",
+    // delivery details (collapsible panel)
+    deliveryDetailsTitle: "Détails de livraison",
+    deliveryDetailsLoading: "Chargement des options de livraison…",
+    deliveryDetailsError: "Les options de livraison sont indisponibles pour le moment.",
+    deliveryDetailsEmpty: "Aucune option de livraison n'est configurée pour le moment.",
+    deliveryDetailsWorldwide: "Autres destinations",
+    deliveryDetailsDaysUnit: "jours ouvrés",
+    deliveryDetailsFree: "Gratuit",
     savingsPrefix: "Une économie de ",
     savingsSuffix: " sera confirmée à la caisse.",
     // quantity discounts (upselling)
@@ -3027,6 +3043,14 @@ export const es: Translations = {
     freeShippingProductNote: "La entrega corre de nuestra cuenta para este producto.",
     freeShippingCartNote: "Tu pedido tiene envío gratis.",
     freeShippingIncluded: "Gratis",
+    // delivery details (collapsible panel)
+    deliveryDetailsTitle: "Detalles de envío",
+    deliveryDetailsLoading: "Cargando opciones de envío…",
+    deliveryDetailsError: "Las opciones de envío no están disponibles en este momento.",
+    deliveryDetailsEmpty: "Aún no hay opciones de envío configuradas.",
+    deliveryDetailsWorldwide: "Otros destinos",
+    deliveryDetailsDaysUnit: "días hábiles",
+    deliveryDetailsFree: "Gratis",
     savingsPrefix: "Ahorro de ",
     savingsSuffix: " se confirmará al finalizar la compra.",
     // quantity discounts (upselling)
@@ -4044,6 +4068,14 @@ export const it: Translations = {
     freeShippingProductNote: "La consegna è offerta da noi per questo prodotto.",
     freeShippingCartNote: "Il tuo ordine ha la spedizione gratuita.",
     freeShippingIncluded: "Gratuita",
+    // delivery details (collapsible panel)
+    deliveryDetailsTitle: "Dettagli di consegna",
+    deliveryDetailsLoading: "Caricamento delle opzioni di consegna…",
+    deliveryDetailsError: "Le opzioni di consegna non sono disponibili al momento.",
+    deliveryDetailsEmpty: "Nessuna opzione di consegna configurata al momento.",
+    deliveryDetailsWorldwide: "Altre destinazioni",
+    deliveryDetailsDaysUnit: "giorni lavorativi",
+    deliveryDetailsFree: "Gratuita",
     savingsPrefix: "Risparmio di ",
     savingsSuffix: " sarà confermato al checkout.",
     // quantity discounts (upselling)
@@ -5061,6 +5093,14 @@ export const de: Translations = {
     freeShippingProductNote: "Die Lieferung ist für dieses Produkt kostenlos.",
     freeShippingCartNote: "Ihre Bestellung wird kostenlos versendet.",
     freeShippingIncluded: "Kostenlos",
+    // delivery details (collapsible panel)
+    deliveryDetailsTitle: "Lieferdetails",
+    deliveryDetailsLoading: "Versandoptionen werden geladen…",
+    deliveryDetailsError: "Versandoptionen sind derzeit nicht verfügbar.",
+    deliveryDetailsEmpty: "Es sind noch keine Versandoptionen konfiguriert.",
+    deliveryDetailsWorldwide: "Weitere Länder",
+    deliveryDetailsDaysUnit: "Werktage",
+    deliveryDetailsFree: "Kostenlos",
     savingsPrefix: "Ersparnis von ",
     savingsSuffix: " wird beim Checkout bestätigt.",
     // quantity discounts (upselling)
@@ -6078,6 +6118,14 @@ export const nl: Translations = {
     freeShippingProductNote: "De levering is voor ons rekening bij dit product.",
     freeShippingCartNote: "Je bestelling wordt gratis verzonden.",
     freeShippingIncluded: "Gratis",
+    // delivery details (collapsible panel)
+    deliveryDetailsTitle: "Bezorgdetails",
+    deliveryDetailsLoading: "Verzendopties worden geladen…",
+    deliveryDetailsError: "Verzendopties zijn momenteel niet beschikbaar.",
+    deliveryDetailsEmpty: "Er zijn nog geen verzendopties geconfigureerd.",
+    deliveryDetailsWorldwide: "Overige bestemmingen",
+    deliveryDetailsDaysUnit: "werkdagen",
+    deliveryDetailsFree: "Gratis",
     savingsPrefix: "Besparing van ",
     savingsSuffix: " wordt bevestigd bij het afrekenen.",
     // quantity discounts (upselling)
@@ -7095,6 +7143,14 @@ export const pl: Translations = {
     freeShippingProductNote: "Dostawa dla tego produktu jest po naszej stronie.",
     freeShippingCartNote: "Twoje zamówienie ma darmową dostawę.",
     freeShippingIncluded: "Bezpłatnie",
+    // delivery details (collapsible panel)
+    deliveryDetailsTitle: "Szczegóły dostawy",
+    deliveryDetailsLoading: "Ładowanie opcji dostawy…",
+    deliveryDetailsError: "Opcje dostawy są obecnie niedostępne.",
+    deliveryDetailsEmpty: "Nie skonfigurowano jeszcze żadnych opcji dostawy.",
+    deliveryDetailsWorldwide: "Pozostałe kraje",
+    deliveryDetailsDaysUnit: "dni roboczych",
+    deliveryDetailsFree: "Za darmo",
     savingsPrefix: "Oszczędność w wysokości ",
     savingsSuffix: " zostanie potwierdzona przy finalizacji zakupu.",
     // quantity discounts (upselling)
