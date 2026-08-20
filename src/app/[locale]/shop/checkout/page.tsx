@@ -461,8 +461,16 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
 
     const intentRes = await fetch(`/next-api/public/shop/checkout/${snapshot.orderId}/payment-intent`, { method: "POST" });
     if (!intentRes.ok) {
-      const err = await intentRes.json().catch(() => ({}));
-      setFormError((err as any).message ?? t.failedPaymentInit);
+      // Always the frontend's own translated copy here, never the raw
+      // backend message: this failure covers everything from "this is a
+      // demand-test product, no charge is ever created for it" (deliberately
+      // phrased generically server-side so a customer can't tell it apart
+      // from a real outage) to a genuine backend error, whose message could
+      // be English-only or technical-sounding (e.g. an unhandled exception's
+      // "Internal server error"). t.failedPaymentInit is already a proper
+      // human, apologetic message in all supported locales — no reason to
+      // ever show anything else here.
+      setFormError(t.failedPaymentInit);
       setSubmitting(false);
       return;
     }
