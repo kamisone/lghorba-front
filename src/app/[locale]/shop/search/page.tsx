@@ -9,6 +9,7 @@ import shopStyles from "../Shop.module.css";
 import styles from "./Search.module.css";
 import { getTranslations } from "@/lib/i18n";
 import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
+import { ttqTrack, trackTikTokServerEvent } from "@/lib/tiktokPixel";
 import { trackShopBehavior } from "@/lib/shopBehavior";
 
 interface Hit {
@@ -67,6 +68,9 @@ export default function ShopSearchPage({ params }: { params: { locale: string } 
     const eventId = crypto.randomUUID();
     pixelTrack("Search", { search_string: q }, eventId);
     trackServerEvent("Search", eventId, { search_string: q });
+    const tiktokEventId = crypto.randomUUID();
+    ttqTrack("Search", { search_string: q }, tiktokEventId);
+    trackTikTokServerEvent("Search", tiktokEventId, { search_string: q });
   }, [q]);
 
   // Internal behavior tracking (admin analytics, independent of Meta): needs

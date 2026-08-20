@@ -13,7 +13,7 @@ const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 
 interface TrackedOrder {
   totalCents: number;
-  items: { sku: string | null; productId?: string | null; variantId?: string | null; quantity: number; unitPriceCents: number }[];
+  items: { title?: string | null; sku: string | null; productId?: string | null; variantId?: string | null; quantity: number; unitPriceCents: number }[];
 }
 
 async function fetchOrderForTracking(orderNumber: string, token: string): Promise<TrackedOrder | null> {
@@ -53,6 +53,7 @@ export default async function CheckoutSuccessPage({ params, searchParams }: Prop
           totalCents={order.totalCents}
           items={order.items.map(i => ({
             id: i.variantId ?? i.productId ?? i.sku ?? "unknown",
+            title: i.title,
             quantity: i.quantity,
             unitPriceCents: i.unitPriceCents,
           }))}

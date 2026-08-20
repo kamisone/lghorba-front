@@ -9,7 +9,8 @@ import { CartProvider } from "@/components/shop/CartContext";
 import { WishlistProvider } from "@/components/shop/WishlistContext";
 import CartDrawer from "@/components/shop/CartDrawer";
 import MetaPixelLoader from "@/components/tracking/MetaPixelLoader";
-import { getMetaPixelConfig } from "@/lib/platformSettings";
+import TikTokPixelLoader from "@/components/tracking/TikTokPixelLoader";
+import { getMetaPixelConfig, getTikTokPixelConfig } from "@/lib/platformSettings";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -26,12 +27,16 @@ export default async function LocaleLayout({
     redirect(`/${DEFAULT_LOCALE}`);
   }
 
-  const metaPixel = await getMetaPixelConfig();
+  const [metaPixel, tiktokPixel] = await Promise.all([
+    getMetaPixelConfig(),
+    getTikTokPixelConfig(),
+  ]);
 
   return (
     <CookieConsentProvider locale={params.locale}>
       <Suspense fallback={null}>
         <MetaPixelLoader pixelId={metaPixel.pixelId} enabled={metaPixel.enabled} />
+        <TikTokPixelLoader pixelId={tiktokPixel.pixelId} enabled={tiktokPixel.enabled} />
       </Suspense>
       <CartProvider locale={params.locale}>
         <WishlistProvider>

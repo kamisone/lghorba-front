@@ -11,6 +11,7 @@ import ProductGallery, { type GalleryMediaItem, type ProductGalleryHandle } from
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import { getTranslations } from "@/lib/i18n";
 import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
+import { ttqTrack, trackTikTokServerEvent } from "@/lib/tiktokPixel";
 import { trackShopBehavior } from "@/lib/shopBehavior";
 import { formatStockError, stockCheckMessage } from "@/lib/shop/stockError";
 import { getTrustBadgeIcon } from "@/lib/shop/trustBadgeIcons";
@@ -360,6 +361,17 @@ export default function ShopProductDetail({
     };
     pixelTrack("ViewContent", customData, eventId);
     trackServerEvent("ViewContent", eventId, customData);
+    // TikTok: separate event ID — dedup is per-platform, no reason to share Meta's.
+    // `contents` is a nested array per TikTok's own event-code spec — a flat
+    // content_id is not the documented shape.
+    const tiktokEventId = crypto.randomUUID();
+    const tiktokProperties = {
+      contents: [{ content_id: product.id, content_type: "product", content_name: product.title }],
+      value: activePriceCents / 100,
+      currency: "EUR",
+    };
+    ttqTrack("ViewContent", tiktokProperties, tiktokEventId);
+    trackTikTokServerEvent("ViewContent", tiktokEventId, tiktokProperties);
     trackShopBehavior("product_view", { productId: product.id });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);

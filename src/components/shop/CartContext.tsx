@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { parseApiError, type CartMutationResult } from "@/lib/shop/stockError";
 import { pixelTrack } from "@/lib/metaPixel";
+import { ttqTrack } from "@/lib/tiktokPixel";
 import { getTrafficSource } from "@/lib/shopBehavior";
 import type { CouponResult } from "./PromoCodeInput";
 
@@ -126,7 +127,7 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
         body: JSON.stringify({ variantId, quantity, selectedOptionValueIds, ...getTrafficSource() }),
       });
       if (res.ok) {
-        const data: Cart & { metaAddToCartEventId?: string } = await res.json();
+        const data: Cart & { metaAddToCartEventId?: string; tiktokAddToCartEventId?: string } = await res.json();
         applyCart(data);
         // Meta Pixel: value/currency/ids only — never add customer PII here.
         // Value reflects what was just added (unit price × quantity added),
@@ -140,6 +141,17 @@ export function CartProvider({ children, locale = "fr" }: { children: React.Reac
           currency: "EUR",
           num_items: quantity,
         }, data.metaAddToCartEventId);
+        ttqTrack("AddToCart", {
+          contents: [{
+            content_id: variantId,
+            content_type: "product",
+            content_name: addedItem?.titleSnapshot,
+            quantity,
+            price: (addedItem?.unitPriceCents ?? 0) / 100,
+          }],
+          value: ((addedItem?.unitPriceCents ?? 0) * quantity) / 100,
+          currency: "EUR",
+        }, data.tiktokAddToCartEventId);
         return { ok: true };
       }
       const body = await res.json().catch(() => ({}));

@@ -8,10 +8,12 @@ const API = process.env.API_BASE_URL_SERVER ?? "http://127.0.0.1:4000";
 const REVALIDATE_SECONDS = 300;
 
 interface MetaPixelConfig { pixelId: string | null; enabled: boolean }
+interface TikTokPixelConfig { pixelId: string | null; enabled: boolean }
 
 interface PlatformSettings {
   timezone?: string;
   metaPixel?: MetaPixelConfig;
+  tiktokPixel?: TikTokPixelConfig;
 }
 
 async function getPlatformSettings(): Promise<PlatformSettings | null> {
@@ -34,4 +36,9 @@ export async function getBusinessTimezone(): Promise<string> {
 export async function getMetaPixelConfig(): Promise<MetaPixelConfig> {
   const settings = await getPlatformSettings();
   return settings?.metaPixel ?? { pixelId: null, enabled: false };
+}
+
+export async function getTikTokPixelConfig(): Promise<TikTokPixelConfig> {
+  const settings = await getPlatformSettings();
+  return settings?.tiktokPixel ?? { pixelId: null, enabled: false };
 }
