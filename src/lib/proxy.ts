@@ -93,11 +93,14 @@ export async function proxyRequest(
       }
     }
 
+    // Forwarded for every method, not just GET: query params like ?lang=
+    // are just as meaningful on a POST/PUT/DELETE mutation (e.g. the shop
+    // cart's add/update/remove-item routes) as on a read, and dropping them
+    // silently made those endpoints always answer in the base language
+    // regardless of what the caller asked for.
     let url = `${BACKEND_URL}${path}`;
-    if (method === "GET") {
-      const qs = new URL(req.url).searchParams.toString();
-      if (qs) url += `?${qs}`;
-    }
+    const qs = new URL(req.url).searchParams.toString();
+    if (qs) url += `?${qs}`;
 
     const res = await fetch(url, {
       method,
