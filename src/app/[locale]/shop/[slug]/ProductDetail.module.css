@@ -434,16 +434,43 @@
 
 .deliveryState { padding: 14px 0; font-size: 13px; color: var(--color-text-muted); }
 
-.deliveryFreeNote {
+.deliveryFreeBanner {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 12px 0 2px;
-  margin: 0;
+  gap: 7px;
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--color-brand-primary);
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
 }
+.deliveryFreeIcon { flex-shrink: 0; }
+
+.deliveryUpgrades { margin: 4px 0 4px; }
+.deliveryUpgradesTitle {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+.deliveryUpgradeList { display: flex; flex-direction: column; gap: 6px; }
+.deliveryUpgradeRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.deliveryUpgradeMain { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.deliveryUpgradeName { font-weight: 600; color: var(--color-text-secondary); }
+.deliveryUpgradeTag { font-size: 11px; color: var(--color-text-placeholder); }
+.deliveryUpgradeMeta { display: flex; align-items: baseline; gap: 8px; flex-shrink: 0; white-space: nowrap; }
+.deliveryUpgradeDays { font-size: 12px; color: var(--color-text-muted); }
+.deliveryUpgradePrice { font-size: 12.5px; font-weight: 700; color: var(--color-text-heading); }
 
 .deliveryZone { padding: 14px 0; border-bottom: 1px solid var(--color-border); }
 .deliveryZone:last-child { border-bottom: none; }
@@ -480,6 +507,85 @@
   white-space: nowrap;
   min-width: 44px;
   text-align: right;
+}
+
+/* ── Package contents (collapsible) ── */
+.packageSection {
+  display: block;
+  flex-shrink: 0;
+  margin-bottom: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.packageToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-heading);
+}
+.packageToggle::-webkit-details-marker { display: none; }
+.packageToggleLabel { display: inline-flex; align-items: center; gap: 8px; }
+.packageToggleIcon { flex-shrink: 0; color: var(--color-text-muted); }
+
+.packageChevron {
+  width: 16px; height: 16px; flex-shrink: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition: transform 0.2s ease;
+}
+.packageSection[open] .packageChevron { transform: rotate(180deg); }
+
+.packageBody { padding: 4px 16px 16px; border-top: 1px solid var(--color-border); }
+
+.packageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 14px;
+  padding-top: 12px;
+}
+
+.packageItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: zoom-in;
+}
+
+.packageThumb {
+  display: block;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  transition: border-color 0.15s ease;
+}
+.packageItem:hover .packageThumb,
+.packageItem:focus-visible .packageThumb { border-color: var(--color-brand-primary); }
+
+.packageThumbImg { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.packageLabel {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--color-text-muted);
 }
 
 /* ── Description ── */
@@ -736,6 +842,7 @@
      is already stacked full-width. */
   .trust           { margin-bottom: 16px; }
   .deliverySection { margin-bottom: 16px; }
+  .packageSection  { margin-bottom: 16px; }
   .descSection     { padding-top: 16px; }
 }
 

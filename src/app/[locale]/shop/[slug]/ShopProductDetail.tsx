@@ -10,6 +10,7 @@ import StickyVariantSelector from "@/components/shop/StickyVariantSelector";
 import ProductGallery, { type GalleryMediaItem, type ProductGalleryHandle } from "./ProductGallery";
 import PromotionBadge, { type PromotionInfo } from "@/components/shop/PromotionBadge";
 import DeliveryDetails from "./DeliveryDetails";
+import PackageContents from "./PackageContents";
 import { getTranslations } from "@/lib/i18n";
 import { pixelTrack, trackServerEvent } from "@/lib/metaPixel";
 import { ttqTrack, trackTikTokServerEvent } from "@/lib/tiktokPixel";
@@ -53,6 +54,25 @@ interface ProductInfoSection {
   sortOrder: number;
 }
 
+/** A paid faster-delivery alternative offered alongside free shipping */
+interface FreeShippingUpgradeMethod {
+  id: string;
+  name: string;
+  carrier: string | null;
+  priceCents: number;
+  estimatedDaysMin: number;
+  estimatedDaysMax: number;
+  isActive?: boolean;
+}
+
+/** A "what's in the box" image shown in a collapsible section after Delivery details */
+interface ProductPackageContentItem {
+  id: string;
+  key: string;
+  label?: string | null;
+  url: string;
+}
+
 /** A small icon+title trust signal shown near the buy box (e.g. "Secure checkout") */
 interface ProductTrustBadge {
   id: string;
@@ -89,6 +109,7 @@ interface Product {
   media: ResolvedProductMediaItem[];
   infoSections: ProductInfoSection[];
   trustBadges: ProductTrustBadge[];
+  packageContents?: ProductPackageContentItem[];
   faqs: ProductFaq[];
   documents: Array<{ id: string; title: string; url: string; originalFilename: string; sizeBytes: number }>;
   variants: FlatVariant[];
@@ -99,6 +120,7 @@ interface Product {
   freeShipping?: boolean;
   freeShippingDaysMin?: number | null;
   freeShippingDaysMax?: number | null;
+  freeShippingUpgradeMethods?: FreeShippingUpgradeMethod[];
   upsellingEnabled?: boolean;
   upsellTiers?: UpsellTier[];
 }
@@ -782,7 +804,10 @@ export default function ShopProductDetail({
           freeShipping={product.freeShipping}
           freeShippingDaysMin={product.freeShippingDaysMin}
           freeShippingDaysMax={product.freeShippingDaysMax}
+          freeShippingUpgradeMethods={product.freeShippingUpgradeMethods}
         />
+
+        <PackageContents locale={locale} items={product.packageContents ?? []} />
 
         {/* Description — no heading, the text reads fine as a direct continuation of the page */}
         {product.description && (

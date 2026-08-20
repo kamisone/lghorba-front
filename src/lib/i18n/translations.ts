@@ -931,6 +931,10 @@ export const en = {
     deliveryDetailsWorldwide: "Other destinations",
     deliveryDetailsDaysUnit: "business days",
     deliveryDetailsFree: "Free",
+    deliveryDetailsUpgradesTitle: "Faster delivery available:",
+    deliveryDetailsUpgradeTag: "Optional, paid upgrade",
+    // package contents (collapsible panel)
+    packageContentsTitle: "What's in the box",
     savingsPrefix: "Savings of ",
     savingsSuffix: " will be confirmed at checkout.",
     // quantity discounts (upselling)
@@ -2025,6 +2029,10 @@ export const fr: Translations = {
     deliveryDetailsWorldwide: "Autres destinations",
     deliveryDetailsDaysUnit: "jours ouvrés",
     deliveryDetailsFree: "Gratuit",
+    deliveryDetailsUpgradesTitle: "Livraison plus rapide disponible :",
+    deliveryDetailsUpgradeTag: "En option, payant",
+    // package contents (collapsible panel)
+    packageContentsTitle: "Contenu du colis",
     savingsPrefix: "Une économie de ",
     savingsSuffix: " sera confirmée à la caisse.",
     // quantity discounts (upselling)
@@ -3051,6 +3059,10 @@ export const es: Translations = {
     deliveryDetailsWorldwide: "Otros destinos",
     deliveryDetailsDaysUnit: "días hábiles",
     deliveryDetailsFree: "Gratis",
+    deliveryDetailsUpgradesTitle: "Entrega más rápida disponible:",
+    deliveryDetailsUpgradeTag: "Opcional, de pago",
+    // package contents (collapsible panel)
+    packageContentsTitle: "Contenido del paquete",
     savingsPrefix: "Ahorro de ",
     savingsSuffix: " se confirmará al finalizar la compra.",
     // quantity discounts (upselling)
@@ -4076,6 +4088,10 @@ export const it: Translations = {
     deliveryDetailsWorldwide: "Altre destinazioni",
     deliveryDetailsDaysUnit: "giorni lavorativi",
     deliveryDetailsFree: "Gratuita",
+    deliveryDetailsUpgradesTitle: "Consegna più rapida disponibile:",
+    deliveryDetailsUpgradeTag: "Opzionale, a pagamento",
+    // package contents (collapsible panel)
+    packageContentsTitle: "Contenuto della confezione",
     savingsPrefix: "Risparmio di ",
     savingsSuffix: " sarà confermato al checkout.",
     // quantity discounts (upselling)
@@ -5101,6 +5117,10 @@ export const de: Translations = {
     deliveryDetailsWorldwide: "Weitere Länder",
     deliveryDetailsDaysUnit: "Werktage",
     deliveryDetailsFree: "Kostenlos",
+    deliveryDetailsUpgradesTitle: "Schnellerer Versand verfügbar:",
+    deliveryDetailsUpgradeTag: "Optional, kostenpflichtig",
+    // package contents (collapsible panel)
+    packageContentsTitle: "Lieferumfang",
     savingsPrefix: "Ersparnis von ",
     savingsSuffix: " wird beim Checkout bestätigt.",
     // quantity discounts (upselling)
@@ -6126,6 +6146,10 @@ export const nl: Translations = {
     deliveryDetailsWorldwide: "Overige bestemmingen",
     deliveryDetailsDaysUnit: "werkdagen",
     deliveryDetailsFree: "Gratis",
+    deliveryDetailsUpgradesTitle: "Snellere levering beschikbaar:",
+    deliveryDetailsUpgradeTag: "Optioneel, tegen betaling",
+    // package contents (collapsible panel)
+    packageContentsTitle: "Inhoud van de doos",
     savingsPrefix: "Besparing van ",
     savingsSuffix: " wordt bevestigd bij het afrekenen.",
     // quantity discounts (upselling)
@@ -7151,6 +7175,10 @@ export const pl: Translations = {
     deliveryDetailsWorldwide: "Pozostałe kraje",
     deliveryDetailsDaysUnit: "dni roboczych",
     deliveryDetailsFree: "Za darmo",
+    deliveryDetailsUpgradesTitle: "Dostępna szybsza dostawa:",
+    deliveryDetailsUpgradeTag: "Opcjonalnie, płatne",
+    // package contents (collapsible panel)
+    packageContentsTitle: "Zawartość zestawu",
     savingsPrefix: "Oszczędność w wysokości ",
     savingsSuffix: " zostanie potwierdzona przy finalizacji zakupu.",
     // quantity discounts (upselling)

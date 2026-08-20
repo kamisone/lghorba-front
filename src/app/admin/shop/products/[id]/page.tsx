@@ -8,6 +8,7 @@ import ProductInfoSectionsManager, { ProductInfoSection } from "@/components/adm
 import ProductTrustBadgesManager, { ProductTrustBadge } from "@/components/admin/shop/ProductTrustBadgesManager";
 import ProductFaqsManager, { ProductFaq } from "@/components/admin/shop/ProductFaqsManager";
 import ProductZoomedImagesManager, { ProductZoomedImage, ResolvedProductZoomedImage } from "@/components/admin/shop/ProductZoomedImagesManager";
+import ProductPackageContentsManager, { ProductPackageContentItem, ResolvedProductPackageContentItem } from "@/components/admin/shop/ProductPackageContentsManager";
 import ProductDocumentsManager, { ProductDocument } from "@/components/admin/shop/ProductDocumentsManager";
 import ProductPrivateLinksManager, { ProductPrivateLink } from "@/components/admin/shop/ProductPrivateLinksManager";
 import ProductStoryGalleryManager, { ProductStoryItem, ResolvedProductStoryItem } from "@/components/admin/shop/ProductStoryGalleryManager";
@@ -21,7 +22,7 @@ import { useToast } from "@/components/toast/ToastContext";
 import { useEntityTranslations } from "@/hooks/useEntityTranslations";
 import { useSectionGenerate } from "@/hooks/useSectionGenerate";
 import { AI_TARGET_LANGS, summarizeGenerateErrors, type SectionTranslationOutcome } from "@/lib/sectionTranslate";
-import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd, Clapperboard, Layers, ZoomIn, Lock } from "lucide-react";
+import { Pencil, ImagePlus, DollarSign, Image, ClipboardList, Shield, HelpCircle, FileText, Palette, GalleryHorizontalEnd, Clapperboard, Layers, ZoomIn, Lock, Package } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ interface Product {
   trustBadges: ProductTrustBadge[];
   faqs: ProductFaq[];
   zoomedImages: ResolvedProductZoomedImage[];
+  packageContents: ResolvedProductPackageContentItem[];
   documents: ProductDocument[];
   privateLinks: ProductPrivateLink[];
   storyGallery: ResolvedProductStoryItem[];
@@ -131,6 +133,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [trustBadges, setTrustBadges] = useState<ProductTrustBadge[]>([]);
   const [faqs, setFaqs] = useState<ProductFaq[]>([]);
   const [zoomedImages, setZoomedImages] = useState<ProductZoomedImage[]>([]);
+  const [packageContents, setPackageContents] = useState<ProductPackageContentItem[]>([]);
   const [documents, setDocuments] = useState<ProductDocument[]>([]);
   const [privateLinks, setPrivateLinks] = useState<ProductPrivateLink[]>([]);
   const [storyGallery, setStoryGallery] = useState<ProductStoryItem[]>([]);
@@ -247,6 +250,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setTrustBadges(p.trustBadges ?? []);
       setFaqs(p.faqs ?? []);
       setZoomedImages(p.zoomedImages ?? []);
+      setPackageContents(p.packageContents ?? []);
       setDocuments(p.documents ?? []);
       setPrivateLinks(p.privateLinks ?? []);
       setStoryGallery(p.storyGallery ?? []);
@@ -451,6 +455,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         trustBadges,
         faqs,
         zoomedImages,
+        packageContents,
         documents,
         privateLinks,
         storyGallery,
@@ -486,6 +491,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setTrustBadges(p.trustBadges ?? []);
       setFaqs(p.faqs ?? []);
       setZoomedImages(p.zoomedImages ?? []);
+      setPackageContents(p.packageContents ?? []);
       setDocuments(p.documents ?? []);
       setPrivateLinks(p.privateLinks ?? []);
       setStoryGallery(p.storyGallery ?? []);
@@ -713,6 +719,10 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             {/* Zoomed Images */}
             <CollapsibleSection icon={<ZoomIn size={14} strokeWidth={1.75} />} title="Zoomed images">
               <ProductZoomedImagesManager initialItems={product.zoomedImages ?? []} onChange={setZoomedImages} />
+            </CollapsibleSection>
+
+            <CollapsibleSection icon={<Package size={14} strokeWidth={1.75} />} title="Package contents">
+              <ProductPackageContentsManager initialItems={product.packageContents ?? []} onChange={setPackageContents} />
             </CollapsibleSection>
 
             {/* Trust badges */}

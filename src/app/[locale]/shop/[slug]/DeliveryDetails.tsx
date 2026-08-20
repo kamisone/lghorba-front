@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Truck } from "lucide-react";
+import { Truck, CheckCircle2 } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 import styles from "./ProductDetail.module.css";
 
@@ -12,6 +12,16 @@ interface OverviewMethod {
   priceCents: number;
   estimatedDaysMin: number;
   estimatedDaysMax: number;
+}
+
+interface FreeShippingUpgradeMethod {
+  id: string;
+  name: string;
+  carrier: string | null;
+  priceCents: number;
+  estimatedDaysMin: number;
+  estimatedDaysMax: number;
+  isActive?: boolean;
 }
 
 interface OverviewZone {
@@ -47,9 +57,12 @@ interface Props {
   freeShipping?: boolean;
   freeShippingDaysMin?: number | null;
   freeShippingDaysMax?: number | null;
+  freeShippingUpgradeMethods?: FreeShippingUpgradeMethod[];
 }
 
-export default function DeliveryDetails({ locale, freeShipping, freeShippingDaysMin, freeShippingDaysMax }: Props) {
+export default function DeliveryDetails({
+  locale, freeShipping, freeShippingDaysMin, freeShippingDaysMax, freeShippingUpgradeMethods,
+}: Props) {
   const t = getTranslations(locale).shop;
   const [loaded, setLoaded]   = useState(false);
   const [loading, setLoading] = useState(false);
@@ -92,12 +105,37 @@ export default function DeliveryDetails({ locale, freeShipping, freeShippingDays
 
       <div className={styles.deliveryBody}>
         {freeShipping && (
-          <p className={styles.deliveryFreeNote}>
-            {t.freeShippingBadge}
-            {freeShippingDaysMax != null && (
-              <> · {formatDays(freeShippingDaysMin ?? freeShippingDaysMax, freeShippingDaysMax, t.deliveryDetailsDaysUnit)}</>
+          <>
+            <p className={styles.deliveryFreeBanner}>
+              <CheckCircle2 size={16} className={styles.deliveryFreeIcon} aria-hidden="true" />
+              {t.freeShippingBadge}
+              {freeShippingDaysMax != null && (
+                <> · {formatDays(freeShippingDaysMin ?? freeShippingDaysMax, freeShippingDaysMax, t.deliveryDetailsDaysUnit)}</>
+              )}
+            </p>
+
+            {!!freeShippingUpgradeMethods?.filter(m => m.isActive !== false).length && (
+              <div className={styles.deliveryUpgrades}>
+                <p className={styles.deliveryUpgradesTitle}>{t.deliveryDetailsUpgradesTitle}</p>
+                <ul className={styles.deliveryUpgradeList}>
+                  {freeShippingUpgradeMethods.filter(m => m.isActive !== false).map(method => (
+                    <li className={styles.deliveryUpgradeRow} key={method.id}>
+                      <span className={styles.deliveryUpgradeMain}>
+                        <span className={styles.deliveryUpgradeName}>{method.name}</span>
+                        <span className={styles.deliveryUpgradeTag}>{t.deliveryDetailsUpgradeTag}</span>
+                      </span>
+                      <span className={styles.deliveryUpgradeMeta}>
+                        <span className={styles.deliveryUpgradeDays}>
+                          {formatDays(method.estimatedDaysMin, method.estimatedDaysMax, t.deliveryDetailsDaysUnit)}
+                        </span>
+                        <span className={styles.deliveryUpgradePrice}>{`${centsToEuros(method.priceCents)} €`}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
-          </p>
+          </>
         )}
 
         {loading && <p className={styles.deliveryState}>{t.deliveryDetailsLoading}</p>}
