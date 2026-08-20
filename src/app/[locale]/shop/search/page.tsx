@@ -68,10 +68,28 @@ export default function ShopSearchPage({ params }: { params: { locale: string } 
     const eventId = crypto.randomUUID();
     pixelTrack("Search", { search_string: q }, eventId);
     trackServerEvent("Search", eventId, { search_string: q });
-    const tiktokEventId = crypto.randomUUID();
-    ttqTrack("Search", { search_string: q }, tiktokEventId);
-    trackTikTokServerEvent("Search", tiktokEventId, { search_string: q });
   }, [q]);
+
+  // TikTok: separate effect from Meta's above because TikTok's Data Sources
+  // health check flags Search events missing "content_id" — unlike Meta,
+  // it wants the matched products attached, so this waits for results to
+  // load before firing (top 10 hits) instead of firing alongside the query.
+  const tiktokSearchFiredForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!q.trim() || !data || tiktokSearchFiredForRef.current === q) return;
+    tiktokSearchFiredForRef.current = q;
+    const tiktokEventId = crypto.randomUUID();
+    const properties = {
+      search_string: q,
+      contents: data.hits.slice(0, 10).map(h => ({
+        content_id: h.id,
+        content_type: "product",
+        content_name: h.title,
+      })),
+    };
+    ttqTrack("Search", properties, tiktokEventId);
+    trackTikTokServerEvent("Search", tiktokEventId, properties);
+  }, [q, data]);
 
   // Internal behavior tracking (admin analytics, independent of Meta): needs
   // the actual result count, so it waits for the fetch to land rather than
