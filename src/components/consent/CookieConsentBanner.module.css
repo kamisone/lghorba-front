@@ -19,12 +19,19 @@
   flex-wrap: wrap;
 }
 
+.textCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+  flex: 1 1 300px;
+}
+
 .text {
   color: rgba(var(--rgb-white), 0.85);
   font-size: 0.875rem;
   line-height: 1.55;
   margin: 0;
-  flex: 1 1 300px;
 }
 
 .learnMore {
@@ -35,6 +42,31 @@
 
 .learnMore:hover {
   color: var(--color-brand-light);
+}
+
+/* "Reject all" — intentionally understated: a plain text link rather than a
+   button, so it doesn't compete for attention with the two real CTAs. Still
+   a real <button> (keyboard/AT accessible), just styled to read as a link. */
+.rejectLink {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  color: rgba(var(--rgb-white), 0.5);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+.rejectLink:hover {
+  color: rgba(var(--rgb-white), 0.8);
+}
+.rejectLink:focus-visible {
+  outline: 2px solid rgba(var(--rgb-white), 0.5);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .actions {
@@ -55,18 +87,6 @@
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
   line-height: 1;
-}
-
-/* Ghost — transparent, white text */
-.btnGhost {
-  background: transparent;
-  color: rgba(var(--rgb-white), 0.7);
-  border-color: rgba(var(--rgb-white), 0.25);
-}
-.btnGhost:hover {
-  background: rgba(var(--rgb-white), 0.06);
-  color: rgba(var(--rgb-white), 0.9);
-  border-color: rgba(var(--rgb-white), 0.45);
 }
 
 /* Outline — accent border */
@@ -95,6 +115,9 @@
   .inner {
     flex-direction: column;
     align-items: stretch;
+  }
+  .textCol {
+    align-items: flex-start;
   }
   .actions {
     flex-direction: column;

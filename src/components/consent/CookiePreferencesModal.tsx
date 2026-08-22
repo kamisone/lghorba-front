@@ -106,25 +106,27 @@ export default function CookiePreferencesModal({
         <div className={styles.footer}>
           <button
             type="button"
-            className={`${styles.btn} ${styles.btnGhost}`}
+            className={styles.rejectLink}
             onClick={onRejectAll}
           >
             {c.rejectAll}
           </button>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnOutline}`}
-            onClick={onAcceptAll}
-          >
-            {c.acceptAll}
-          </button>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnFilled}`}
-            onClick={() => onSave({ analytics, marketing })}
-          >
-            {c.savePrefs}
-          </button>
+          <div className={styles.footerActions}>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnOutline}`}
+              onClick={onAcceptAll}
+            >
+              {c.acceptAll}
+            </button>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnFilled}`}
+              onClick={() => onSave({ analytics, marketing })}
+            >
+              {c.savePrefs}
+            </button>
+          </div>
         </div>
       </div>
     </div>

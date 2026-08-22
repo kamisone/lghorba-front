@@ -149,11 +149,43 @@
 .footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--color-border);
   flex-wrap: wrap;
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* "Reject all" — a plain text link rather than a button, so it reads as the
+   understated opt-out next to "Accept all" / "Save preferences". Still a
+   real <button> (keyboard/AT accessible), just styled to look like a link. */
+.rejectLink {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+.rejectLink:hover {
+  color: var(--color-text-primary);
+}
+.rejectLink:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .btn {
@@ -166,16 +198,6 @@
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
   line-height: 1;
-}
-
-.btnGhost {
-  background: transparent;
-  color: var(--color-text-secondary);
-  border-color: var(--color-border);
-}
-.btnGhost:hover {
-  background: var(--color-surface-raised);
-  color: var(--color-text-primary);
 }
 
 .btnOutline {
@@ -200,8 +222,15 @@
 
 @media (max-width: 480px) {
   .footer {
-    flex-direction: column;
+    flex-direction: column-reverse;
     align-items: stretch;
+  }
+  .rejectLink {
+    align-self: center;
+    margin-top: 0.5rem;
+  }
+  .footerActions {
+    flex-direction: column;
   }
   .btn {
     width: 100%;

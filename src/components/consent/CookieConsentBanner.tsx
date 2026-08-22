@@ -23,20 +23,22 @@ export default function CookieConsentBanner({
   return (
     <div className={styles.banner} role="region" aria-label="Cookie consent">
       <div className={styles.inner}>
-        <p className={styles.text}>
-          {c.bannerText}{" "}
-          <Link href={`/${locale}/cookies`} className={styles.learnMore}>
-            {c.learnMore}
-          </Link>
-        </p>
-        <div className={styles.actions}>
+        <div className={styles.textCol}>
+          <p className={styles.text}>
+            {c.bannerText}{" "}
+            <Link href={`/${locale}/cookies`} className={styles.learnMore}>
+              {c.learnMore}
+            </Link>
+          </p>
           <button
             type="button"
-            className={`${styles.btn} ${styles.btnGhost}`}
+            className={styles.rejectLink}
             onClick={onRejectAll}
           >
             {c.rejectAll}
           </button>
+        </div>
+        <div className={styles.actions}>
           <button
             type="button"
             className={`${styles.btn} ${styles.btnOutline}`}
