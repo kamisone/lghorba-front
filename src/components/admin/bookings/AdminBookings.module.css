@@ -1170,6 +1170,70 @@
   background: rgba(var(--rgb-admin-secondary, 0, 92, 143), 0.05);
 }
 
+/* ── Inline confirm layer (cancel / delete) ── */
+.confirmSection {
+  margin: 0 16px 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-error-border);
+  background: var(--color-error-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirmLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-error);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.confirmText {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.confirmDanger {
+  padding: 0.5rem 0.875rem;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-error);
+  background: var(--color-error);
+  color: var(--color-white);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.12s;
+  white-space: nowrap;
+}
+.confirmDanger:hover:not(:disabled) { opacity: 0.88; }
+.confirmDanger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.actionRestore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-admin-primary);
+  background: var(--color-white);
+  color: var(--color-admin-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.actionRestore:hover:not(:disabled) {
+  background: var(--color-admin-primary);
+  color: var(--color-white);
+}
+.actionRestore:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ── Reactivate section ── */
 .reactivateSection {
   margin: 0 16px 12px;

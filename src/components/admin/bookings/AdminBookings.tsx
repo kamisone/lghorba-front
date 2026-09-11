@@ -16,7 +16,7 @@ import {
   localDTToISO,
   nowLocalDT,
 } from "@/lib/dateUtils";
-import { Car as CarIcon, User, Plane, Pencil, Search, CalendarDays, AlertTriangle, Check, X } from "lucide-react";
+import { Car as CarIcon, User, Plane, Pencil, Search, CalendarDays, AlertTriangle, Check, X, RotateCcw } from "lucide-react";
 import styles from "./AdminBookings.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -183,11 +183,20 @@ interface ModalProps {
   onDelete:     (id: string) => void;
   onEdit:       (b: AdminBooking) => void;
   onReactivated: (b: AdminBooking) => void;
+  onRestored:   (b: AdminBooking) => void;
 }
 
-function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel, onDelete, onEdit, onReactivated }: ModalProps) {
+type PendingAction = "cancel" | "delete" | null;
+
+function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel, onDelete, onEdit, onReactivated, onRestored }: ModalProps) {
   const duration    = daysDiff(booking.startDateTime, booking.endDateTime);
   const pricePerDay = Number(booking.totalPrice) / duration;
+
+  // Cancel / Delete are two-step: the first click opens an inline confirm
+  // layer, the second click (inside that layer) fires the action.
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [restoring,     setRestoring]     = useState(false);
+  const [restoreError,  setRestoreError]  = useState<string | null>(null);
 
   const [reactivating,    setReactivating]    = useState(false);
   const [reactivateEnd,   setReactivateEnd]   = useState("");
@@ -218,11 +227,34 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
     }
   };
 
+  const handleRestore = async () => {
+    setRestoreError(null);
+    setRestoring(true);
+    try {
+      const res = await fetch(`/next-api/bookings/${booking.id}/restore`, { method: "POST" });
+      if (res.ok) {
+        onRestored(await res.json());
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setRestoreError(err?.message ?? "Failed to restore booking.");
+      }
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  // Reset the confirm layer whenever the booking changes (e.g. after cancel)
+  useEffect(() => { setPendingAction(null); }, [booking.id, booking.status]);
+
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const h = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (pendingAction) setPendingAction(null); // Esc first dismisses the confirm layer
+      else onClose();
+    };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [onClose]);
+  }, [onClose, pendingAction]);
 
   return (
     <div className={styles.backdrop} onMouseDown={onClose}>
@@ -418,6 +450,42 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
           ) : null
         )}
 
+        {pendingAction && (
+          <div className={styles.confirmSection} role="alertdialog" aria-live="assertive">
+            <span className={styles.confirmLabel}>
+              {pendingAction === "cancel" ? "Cancel this booking?" : "Delete this booking?"}
+            </span>
+            <p className={styles.confirmText}>
+              {pendingAction === "cancel"
+                ? "The car will be released for this period and any active rent session will be stopped. You can restore it later."
+                : "This permanently removes the booking and cannot be undone."}
+            </p>
+            <div className={styles.reactivateRow}>
+              <button
+                className={styles.confirmDanger}
+                onClick={() => pendingAction === "cancel" ? onCancel(booking.id) : onDelete(booking.id)}
+                disabled={actionLoading}
+                autoFocus
+              >
+                {actionLoading ? "Working…" : pendingAction === "cancel" ? "Yes, cancel booking" : "Yes, delete"}
+              </button>
+              <button
+                className={styles.actionEdit}
+                onClick={() => setPendingAction(null)}
+                disabled={actionLoading}
+              >
+                Keep booking
+              </button>
+            </div>
+          </div>
+        )}
+
+        {restoreError && (
+          <div className={styles.confirmSection}>
+            <span className={styles.reactivateError}>{restoreError}</span>
+          </div>
+        )}
+
         <div className={styles.modalActions}>
           <Link
             href={`/admin/fleet/${booking.carId}/rent`}
@@ -449,12 +517,29 @@ function BookingModal({ booking, actionLoading, tz, onClose, onConfirm, onCancel
               Confirm booking
             </button>
           )}
+          {booking.status === "cancelled" && (
+            <button
+              className={styles.actionRestore}
+              onClick={handleRestore}
+              disabled={actionLoading || restoring || !!pendingAction}
+            >
+              <RotateCcw size={14} strokeWidth={1.75} /> {restoring ? "Restoring…" : "Restore booking"}
+            </button>
+          )}
           {!isCancelledStatus(booking.status) && (
-            <button className={styles.actionCancel} onClick={() => onCancel(booking.id)} disabled={actionLoading}>
+            <button
+              className={styles.actionCancel}
+              onClick={() => setPendingAction("cancel")}
+              disabled={actionLoading || pendingAction === "cancel"}
+            >
               Cancel
             </button>
           )}
-          <button className={styles.actionDelete} onClick={() => onDelete(booking.id)} disabled={actionLoading}>
+          <button
+            className={styles.actionDelete}
+            onClick={() => setPendingAction("delete")}
+            disabled={actionLoading || pendingAction === "delete"}
+          >
             Delete
           </button>
         </div>
@@ -733,15 +818,16 @@ export default function AdminBookings() {
       });
       if (!res.ok) return;
       const updated: AdminBooking = await res.json();
-      mutate(prev => (prev ?? []).map(b => b.id === id ? { ...b, status: updated.status } : b), { revalidate: false });
-      setSelected(prev => prev?.id === id ? { ...prev, status: updated.status } : prev);
+      const patch = { status: updated.status, cancelledAt: updated.cancelledAt ?? null };
+      mutate(prev => (prev ?? []).map(b => b.id === id ? { ...b, ...patch } : b), { revalidate: false });
+      setSelected(prev => prev?.id === id ? { ...prev, ...patch } : prev);
     } finally {
       setActionLoading(false);
     }
   }, [mutate]);
 
+  // Confirmation happens in BookingModal's inline confirm layer.
   const deleteBooking = useCallback(async (id: string) => {
-    if (!window.confirm("Delete this booking? This cannot be undone.")) return;
     setActionLoading(true);
     try {
       const res = await fetch(`/next-api/bookings/${id}`, { method: "DELETE" });
@@ -762,6 +848,12 @@ export default function AdminBookings() {
     setSelected(null);
     closeModal();
   }, [closeModal, mutate]);
+
+  // Keep the modal open after a restore so the admin sees the new status.
+  const handleRestored = useCallback((updated: AdminBooking) => {
+    mutate(prev => (prev ?? []).map(b => b.id === updated.id ? { ...b, ...updated } : b), { revalidate: false });
+    setSelected(prev => prev?.id === updated.id ? { ...prev, ...updated } : prev);
+  }, [mutate]);
 
   const openCarPicker = async () => {
     setShowCarPicker(true);
@@ -1043,6 +1135,7 @@ export default function AdminBookings() {
           onDelete={deleteBooking}
           onEdit={openBookingEdit}
           onReactivated={handleReactivated}
+          onRestored={handleRestored}
         />
       )}
 
