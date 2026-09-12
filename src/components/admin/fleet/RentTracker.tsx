@@ -11,6 +11,7 @@ import { useModalUrl } from "@/hooks/useModalUrl";
 import { useBusinessTz } from "@/contexts/TzContext";
 import { fmtDateTime } from "@/lib/dateUtils";
 import { Car as CarIcon, User, ClipboardList, MapPin, Banknote, Ruler, ExternalLink, Pencil, X, Radio, ChevronUp, ChevronDown, ArrowRight, Maximize2, CalendarClock } from "lucide-react";
+import SourceBadge from "../SourceBadge";
 import styles from "./RentTracker.module.css";
 
 interface RentSession {
@@ -553,6 +554,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
             </div>
           </div>
           <div className={styles.scheduleCardMeta}>
+            <SourceBadge source={activeBooking.source} />
             {activeBooking.user?.name && (
               <Link
                 href={`/admin/users/${activeBooking.user.id}`}
@@ -630,6 +632,7 @@ export default function RentTracker({ car, onBookingUpdate, onBookingDelete, onU
                       <span className={styles.sessionDate}>
                         {fmtShort(session.startedAt)} <ArrowRight size={13} strokeWidth={1.75} /> {session.endedAt ? fmtShort(session.endedAt) : "…"}
                       </span>
+                      {linked && <SourceBadge source={linked.source} size="sm" />}
                       {linked?.user?.name && (
                         <Link
                           href={`/admin/users/${linked.user.id}`}

@@ -5,6 +5,7 @@ import useSWR from "swr";
 import Link from "next/link";
 import type { Car, CalendarBooking } from "../fleet/data";
 import BookingAdminModal from "./BookingAdminModal";
+import SourceBadge from "../SourceBadge";
 import { useModalUrl } from "@/hooks/useModalUrl";
 import { useBusinessTz } from "@/contexts/TzContext";
 import {
@@ -159,17 +160,6 @@ function StatusBadge({ status }: { status: AdminBooking["status"] }) {
   return <span className={`${styles.badge} ${styles[`badge_${cls}`]}`}>{label}</span>;
 }
 
-const SOURCE_LABELS: Record<AdminBooking["source"], string> = {
-  private: "Private", turo: "Turo", getaround: "Getaround",
-};
-
-function SourceBadge({ source }: { source: AdminBooking["source"] }) {
-  return (
-    <span className={`${styles.badge} ${styles[`badge_source_${source}`]}`}>
-      {SOURCE_LABELS[source]}
-    </span>
-  );
-}
 
 // ── Detail modal ──────────────────────────────────────────────────────────────
 

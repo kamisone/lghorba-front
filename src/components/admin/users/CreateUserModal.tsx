@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import styles from "./CreateUserModal.module.css";
 import { X, Check, Search } from "lucide-react";
+import SourceBadge, { type BookingSource } from "@/components/admin/SourceBadge";
 
 interface UnlinkedSession {
   id: string;
@@ -10,6 +11,7 @@ interface UnlinkedSession {
   endedAt?: string | null;
   status: string;
   car?: { id: string; name: string; immatriculation: string } | null;
+  booking?: { id: string; source: BookingSource } | null;
 }
 
 interface CreateForm {
@@ -222,6 +224,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
                         <div className={styles.sessionOptionMain}>
                           <span className={styles.sessionCar}>
                             {s.car ? `${s.car.name} · ${s.car.immatriculation}` : "Unknown car"}
+                            {s.booking && <> <SourceBadge source={s.booking.source} size="sm" /></>}
                           </span>
                           <span className={`${styles.statusBadge} ${styles[`status_${s.status}`]}`}>{s.status}</span>
                         </div>

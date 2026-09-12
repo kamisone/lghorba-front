@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./user.module.css";
 import { Star } from "lucide-react";
+import SourceBadge, { type BookingSource } from "@/components/admin/SourceBadge";
 
 interface RentSession {
   id: string;
@@ -12,7 +13,7 @@ interface RentSession {
   endedAt?: string;
   status: string;
   car?: { id: string; name: string; immatriculation: string };
-  booking?: { id: string; startDateTime: string; endDateTime: string } | null;
+  booking?: { id: string; startDateTime: string; endDateTime: string; source: BookingSource } | null;
 }
 
 interface User {
@@ -263,7 +264,7 @@ export default function UserDetailPage() {
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
-                <tr><th>Car</th><th>Started</th><th>Ended</th><th>Status</th><th>Booking</th></tr>
+                <tr><th>Car</th><th>Source</th><th>Started</th><th>Ended</th><th>Status</th><th>Booking</th></tr>
               </thead>
               <tbody>
                 {user.rentSessions.map(s => (
@@ -274,6 +275,7 @@ export default function UserDetailPage() {
                         : <span className={styles.na}>—</span>
                       }
                     </td>
+                    <td>{s.booking ? <SourceBadge source={s.booking.source} /> : <span className={styles.na}>—</span>}</td>
                     <td className={styles.dateCell}>{new Date(s.startedAt).toLocaleString()}</td>
                     <td className={styles.dateCell}>{s.endedAt ? new Date(s.endedAt).toLocaleString() : <span className={styles.na}>ongoing</span>}</td>
                     <td><span className={`${styles.statusBadge} ${styles[`status_${s.status}`]}`}>{s.status}</span></td>
